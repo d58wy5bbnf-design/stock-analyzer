@@ -49,13 +49,6 @@ h1{
   margin-bottom:18px;
 }
 
-.radarTop{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:flex-start;
-}
-
 .sectionTitle{
   font-size:22px;
   font-weight:800;
@@ -67,29 +60,12 @@ h1{
   line-height:1.6;
 }
 
-.green{
-  color:#46ddb2;
-}
-
-.orange{
-  color:#ff9c46;
-}
-
-.yellow{
-  color:#ffd75e;
-}
-
-.red{
-  color:#ff6969;
-}
-
-.blue{
-  color:#71a7ff;
-}
-
-.purple{
-  color:#bd8cff;
-}
+.green{color:#46ddb2;}
+.orange{color:#ff9c46;}
+.yellow{color:#ffd75e;}
+.red{color:#ff6969;}
+.blue{color:#71a7ff;}
+.purple{color:#bd8cff;}
 
 button{
   border:0;
@@ -100,17 +76,10 @@ button{
   cursor:pointer;
 }
 
-.refresh{
-  background:#171717;
-  color:#eee;
-  border:1px solid #333;
-  white-space:nowrap;
-}
-
 .search{
   display:flex;
   gap:10px;
-  margin:20px 0 8px;
+  margin:18px 0 10px;
 }
 
 input{
@@ -135,6 +104,20 @@ input:focus{
   min-width:112px;
 }
 
+.radarTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.refresh{
+  background:#171717;
+  color:#eee;
+  border:1px solid #333;
+  white-space:nowrap;
+}
+
 .radarItem{
   background:#111;
   border:1px solid #272727;
@@ -151,9 +134,22 @@ input:focus{
   gap:12px;
 }
 
+.symbolLine{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
 .symbol{
   font-size:21px;
   font-weight:850;
+}
+
+.stockName{
+  font-size:16px;
+  color:#aaa;
+  font-weight:700;
 }
 
 .score{
@@ -249,10 +245,6 @@ input:focus{
   line-height:1.6;
 }
 
-.hidden{
-  display:none;
-}
-
 .disclaimer{
   color:#666;
   font-size:12px;
@@ -261,6 +253,7 @@ input:focus{
 }
 
 @media(max-width:600px){
+
   .container{
     padding-top:36px;
   }
@@ -284,6 +277,14 @@ input:focus{
   .bigPrice{
     font-size:38px;
   }
+
+  .radarTop{
+    gap:8px;
+  }
+
+  .refresh{
+    padding:11px 12px;
+  }
 }
 </style>
 </head>
@@ -300,43 +301,9 @@ input:focus{
 </div>
 
 
-<!-- 雷達 -->
-
-<div class="card">
-
-  <div class="radarTop">
-
-    <div>
-      <div class="sectionTitle">
-        🔥 今日異動雷達
-      </div>
-
-      <div class="small" id="radarStatus">
-        正在載入今日掃描結果…
-      </div>
-
-      <div class="small" id="countdown">
-      </div>
-    </div>
-
-    <button
-      class="refresh"
-      onclick="loadRadar(true)">
-      ↻ 立即掃描
-    </button>
-
-  </div>
-
-  <div id="radarList">
-    <div class="loading">
-      掃描中…
-    </div>
-  </div>
-
-</div>
-
-
-<!-- 個股搜尋 -->
+<!-- =========================
+     搜尋移到最上面
+========================= -->
 
 <div class="card">
 
@@ -361,19 +328,70 @@ input:focus{
   </div>
 
   <div class="small">
-    點擊上方異動雷達的股票，也會自動帶入完整分析。
+    可直接輸入股票代號，或點擊下方異動雷達股票查看完整分析。
   </div>
 
 </div>
 
 
+<!-- =========================
+     異動雷達
+========================= -->
+
+<div class="card">
+
+  <div class="radarTop">
+
+    <div>
+
+      <div class="sectionTitle">
+        🔥 今日異動雷達
+      </div>
+
+      <div
+        class="small"
+        id="radarStatus">
+        正在載入今日掃描結果…
+      </div>
+
+      <div
+        class="small"
+        id="countdown">
+      </div>
+
+    </div>
+
+
+    <button
+      class="refresh"
+      onclick="loadRadar(true)">
+      ↻ 立即掃描
+    </button>
+
+  </div>
+
+
+  <div id="radarList">
+
+    <div class="loading">
+      掃描中…
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- 分析結果 -->
+
 <div id="result"></div>
 
 
 <div class="disclaimer">
-本平台為規則式技術分析與異動條件偵測工具，
-異動分數代表符合技術條件的程度，不代表未來上漲機率，
-亦不構成買賣建議。市場存在風險，請自行評估。
+本平台為規則式技術分析與異動條件偵測工具。
+異動分數代表符合技術條件的程度，
+不代表未來上漲機率，亦不構成買賣建議。
+市場存在風險，請自行評估。
 </div>
 
 </div>
@@ -381,12 +399,69 @@ input:focus{
 
 <script>
 
-/* =============================
-   基本工具
-============================= */
+/* =========================
+   股票中文名稱
+========================= */
 
-const $ = id =>
+const STOCK_NAMES={
+
+  "2330":"台積電",
+  "2303":"聯電",
+  "2454":"聯發科",
+  "2317":"鴻海",
+  "2382":"廣達",
+  "3231":"緯創",
+  "6669":"緯穎",
+  "3017":"奇鋐",
+  "3324":"雙鴻",
+  "2345":"智邦",
+
+  "3661":"世芯-KY",
+  "3443":"創意",
+  "3035":"智原",
+  "2376":"技嘉",
+  "2377":"微星",
+  "2357":"華碩",
+  "2356":"英業達",
+
+  "2603":"長榮",
+  "2609":"陽明",
+  "2615":"萬海",
+
+  "2881":"富邦金",
+  "2882":"國泰金",
+  "2891":"中信金",
+
+  "1519":"華城",
+  "1513":"中興電",
+  "1503":"士電",
+
+  "2408":"南亞科",
+  "2344":"華邦電",
+  "2337":"旺宏",
+
+  "3037":"欣興",
+  "8046":"南電",
+  "3189":"景碩",
+
+  "2368":"金像電",
+  "2383":"台光電",
+  "6274":"台燿",
+
+  "3711":"日月光投控",
+  "2308":"台達電",
+  "2327":"國巨"
+
+};
+
+
+/* =========================
+   基本工具
+========================= */
+
+const $=id=>
   document.getElementById(id);
+
 
 function num(v,d=2){
 
@@ -397,6 +472,7 @@ function num(v,d=2){
 
   return n.toFixed(d);
 }
+
 
 function money(v){
 
@@ -412,11 +488,11 @@ function money(v){
 }
 
 
-/* =============================
+/* =========================
    雷達
-============================= */
+========================= */
 
-let nextRefresh =
+let nextRefresh=
   Date.now()+300000;
 
 let radarLoading=false;
@@ -429,14 +505,16 @@ async function loadRadar(manual=false){
 
   radarLoading=true;
 
-  $("radarStatus").textContent =
+
+  $("radarStatus").textContent=
     manual
     ? "正在重新掃描…"
     : "正在取得異動雷達…";
 
+
   try{
 
-    const response =
+    const response=
       await fetch(
         "/api/radar?t="+Date.now(),
         {
@@ -444,68 +522,100 @@ async function loadRadar(manual=false){
         }
       );
 
-    const data =
+
+    const data=
       await response.json();
 
-    if(!response.ok)
+
+    if(!response.ok){
+
       throw new Error(
         data.error ||
         "雷達讀取失敗"
       );
 
+    }
+
+
     renderRadar(data);
 
-    nextRefresh =
+
+    nextRefresh=
       Date.now()+300000;
+
 
   }catch(error){
 
-    $("radarList").innerHTML =
+
+    $("radarList").innerHTML=
+
       `<div class="error">
         ⚠️ ${error.message}
       </div>`;
 
-    $("radarStatus").textContent =
+
+    $("radarStatus").textContent=
       "雷達暫時無法取得";
+
 
   }finally{
 
     radarLoading=false;
+
   }
+
 }
 
 
+/* =========================
+   顯示雷達
+========================= */
+
 function renderRadar(data){
 
-  const radar =
+  const radar=
     Array.isArray(data.radar)
     ? data.radar
     : [];
 
-  const now =
+
+  const now=
     new Date();
 
-  $("radarStatus").textContent =
-    `已掃描 ${data.scanned ?? "--"} 檔｜顯示 ${radar.length} 檔｜最後更新 ${now.toLocaleTimeString("zh-TW",{
-      hour:"2-digit",
-      minute:"2-digit"
-    })}`;
+
+  $("radarStatus").textContent=
+
+    `已掃描 ${data.scanned ?? "--"} 檔｜顯示 ${radar.length} 檔｜最後更新 ${
+      now.toLocaleTimeString(
+        "zh-TW",
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      )
+    }`;
+
 
   if(!radar.length){
 
-    $("radarList").innerHTML =
+    $("radarList").innerHTML=
+
       `<div class="loading">
         今日暫無明顯異動訊號
       </div>`;
 
     return;
+
   }
 
 
-  $("radarList").innerHTML =
+  $("radarList").innerHTML=
+
     radar.map(x=>{
 
+
       let levelClass="green";
+
 
       if(x.level==="強異動")
         levelClass="red";
@@ -517,15 +627,21 @@ function renderRadar(data){
         levelClass="yellow";
 
 
-      const reasons =
+      const reasons=
         Array.isArray(x.reasons)
         ? x.reasons
         : [];
 
-      const warnings =
+
+      const warnings=
         Array.isArray(x.warnings)
         ? x.warnings
         : [];
+
+
+      const stockName=
+        STOCK_NAMES[x.symbol] ||
+        "";
 
 
       return `
@@ -534,77 +650,126 @@ function renderRadar(data){
         class="radarItem"
         onclick="openStock('${x.symbol}')">
 
+
         <div class="radarHead">
+
 
           <div>
 
-            <div class="symbol">
-              ${x.emoji || "📊"}
-              ${x.symbol}
+
+            <div class="symbolLine">
+
+              <span class="symbol">
+
+                ${x.emoji || "📊"}
+                ${x.symbol}
+
+              </span>
+
+
+              <span class="stockName">
+
+                ${stockName}
+
+              </span>
+
             </div>
 
-            <div class="${levelClass}"
-                 style="margin-top:5px;font-weight:800">
+
+            <div
+              class="${levelClass}"
+              style="
+                margin-top:5px;
+                font-weight:800;
+              ">
 
               ${x.level || "觀察"}
 
             </div>
+
 
           </div>
 
 
           <div style="text-align:right">
 
+
             <div class="score">
-              異動分數 ${num(x.score,0)}
+
+              異動分數
+              ${num(x.score,0)}
+
             </div>
 
-            <div class="${
-              Number(x.changePercent)>=0
-              ? "green"
-              : "red"
-            }"
-            style="margin-top:5px">
+
+            <div
+              class="${
+                Number(x.changePercent)>=0
+                ? "green"
+                : "red"
+              }"
+              style="margin-top:5px">
 
               ${
                 Number(x.changePercent)>=0
                 ? "+"
                 : ""
-              }${num(x.changePercent)}%
+              }
+
+              ${num(x.changePercent)}%
 
             </div>
 
+
           </div>
+
 
         </div>
 
 
         <div class="metrics">
 
-          <span class="tag">
-            股價 ${money(x.price)}
-          </span>
 
           <span class="tag">
-            量比 ${num(x.volumeRatio,1)}x
+
+            股價
+            ${money(x.price)}
+
           </span>
 
-          <span class="tag">
-            RSI ${num(x.rsi,0)}
-          </span>
 
           <span class="tag">
+
+            量比
+            ${num(x.volumeRatio,1)}x
+
+          </span>
+
+
+          <span class="tag">
+
+            RSI
+            ${num(x.rsi,0)}
+
+          </span>
+
+
+          <span class="tag">
+
             ${
               x.breakout
               ? "✓ 已突破20日高"
               : "距20日高 "+num(x.distanceToHigh,1)+"%"
             }
+
           </span>
+
 
         </div>
 
 
         <div class="reason">
+
 
           ${
             reasons.length
@@ -612,63 +777,87 @@ function renderRadar(data){
             : "目前為條件觀察"
           }
 
+
           ${
             warnings.length
-            ? `<br><span class="orange">
-                ⚠ ${warnings.join("<br>⚠ ")}
-               </span>`
+            ?
+
+            `<br>
+             <span class="orange">
+             ⚠ ${warnings.join("<br>⚠ ")}
+             </span>`
+
             : ""
           }
 
-        </div>
-
-        <div class="small"
-             style="margin-top:10px">
-
-          點擊查看完整雙策略分析 →
 
         </div>
 
-      </div>`;
+
+        <div
+          class="small"
+          style="margin-top:10px">
+
+          點擊查看
+          ${stockName || x.symbol}
+          完整雙策略分析 →
+
+        </div>
+
+
+      </div>
+
+      `;
+
 
     }).join("");
+
 }
 
 
-/* =============================
-   5分鐘倒數
-============================= */
+/* =========================
+   五分鐘倒數
+========================= */
 
 setInterval(()=>{
 
-  const remain =
+  const remain=
     Math.max(
       0,
       nextRefresh-Date.now()
     );
 
-  const totalSeconds =
+
+  const totalSeconds=
     Math.floor(
       remain/1000
     );
 
-  const min =
+
+  const min=
     Math.floor(
       totalSeconds/60
     );
 
-  const sec =
+
+  const sec=
     totalSeconds%60;
 
-  $("countdown").textContent =
-    `每 5 分鐘自動更新｜下次掃描 ${min}:${String(sec).padStart(2,"0")}`;
+
+  $("countdown").textContent=
+
+    `每 5 分鐘自動更新｜下次掃描 ${
+      min
+    }:${
+      String(sec).padStart(2,"0")
+    }`;
 
 },1000);
 
 
-/* =============================
-   每5分鐘自動刷新
-============================= */
+/* =========================
+   每五分鐘自動更新
+========================= */
 
 setInterval(()=>{
 
@@ -677,16 +866,18 @@ setInterval(()=>{
 },300000);
 
 
-/* =============================
-   點雷達股票
-============================= */
+/* =========================
+   點擊雷達股票
+========================= */
 
 function openStock(symbol){
 
-  $("symbol").value =
+  $("symbol").value=
     symbol;
 
+
   analyzeStock();
+
 
   setTimeout(()=>{
 
@@ -696,25 +887,29 @@ function openStock(symbol){
       });
 
   },150);
+
 }
 
 
-/* =============================
+/* =========================
    技術指標
-============================= */
+========================= */
 
 function SMA(arr,p){
 
   if(arr.length<p)
     return null;
 
+
   const a=
     arr.slice(-p);
+
 
   return a.reduce(
     (s,v)=>s+v,
     0
   )/p;
+
 }
 
 
@@ -723,20 +918,30 @@ function EMA(arr,p){
   if(!arr.length)
     return null;
 
+
   const k=
     2/(p+1);
+
 
   let value=
     arr[0];
 
-  for(let i=1;i<arr.length;i++){
+
+  for(
+    let i=1;
+    i<arr.length;
+    i++
+  ){
 
     value=
       arr[i]*k+
       value*(1-k);
+
   }
 
+
   return value;
+
 }
 
 
@@ -745,8 +950,10 @@ function RSI(arr,p=14){
   if(arr.length<p+1)
     return null;
 
+
   let gains=0;
   let losses=0;
+
 
   for(
     let i=arr.length-p;
@@ -755,23 +962,31 @@ function RSI(arr,p=14){
   ){
 
     const diff=
-      arr[i]-arr[i-1];
+      arr[i]-
+      arr[i-1];
+
 
     if(diff>0)
       gains+=diff;
+
     else
       losses-=diff;
+
   }
+
 
   if(losses===0)
     return 100;
+
 
   const rs=
     (gains/p)/
     (losses/p);
 
+
   return 100-
     100/(1+rs);
+
 }
 
 
@@ -780,7 +995,9 @@ function ATR(rows,p=14){
   if(rows.length<p+1)
     return null;
 
+
   let tr=[];
+
 
   for(
     let i=rows.length-p;
@@ -791,67 +1008,103 @@ function ATR(rows,p=14){
     const current=
       rows[i];
 
+
     const prev=
       rows[i-1];
 
+
     tr.push(
+
       Math.max(
-        current.high-current.low,
+
+        current.high-
+        current.low,
+
         Math.abs(
-          current.high-prev.close
+          current.high-
+          prev.close
         ),
+
         Math.abs(
-          current.low-prev.close
+          current.low-
+          prev.close
         )
+
       )
+
     );
+
   }
+
 
   return tr.reduce(
     (a,b)=>a+b,
     0
   )/tr.length;
+
 }
 
 
-/* =============================
+/* =========================
    個股分析
-============================= */
+========================= */
 
 async function analyzeStock(){
 
   const symbol=
     $("symbol")
-    .value
-    .trim()
-    .toUpperCase();
+      .value
+      .trim()
+      .toUpperCase();
+
 
   if(!symbol)
     return;
 
+
   $("result").innerHTML=
+
     `<div class="card loading">
-      正在分析 ${symbol}…
+
+      正在分析
+      ${symbol}
+      ${STOCK_NAMES[symbol] || ""}
+      …
+
     </div>`;
+
 
   try{
 
+
     const response=
       await fetch(
-        `/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
+
+        `/api/stock?symbol=${
+          encodeURIComponent(symbol)
+        }&t=${
+          Date.now()
+        }`,
+
         {
           cache:"no-store"
         }
+
       );
+
 
     const d=
       await response.json();
 
-    if(!response.ok)
+
+    if(!response.ok){
+
       throw new Error(
         d.error ||
         "行情取得失敗"
       );
+
+    }
 
 
     const rows=
@@ -860,10 +1113,13 @@ async function analyzeStock(){
       : [];
 
 
-    if(rows.length<60)
+    if(rows.length<60){
+
       throw new Error(
         "歷史資料不足"
       );
+
+    }
 
 
     const closes=
@@ -877,46 +1133,67 @@ async function analyzeStock(){
 
 
     const price=
+
       Number.isFinite(
         Number(d.livePrice)
       )
+
       ? Number(d.livePrice)
+
       : dailyClose;
 
 
     const ma20=
-      SMA(closes,20);
+      SMA(
+        closes,
+        20
+      );
+
 
     const ma60=
-      SMA(closes,60);
+      SMA(
+        closes,
+        60
+      );
+
 
     const rsi=
-      RSI(closes,14);
+      RSI(
+        closes,
+        14
+      );
+
 
     const macd=
+
       EMA(
         closes.slice(-80),
         12
-      )-
+      )
+
+      -
+
       EMA(
         closes.slice(-80),
         26
       );
 
+
     const atr=
-      ATR(rows,14);
+      ATR(
+        rows,
+        14
+      );
 
 
-    /*
-      前20日壓力
-      不包含最新一天
-    */
+    /* 前20日壓力 */
 
     const prior20=
       rows.slice(
         -21,
         -1
       );
+
 
     const resistance=
       Math.max(
@@ -926,12 +1203,11 @@ async function analyzeStock(){
       );
 
 
-    /*
-      近期支撐
-    */
+    /* 近期支撐 */
 
     const prior10=
       rows.slice(-10);
+
 
     const recentLow=
       Math.min(
@@ -951,168 +1227,258 @@ async function analyzeStock(){
     const support=
       Math.max(
         recentLow,
-        maSupport-atr*0.5
+        maSupport-
+        atr*0.5
       );
 
 
-    /*
-      趨勢
-    */
+    /* 趨勢 */
 
     let trend=
       "整理";
 
+
     if(
       price>ma20 &&
       ma20>ma60
-    )
-      trend="多頭";
+    ){
+
+      trend=
+        "多頭";
+
+    }
 
     else if(
       price<ma20 &&
       ma20<ma60
-    )
-      trend="偏弱";
+    ){
+
+      trend=
+        "偏弱";
+
+    }
 
 
-    /*
-      突破
-    */
+    /* 突破 */
 
     const breakoutConfirmed=
-      price>resistance &&
-      price>ma20;
+
+      price>
+      resistance
+
+      &&
+
+      price>
+      ma20;
 
 
-    /*
-      支撐回踩策略
-    */
+    /* 支撐回踩 */
 
     const swingEntryLow=
+
       Math.max(
         support,
-        ma20-atr*0.5
-      );
-
-    const swingEntryHigh=
-      ma20+atr*0.35;
-
-    const swingStop=
-      Math.min(
-        support-atr*0.5,
-        swingEntryLow-atr
-      );
-
-    const swingRisk=
-      Math.max(
-        price-swingStop,
-        atr
-      );
-
-    const swingTP1=
-      price+swingRisk*1.5;
-
-    const swingTP2=
-      price+swingRisk*2.5;
-
-    const swingTP3=
-      price+swingRisk*4;
-
-
-    /*
-      高R突破回測
-    */
-
-    const breakEntryLow=
-      resistance-atr*0.25;
-
-    const breakEntryHigh=
-      resistance+atr*0.35;
-
-    const breakStop=
-      resistance-atr*0.8;
-
-    const breakRisk=
-      Math.max(
-        resistance-breakStop,
+        ma20-
         atr*0.5
       );
 
+
+    const swingEntryHigh=
+
+      ma20+
+      atr*0.35;
+
+
+    const swingStop=
+
+      Math.min(
+
+        support-
+        atr*0.5,
+
+        swingEntryLow-
+        atr
+
+      );
+
+
+    const swingRisk=
+
+      Math.max(
+        price-
+        swingStop,
+        atr
+      );
+
+
+    const swingTP1=
+
+      price+
+      swingRisk*1.5;
+
+
+    const swingTP2=
+
+      price+
+      swingRisk*2.5;
+
+
+    const swingTP3=
+
+      price+
+      swingRisk*4;
+
+
+    /* 高R突破 */
+
+    const breakEntryLow=
+
+      resistance-
+      atr*0.25;
+
+
+    const breakEntryHigh=
+
+      resistance+
+      atr*0.35;
+
+
+    const breakStop=
+
+      resistance-
+      atr*0.8;
+
+
+    const breakRisk=
+
+      Math.max(
+
+        resistance-
+        breakStop,
+
+        atr*0.5
+
+      );
+
+
     const breakTP1=
+
       resistance+
       breakRisk*2;
 
+
     const breakTP2=
+
       resistance+
       breakRisk*3;
 
+
     const breakTP3=
+
       resistance+
       breakRisk*5;
 
+
     const breakTP4=
+
       resistance+
       breakRisk*7;
 
 
-    /*
-      高R狀態
-    */
+    /* 高R狀態 */
 
     let breakoutStatus=
       "等待突破";
 
+
     let breakoutText=
+
       "目前尚未有效突破近期壓力，先觀察價格是否帶動能站上壓力區。";
 
 
-    if(breakoutConfirmed){
+    if(
+      breakoutConfirmed
+    ){
 
       breakoutStatus=
         "突破成立・等待回測";
 
+
       breakoutText=
+
         "價格已站上近期壓力。高 R 策略不追價，優先觀察是否回測突破區後仍能守住。";
+
     }
 
 
     if(
-      breakoutConfirmed &&
+
+      breakoutConfirmed
+
+      &&
+
       price>
       resistance+
       atr*1.5
+
     ){
 
       breakoutStatus=
         "距突破區偏遠";
 
+
       breakoutText=
+
         "價格已明顯離開突破區，風險報酬可能下降；等待新的結構或回測會更符合這套規則。";
+
     }
 
 
-    /*
-      回踩狀態
-    */
+    /* 回踩狀態 */
 
     let swingStatus=
       "等待回踩";
 
+
     if(
-      price>=swingEntryLow &&
-      price<=swingEntryHigh
+
+      price>=
+      swingEntryLow
+
+      &&
+
+      price<=
+      swingEntryHigh
+
     ){
 
       swingStatus=
         "進入支撐觀察區";
+
     }
 
 
     const change=
       Number(d.change);
 
+
     const changePercent=
-      Number(d.changePercent);
+      Number(
+        d.changePercent
+      );
+
+
+    const stockName=
+
+      d.name &&
+      d.name!==symbol
+
+      ? d.name
+
+      : (
+          STOCK_NAMES[symbol] ||
+          symbol
+        );
 
 
     $("result").innerHTML=`
@@ -1120,83 +1486,132 @@ async function analyzeStock(){
       <div class="card quote">
 
         <div class="small">
-          ${d.name || symbol}
-          ・${d.symbol || symbol}
+
+          ${stockName}
+          ・
+          ${d.symbol || symbol}
+
         </div>
+
 
         <div class="bigPrice">
+
           ${money(price)}
-          <span style="font-size:16px;color:#777">
+
+          <span
+            style="
+              font-size:16px;
+              color:#777;
+            ">
+
             ${d.currency || "TWD"}
+
           </span>
+
         </div>
 
-        <div class="${
-          change>=0
-          ? "green"
-          : "red"
-        }"
-        style="font-size:18px;font-weight:800">
+
+        <div
+          class="${
+            change>=0
+            ? "green"
+            : "red"
+          }"
+          style="
+            font-size:18px;
+            font-weight:800;
+          ">
 
           ${
             change>=0
             ? "+"
             : ""
-          }${num(change)}
+          }
 
-          （${
+          ${num(change)}
+
+          （
+
+          ${
             changePercent>=0
             ? "+"
             : ""
-          }${num(changePercent)}%）
+          }
+
+          ${num(changePercent)}%
+
+          ）
 
         </div>
+
 
         <div class="grid">
 
+
           <div class="metric">
+
             <div class="metricLabel">
               前收
             </div>
+
             <div class="metricValue">
               ${money(d.previousClose)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               當日高點
             </div>
+
             <div class="metricValue">
               ${money(d.dayHigh)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               當日低點
             </div>
+
             <div class="metricValue">
               ${money(d.dayLow)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               趨勢結構
             </div>
+
             <div class="metricValue">
               ${trend}
             </div>
+
           </div>
+
 
         </div>
 
-        <div class="small"
-             style="margin-top:14px">
+
+        <div
+          class="small"
+          style="margin-top:14px">
 
           資料來源：
-          ${d.liveSource || "市場行情資料"}
+          ${
+            d.liveSource ||
+            "市場行情資料"
+          }
 
         </div>
 
@@ -1209,61 +1624,87 @@ async function analyzeStock(){
           📊 技術指標
         </div>
 
+
         <div class="grid">
 
+
           <div class="metric">
+
             <div class="metricLabel">
               MA20
             </div>
+
             <div class="metricValue">
               ${money(ma20)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               MA60
             </div>
+
             <div class="metricValue">
               ${money(ma60)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               RSI 14
             </div>
+
             <div class="metricValue">
               ${num(rsi,1)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               MACD 動能
             </div>
+
             <div class="metricValue">
               ${num(macd,2)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               ATR
             </div>
+
             <div class="metricValue">
               ${money(atr)}
             </div>
+
           </div>
 
+
           <div class="metric">
+
             <div class="metricLabel">
               20日壓力
             </div>
+
             <div class="metricValue">
               ${money(resistance)}
             </div>
+
           </div>
+
 
         </div>
 
@@ -1276,38 +1717,58 @@ async function analyzeStock(){
           🧭 市場結構
         </div>
 
-        <div class="row">
-          趨勢：
-          <strong>${trend}</strong>
-        </div>
 
         <div class="row">
+
+          趨勢：
+          <strong>
+            ${trend}
+          </strong>
+
+        </div>
+
+
+        <div class="row">
+
           近期支撐：
+
           <strong>
             ${money(support)}
           </strong>
+
         </div>
 
+
         <div class="row">
+
           近期壓力：
+
           <strong>
             ${money(resistance)}
           </strong>
+
         </div>
 
+
         <div class="row">
+
           突破狀態：
-          <strong class="${
-            breakoutConfirmed
-            ? "green"
-            : "yellow"
-          }">
+
+          <strong
+            class="${
+              breakoutConfirmed
+              ? "green"
+              : "yellow"
+            }">
+
             ${
               breakoutConfirmed
               ? "已站上壓力"
               : "尚未突破"
             }
+
           </strong>
+
         </div>
 
       </div>
@@ -1319,120 +1780,180 @@ async function analyzeStock(){
           🟢 支撐回踩波段
         </div>
 
-        <div class="small"
-             style="margin:8px 0 12px">
+
+        <div
+          class="small"
+          style="margin:8px 0 12px">
+
           核心：順勢等待價格回到支撐附近，
           而不是在離支撐過遠的位置追價。
+
         </div>
 
+
         <div class="row">
+
           狀態：
+
           <strong>
             ${swingStatus}
           </strong>
+
         </div>
 
+
         <div class="row">
+
           入場觀察區：
+
           <strong>
+
             ${money(swingEntryLow)}
             ～
             ${money(swingEntryHigh)}
+
           </strong>
+
         </div>
 
+
         <div class="row">
+
           結構失效：
+
           <strong class="red">
+
             ${money(swingStop)}
+
           </strong>
+
         </div>
+
 
         <div class="row">
           TP1：
           ${money(swingTP1)}
         </div>
 
+
         <div class="row">
           TP2：
           ${money(swingTP2)}
         </div>
+
 
         <div class="row">
           TP3：
           ${money(swingTP3)}
         </div>
 
+
         <div class="row">
+
           趨勢延伸：
+
           若突破 TP3 後結構仍維持，
-          可用 ATR／前波低點方式追蹤，
-          而非固定猜最高點。
+          可使用 ATR／前波低點追蹤，
+          而不是固定猜最高點。
+
         </div>
 
       </div>
 
 
-      <div class="card strategy purpleBorder">
+      <div
+        class="card strategy purpleBorder">
 
         <div class="sectionTitle purple">
           🟣 高 R 突破回測
         </div>
 
-        <div class="small"
-             style="margin:8px 0 12px">
-          核心：先等突破成立，再觀察突破區是否轉為支撐。
+
+        <div
+          class="small"
+          style="margin:8px 0 12px">
+
+          核心：先等突破成立，
+          再觀察突破區是否轉為支撐。
           高 R 不代表高勝率。
+
         </div>
 
+
         <div class="row">
+
           狀態：
+
           <strong>
             ${breakoutStatus}
           </strong>
+
         </div>
 
+
         <div class="row">
+
           ${breakoutText}
+
         </div>
 
+
         <div class="row">
+
           突破關鍵價：
+
           <strong>
             ${money(resistance)}
           </strong>
+
         </div>
 
+
         <div class="row">
+
           回測觀察區：
+
           <strong>
+
             ${money(breakEntryLow)}
             ～
             ${money(breakEntryHigh)}
+
           </strong>
+
         </div>
 
+
         <div class="row">
+
           結構失效：
+
           <strong class="red">
+
             ${money(breakStop)}
+
           </strong>
+
         </div>
+
 
         <div class="row">
           2R：
           ${money(breakTP1)}
         </div>
 
+
         <div class="row">
           3R：
           ${money(breakTP2)}
         </div>
 
+
         <div class="row">
           5R：
           ${money(breakTP3)}
         </div>
+
 
         <div class="row">
           7R 延伸：
@@ -1446,6 +1967,7 @@ async function analyzeStock(){
 
   }catch(error){
 
+
     $("result").innerHTML=
 
       `<div class="card error">
@@ -1453,11 +1975,13 @@ async function analyzeStock(){
         ⚠️ ${error.message}
 
       </div>`;
+
   }
+
 }
 
 
-/* Enter 開始分析 */
+/* Enter 直接分析 */
 
 $("symbol")
 .addEventListener(
@@ -1471,7 +1995,7 @@ $("symbol")
 );
 
 
-/* 第一次開啟網站立即掃描 */
+/* 網站打開立即掃描 */
 
 loadRadar(false);
 
