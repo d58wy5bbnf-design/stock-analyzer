@@ -1,2004 +1,1785 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<title>妖子平台2.1</title>
+  <title>妖子平台2.2</title>
 
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="妖子平台2.1">
+  <meta name="theme-color" content="#050505" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="妖子平台2.2" />
 
-<style>
-*{
-  box-sizing:border-box;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-body{
-  margin:0;
-  background:#000;
-  color:#f5f5f5;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
+    :root {
+      --bg: #050505;
+      --card: #0d0d0f;
+      --card2: #121214;
+      --border: #242428;
+      --text: #f5f5f7;
+      --muted: #8d8d95;
+      --green: #72e2b6;
+      --red: #ff6b75;
+      --yellow: #ffd76a;
+      --purple: #bd8cff;
+      --blue: #75b8ff;
+      --orange: #ffad66;
+    }
 
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:42px 18px 100px;
-}
+    html {
+      background: var(--bg);
+    }
 
-h1{
-  font-size:38px;
-  margin:0 0 12px;
-}
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top, rgba(20, 45, 38, 0.18), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        "PingFang TC",
+        "Noto Sans TC",
+        sans-serif;
+      min-height: 100vh;
+    }
 
-.subtitle{
-  color:#888;
-  font-size:18px;
-  line-height:1.7;
-  margin-bottom:30px;
-}
+    button,
+    input {
+      font: inherit;
+    }
 
-.card{
-  background:#0b0b0b;
-  border:1px solid #252525;
-  border-radius:22px;
-  padding:20px;
-  margin-bottom:18px;
-}
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.sectionTitle{
-  font-size:22px;
-  font-weight:800;
-}
+    .app {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding:
+        calc(22px + env(safe-area-inset-top))
+        16px
+        calc(60px + env(safe-area-inset-bottom));
+    }
 
-.small{
-  color:#777;
-  font-size:13px;
-  line-height:1.6;
-}
+    .header {
+      margin-bottom: 22px;
+    }
 
-.green{color:#46ddb2;}
-.orange{color:#ff9c46;}
-.yellow{color:#ffd75e;}
-.red{color:#ff6969;}
-.blue{color:#71a7ff;}
-.purple{color:#bd8cff;}
+    .brand-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
 
-button{
-  border:0;
-  border-radius:15px;
-  padding:13px 16px;
-  font-size:15px;
-  font-weight:800;
-  cursor:pointer;
-}
+    .brand {
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -1.3px;
+    }
 
-.search{
-  display:flex;
-  gap:10px;
-  margin:18px 0 10px;
-}
+    .version {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid rgba(114, 226, 182, 0.25);
+      background: rgba(114, 226, 182, 0.08);
+      padding: 6px 9px;
+      border-radius: 999px;
+    }
 
-input{
-  min-width:0;
-  flex:1;
-  background:#0b0b0b;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:18px;
-  padding:18px;
-  font-size:18px;
-  outline:none;
-}
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 9px;
+      line-height: 1.55;
+    }
 
-input:focus{
-  border-color:#46ddb2;
-}
+    .card {
+      background: rgba(13, 13, 15, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+    }
 
-.analyze{
-  background:#46ddb2;
-  color:#00291e;
-  min-width:112px;
-}
+    .search-card {
+      padding: 14px;
+    }
 
-.radarTop{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:flex-start;
-}
+    .search-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 9px 3px;
+    }
 
-.refresh{
-  background:#171717;
-  color:#eee;
-  border:1px solid #333;
-  white-space:nowrap;
-}
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      gap: 9px;
+    }
 
-.radarItem{
-  background:#111;
-  border:1px solid #272727;
-  border-radius:18px;
-  padding:17px;
-  margin-top:13px;
-  cursor:pointer;
-}
+    .search-input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid #29292d;
+      border-radius: 14px;
+      outline: none;
+      background: #09090a;
+      color: white;
+      padding: 0 15px;
+      font-size: 16px;
+    }
 
-.radarHead{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-}
+    .search-input:focus {
+      border-color: rgba(114, 226, 182, 0.6);
+      box-shadow: 0 0 0 3px rgba(114, 226, 182, 0.08);
+    }
 
-.symbolLine{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
+    .primary-btn {
+      border: 0;
+      border-radius: 14px;
+      color: #06120d;
+      background: var(--green);
+      font-weight: 900;
+      cursor: pointer;
+    }
 
-.symbol{
-  font-size:21px;
-  font-weight:850;
-}
+    .primary-btn:active {
+      transform: scale(0.98);
+    }
 
-.stockName{
-  font-size:16px;
-  color:#aaa;
-  font-weight:700;
-}
+    .section {
+      margin-top: 24px;
+    }
 
-.score{
-  font-size:16px;
-  font-weight:800;
-}
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 2px 12px;
+    }
 
-.metrics{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:12px;
-}
+    .section-title {
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
 
-.tag{
-  background:#191919;
-  border:1px solid #292929;
-  padding:7px 9px;
-  border-radius:10px;
-  font-size:13px;
-  color:#bbb;
-}
+    .section-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
 
-.reason{
-  color:#aaa;
-  font-size:14px;
-  line-height:1.7;
-  margin-top:11px;
-}
+    .refresh-btn {
+      border: 1px solid #2b2b30;
+      color: #d8d8dc;
+      background: #111113;
+      border-radius: 12px;
+      padding: 9px 11px;
+      white-space: nowrap;
+      font-size: 12px;
+      cursor: pointer;
+    }
 
-.quote{
-  margin-top:18px;
-}
+    .refresh-btn:disabled {
+      opacity: 0.5;
+    }
 
-.bigPrice{
-  font-size:42px;
-  font-weight:850;
-  margin:5px 0;
-}
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  margin-top:14px;
-}
+    .stat {
+      background: #0b0b0d;
+      border: 1px solid #202024;
+      border-radius: 13px;
+      padding: 11px 8px;
+      text-align: center;
+    }
 
-.metric{
-  background:#111;
-  border:1px solid #222;
-  border-radius:14px;
-  padding:13px;
-}
+    .stat-value {
+      font-weight: 900;
+      font-size: 16px;
+    }
 
-.metricLabel{
-  color:#777;
-  font-size:12px;
-}
+    .stat-label {
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 4px;
+    }
 
-.metricValue{
-  font-size:17px;
-  font-weight:750;
-  margin-top:5px;
-}
+    .long-grid,
+    .radar-grid {
+      display: grid;
+      gap: 10px;
+    }
 
-.strategy{
-  border-left:3px solid #46ddb2;
-}
+    .long-card,
+    .radar-card {
+      border: 1px solid #242429;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,255,255,0.025),
+          transparent 55%
+        ),
+        #0e0e10;
+      border-radius: 17px;
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
 
-.strategy.purpleBorder{
-  border-left-color:#bd8cff;
-}
+    .long-card:active,
+    .radar-card:active {
+      transform: scale(0.985);
+      background: #141417;
+    }
 
-.row{
-  padding:9px 0;
-  border-bottom:1px solid #1d1d1d;
-  line-height:1.6;
-}
+    .long-card.priority {
+      border-color: rgba(114, 226, 182, 0.28);
+      background:
+        radial-gradient(circle at top right, rgba(114,226,182,0.09), transparent 42%),
+        #0e0e10;
+    }
 
-.row:last-child{
-  border-bottom:0;
-}
+    .stock-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
 
-.loading{
-  color:#999;
-  padding:20px 0;
-  text-align:center;
-}
+    .stock-code {
+      font-size: 18px;
+      font-weight: 900;
+    }
 
-.error{
-  color:#ff6969;
-  padding:15px 0;
-  line-height:1.6;
-}
+    .stock-name {
+      color: #aaaab1;
+      font-size: 12px;
+      margin-top: 3px;
+    }
 
-.disclaimer{
-  color:#666;
-  font-size:12px;
-  line-height:1.7;
-  margin-top:25px;
-}
+    .score {
+      text-align: right;
+    }
 
-@media(max-width:600px){
+    .score-number {
+      font-size: 22px;
+      font-weight: 950;
+      line-height: 1;
+    }
 
-  .container{
-    padding-top:36px;
-  }
+    .score-label {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
 
-  h1{
-    font-size:34px;
-  }
+    .stock-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 12px;
+    }
 
-  .search{
-    align-items:stretch;
-  }
+    .stock-price {
+      font-size: 21px;
+      font-weight: 900;
+    }
 
-  input{
-    width:100%;
-  }
+    .up {
+      color: var(--green);
+    }
 
-  .analyze{
-    min-width:105px;
-  }
+    .down {
+      color: var(--red);
+    }
 
-  .bigPrice{
-    font-size:38px;
-  }
+    .flat {
+      color: #d4d4d8;
+    }
 
-  .radarTop{
-    gap:8px;
-  }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 11px;
+    }
 
-  .refresh{
-    padding:11px 12px;
-  }
-}
-</style>
+    .chip {
+      background: #17171a;
+      border: 1px solid #25252a;
+      color: #c4c4ca;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+    }
+
+    .chip.green {
+      color: var(--green);
+      border-color: rgba(114,226,182,0.18);
+      background: rgba(114,226,182,0.06);
+    }
+
+    .chip.yellow {
+      color: var(--yellow);
+      border-color: rgba(255,215,106,0.18);
+      background: rgba(255,215,106,0.06);
+    }
+
+    .chip.red {
+      color: var(--red);
+      border-color: rgba(255,107,117,0.18);
+      background: rgba(255,107,117,0.06);
+    }
+
+    .reason-box {
+      margin-top: 11px;
+      color: #b8b8bf;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .warning {
+      margin-top: 8px;
+      color: var(--yellow);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .levels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .level-pill {
+      font-size: 10px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #171719;
+      border: 1px solid #27272c;
+      color: #c8c8cd;
+    }
+
+    .analysis {
+      scroll-margin-top: 15px;
+    }
+
+    .analysis-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 32px 15px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .analysis-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .analysis-symbol {
+      font-size: 25px;
+      font-weight: 950;
+    }
+
+    .analysis-name {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .analysis-price {
+      font-size: 26px;
+      font-weight: 950;
+      text-align: right;
+    }
+
+    .analysis-change {
+      text-align: right;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      background: #101012;
+      border: 1px solid #232327;
+      border-radius: 13px;
+      padding: 11px;
+    }
+
+    .metric-name {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .metric-value {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .strategy {
+      margin-top: 12px;
+      border-radius: 17px;
+      padding: 14px;
+      border: 1px solid #28282e;
+      background: #101012;
+    }
+
+    .strategy.green-strategy {
+      border-color: rgba(114,226,182,0.2);
+    }
+
+    .strategy.purple-strategy {
+      border-color: rgba(189,140,255,0.22);
+    }
+
+    .strategy-title {
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .strategy-status {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .strategy-item {
+      background: #0b0b0d;
+      border-radius: 10px;
+      padding: 9px;
+    }
+
+    .strategy-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .strategy-item strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .loading {
+      padding: 28px 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .error {
+      color: var(--red);
+      border: 1px solid rgba(255,107,117,0.2);
+      background: rgba(255,107,117,0.05);
+      padding: 13px;
+      border-radius: 13px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .notice {
+      color: #73737b;
+      font-size: 10px;
+      line-height: 1.7;
+      margin: 20px 3px 0;
+    }
+
+    .footer {
+      text-align: center;
+      color: #55555d;
+      font-size: 10px;
+      margin-top: 28px;
+    }
+
+    @media (min-width: 700px) {
+      .long-grid,
+      .radar-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .metric-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .strategy-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <main class="app">
 
-<div class="container">
+    <header class="header">
+      <div class="brand-row">
+        <div>
+          <div class="brand">妖子平台</div>
+          <div class="subtitle">
+            台股即時異動・規則式技術分析
+          </div>
+        </div>
 
-<h1>妖子平台2.1</h1>
+        <div class="version">2.2 LIVE</div>
+      </div>
+    </header>
 
-<div class="subtitle">
-即時行情 × 雙策略波段技術分析<br>
-支撐回踩｜高 R 突破回測｜異動雷達
-</div>
+    <!-- 搜尋 -->
+    <section class="card search-card">
+      <div class="search-label">
+        個股技術分析
+      </div>
 
+      <div class="search-row">
+        <input
+          id="symbolInput"
+          class="search-input"
+          inputmode="numeric"
+          maxlength="6"
+          placeholder="輸入台股代號，例如 2330"
+          autocomplete="off"
+        />
 
-<!-- =========================
-     搜尋移到最上面
-========================= -->
+        <button
+          class="primary-btn"
+          onclick="analyzeStock()"
+        >
+          分析
+        </button>
+      </div>
+    </section>
 
-<div class="card">
+    <!-- 即時狀態 -->
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">
+            ⚡ 即時市場掃描
+          </div>
+          <div
+            id="updateText"
+            class="section-subtitle"
+          >
+            正在連線 FinMind…
+          </div>
+        </div>
 
-  <div class="sectionTitle">
-    🔎 個股完整分析
-  </div>
+        <button
+          id="refreshBtn"
+          class="refresh-btn"
+          onclick="loadRadar(true)"
+        >
+          ↻ 立即掃描
+        </button>
+      </div>
 
-  <div class="search">
+      <div class="status-strip">
+        <div class="stat">
+          <div
+            id="scannedCount"
+            class="stat-value"
+          >
+            --
+          </div>
+          <div class="stat-label">
+            掃描股票
+          </div>
+        </div>
 
-    <input
-      id="symbol"
-      placeholder="輸入台股代號，例如 2330"
-      inputmode="numeric"
-      autocomplete="off">
+        <div class="stat">
+          <div
+            id="radarCount"
+            class="stat-value"
+          >
+            --
+          </div>
+          <div class="stat-label">
+            異動
+          </div>
+        </div>
 
-    <button
-      class="analyze"
-      onclick="analyzeStock()">
-      開始分析
-    </button>
+        <div class="stat">
+          <div
+            id="longCount"
+            class="stat-value"
+          >
+            --
+          </div>
+          <div class="stat-label">
+            做多觀察
+          </div>
+        </div>
 
-  </div>
+        <div class="stat">
+          <div
+            id="countdown"
+            class="stat-value"
+          >
+            05:00
+          </div>
+          <div class="stat-label">
+            下次更新
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <div class="small">
-    可直接輸入股票代號，或點擊下方異動雷達股票查看完整分析。
-  </div>
-
-</div>
-
-
-<!-- =========================
-     異動雷達
-========================= -->
-
-<div class="card">
-
-  <div class="radarTop">
-
-    <div>
-
-      <div class="sectionTitle">
-        🔥 今日異動雷達
+    <!-- 今日做多觀察 -->
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">
+            🚀 今日做多觀察
+          </div>
+          <div class="section-subtitle">
+            即時量價、強度與盤中位置綜合篩選
+          </div>
+        </div>
       </div>
 
       <div
-        class="small"
-        id="radarStatus">
-        正在載入今日掃描結果…
+        id="longWatch"
+        class="long-grid"
+      >
+        <div class="loading">
+          正在掃描盤中訊號…
+        </div>
+      </div>
+    </section>
+
+    <!-- 異動雷達 -->
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="section-title">
+            🔥 即時異動雷達
+          </div>
+          <div class="section-subtitle">
+            分數越高代表符合的異動條件越多
+          </div>
+        </div>
       </div>
 
       <div
-        class="small"
-        id="countdown">
+        id="radarGrid"
+        class="radar-grid"
+      >
+        <div class="loading">
+          正在載入異動雷達…
+        </div>
+      </div>
+    </section>
+
+    <!-- 個股分析 -->
+    <section
+      id="analysisSection"
+      class="section analysis"
+    >
+      <div class="section-head">
+        <div>
+          <div class="section-title">
+            📊 個股技術分析
+          </div>
+          <div class="section-subtitle">
+            支撐回踩＋高 R 突破回測
+          </div>
+        </div>
       </div>
 
+      <div
+        id="analysisResult"
+        class="card"
+      >
+        <div class="analysis-empty">
+          輸入股票代號，或直接點擊上方雷達股票。<br>
+          系統會計算趨勢、MA、RSI、MACD、ATR、
+          支撐、壓力與兩套策略觀察區。
+        </div>
+      </div>
+    </section>
+
+    <div class="notice">
+      本平台為規則式技術分析與市場異動篩選工具。
+      「異動分數」代表符合技術條件的程度，
+      不代表未來上漲機率，也不是買賣保證。
+      「做多觀察」為技術條件篩選結果，
+      實際交易仍需自行評估風險。
     </div>
 
-
-    <button
-      class="refresh"
-      onclick="loadRadar(true)">
-      ↻ 立即掃描
-    </button>
-
-  </div>
-
-
-  <div id="radarList">
-
-    <div class="loading">
-      掃描中…
+    <div class="footer">
+      妖子平台 2.2 · FinMind Market Data
     </div>
 
-  </div>
-
-</div>
-
-
-<!-- 分析結果 -->
-
-<div id="result"></div>
-
-
-<div class="disclaimer">
-本平台為規則式技術分析與異動條件偵測工具。
-異動分數代表符合技術條件的程度，
-不代表未來上漲機率，亦不構成買賣建議。
-市場存在風險，請自行評估。
-</div>
-
-</div>
-
+  </main>
 
 <script>
+  const REFRESH_SECONDS = 300;
 
-/* =========================
-   股票中文名稱
-========================= */
+  let countdownSeconds = REFRESH_SECONDS;
+  let countdownTimer = null;
+  let currentRadarData = null;
 
-const STOCK_NAMES={
+  const STOCK_NAMES = {
+    "2330":"台積電",
+    "2303":"聯電",
+    "2454":"聯發科",
+    "2317":"鴻海",
+    "2382":"廣達",
+    "3231":"緯創",
+    "6669":"緯穎",
+    "3017":"奇鋐",
+    "3324":"雙鴻",
+    "2345":"智邦",
+    "3661":"世芯-KY",
+    "3443":"創意",
+    "3035":"智原",
+    "2376":"技嘉",
+    "2377":"微星",
+    "2357":"華碩",
+    "2356":"英業達",
+    "2603":"長榮",
+    "2609":"陽明",
+    "2615":"萬海",
+    "2881":"富邦金",
+    "2882":"國泰金",
+    "2891":"中信金",
+    "1519":"華城",
+    "1513":"中興電",
+    "1503":"士電",
+    "2408":"南亞科",
+    "2344":"華邦電",
+    "2337":"旺宏",
+    "3037":"欣興",
+    "8046":"南電",
+    "3189":"景碩",
+    "2368":"金像電",
+    "2383":"台光電",
+    "6274":"台燿",
+    "3711":"日月光投控",
+    "2308":"台達電",
+    "2327":"國巨"
+  };
 
-  "2330":"台積電",
-  "2303":"聯電",
-  "2454":"聯發科",
-  "2317":"鴻海",
-  "2382":"廣達",
-  "3231":"緯創",
-  "6669":"緯穎",
-  "3017":"奇鋐",
-  "3324":"雙鴻",
-  "2345":"智邦",
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
-  "3661":"世芯-KY",
-  "3443":"創意",
-  "3035":"智原",
-  "2376":"技嘉",
-  "2377":"微星",
-  "2357":"華碩",
-  "2356":"英業達",
+  function fmt(value, digits = 2) {
+    const n = Number(value);
 
-  "2603":"長榮",
-  "2609":"陽明",
-  "2615":"萬海",
-
-  "2881":"富邦金",
-  "2882":"國泰金",
-  "2891":"中信金",
-
-  "1519":"華城",
-  "1513":"中興電",
-  "1503":"士電",
-
-  "2408":"南亞科",
-  "2344":"華邦電",
-  "2337":"旺宏",
-
-  "3037":"欣興",
-  "8046":"南電",
-  "3189":"景碩",
-
-  "2368":"金像電",
-  "2383":"台光電",
-  "6274":"台燿",
-
-  "3711":"日月光投控",
-  "2308":"台達電",
-  "2327":"國巨"
-
-};
-
-
-/* =========================
-   基本工具
-========================= */
-
-const $=id=>
-  document.getElementById(id);
-
-
-function num(v,d=2){
-
-  const n=Number(v);
-
-  if(!Number.isFinite(n))
-    return "--";
-
-  return n.toFixed(d);
-}
-
-
-function money(v){
-
-  const n=Number(v);
-
-  if(!Number.isFinite(n))
-    return "--";
-
-  if(n>=1000)
-    return n.toFixed(0);
-
-  return n.toFixed(2);
-}
-
-
-/* =========================
-   雷達
-========================= */
-
-let nextRefresh=
-  Date.now()+300000;
-
-let radarLoading=false;
-
-
-async function loadRadar(manual=false){
-
-  if(radarLoading)
-    return;
-
-  radarLoading=true;
-
-
-  $("radarStatus").textContent=
-    manual
-    ? "正在重新掃描…"
-    : "正在取得異動雷達…";
-
-
-  try{
-
-    const response=
-      await fetch(
-        "/api/radar?t="+Date.now(),
-        {
-          cache:"no-store"
-        }
-      );
-
-
-    const data=
-      await response.json();
-
-
-    if(!response.ok){
-
-      throw new Error(
-        data.error ||
-        "雷達讀取失敗"
-      );
-
+    if (!Number.isFinite(n)) {
+      return "--";
     }
 
-
-    renderRadar(data);
-
-
-    nextRefresh=
-      Date.now()+300000;
-
-
-  }catch(error){
-
-
-    $("radarList").innerHTML=
-
-      `<div class="error">
-        ⚠️ ${error.message}
-      </div>`;
-
-
-    $("radarStatus").textContent=
-      "雷達暫時無法取得";
-
-
-  }finally{
-
-    radarLoading=false;
-
+    return n.toLocaleString("zh-TW", {
+      maximumFractionDigits: digits
+    });
   }
 
-}
+  function signed(value) {
+    const n = Number(value);
 
+    if (!Number.isFinite(n)) {
+      return "--";
+    }
 
-/* =========================
-   顯示雷達
-========================= */
+    return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+  }
 
-function renderRadar(data){
+  function changeClass(value) {
+    const n = Number(value);
 
-  const radar=
-    Array.isArray(data.radar)
-    ? data.radar
-    : [];
+    if (n > 0) return "up";
+    if (n < 0) return "down";
 
+    return "flat";
+  }
 
-  const now=
-    new Date();
+  function stockName(stock) {
+    return (
+      stock?.name ||
+      STOCK_NAMES[String(stock?.symbol)] ||
+      ""
+    );
+  }
 
+  function formatTime(value) {
+    if (!value) return "--";
 
-  $("radarStatus").textContent=
-
-    `已掃描 ${data.scanned ?? "--"} 檔｜顯示 ${radar.length} 檔｜最後更新 ${
-      now.toLocaleTimeString(
+    try {
+      return new Date(value).toLocaleTimeString(
         "zh-TW",
         {
-          hour:"2-digit",
-          minute:"2-digit"
+          timeZone: "Asia/Taipei",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
         }
-      )
-    }`;
-
-
-  if(!radar.length){
-
-    $("radarList").innerHTML=
-
-      `<div class="loading">
-        今日暫無明顯異動訊號
-      </div>`;
-
-    return;
-
+      );
+    } catch {
+      return "--";
+    }
   }
 
+  function resetCountdown() {
+    countdownSeconds = REFRESH_SECONDS;
+    renderCountdown();
+  }
 
-  $("radarList").innerHTML=
+  function renderCountdown() {
+    const m = Math.floor(countdownSeconds / 60);
+    const s = countdownSeconds % 60;
 
-    radar.map(x=>{
+    document.getElementById("countdown").textContent =
+      `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
 
+  function startCountdown() {
+    if (countdownTimer) {
+      clearInterval(countdownTimer);
+    }
 
-      let levelClass="green";
+    countdownTimer = setInterval(() => {
+      countdownSeconds -= 1;
 
+      if (countdownSeconds <= 0) {
+        countdownSeconds = REFRESH_SECONDS;
+        loadRadar(false);
+      }
 
-      if(x.level==="強異動")
-        levelClass="red";
+      renderCountdown();
+    }, 1000);
+  }
 
-      else if(x.level==="異動")
-        levelClass="orange";
+  function openStock(symbol) {
+    const input = document.getElementById("symbolInput");
 
-      else if(x.level==="蓄勢")
-        levelClass="yellow";
+    input.value = symbol;
 
+    analyzeStock();
 
-      const reasons=
-        Array.isArray(x.reasons)
-        ? x.reasons
-        : [];
+    setTimeout(() => {
+      document
+        .getElementById("analysisSection")
+        .scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+    }, 150);
+  }
 
+  function renderLongWatch(list) {
+    const root = document.getElementById("longWatch");
 
-      const warnings=
-        Array.isArray(x.warnings)
-        ? x.warnings
-        : [];
+    if (!Array.isArray(list) || !list.length) {
+      root.innerHTML = `
+        <div class="card">
+          <div class="analysis-empty">
+            目前沒有股票符合做多觀察條件。
+          </div>
+        </div>
+      `;
+      return;
+    }
 
+    root.innerHTML = list.map(stock => {
+      const name = stockName(stock);
 
-      const stockName=
-        STOCK_NAMES[x.symbol] ||
-        "";
+      const reasons =
+        Array.isArray(stock.reasons)
+          ? stock.reasons.slice(0, 4)
+          : [];
 
+      const warnings =
+        Array.isArray(stock.warnings)
+          ? stock.warnings
+          : [];
+
+      const priority =
+        stock.longStatus === "優先觀察";
 
       return `
+        <article
+          class="long-card ${priority ? "priority" : ""}"
+          onclick="openStock('${escapeHTML(stock.symbol)}')"
+        >
+          <div class="stock-top">
+            <div>
+              <div class="stock-code">
+                ${escapeHTML(stock.longEmoji || "🚀")}
+                ${escapeHTML(stock.symbol)}
+              </div>
 
-      <div
-        class="radarItem"
-        onclick="openStock('${x.symbol}')">
-
-
-        <div class="radarHead">
-
-
-          <div>
-
-
-            <div class="symbolLine">
-
-              <span class="symbol">
-
-                ${x.emoji || "📊"}
-                ${x.symbol}
-
-              </span>
-
-
-              <span class="stockName">
-
-                ${stockName}
-
-              </span>
-
+              <div class="stock-name">
+                ${escapeHTML(name || "台股")}
+                · ${escapeHTML(stock.longStatus || "")}
+              </div>
             </div>
-
-
-            <div
-              class="${levelClass}"
-              style="
-                margin-top:5px;
-                font-weight:800;
-              ">
-
-              ${x.level || "觀察"}
-
-            </div>
-
-
-          </div>
-
-
-          <div style="text-align:right">
-
 
             <div class="score">
-
-              異動分數
-              ${num(x.score,0)}
-
+              <div class="score-number">
+                ${escapeHTML(stock.score)}
+              </div>
+              <div class="score-label">
+                異動分數
+              </div>
             </div>
-
-
-            <div
-              class="${
-                Number(x.changePercent)>=0
-                ? "green"
-                : "red"
-              }"
-              style="margin-top:5px">
-
-              ${
-                Number(x.changePercent)>=0
-                ? "+"
-                : ""
-              }
-
-              ${num(x.changePercent)}%
-
-            </div>
-
-
           </div>
 
+          <div class="stock-price-row">
+            <div class="stock-price">
+              ${fmt(stock.price)}
+            </div>
 
-        </div>
+            <div class="${changeClass(stock.changePercent)}">
+              ${signed(stock.changePercent)}
+            </div>
+          </div>
 
+          <div class="chips">
+            <div class="chip green">
+              量比 ${fmt(stock.volumeRatio, 1)}x
+            </div>
 
-        <div class="metrics">
+            <div class="chip">
+              高點 ${fmt(stock.high)}
+            </div>
 
+            <div class="chip">
+              位置 ${fmt(stock.dayPosition, 0)}%
+            </div>
 
-          <span class="tag">
+            <div class="chip">
+              總量 ${fmt(stock.totalVolume, 0)}
+            </div>
+          </div>
 
-            股價
-            ${money(x.price)}
-
-          </span>
-
-
-          <span class="tag">
-
-            量比
-            ${num(x.volumeRatio,1)}x
-
-          </span>
-
-
-          <span class="tag">
-
-            RSI
-            ${num(x.rsi,0)}
-
-          </span>
-
-
-          <span class="tag">
-
-            ${
-              x.breakout
-              ? "✓ 已突破20日高"
-              : "距20日高 "+num(x.distanceToHigh,1)+"%"
-            }
-
-          </span>
-
-
-        </div>
-
-
-        <div class="reason">
-
-
-          ${
-            reasons.length
-            ? "✓ "+reasons.join("<br>✓ ")
-            : "目前為條件觀察"
-          }
-
+          <div class="reason-box">
+            ${reasons.length
+              ? reasons.map(x => `✓ ${escapeHTML(x)}`).join("<br>")
+              : "符合盤中量價條件"}
+          </div>
 
           ${
             warnings.length
-            ?
-
-            `<br>
-             <span class="orange">
-             ⚠ ${warnings.join("<br>⚠ ")}
-             </span>`
-
-            : ""
+              ? `
+                <div class="warning">
+                  ⚠️ ${warnings.map(escapeHTML).join("・")}
+                </div>
+              `
+              : ""
           }
 
+          <div class="levels">
+            <div class="level-pill">
+              觀察區 ${fmt(stock.observationLow)}
+              ～ ${fmt(stock.observationHigh)}
+            </div>
 
+            <div class="level-pill">
+              失效 ${fmt(stock.invalidation)}
+            </div>
+
+            <div class="level-pill">
+              TP1 ${fmt(stock.target1)}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  function renderRadar(list) {
+    const root = document.getElementById("radarGrid");
+
+    if (!Array.isArray(list) || !list.length) {
+      root.innerHTML = `
+        <div class="card">
+          <div class="analysis-empty">
+            目前沒有明顯異動訊號。
+          </div>
         </div>
+      `;
+      return;
+    }
 
+    root.innerHTML = list.map(stock => {
+      const name = stockName(stock);
 
-        <div
-          class="small"
-          style="margin-top:10px">
+      const reasons =
+        Array.isArray(stock.reasons)
+          ? stock.reasons.slice(0, 3)
+          : [];
 
-          點擊查看
-          ${stockName || x.symbol}
-          完整雙策略分析 →
+      return `
+        <article
+          class="radar-card"
+          onclick="openStock('${escapeHTML(stock.symbol)}')"
+        >
+          <div class="stock-top">
+            <div>
+              <div class="stock-code">
+                ${escapeHTML(stock.emoji || "🟡")}
+                ${escapeHTML(stock.symbol)}
+              </div>
 
+              <div class="stock-name">
+                ${escapeHTML(name || "台股")}
+                · ${escapeHTML(stock.level || "")}
+              </div>
+            </div>
+
+            <div class="score">
+              <div class="score-number">
+                ${escapeHTML(stock.score)}
+              </div>
+              <div class="score-label">
+                SCORE
+              </div>
+            </div>
+          </div>
+
+          <div class="stock-price-row">
+            <div class="stock-price">
+              ${fmt(stock.price)}
+            </div>
+
+            <div class="${changeClass(stock.changePercent)}">
+              ${signed(stock.changePercent)}
+            </div>
+          </div>
+
+          <div class="chips">
+            <div class="chip">
+              量比 ${fmt(stock.volumeRatio, 1)}x
+            </div>
+
+            <div class="chip">
+              高 ${fmt(stock.high)}
+            </div>
+
+            <div class="chip">
+              低 ${fmt(stock.low)}
+            </div>
+
+            <div class="chip">
+              位置 ${fmt(stock.dayPosition, 0)}%
+            </div>
+          </div>
+
+          <div class="reason-box">
+            ${reasons.length
+              ? reasons.map(x => `• ${escapeHTML(x)}`).join("<br>")
+              : "盤中異動條件成立"}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function loadRadar(manual = false) {
+    const button =
+      document.getElementById("refreshBtn");
+
+    button.disabled = true;
+    button.textContent = "掃描中…";
+
+    try {
+      const response = await fetch(
+        `/api/radar?t=${Date.now()}`,
+        {
+          cache: "no-store"
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(
+          data.error || "雷達資料取得失敗"
+        );
+      }
+
+      currentRadarData = data;
+
+      document.getElementById(
+        "scannedCount"
+      ).textContent =
+        fmt(data.scanned, 0);
+
+      document.getElementById(
+        "radarCount"
+      ).textContent =
+        fmt(data.found, 0);
+
+      document.getElementById(
+        "longCount"
+      ).textContent =
+        fmt(data.longWatchCount, 0);
+
+      document.getElementById(
+        "updateText"
+      ).textContent =
+        `FinMind Sponsor 即時資料 · 更新 ${formatTime(data.updatedAt)}`;
+
+      renderLongWatch(data.longWatch || []);
+      renderRadar(data.radar || []);
+
+      resetCountdown();
+
+    } catch (error) {
+      document.getElementById(
+        "updateText"
+      ).textContent =
+        "即時雷達連線失敗";
+
+      document.getElementById(
+        "longWatch"
+      ).innerHTML = `
+        <div class="error">
+          ${escapeHTML(error.message)}
         </div>
-
-
-      </div>
-
       `;
 
-
-    }).join("");
-
-}
-
-
-/* =========================
-   五分鐘倒數
-========================= */
-
-setInterval(()=>{
-
-  const remain=
-    Math.max(
-      0,
-      nextRefresh-Date.now()
-    );
-
-
-  const totalSeconds=
-    Math.floor(
-      remain/1000
-    );
-
-
-  const min=
-    Math.floor(
-      totalSeconds/60
-    );
-
-
-  const sec=
-    totalSeconds%60;
-
-
-  $("countdown").textContent=
-
-    `每 5 分鐘自動更新｜下次掃描 ${
-      min
-    }:${
-      String(sec).padStart(2,"0")
-    }`;
-
-},1000);
-
-
-/* =========================
-   每五分鐘自動更新
-========================= */
-
-setInterval(()=>{
-
-  loadRadar(false);
-
-},300000);
-
-
-/* =========================
-   點擊雷達股票
-========================= */
-
-function openStock(symbol){
-
-  $("symbol").value=
-    symbol;
-
-
-  analyzeStock();
-
-
-  setTimeout(()=>{
-
-    $("result")
-      .scrollIntoView({
-        behavior:"smooth"
-      });
-
-  },150);
-
-}
-
-
-/* =========================
-   技術指標
-========================= */
-
-function SMA(arr,p){
-
-  if(arr.length<p)
-    return null;
-
-
-  const a=
-    arr.slice(-p);
-
-
-  return a.reduce(
-    (s,v)=>s+v,
-    0
-  )/p;
-
-}
-
-
-function EMA(arr,p){
-
-  if(!arr.length)
-    return null;
-
-
-  const k=
-    2/(p+1);
-
-
-  let value=
-    arr[0];
-
-
-  for(
-    let i=1;
-    i<arr.length;
-    i++
-  ){
-
-    value=
-      arr[i]*k+
-      value*(1-k);
-
+      document.getElementById(
+        "radarGrid"
+      ).innerHTML = `
+        <div class="error">
+          ${escapeHTML(error.message)}
+        </div>
+      `;
+    } finally {
+      button.disabled = false;
+      button.textContent = "↻ 立即掃描";
+    }
   }
 
+  function SMA(values, period) {
+    if (!Array.isArray(values) ||
+        values.length < period) {
+      return NaN;
+    }
 
-  return value;
+    const part = values.slice(-period);
 
-}
-
-
-function RSI(arr,p=14){
-
-  if(arr.length<p+1)
-    return null;
-
-
-  let gains=0;
-  let losses=0;
-
-
-  for(
-    let i=arr.length-p;
-    i<arr.length;
-    i++
-  ){
-
-    const diff=
-      arr[i]-
-      arr[i-1];
-
-
-    if(diff>0)
-      gains+=diff;
-
-    else
-      losses-=diff;
-
-  }
-
-
-  if(losses===0)
-    return 100;
-
-
-  const rs=
-    (gains/p)/
-    (losses/p);
-
-
-  return 100-
-    100/(1+rs);
-
-}
-
-
-function ATR(rows,p=14){
-
-  if(rows.length<p+1)
-    return null;
-
-
-  let tr=[];
-
-
-  for(
-    let i=rows.length-p;
-    i<rows.length;
-    i++
-  ){
-
-    const current=
-      rows[i];
-
-
-    const prev=
-      rows[i-1];
-
-
-    tr.push(
-
-      Math.max(
-
-        current.high-
-        current.low,
-
-        Math.abs(
-          current.high-
-          prev.close
-        ),
-
-        Math.abs(
-          current.low-
-          prev.close
-        )
-
-      )
-
+    return (
+      part.reduce((a, b) => a + Number(b), 0) /
+      period
     );
-
   }
 
-
-  return tr.reduce(
-    (a,b)=>a+b,
-    0
-  )/tr.length;
-
-}
-
-
-/* =========================
-   個股分析
-========================= */
-
-async function analyzeStock(){
-
-  const symbol=
-    $("symbol")
-      .value
-      .trim()
-      .toUpperCase();
-
-
-  if(!symbol)
-    return;
-
-
-  $("result").innerHTML=
-
-    `<div class="card loading">
-
-      正在分析
-      ${symbol}
-      ${STOCK_NAMES[symbol] || ""}
-      …
-
-    </div>`;
-
-
-  try{
-
-
-    const response=
-      await fetch(
-
-        `/api/stock?symbol=${
-          encodeURIComponent(symbol)
-        }&t=${
-          Date.now()
-        }`,
-
-        {
-          cache:"no-store"
-        }
-
-      );
-
-
-    const d=
-      await response.json();
-
-
-    if(!response.ok){
-
-      throw new Error(
-        d.error ||
-        "行情取得失敗"
-      );
-
+  function EMA(values, period) {
+    if (!Array.isArray(values) ||
+        values.length < period) {
+      return NaN;
     }
 
+    const k = 2 / (period + 1);
 
-    const rows=
-      Array.isArray(d.rows)
-      ? d.rows
-      : [];
+    let ema =
+      values
+        .slice(0, period)
+        .reduce((a, b) => a + Number(b), 0) /
+      period;
 
-
-    if(rows.length<60){
-
-      throw new Error(
-        "歷史資料不足"
-      );
-
+    for (
+      let i = period;
+      i < values.length;
+      i++
+    ) {
+      ema =
+        Number(values[i]) * k +
+        ema * (1 - k);
     }
 
+    return ema;
+  }
 
-    const closes=
-      rows.map(
-        x=>Number(x.close)
-      );
-
-
-    const dailyClose=
-      closes.at(-1);
-
-
-    const price=
-
-      Number.isFinite(
-        Number(d.livePrice)
-      )
-
-      ? Number(d.livePrice)
-
-      : dailyClose;
-
-
-    const ma20=
-      SMA(
-        closes,
-        20
-      );
-
-
-    const ma60=
-      SMA(
-        closes,
-        60
-      );
-
-
-    const rsi=
-      RSI(
-        closes,
-        14
-      );
-
-
-    const macd=
-
-      EMA(
-        closes.slice(-80),
-        12
-      )
-
-      -
-
-      EMA(
-        closes.slice(-80),
-        26
-      );
-
-
-    const atr=
-      ATR(
-        rows,
-        14
-      );
-
-
-    /* 前20日壓力 */
-
-    const prior20=
-      rows.slice(
-        -21,
-        -1
-      );
-
-
-    const resistance=
-      Math.max(
-        ...prior20.map(
-          x=>Number(x.high)
-        )
-      );
-
-
-    /* 近期支撐 */
-
-    const prior10=
-      rows.slice(-10);
-
-
-    const recentLow=
-      Math.min(
-        ...prior10.map(
-          x=>Number(x.low)
-        )
-      );
-
-
-    const maSupport=
-      Math.min(
-        ma20,
-        price
-      );
-
-
-    const support=
-      Math.max(
-        recentLow,
-        maSupport-
-        atr*0.5
-      );
-
-
-    /* 趨勢 */
-
-    let trend=
-      "整理";
-
-
-    if(
-      price>ma20 &&
-      ma20>ma60
-    ){
-
-      trend=
-        "多頭";
-
+  function RSI(values, period = 14) {
+    if (!Array.isArray(values) ||
+        values.length <= period) {
+      return NaN;
     }
 
-    else if(
-      price<ma20 &&
-      ma20<ma60
-    ){
+    const part =
+      values.slice(-(period + 1));
 
-      trend=
-        "偏弱";
+    let gains = 0;
+    let losses = 0;
 
+    for (
+      let i = 1;
+      i < part.length;
+      i++
+    ) {
+      const diff =
+        Number(part[i]) -
+        Number(part[i - 1]);
+
+      if (diff > 0) {
+        gains += diff;
+      } else {
+        losses += Math.abs(diff);
+      }
     }
 
-
-    /* 突破 */
-
-    const breakoutConfirmed=
-
-      price>
-      resistance
-
-      &&
-
-      price>
-      ma20;
-
-
-    /* 支撐回踩 */
-
-    const swingEntryLow=
-
-      Math.max(
-        support,
-        ma20-
-        atr*0.5
-      );
-
-
-    const swingEntryHigh=
-
-      ma20+
-      atr*0.35;
-
-
-    const swingStop=
-
-      Math.min(
-
-        support-
-        atr*0.5,
-
-        swingEntryLow-
-        atr
-
-      );
-
-
-    const swingRisk=
-
-      Math.max(
-        price-
-        swingStop,
-        atr
-      );
-
-
-    const swingTP1=
-
-      price+
-      swingRisk*1.5;
-
-
-    const swingTP2=
-
-      price+
-      swingRisk*2.5;
-
-
-    const swingTP3=
-
-      price+
-      swingRisk*4;
-
-
-    /* 高R突破 */
-
-    const breakEntryLow=
-
-      resistance-
-      atr*0.25;
-
-
-    const breakEntryHigh=
-
-      resistance+
-      atr*0.35;
-
-
-    const breakStop=
-
-      resistance-
-      atr*0.8;
-
-
-    const breakRisk=
-
-      Math.max(
-
-        resistance-
-        breakStop,
-
-        atr*0.5
-
-      );
-
-
-    const breakTP1=
-
-      resistance+
-      breakRisk*2;
-
-
-    const breakTP2=
-
-      resistance+
-      breakRisk*3;
-
-
-    const breakTP3=
-
-      resistance+
-      breakRisk*5;
-
-
-    const breakTP4=
-
-      resistance+
-      breakRisk*7;
-
-
-    /* 高R狀態 */
-
-    let breakoutStatus=
-      "等待突破";
-
-
-    let breakoutText=
-
-      "目前尚未有效突破近期壓力，先觀察價格是否帶動能站上壓力區。";
-
-
-    if(
-      breakoutConfirmed
-    ){
-
-      breakoutStatus=
-        "突破成立・等待回測";
-
-
-      breakoutText=
-
-        "價格已站上近期壓力。高 R 策略不追價，優先觀察是否回測突破區後仍能守住。";
-
+    const avgGain = gains / period;
+    const avgLoss = losses / period;
+
+    if (avgLoss === 0) {
+      return 100;
     }
 
+    const rs = avgGain / avgLoss;
 
-    if(
+    return 100 - 100 / (1 + rs);
+  }
 
-      breakoutConfirmed
-
-      &&
-
-      price>
-      resistance+
-      atr*1.5
-
-    ){
-
-      breakoutStatus=
-        "距突破區偏遠";
-
-
-      breakoutText=
-
-        "價格已明顯離開突破區，風險報酬可能下降；等待新的結構或回測會更符合這套規則。";
-
+  function ATR(rows, period = 14) {
+    if (!Array.isArray(rows) ||
+        rows.length <= period) {
+      return NaN;
     }
 
+    const trs = [];
 
-    /* 回踩狀態 */
+    for (
+      let i = 1;
+      i < rows.length;
+      i++
+    ) {
+      const high = Number(rows[i].high);
+      const low = Number(rows[i].low);
+      const prevClose =
+        Number(rows[i - 1].close);
 
-    let swingStatus=
-      "等待回踩";
-
-
-    if(
-
-      price>=
-      swingEntryLow
-
-      &&
-
-      price<=
-      swingEntryHigh
-
-    ){
-
-      swingStatus=
-        "進入支撐觀察區";
-
-    }
-
-
-    const change=
-      Number(d.change);
-
-
-    const changePercent=
-      Number(
-        d.changePercent
+      const tr = Math.max(
+        high - low,
+        Math.abs(high - prevClose),
+        Math.abs(low - prevClose)
       );
 
+      trs.push(tr);
+    }
 
-    const stockName=
+    return SMA(trs, period);
+  }
 
-      d.name &&
-      d.name!==symbol
+  async function analyzeStock() {
+    const input =
+      document.getElementById("symbolInput");
 
-      ? d.name
+    const symbol =
+      input.value.trim().replace(/\D/g, "");
 
-      : (
-          STOCK_NAMES[symbol] ||
-          symbol
-        );
+    const result =
+      document.getElementById("analysisResult");
 
-
-    $("result").innerHTML=`
-
-      <div class="card quote">
-
-        <div class="small">
-
-          ${stockName}
-          ・
-          ${d.symbol || symbol}
-
+    if (!symbol) {
+      result.innerHTML = `
+        <div class="error">
+          請輸入台股代號，例如 2330。
         </div>
+      `;
+      return;
+    }
 
+    input.value = symbol;
 
-        <div class="bigPrice">
-
-          ${money(price)}
-
-          <span
-            style="
-              font-size:16px;
-              color:#777;
-            ">
-
-            ${d.currency || "TWD"}
-
-          </span>
-
-        </div>
-
-
-        <div
-          class="${
-            change>=0
-            ? "green"
-            : "red"
-          }"
-          style="
-            font-size:18px;
-            font-weight:800;
-          ">
-
-          ${
-            change>=0
-            ? "+"
-            : ""
-          }
-
-          ${num(change)}
-
-          （
-
-          ${
-            changePercent>=0
-            ? "+"
-            : ""
-          }
-
-          ${num(changePercent)}%
-
-          ）
-
-        </div>
-
-
-        <div class="grid">
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              前收
-            </div>
-
-            <div class="metricValue">
-              ${money(d.previousClose)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              當日高點
-            </div>
-
-            <div class="metricValue">
-              ${money(d.dayHigh)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              當日低點
-            </div>
-
-            <div class="metricValue">
-              ${money(d.dayLow)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              趨勢結構
-            </div>
-
-            <div class="metricValue">
-              ${trend}
-            </div>
-
-          </div>
-
-
-        </div>
-
-
-        <div
-          class="small"
-          style="margin-top:14px">
-
-          資料來源：
-          ${
-            d.liveSource ||
-            "市場行情資料"
-          }
-
-        </div>
-
+    result.innerHTML = `
+      <div class="loading">
+        正在分析 ${escapeHTML(symbol)}…
       </div>
-
-
-      <div class="card">
-
-        <div class="sectionTitle">
-          📊 技術指標
-        </div>
-
-
-        <div class="grid">
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              MA20
-            </div>
-
-            <div class="metricValue">
-              ${money(ma20)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              MA60
-            </div>
-
-            <div class="metricValue">
-              ${money(ma60)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              RSI 14
-            </div>
-
-            <div class="metricValue">
-              ${num(rsi,1)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              MACD 動能
-            </div>
-
-            <div class="metricValue">
-              ${num(macd,2)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              ATR
-            </div>
-
-            <div class="metricValue">
-              ${money(atr)}
-            </div>
-
-          </div>
-
-
-          <div class="metric">
-
-            <div class="metricLabel">
-              20日壓力
-            </div>
-
-            <div class="metricValue">
-              ${money(resistance)}
-            </div>
-
-          </div>
-
-
-        </div>
-
-      </div>
-
-
-      <div class="card">
-
-        <div class="sectionTitle">
-          🧭 市場結構
-        </div>
-
-
-        <div class="row">
-
-          趨勢：
-          <strong>
-            ${trend}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          近期支撐：
-
-          <strong>
-            ${money(support)}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          近期壓力：
-
-          <strong>
-            ${money(resistance)}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          突破狀態：
-
-          <strong
-            class="${
-              breakoutConfirmed
-              ? "green"
-              : "yellow"
-            }">
-
-            ${
-              breakoutConfirmed
-              ? "已站上壓力"
-              : "尚未突破"
-            }
-
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <div class="card strategy">
-
-        <div class="sectionTitle green">
-          🟢 支撐回踩波段
-        </div>
-
-
-        <div
-          class="small"
-          style="margin:8px 0 12px">
-
-          核心：順勢等待價格回到支撐附近，
-          而不是在離支撐過遠的位置追價。
-
-        </div>
-
-
-        <div class="row">
-
-          狀態：
-
-          <strong>
-            ${swingStatus}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          入場觀察區：
-
-          <strong>
-
-            ${money(swingEntryLow)}
-            ～
-            ${money(swingEntryHigh)}
-
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          結構失效：
-
-          <strong class="red">
-
-            ${money(swingStop)}
-
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-          TP1：
-          ${money(swingTP1)}
-        </div>
-
-
-        <div class="row">
-          TP2：
-          ${money(swingTP2)}
-        </div>
-
-
-        <div class="row">
-          TP3：
-          ${money(swingTP3)}
-        </div>
-
-
-        <div class="row">
-
-          趨勢延伸：
-
-          若突破 TP3 後結構仍維持，
-          可使用 ATR／前波低點追蹤，
-          而不是固定猜最高點。
-
-        </div>
-
-      </div>
-
-
-      <div
-        class="card strategy purpleBorder">
-
-        <div class="sectionTitle purple">
-          🟣 高 R 突破回測
-        </div>
-
-
-        <div
-          class="small"
-          style="margin:8px 0 12px">
-
-          核心：先等突破成立，
-          再觀察突破區是否轉為支撐。
-          高 R 不代表高勝率。
-
-        </div>
-
-
-        <div class="row">
-
-          狀態：
-
-          <strong>
-            ${breakoutStatus}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          ${breakoutText}
-
-        </div>
-
-
-        <div class="row">
-
-          突破關鍵價：
-
-          <strong>
-            ${money(resistance)}
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          回測觀察區：
-
-          <strong>
-
-            ${money(breakEntryLow)}
-            ～
-            ${money(breakEntryHigh)}
-
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-
-          結構失效：
-
-          <strong class="red">
-
-            ${money(breakStop)}
-
-          </strong>
-
-        </div>
-
-
-        <div class="row">
-          2R：
-          ${money(breakTP1)}
-        </div>
-
-
-        <div class="row">
-          3R：
-          ${money(breakTP2)}
-        </div>
-
-
-        <div class="row">
-          5R：
-          ${money(breakTP3)}
-        </div>
-
-
-        <div class="row">
-          7R 延伸：
-          ${money(breakTP4)}
-        </div>
-
-      </div>
-
     `;
 
+    try {
+      const response = await fetch(
+        `/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
+        {
+          cache: "no-store"
+        }
+      );
 
-  }catch(error){
+      const d = await response.json();
 
+      if (!response.ok) {
+        throw new Error(
+          d.error || "股票資料取得失敗"
+        );
+      }
 
-    $("result").innerHTML=
+      const rows =
+        Array.isArray(d.rows)
+          ? d.rows
+          : [];
 
-      `<div class="card error">
+      if (rows.length < 60) {
+        throw new Error(
+          "歷史資料不足，暫時無法計算完整技術指標。"
+        );
+      }
 
-        ⚠️ ${error.message}
+      const closes =
+        rows.map(x => Number(x.close));
 
-      </div>`;
+      const dailyClose =
+        closes.at(-1);
 
+      let liveStock = null;
+
+      if (currentRadarData) {
+        const all = [
+          ...(currentRadarData.radar || []),
+          ...(currentRadarData.longWatch || []),
+          ...(currentRadarData.volumeLeaders || []),
+          ...(currentRadarData.momentumLeaders || [])
+        ];
+
+        liveStock =
+          all.find(
+            x => String(x.symbol) === symbol
+          ) || null;
+      }
+
+      const price =
+        liveStock &&
+        Number.isFinite(Number(liveStock.price))
+          ? Number(liveStock.price)
+          : Number.isFinite(Number(d.livePrice))
+            ? Number(d.livePrice)
+            : dailyClose;
+
+      const ma20 =
+        SMA(closes, 20);
+
+      const ma60 =
+        SMA(closes, 60);
+
+      const rsi =
+        RSI(closes, 14);
+
+      const macd =
+        EMA(closes.slice(-80), 12) -
+        EMA(closes.slice(-80), 26);
+
+      const atr =
+        ATR(rows, 14);
+
+      const prior20 =
+        rows.slice(-21, -1);
+
+      const resistance =
+        Math.max(
+          ...prior20.map(
+            x => Number(x.high)
+          )
+        );
+
+      const prior10 =
+        rows.slice(-10);
+
+      const recentLow =
+        Math.min(
+          ...prior10.map(
+            x => Number(x.low)
+          )
+        );
+
+      const maSupport =
+        Math.min(ma20, price);
+
+      const support =
+        Math.max(
+          recentLow,
+          maSupport - atr * 0.5
+        );
+
+      let trend = "整理";
+
+      if (
+        price > ma20 &&
+        ma20 > ma60
+      ) {
+        trend = "多頭";
+      } else if (
+        price < ma20 &&
+        ma20 < ma60
+      ) {
+        trend = "偏弱";
+      }
+
+      const breakoutConfirmed =
+        price > resistance &&
+        price > ma20;
+
+      // 支撐回踩策略
+      const swingEntryLow =
+        Math.max(
+          support,
+          ma20 - atr * 0.5
+        );
+
+      const swingEntryHigh =
+        ma20 + atr * 0.35;
+
+      const swingStop =
+        Math.min(
+          support - atr * 0.5,
+          swingEntryLow - atr
+        );
+
+      const swingRisk =
+        Math.max(
+          price - swingStop,
+          atr
+        );
+
+      const swingTP1 =
+        price + swingRisk * 1.5;
+
+      const swingTP2 =
+        price + swingRisk * 2.5;
+
+      const swingTP3 =
+        price + swingRisk * 4;
+
+      let swingStatus =
+        "等待回踩";
+
+      if (
+        price >= swingEntryLow &&
+        price <= swingEntryHigh
+      ) {
+        swingStatus =
+          "進入支撐觀察區";
+      }
+
+      // 突破策略
+      const breakEntryLow =
+        resistance - atr * 0.25;
+
+      const breakEntryHigh =
+        resistance + atr * 0.35;
+
+      const breakStop =
+        resistance - atr * 0.8;
+
+      const breakRisk =
+        Math.max(
+          resistance - breakStop,
+          atr * 0.5
+        );
+
+      const breakTP2R =
+        resistance + breakRisk * 2;
+
+      const breakTP3R =
+        resistance + breakRisk * 3;
+
+      const breakTP5R =
+        resistance + breakRisk * 5;
+
+      const breakTP7R =
+        resistance + breakRisk * 7;
+
+      let breakStatus =
+        "等待突破";
+
+      if (breakoutConfirmed) {
+        breakStatus =
+          "突破成立・等待回測";
+      }
+
+      if (
+        price >
+        resistance + 1.5 * atr
+      ) {
+        breakStatus =
+          "距突破區偏遠・避免追價";
+      }
+
+      const change =
+        liveStock
+          ? Number(liveStock.changePercent)
+          : Number(d.changePercent || 0);
+
+      const displayName =
+        d.name ||
+        stockName(liveStock) ||
+        STOCK_NAMES[symbol] ||
+        "";
+
+      result.innerHTML = `
+        <div class="analysis-header">
+          <div>
+            <div class="analysis-symbol">
+              ${escapeHTML(symbol)}
+            </div>
+
+            <div class="analysis-name">
+              ${escapeHTML(displayName || "台股")}
+              · ${escapeHTML(trend)}
+            </div>
+          </div>
+
+          <div>
+            <div class="analysis-price">
+              ${fmt(price)}
+            </div>
+
+            <div class="analysis-change ${changeClass(change)}">
+              ${signed(change)}
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-name">
+              MA20
+            </div>
+            <div class="metric-value">
+              ${fmt(ma20)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              MA60
+            </div>
+            <div class="metric-value">
+              ${fmt(ma60)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              RSI 14
+            </div>
+            <div class="metric-value">
+              ${fmt(rsi, 1)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              MACD
+            </div>
+            <div class="metric-value">
+              ${fmt(macd)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              ATR
+            </div>
+            <div class="metric-value">
+              ${fmt(atr)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              支撐
+            </div>
+            <div class="metric-value">
+              ${fmt(support)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              20日壓力
+            </div>
+            <div class="metric-value">
+              ${fmt(resistance)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-name">
+              趨勢
+            </div>
+            <div class="metric-value">
+              ${escapeHTML(trend)}
+            </div>
+          </div>
+        </div>
+
+        <div class="strategy green-strategy">
+          <div class="strategy-title">
+            🟢 支撐回踩波段
+          </div>
+
+          <div class="strategy-status">
+            ${escapeHTML(swingStatus)}
+          </div>
+
+          <div class="strategy-grid">
+            <div class="strategy-item">
+              <span>入場觀察區</span>
+              <strong>
+                ${fmt(swingEntryLow)}
+                ～ ${fmt(swingEntryHigh)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>結構失效</span>
+              <strong>
+                ${fmt(swingStop)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>TP1 · 1.5R</span>
+              <strong>
+                ${fmt(swingTP1)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>TP2 · 2.5R</span>
+              <strong>
+                ${fmt(swingTP2)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>TP3 · 4R</span>
+              <strong>
+                ${fmt(swingTP3)}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="strategy purple-strategy">
+          <div class="strategy-title">
+            🟣 高 R 突破回測
+          </div>
+
+          <div class="strategy-status">
+            ${escapeHTML(breakStatus)}
+          </div>
+
+          <div class="strategy-grid">
+            <div class="strategy-item">
+              <span>突破觀察區</span>
+              <strong>
+                ${fmt(breakEntryLow)}
+                ～ ${fmt(breakEntryHigh)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>結構失效</span>
+              <strong>
+                ${fmt(breakStop)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>2R</span>
+              <strong>
+                ${fmt(breakTP2R)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>3R</span>
+              <strong>
+                ${fmt(breakTP3R)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>5R</span>
+              <strong>
+                ${fmt(breakTP5R)}
+              </strong>
+            </div>
+
+            <div class="strategy-item">
+              <span>延伸 · 7R</span>
+              <strong>
+                ${fmt(breakTP7R)}
+              </strong>
+            </div>
+          </div>
+        </div>
+      `;
+
+    } catch (error) {
+      result.innerHTML = `
+        <div class="error">
+          分析失敗：${escapeHTML(error.message)}
+        </div>
+      `;
+    }
   }
 
-}
+  document
+    .getElementById("symbolInput")
+    .addEventListener(
+      "keydown",
+      event => {
+        if (event.key === "Enter") {
+          analyzeStock();
+        }
+      }
+    );
 
-
-/* Enter 直接分析 */
-
-$("symbol")
-.addEventListener(
-  "keydown",
-  e=>{
-
-    if(e.key==="Enter")
-      analyzeStock();
-
-  }
-);
-
-
-/* 網站打開立即掃描 */
-
-loadRadar(false);
-
+  loadRadar(false);
+  startCountdown();
 </script>
 
 </body>
