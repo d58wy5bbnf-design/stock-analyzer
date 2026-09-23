@@ -1,1653 +1,1418 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
-  <title>妖子平台2.3</title>
-
-  <meta name="theme-color" content="#050505" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="妖子平台2.3" />
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    :root {
-      --bg: #050505;
-      --card: #0d0d0f;
-      --border: #242428;
-      --text: #f5f5f7;
-      --muted: #8d8d95;
-      --green: #72e2b6;
-      --red: #ff6b75;
-      --yellow: #ffd76a;
-      --purple: #bd8cff;
-      --blue: #75b8ff;
-    }
-
-    html {
-      background: var(--bg);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top, rgba(20,45,38,.18), transparent 30%),
-        var(--bg);
-      color: var(--text);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        "PingFang TC",
-        "Noto Sans TC",
-        sans-serif;
-    }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .app {
-      width: min(100%, 920px);
-      margin: 0 auto;
-      padding:
-        calc(22px + env(safe-area-inset-top))
-        16px
-        calc(60px + env(safe-area-inset-bottom));
-    }
-
-    .header {
-      margin-bottom: 22px;
-    }
-
-    .brand-row {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand {
-      font-size: 30px;
-      line-height: 1;
-      font-weight: 900;
-      letter-spacing: -1.3px;
-    }
-
-    .version {
-      color: var(--green);
-      font-size: 13px;
-      font-weight: 800;
-      border: 1px solid rgba(114,226,182,.25);
-      background: rgba(114,226,182,.08);
-      padding: 6px 9px;
-      border-radius: 999px;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 9px;
-      line-height: 1.55;
-    }
-
-    .card {
-      background: rgba(13,13,15,.94);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.2);
-    }
-
-    .search-card {
-      padding: 14px;
-    }
-
-    .search-label {
-      font-size: 12px;
-      color: var(--muted);
-      margin: 0 0 9px 3px;
-    }
-
-    .search-row {
-      display: grid;
-      grid-template-columns: 1fr 96px;
-      gap: 9px;
-    }
-
-    .search-input {
-      width: 100%;
-      height: 50px;
-      border: 1px solid #29292d;
-      border-radius: 14px;
-      outline: none;
-      background: #09090a;
-      color: white;
-      padding: 0 15px;
-      font-size: 16px;
-      text-transform: uppercase;
-    }
-
-    .search-input:focus {
-      border-color: rgba(114,226,182,.6);
-      box-shadow: 0 0 0 3px rgba(114,226,182,.08);
-    }
-
-    .primary-btn {
-      border: 0;
-      border-radius: 14px;
-      color: #06120d;
-      background: var(--green);
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .market-hint {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    .hint {
-      color: #9c9ca4;
-      border: 1px solid #25252a;
-      background: #111113;
-      padding: 5px 8px;
-      border-radius: 999px;
-      font-size: 10px;
-    }
-
-    .section {
-      margin-top: 24px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin: 0 2px 12px;
-    }
-
-    .section-title {
-      font-size: 19px;
-      font-weight: 900;
-    }
-
-    .section-subtitle {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .refresh-btn {
-      border: 1px solid #2b2b30;
-      color: #d8d8dc;
-      background: #111113;
-      border-radius: 12px;
-      padding: 9px 11px;
-      white-space: nowrap;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .refresh-btn:disabled {
-      opacity: .5;
-    }
-
-    .status-strip {
-      display: grid;
-      grid-template-columns: repeat(4,1fr);
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .stat {
-      background: #0b0b0d;
-      border: 1px solid #202024;
-      border-radius: 13px;
-      padding: 11px 8px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-weight: 900;
-      font-size: 16px;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: 4px;
-    }
-
-    .long-grid,
-    .radar-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .long-card,
-    .radar-card {
-      border: 1px solid #242429;
-      background:
-        linear-gradient(135deg,rgba(255,255,255,.025),transparent 55%),
-        #0e0e10;
-      border-radius: 17px;
-      padding: 14px;
-      cursor: pointer;
-    }
-
-    .long-card:active,
-    .radar-card:active {
-      transform: scale(.985);
-    }
-
-    .long-card.priority {
-      border-color: rgba(114,226,182,.28);
-      background:
-        radial-gradient(circle at top right,rgba(114,226,182,.09),transparent 42%),
-        #0e0e10;
-    }
-
-    .stock-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .stock-code {
-      font-size: 18px;
-      font-weight: 900;
-    }
-
-    .stock-name {
-      color: #aaaab1;
-      font-size: 12px;
-      margin-top: 3px;
-    }
-
-    .score {
-      text-align: right;
-    }
-
-    .score-number {
-      font-size: 22px;
-      font-weight: 950;
-      line-height: 1;
-    }
-
-    .score-label {
-      font-size: 9px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .stock-price-row {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .stock-price {
-      font-size: 21px;
-      font-weight: 900;
-    }
-
-    .up {
-      color: var(--green);
-    }
-
-    .down {
-      color: var(--red);
-    }
-
-    .flat {
-      color: #d4d4d8;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 11px;
-    }
-
-    .chip {
-      background: #17171a;
-      border: 1px solid #25252a;
-      color: #c4c4ca;
-      padding: 5px 8px;
-      border-radius: 8px;
-      font-size: 10px;
-    }
-
-    .chip.green {
-      color: var(--green);
-      border-color: rgba(114,226,182,.18);
-      background: rgba(114,226,182,.06);
-    }
-
-    .reason-box {
-      margin-top: 11px;
-      color: #b8b8bf;
-      font-size: 11px;
-      line-height: 1.65;
-    }
-
-    .warning {
-      margin-top: 8px;
-      color: var(--yellow);
-      font-size: 10px;
-      line-height: 1.55;
-    }
-
-    .levels {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 12px;
-    }
-
-    .level-pill {
-      font-size: 10px;
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: #171719;
-      border: 1px solid #27272c;
-      color: #c8c8cd;
-    }
-
-    .analysis {
-      scroll-margin-top: 15px;
-    }
-
-    .analysis-empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 32px 15px;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .analysis-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .analysis-symbol {
-      font-size: 25px;
-      font-weight: 950;
-    }
-
-    .analysis-name {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 3px;
-    }
-
-    .analysis-price {
-      font-size: 26px;
-      font-weight: 950;
-      text-align: right;
-    }
-
-    .analysis-change {
-      text-align: right;
-      font-size: 12px;
-      margin-top: 3px;
-    }
-
-    .market-badge {
-      display: inline-block;
-      margin-top: 8px;
-      border-radius: 999px;
-      padding: 5px 8px;
-      font-size: 10px;
-      border: 1px solid #29292e;
-      background: #151517;
-      color: #ccc;
-    }
-
-    .market-badge.us {
-      color: var(--blue);
-      border-color: rgba(117,184,255,.22);
-      background: rgba(117,184,255,.06);
-    }
-
-    .market-badge.tw {
-      color: var(--green);
-      border-color: rgba(114,226,182,.22);
-      background: rgba(114,226,182,.06);
-    }
-
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .metric {
-      background: #101012;
-      border: 1px solid #232327;
-      border-radius: 13px;
-      padding: 11px;
-    }
-
-    .metric-name {
-      color: var(--muted);
-      font-size: 10px;
-    }
-
-    .metric-value {
-      margin-top: 5px;
-      font-size: 14px;
-      font-weight: 850;
-    }
-
-    .strategy {
-      margin-top: 12px;
-      border-radius: 17px;
-      padding: 14px;
-      border: 1px solid #28282e;
-      background: #101012;
-    }
-
-    .green-strategy {
-      border-color: rgba(114,226,182,.2);
-    }
-
-    .purple-strategy {
-      border-color: rgba(189,140,255,.22);
-    }
-
-    .strategy-title {
-      font-size: 15px;
-      font-weight: 900;
-    }
-
-    .strategy-status {
-      color: var(--muted);
-      font-size: 11px;
-      margin-top: 4px;
-    }
-
-    .strategy-grid {
-      display: grid;
-      grid-template-columns: repeat(2,1fr);
-      gap: 7px;
-      margin-top: 12px;
-    }
-
-    .strategy-item {
-      background: #0b0b0d;
-      border-radius: 10px;
-      padding: 9px;
-    }
-
-    .strategy-item span {
-      display: block;
-      color: var(--muted);
-      font-size: 9px;
-    }
-
-    .strategy-item strong {
-      display: block;
-      margin-top: 4px;
-      font-size: 12px;
-    }
-
-    .data-note {
-      margin-top: 12px;
-      padding: 10px 11px;
-      border-radius: 11px;
-      background: #0b0b0d;
-      color: #777780;
-      font-size: 10px;
-      line-height: 1.6;
-    }
-
-    .loading {
-      padding: 28px 12px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .error {
-      color: var(--red);
-      border: 1px solid rgba(255,107,117,.2);
-      background: rgba(255,107,117,.05);
-      padding: 13px;
-      border-radius: 13px;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .notice {
-      color: #73737b;
-      font-size: 10px;
-      line-height: 1.7;
-      margin: 20px 3px 0;
-    }
-
-    .footer {
-      text-align: center;
-      color: #55555d;
-      font-size: 10px;
-      margin-top: 28px;
-    }
-
-    @media (min-width:700px) {
-      .long-grid,
-      .radar-grid {
-        grid-template-columns: repeat(2,1fr);
-      }
-
-      .metric-grid {
-        grid-template-columns: repeat(4,1fr);
-      }
-
-      .strategy-grid {
-        grid-template-columns: repeat(4,1fr);
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<title>妖子平台 2.3</title>
+
+<meta name="theme-color" content="#050807">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="妖子平台">
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+:root{
+  --bg:#050807;
+  --card:#0d100f;
+  --card2:#101412;
+  --border:#292d2b;
+  --text:#f5f7f6;
+  --muted:#909694;
+  --green:#70e0b6;
+  --red:#ff7078;
+  --yellow:#ffd56a;
+  --purple:#bc91ff;
+  --blue:#78baff;
+}
+
+html{
+  background:var(--bg);
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at top,rgba(37,95,74,.10),transparent 28%),
+    var(--bg);
+  color:var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang TC",
+    "Noto Sans TC",
+    sans-serif;
+}
+
+button,
+input{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  width:min(100%,900px);
+  margin:auto;
+
+  padding:
+    calc(24px + env(safe-area-inset-top))
+    16px
+    calc(60px + env(safe-area-inset-bottom));
+}
+
+
+/* HEADER */
+
+.header{
+  margin-bottom:25px;
+}
+
+.header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:15px;
+}
+
+.brand{
+  font-size:31px;
+  font-weight:950;
+  letter-spacing:-1.5px;
+}
+
+.subtitle{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.version{
+  padding:7px 11px;
+  border-radius:999px;
+
+  color:var(--green);
+
+  border:
+    1px solid
+    rgba(112,224,182,.30);
+
+  background:
+    rgba(112,224,182,.08);
+
+  font-weight:900;
+  font-size:13px;
+}
+
+
+/* COMMON */
+
+.card{
+  background:
+    rgba(13,16,15,.96);
+
+  border:
+    1px solid var(--border);
+
+  border-radius:20px;
+
+  padding:16px;
+
+  margin-bottom:15px;
+}
+
+.section{
+  margin-top:27px;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+
+  margin:
+    0 3px
+    13px;
+}
+
+.section-title{
+  font-size:20px;
+  font-weight:950;
+}
+
+.section-sub{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:5px;
+  line-height:1.5;
+}
+
+
+/* SEARCH */
+
+.search-title{
+  color:var(--muted);
+  font-size:12px;
+  margin:
+    0 0
+    10px 4px;
+}
+
+.search-form{
+  display:grid;
+  grid-template-columns:1fr 100px;
+  gap:9px;
+}
+
+.search-input{
+  width:100%;
+  height:53px;
+
+  background:#080a09;
+  color:white;
+
+  border:
+    1px solid #303431;
+
+  border-radius:15px;
+
+  padding:0 15px;
+
+  outline:none;
+
+  font-size:17px;
+
+  text-transform:uppercase;
+}
+
+.search-input:focus{
+  border-color:
+    rgba(112,224,182,.60);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(112,224,182,.07);
+}
+
+.search-btn{
+  border:0;
+
+  border-radius:15px;
+
+  background:var(--green);
+
+  color:#07130e;
+
+  font-weight:950;
+
+  font-size:16px;
+}
+
+.search-btn:disabled{
+  opacity:.55;
+}
+
+.examples{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+
+  margin-top:11px;
+}
+
+.example{
+  border:
+    1px solid #292d2b;
+
+  background:#111412;
+
+  color:#a7adaa;
+
+  border-radius:999px;
+
+  padding:6px 10px;
+
+  font-size:10px;
+
+  cursor:pointer;
+}
+
+
+/* SCANNER */
+
+.refresh{
+  border:
+    1px solid #303431;
+
+  background:#111412;
+
+  color:#d8dcda;
+
+  border-radius:12px;
+
+  padding:9px 11px;
+
+  font-size:12px;
+}
+
+.stats{
+  display:grid;
+
+  grid-template-columns:
+    repeat(4,1fr);
+
+  gap:8px;
+}
+
+.stat{
+  text-align:center;
+
+  background:#0b0d0c;
+
+  border:
+    1px solid #252925;
+
+  border-radius:14px;
+
+  padding:12px 5px;
+}
+
+.stat strong{
+  display:block;
+
+  font-size:17px;
+
+  font-weight:950;
+}
+
+.stat span{
+  display:block;
+
+  margin-top:5px;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+
+/* STOCK CARDS */
+
+.grid{
+  display:grid;
+  gap:10px;
+}
+
+.stock-card{
+  padding:15px;
+
+  border-radius:18px;
+
+  border:
+    1px solid #292d2b;
+
+  background:
+    linear-gradient(
+      140deg,
+      rgba(255,255,255,.025),
+      transparent 55%
+    ),
+    #0d100f;
+
+  cursor:pointer;
+}
+
+.stock-card.priority{
+  border-color:
+    rgba(112,224,182,.30);
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(112,224,182,.09),
+      transparent 40%
+    ),
+    #0d100f;
+}
+
+.stock-top{
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:12px;
+}
+
+.symbol{
+  font-size:19px;
+
+  font-weight:950;
+}
+
+.name{
+  margin-top:4px;
+
+  color:#a0a6a3;
+
+  font-size:12px;
+}
+
+.score{
+  text-align:right;
+}
+
+.score strong{
+  display:block;
+
+  font-size:23px;
+
+  line-height:1;
+
+  font-weight:950;
+}
+
+.score span{
+  display:block;
+
+  margin-top:5px;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+.price-row{
+  display:flex;
+
+  align-items:baseline;
+
+  gap:9px;
+
+  margin-top:13px;
+}
+
+.price{
+  font-size:22px;
+
+  font-weight:950;
+}
+
+.up{
+  color:var(--green);
+}
+
+.down{
+  color:var(--red);
+}
+
+.flat{
+  color:#ddd;
+}
+
+.chips{
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:6px;
+
+  margin-top:12px;
+}
+
+.chip{
+  border:
+    1px solid #292d2b;
+
+  background:#151816;
+
+  color:#c1c6c3;
+
+  border-radius:9px;
+
+  padding:5px 8px;
+
+  font-size:10px;
+}
+
+.chip.green{
+  color:var(--green);
+
+  border-color:
+    rgba(112,224,182,.22);
+
+  background:
+    rgba(112,224,182,.06);
+}
+
+.reasons{
+  margin-top:12px;
+
+  color:#bcc1be;
+
+  font-size:11px;
+
+  line-height:1.75;
+}
+
+.warning{
+  margin-top:9px;
+
+  color:var(--yellow);
+
+  font-size:10px;
+}
+
+.levels{
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:6px;
+
+  margin-top:12px;
+}
+
+.level{
+  border:
+    1px solid #292d2b;
+
+  background:#131614;
+
+  border-radius:999px;
+
+  padding:6px 9px;
+
+  color:#b8bdbb;
+
+  font-size:10px;
+}
+
+
+/* ANALYSIS */
+
+#analysisSection{
+  scroll-margin-top:20px;
+}
+
+.analysis-empty,
+.loading{
+  padding:30px 10px;
+
+  text-align:center;
+
+  color:var(--muted);
+
+  font-size:12px;
+
+  line-height:1.8;
+}
+
+.error{
+  padding:14px;
+
+  color:var(--red);
+
+  background:
+    rgba(255,112,120,.06);
+
+  border:
+    1px solid
+    rgba(255,112,120,.22);
+
+  border-radius:13px;
+
+  font-size:12px;
+
+  line-height:1.7;
+}
+
+.analysis-head{
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:flex-start;
+
+  gap:14px;
+}
+
+.analysis-symbol{
+  font-size:26px;
+
+  font-weight:950;
+}
+
+.analysis-name{
+  margin-top:4px;
+
+  color:var(--muted);
+
+  font-size:13px;
+}
+
+.market{
+  display:inline-block;
+
+  margin-top:9px;
+
+  padding:5px 9px;
+
+  border-radius:999px;
+
+  font-size:10px;
+
+  border:
+    1px solid #303431;
+
+  background:#151816;
+}
+
+.market.tw{
+  color:var(--green);
+}
+
+.market.us{
+  color:var(--blue);
+}
+
+.analysis-price{
+  text-align:right;
+
+  font-size:27px;
+
+  font-weight:950;
+}
+
+.analysis-change{
+  text-align:right;
+
+  margin-top:4px;
+
+  font-size:12px;
+}
+
+.metrics{
+  display:grid;
+
+  grid-template-columns:
+    repeat(2,1fr);
+
+  gap:8px;
+
+  margin-top:17px;
+}
+
+.metric{
+  padding:11px;
+
+  background:#0b0d0c;
+
+  border:
+    1px solid #252925;
+
+  border-radius:13px;
+}
+
+.metric span{
+  display:block;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+.metric strong{
+  display:block;
+
+  margin-top:5px;
+
+  font-size:14px;
+}
+
+.strategy{
+  margin-top:13px;
+
+  padding:15px;
+
+  border-radius:17px;
+
+  background:#0d100f;
+
+  border:
+    1px solid #292d2b;
+}
+
+.strategy.green{
+  border-color:
+    rgba(112,224,182,.23);
+}
+
+.strategy.purple{
+  border-color:
+    rgba(188,145,255,.25);
+}
+
+.strategy-title{
+  font-size:15px;
+
+  font-weight:950;
+}
+
+.strategy-status{
+  margin-top:5px;
+
+  color:var(--muted);
+
+  font-size:11px;
+}
+
+.strategy-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(2,1fr);
+
+  gap:7px;
+
+  margin-top:12px;
+}
+
+.strategy-item{
+  background:#090b0a;
+
+  border-radius:11px;
+
+  padding:10px;
+}
+
+.strategy-item span{
+  display:block;
+
+  color:var(--muted);
+
+  font-size:9px;
+}
+
+.strategy-item strong{
+  display:block;
+
+  margin-top:5px;
+
+  font-size:12px;
+}
+
+.data-note{
+  margin-top:13px;
+
+  padding:11px;
+
+  border-radius:11px;
+
+  background:#090b0a;
+
+  color:#7f8582;
+
+  font-size:10px;
+
+  line-height:1.65;
+}
+
+.notice{
+  margin-top:23px;
+
+  color:#6e7471;
+
+  font-size:10px;
+
+  line-height:1.7;
+}
+
+.footer{
+  margin-top:30px;
+
+  text-align:center;
+
+  color:#515653;
+
+  font-size:10px;
+}
+
+@media(min-width:700px){
+
+  .grid{
+    grid-template-columns:
+      repeat(2,1fr);
+  }
+
+  .metrics{
+    grid-template-columns:
+      repeat(4,1fr);
+  }
+
+  .strategy-grid{
+    grid-template-columns:
+      repeat(4,1fr);
+  }
+}
+
+</style>
 </head>
 
 <body>
 
 <main class="app">
 
-  <header class="header">
-    <div class="brand-row">
 
-      <div>
-        <div class="brand">
-          妖子平台
-        </div>
+<header class="header">
 
-        <div class="subtitle">
-          🇹🇼 台股即時異動 · 🇺🇸 美股技術分析
-        </div>
+  <div class="header-row">
+
+    <div>
+
+      <div class="brand">
+        妖子平台
       </div>
 
-      <div class="version">
-        2.3 LIVE
-      </div>
-
-    </div>
-  </header>
-
-
-  <!-- 搜尋 -->
-
-  <section class="card search-card">
-
-    <div class="search-label">
-      搜尋台股 / 美股
-    </div>
-
-    <div class="search-row">
-
-      <input
-        id="symbolInput"
-        class="search-input"
-        type="text"
-        inputmode="text"
-        maxlength="10"
-        placeholder="2330 / NVDA / AAPL / TSLA"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-      />
-
-      <button
-        class="primary-btn"
-        onclick="analyzeStock()"
-      >
-        分析
-      </button>
-
-    </div>
-
-    <div class="market-hint">
-      <div class="hint">
-        🇹🇼 2330 台積電
-      </div>
-
-      <div class="hint">
-        🇺🇸 NVDA
-      </div>
-
-      <div class="hint">
-        🇺🇸 AAPL
-      </div>
-
-      <div class="hint">
-        🇺🇸 TSLA
-      </div>
-    </div>
-
-  </section>
-
-
-  <!-- 市場掃描 -->
-
-  <section class="section">
-
-    <div class="section-head">
-
-      <div>
-        <div class="section-title">
-          ⚡ 台股即時市場掃描
-        </div>
-
-        <div
-          id="updateText"
-          class="section-subtitle"
-        >
-          正在連線 FinMind…
-        </div>
-      </div>
-
-      <button
-        id="refreshBtn"
-        class="refresh-btn"
-        onclick="loadRadar(true)"
-      >
-        ↻ 立即掃描
-      </button>
-
-    </div>
-
-
-    <div class="status-strip">
-
-      <div class="stat">
-        <div
-          id="scannedCount"
-          class="stat-value"
-        >
-          --
-        </div>
-
-        <div class="stat-label">
-          掃描股票
-        </div>
-      </div>
-
-
-      <div class="stat">
-        <div
-          id="radarCount"
-          class="stat-value"
-        >
-          --
-        </div>
-
-        <div class="stat-label">
-          異動
-        </div>
-      </div>
-
-
-      <div class="stat">
-        <div
-          id="longCount"
-          class="stat-value"
-        >
-          --
-        </div>
-
-        <div class="stat-label">
-          做多觀察
-        </div>
-      </div>
-
-
-      <div class="stat">
-        <div
-          id="countdown"
-          class="stat-value"
-        >
-          05:00
-        </div>
-
-        <div class="stat-label">
-          下次更新
-        </div>
+      <div class="subtitle">
+        🇹🇼 台股即時異動 · 🇺🇸 美股技術分析
       </div>
 
     </div>
 
-  </section>
-
-
-  <!-- 做多觀察 -->
-
-  <section class="section">
-
-    <div class="section-head">
-      <div>
-
-        <div class="section-title">
-          🚀 今日做多觀察
-        </div>
-
-        <div class="section-subtitle">
-          台股即時量價、強度與盤中位置條件篩選
-        </div>
-
-      </div>
+    <div class="version">
+      2.3 LIVE
     </div>
 
-    <div
-      id="longWatch"
-      class="long-grid"
-    >
-      <div class="loading">
-        正在掃描盤中訊號…
-      </div>
-    </div>
+  </div>
 
-  </section>
+</header>
 
 
-  <!-- 異動雷達 -->
+<!-- SEARCH -->
 
-  <section class="section">
+<section class="card">
 
-    <div class="section-head">
-      <div>
+  <div class="search-title">
+    搜尋台股 / 美股
+  </div>
 
-        <div class="section-title">
-          🔥 台股即時異動雷達
-        </div>
-
-        <div class="section-subtitle">
-          分數代表符合異動條件的程度
-        </div>
-
-      </div>
-    </div>
-
-    <div
-      id="radarGrid"
-      class="radar-grid"
-    >
-      <div class="loading">
-        正在載入異動雷達…
-      </div>
-    </div>
-
-  </section>
-
-
-  <!-- 個股分析 -->
-
-  <section
-    id="analysisSection"
-    class="section analysis"
+  <form
+    id="stockSearchForm"
+    class="search-form"
   >
 
-    <div class="section-head">
-      <div>
-
-        <div class="section-title">
-          📊 個股技術分析
-        </div>
-
-        <div class="section-subtitle">
-          台股 / 美股 · 支撐回踩＋高 R 突破回測
-        </div>
-
-      </div>
-    </div>
-
-
-    <div
-      id="analysisResult"
-      class="card"
+    <input
+      id="symbolInput"
+      class="search-input"
+      type="text"
+      inputmode="text"
+      placeholder="2303 / NVDA"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
     >
 
-      <div class="analysis-empty">
-        輸入台股或美股代號。<br><br>
-        例如：2330、2454、NVDA、AAPL、TSLA、AMD
+    <button
+      id="searchButton"
+      class="search-btn"
+      type="submit"
+    >
+      分析
+    </button>
+
+  </form>
+
+
+  <div class="examples">
+
+    <button
+      type="button"
+      class="example"
+      data-symbol="2330"
+    >
+      🇹🇼 2330 台積電
+    </button>
+
+    <button
+      type="button"
+      class="example"
+      data-symbol="2303"
+    >
+      🇹🇼 2303 聯電
+    </button>
+
+    <button
+      type="button"
+      class="example"
+      data-symbol="NVDA"
+    >
+      🇺🇸 NVDA
+    </button>
+
+    <button
+      type="button"
+      class="example"
+      data-symbol="AAPL"
+    >
+      🇺🇸 AAPL
+    </button>
+
+    <button
+      type="button"
+      class="example"
+      data-symbol="TSLA"
+    >
+      🇺🇸 TSLA
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- SCANNER -->
+
+<section class="section">
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        ⚡ 台股即時市場掃描
+      </div>
+
+      <div
+        id="updateText"
+        class="section-sub"
+      >
+        正在連線 FinMind…
       </div>
 
     </div>
 
-  </section>
 
+    <button
+      id="refreshButton"
+      class="refresh"
+      type="button"
+    >
+      ↻ 立即掃描
+    </button>
 
-  <div class="notice">
-    本平台為規則式技術分析與市場異動篩選工具。
-    異動分數代表技術條件符合程度，不代表未來上漲機率。
-    做多觀察亦不是買賣保證。
-    台股首頁雷達使用盤中資料；
-    美股個股分析目前依 FinMind 提供的日行情資料計算。
   </div>
 
 
-  <div class="footer">
-    妖子平台 2.3 · FinMind Market Data
+  <div class="stats">
+
+    <div class="stat">
+      <strong id="scanCount">
+        --
+      </strong>
+      <span>掃描股票</span>
+    </div>
+
+    <div class="stat">
+      <strong id="radarCount">
+        --
+      </strong>
+      <span>異動</span>
+    </div>
+
+    <div class="stat">
+      <strong id="longCount">
+        --
+      </strong>
+      <span>做多觀察</span>
+    </div>
+
+    <div class="stat">
+      <strong id="countdown">
+        05:00
+      </strong>
+      <span>下次更新</span>
+    </div>
+
   </div>
+
+</section>
+
+
+<!-- LONG -->
+
+<section class="section">
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        🚀 今日做多觀察
+      </div>
+
+      <div class="section-sub">
+        台股即時量價、強度與盤中位置條件篩選
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="longGrid"
+    class="grid"
+  >
+
+    <div class="loading">
+      正在掃描盤中訊號…
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- RADAR -->
+
+<section class="section">
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        🔥 台股即時異動雷達
+      </div>
+
+      <div class="section-sub">
+        分數代表技術條件符合程度
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="radarGrid"
+    class="grid"
+  >
+
+    <div class="loading">
+      正在載入異動雷達…
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ANALYSIS -->
+
+<section
+  id="analysisSection"
+  class="section"
+>
+
+  <div class="section-head">
+
+    <div>
+
+      <div class="section-title">
+        📊 個股技術分析
+      </div>
+
+      <div class="section-sub">
+        台股 / 美股 · 支撐回踩＋高 R 突破回測
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="analysisResult"
+    class="card"
+  >
+
+    <div class="analysis-empty">
+
+      輸入股票代號開始分析
+
+      <br>
+
+      例如：
+      2303、2330、NVDA、AAPL、TSLA
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<div class="notice">
+
+  本平台為規則式技術分析與市場異動篩選工具。
+  異動分數代表條件符合程度，
+  不代表未來上漲機率。
+  做多觀察不是買賣保證。
+
+</div>
+
+
+<div class="footer">
+  妖子平台 2.3 · FinMind Market Data
+</div>
+
 
 </main>
 
 
 <script>
 
-const REFRESH_SECONDS = 300;
-
-let countdownSeconds =
-  REFRESH_SECONDS;
-
-let countdownTimer = null;
-
-let currentRadarData = null;
+"use strict";
 
 
-/* ===============================
-   工具
-================================ */
+/* =========================
+   GLOBAL
+========================= */
 
-function escapeHTML(value) {
+var radarData = null;
 
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+var refreshSeconds = 300;
+
+var countdownSeconds = 300;
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function el(id){
+  return document.getElementById(id);
 }
 
 
-function fmt(value,digits=2) {
+function safe(value){
 
-  const n = Number(value);
+  var div =
+    document.createElement("div");
 
-  if (!Number.isFinite(n)) {
+  div.textContent =
+    value == null
+      ? ""
+      : String(value);
+
+  return div.innerHTML;
+}
+
+
+function number(value){
+
+  var n =
+    Number(value);
+
+  return Number.isFinite(n)
+    ? n
+    : NaN;
+}
+
+
+function formatNumber(
+  value,
+  digits
+){
+
+  if (
+    digits === undefined
+  ){
+    digits = 2;
+  }
+
+  var n =
+    Number(value);
+
+  if (
+    !Number.isFinite(n)
+  ){
     return "--";
   }
 
   return n.toLocaleString(
     "zh-TW",
     {
-      maximumFractionDigits:digits
+      maximumFractionDigits:
+        digits
     }
   );
 }
 
 
-function signed(value) {
+function percent(value){
 
-  const n = Number(value);
+  var n =
+    Number(value);
 
-  if (!Number.isFinite(n)) {
+  if (
+    !Number.isFinite(n)
+  ){
     return "--";
   }
 
   return (
-    `${n > 0 ? "+" : ""}${n.toFixed(2)}%`
+    (n > 0 ? "+" : "") +
+    n.toFixed(2) +
+    "%"
   );
 }
 
 
-function changeClass(value) {
+function priceClass(value){
 
-  const n = Number(value);
+  var n =
+    Number(value);
 
-  if (n > 0) return "up";
-  if (n < 0) return "down";
+  if (n > 0){
+    return "up";
+  }
+
+  if (n < 0){
+    return "down";
+  }
 
   return "flat";
 }
 
 
-function formatTime(value) {
+function normalizeSymbol(value){
 
-  if (!value) {
-    return "--";
-  }
-
-  try {
-
-    return new Date(value)
-      .toLocaleTimeString(
-        "zh-TW",
-        {
-          timeZone:"Asia/Taipei",
-          hour:"2-digit",
-          minute:"2-digit",
-          second:"2-digit"
-        }
-      );
-
-  } catch {
-
-    return "--";
-  }
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(
+      /[^A-Z0-9.\-]/g,
+      ""
+    );
 }
 
 
-/* ===============================
-   倒數
-================================ */
-
-function resetCountdown() {
-
-  countdownSeconds =
-    REFRESH_SECONDS;
-
-  renderCountdown();
-}
-
-
-function renderCountdown() {
-
-  const m =
-    Math.floor(
-      countdownSeconds / 60
-    );
-
-  const s =
-    countdownSeconds % 60;
-
-  document
-    .getElementById("countdown")
-    .textContent =
-      `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-}
-
-
-function startCountdown() {
-
-  if (countdownTimer) {
-    clearInterval(
-      countdownTimer
-    );
-  }
-
-  countdownTimer =
-    setInterval(() => {
-
-      countdownSeconds--;
-
-      if (
-        countdownSeconds <= 0
-      ) {
-
-        countdownSeconds =
-          REFRESH_SECONDS;
-
-        loadRadar(false);
-      }
-
-      renderCountdown();
-
-    },1000);
-}
-
-
-/* ===============================
-   點雷達股票
-================================ */
-
-function openStock(symbol) {
-
-  const input =
-    document.getElementById(
-      "symbolInput"
-    );
-
-  input.value =
-    String(symbol).toUpperCase();
-
-  analyzeStock();
-
-  setTimeout(() => {
-
-    document
-      .getElementById(
-        "analysisSection"
-      )
-      .scrollIntoView({
-        behavior:"smooth",
-        block:"start"
-      });
-
-  },150);
-}
-
-
-/* ===============================
-   做多觀察
-================================ */
-
-function renderLongWatch(list) {
-
-  const root =
-    document.getElementById(
-      "longWatch"
-    );
-
-  if (
-    !Array.isArray(list) ||
-    !list.length
-  ) {
-
-    root.innerHTML = `
-      <div class="card">
-        <div class="analysis-empty">
-          目前沒有股票符合做多觀察條件。
-        </div>
-      </div>
-    `;
-
-    return;
-  }
-
-
-  root.innerHTML =
-    list.map(stock => {
-
-      const reasons =
-        Array.isArray(stock.reasons)
-          ? stock.reasons.slice(0,4)
-          : [];
-
-      const warnings =
-        Array.isArray(stock.warnings)
-          ? stock.warnings
-          : [];
-
-      const priority =
-        stock.longStatus ===
-        "優先觀察";
-
-
-      return `
-        <article
-          class="long-card ${priority ? "priority" : ""}"
-          onclick="openStock('${escapeHTML(stock.symbol)}')"
-        >
-
-          <div class="stock-top">
-
-            <div>
-
-              <div class="stock-code">
-                ${escapeHTML(stock.longEmoji || "🚀")}
-                ${escapeHTML(stock.symbol)}
-              </div>
-
-              <div class="stock-name">
-                ${escapeHTML(stock.name || "台股")}
-                ·
-                ${escapeHTML(stock.longStatus || "")}
-              </div>
-
-            </div>
-
-
-            <div class="score">
-
-              <div class="score-number">
-                ${escapeHTML(stock.score)}
-              </div>
-
-              <div class="score-label">
-                異動分數
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="stock-price-row">
-
-            <div class="stock-price">
-              ${fmt(stock.price)}
-            </div>
-
-            <div class="${changeClass(stock.changePercent)}">
-              ${signed(stock.changePercent)}
-            </div>
-
-          </div>
-
-
-          <div class="chips">
-
-            <div class="chip green">
-              量比 ${fmt(stock.volumeRatio,1)}x
-            </div>
-
-            <div class="chip">
-              高點 ${fmt(stock.high)}
-            </div>
-
-            <div class="chip">
-              位置 ${fmt(stock.dayPosition,0)}%
-            </div>
-
-            <div class="chip">
-              總量 ${fmt(stock.totalVolume,0)}
-            </div>
-
-          </div>
-
-
-          <div class="reason-box">
-
-            ${
-              reasons.length
-                ? reasons
-                    .map(
-                      x =>
-                        `✓ ${escapeHTML(x)}`
-                    )
-                    .join("<br>")
-                : "符合盤中量價條件"
-            }
-
-          </div>
-
-
-          ${
-            warnings.length
-              ? `
-                <div class="warning">
-                  ⚠️
-                  ${warnings
-                    .map(escapeHTML)
-                    .join("・")}
-                </div>
-              `
-              : ""
-          }
-
-
-          <div class="levels">
-
-            <div class="level-pill">
-              觀察區
-              ${fmt(stock.observationLow)}
-              ～
-              ${fmt(stock.observationHigh)}
-            </div>
-
-            <div class="level-pill">
-              失效
-              ${fmt(stock.invalidation)}
-            </div>
-
-            <div class="level-pill">
-              TP1
-              ${fmt(stock.target1)}
-            </div>
-
-          </div>
-
-        </article>
-      `;
-
-    }).join("");
-}
-
-
-/* ===============================
-   雷達
-================================ */
-
-function renderRadar(list) {
-
-  const root =
-    document.getElementById(
-      "radarGrid"
-    );
-
-  if (
-    !Array.isArray(list) ||
-    !list.length
-  ) {
-
-    root.innerHTML = `
-      <div class="card">
-        <div class="analysis-empty">
-          目前沒有明顯異動訊號。
-        </div>
-      </div>
-    `;
-
-    return;
-  }
-
-
-  root.innerHTML =
-    list.map(stock => {
-
-      const reasons =
-        Array.isArray(stock.reasons)
-          ? stock.reasons.slice(0,3)
-          : [];
-
-
-      return `
-        <article
-          class="radar-card"
-          onclick="openStock('${escapeHTML(stock.symbol)}')"
-        >
-
-          <div class="stock-top">
-
-            <div>
-
-              <div class="stock-code">
-                ${escapeHTML(stock.emoji || "🟡")}
-                ${escapeHTML(stock.symbol)}
-              </div>
-
-              <div class="stock-name">
-                ${escapeHTML(stock.name || "台股")}
-                ·
-                ${escapeHTML(stock.level || "")}
-              </div>
-
-            </div>
-
-
-            <div class="score">
-
-              <div class="score-number">
-                ${escapeHTML(stock.score)}
-              </div>
-
-              <div class="score-label">
-                SCORE
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="stock-price-row">
-
-            <div class="stock-price">
-              ${fmt(stock.price)}
-            </div>
-
-            <div class="${changeClass(stock.changePercent)}">
-              ${signed(stock.changePercent)}
-            </div>
-
-          </div>
-
-
-          <div class="chips">
-
-            <div class="chip">
-              量比 ${fmt(stock.volumeRatio,1)}x
-            </div>
-
-            <div class="chip">
-              高 ${fmt(stock.high)}
-            </div>
-
-            <div class="chip">
-              低 ${fmt(stock.low)}
-            </div>
-
-            <div class="chip">
-              位置 ${fmt(stock.dayPosition,0)}%
-            </div>
-
-          </div>
-
-
-          <div class="reason-box">
-
-            ${
-              reasons.length
-                ? reasons
-                    .map(
-                      x =>
-                        `• ${escapeHTML(x)}`
-                    )
-                    .join("<br>")
-                : "盤中異動條件成立"
-            }
-
-          </div>
-
-        </article>
-      `;
-
-    }).join("");
-}
-
-
-/* ===============================
-   載入雷達
-================================ */
-
-async function loadRadar() {
-
-  const button =
-    document.getElementById(
-      "refreshBtn"
-    );
-
-  button.disabled = true;
-  button.textContent =
-    "掃描中…";
-
-
-  try {
-
-    const response =
-      await fetch(
-        `/api/radar?t=${Date.now()}`,
-        {
-          cache:"no-store"
-        }
-      );
-
-
-    const data =
-      await response.json();
-
-
-    if (
-      !response.ok ||
-      !data.ok
-    ) {
-
-      throw new Error(
-        data.error ||
-        "雷達資料取得失敗"
-      );
-    }
-
-
-    currentRadarData =
-      data;
-
-
-    document
-      .getElementById(
-        "scannedCount"
-      )
-      .textContent =
-        fmt(data.scanned,0);
-
-
-    document
-      .getElementById(
-        "radarCount"
-      )
-      .textContent =
-        fmt(data.found,0);
-
-
-    document
-      .getElementById(
-        "longCount"
-      )
-      .textContent =
-        fmt(
-          data.longWatchCount,
-          0
-        );
-
-
-    document
-      .getElementById(
-        "updateText"
-      )
-      .textContent =
-        `FinMind Sponsor 即時資料 · 更新 ${formatTime(data.updatedAt)}`;
-
-
-    renderLongWatch(
-      data.longWatch || []
-    );
-
-    renderRadar(
-      data.radar || []
-    );
-
-    resetCountdown();
-
-
-  } catch(error) {
-
-    document
-      .getElementById(
-        "updateText"
-      )
-      .textContent =
-        "即時雷達連線失敗";
-
-
-    document
-      .getElementById(
-        "longWatch"
-      )
-      .innerHTML = `
-        <div class="error">
-          ${escapeHTML(error.message)}
-        </div>
-      `;
-
-
-    document
-      .getElementById(
-        "radarGrid"
-      )
-      .innerHTML = `
-        <div class="error">
-          ${escapeHTML(error.message)}
-        </div>
-      `;
-
-
-  } finally {
-
-    button.disabled = false;
-
-    button.textContent =
-      "↻ 立即掃描";
-  }
-}
-
-
-/* ===============================
-   技術指標
-================================ */
-
-function SMA(values,period) {
+/* =========================
+   INDICATORS
+========================= */
+
+function SMA(
+  values,
+  period
+){
 
   if (
     !Array.isArray(values) ||
     values.length < period
-  ) {
+  ){
     return NaN;
   }
 
-  const part =
+  var data =
     values.slice(-period);
 
-  return (
-    part.reduce(
-      (a,b) =>
-        a + Number(b),
-      0
-    ) / period
-  );
+  var total = 0;
+
+  for (
+    var i = 0;
+    i < data.length;
+    i++
+  ){
+    total +=
+      Number(data[i]);
+  }
+
+  return total / period;
 }
 
 
-function EMA(values,period) {
+function EMA(
+  values,
+  period
+){
 
   if (
     !Array.isArray(values) ||
     values.length < period
-  ) {
+  ){
     return NaN;
   }
 
-  const k =
-    2 / (period + 1);
+  var total = 0;
 
-  let ema =
-    values
-      .slice(0,period)
-      .reduce(
-        (a,b) =>
-          a + Number(b),
-        0
-      ) / period;
+  for (
+    var i = 0;
+    i < period;
+    i++
+  ){
+    total +=
+      Number(values[i]);
+  }
+
+  var ema =
+    total / period;
+
+  var k =
+    2 / (period + 1);
 
 
   for (
-    let i = period;
-    i < values.length;
-    i++
-  ) {
+    var j = period;
+    j < values.length;
+    j++
+  ){
 
     ema =
-      Number(values[i]) * k +
-      ema * (1-k);
+      Number(values[j]) *
+      k +
+      ema *
+      (1 - k);
   }
 
   return ema;
 }
 
 
-function RSI(values,period=14) {
+function RSI(
+  values,
+  period
+){
+
+  period =
+    period || 14;
 
   if (
     !Array.isArray(values) ||
     values.length <= period
-  ) {
+  ){
     return NaN;
   }
 
-  const part =
+
+  var data =
     values.slice(
-      -(period+1)
+      -(period + 1)
     );
 
-  let gains = 0;
-  let losses = 0;
+
+  var gains = 0;
+
+  var losses = 0;
 
 
   for (
-    let i=1;
-    i<part.length;
+    var i = 1;
+    i < data.length;
     i++
-  ) {
+  ){
 
-    const diff =
-      Number(part[i]) -
-      Number(part[i-1]);
+    var diff =
+      Number(data[i]) -
+      Number(data[i - 1]);
 
-    if (diff > 0) {
+
+    if (diff > 0){
+
       gains += diff;
-    } else {
+
+    }else{
+
       losses +=
         Math.abs(diff);
     }
   }
 
 
-  const avgGain =
+  var avgGain =
     gains / period;
 
-  const avgLoss =
+  var avgLoss =
     losses / period;
 
 
-  if (avgLoss === 0) {
+  if (avgLoss === 0){
     return 100;
   }
 
 
-  const rs =
+  var rs =
     avgGain / avgLoss;
 
 
   return (
     100 -
-    100 / (1+rs)
+    100 / (1 + rs)
   );
 }
 
 
-function ATR(rows,period=14) {
+function ATR(
+  rows,
+  period
+){
+
+  period =
+    period || 14;
 
   if (
     !Array.isArray(rows) ||
     rows.length <= period
-  ) {
+  ){
     return NaN;
   }
 
 
-  const trs = [];
+  var trs = [];
 
 
   for (
-    let i=1;
-    i<rows.length;
+    var i = 1;
+    i < rows.length;
     i++
-  ) {
+  ){
 
-    const high =
-      Number(rows[i].high);
-
-    const low =
-      Number(rows[i].low);
-
-    const prevClose =
+    var high =
       Number(
-        rows[i-1].close
+        rows[i].high
+      );
+
+    var low =
+      Number(
+        rows[i].low
+      );
+
+    var previousClose =
+      Number(
+        rows[i - 1].close
       );
 
 
-    const tr =
+    var tr =
       Math.max(
-        high-low,
+        high - low,
         Math.abs(
-          high-prevClose
+          high -
+          previousClose
         ),
         Math.abs(
-          low-prevClose
+          low -
+          previousClose
         )
       );
 
@@ -1663,769 +1428,1453 @@ function ATR(rows,period=14) {
 }
 
 
-/* ===============================
-   個股分析
-================================ */
+/* =========================
+   SEARCH EVENTS
+========================= */
 
-async function analyzeStock() {
+el("stockSearchForm")
+  .addEventListener(
+    "submit",
+    function(event){
 
-  const input =
-    document.getElementById(
-      "symbolInput"
+      event.preventDefault();
+
+      analyzeStock();
+    }
+  );
+
+
+var examples =
+  document.querySelectorAll(
+    ".example"
+  );
+
+
+for (
+  var exampleIndex = 0;
+  exampleIndex < examples.length;
+  exampleIndex++
+){
+
+  examples[
+    exampleIndex
+  ].addEventListener(
+    "click",
+    function(){
+
+      var symbol =
+        this.getAttribute(
+          "data-symbol"
+        );
+
+      el(
+        "symbolInput"
+      ).value =
+        symbol;
+
+      analyzeStock();
+    }
+  );
+}
+
+
+el("refreshButton")
+  .addEventListener(
+    "click",
+    function(){
+
+      loadRadar();
+    }
+  );
+
+
+/* =========================
+   OPEN STOCK
+========================= */
+
+function openStock(symbol){
+
+  el("symbolInput").value =
+    symbol;
+
+  analyzeStock();
+}
+
+
+/* =========================
+   ANALYZE
+========================= */
+
+async function analyzeStock(){
+
+  var symbol =
+    normalizeSymbol(
+      el("symbolInput").value
     );
 
 
-  const symbol =
-    input.value
-      .trim()
-      .toUpperCase()
-      .replace(
-        /[^A-Z0-9.\-]/g,
-        ""
-      );
+  if (!symbol){
 
-
-  const result =
-    document.getElementById(
+    el(
       "analysisResult"
-    );
-
-
-  if (!symbol) {
-
-    result.innerHTML = `
-      <div class="error">
-        請輸入股票代號，例如 2330 或 NVDA。
-      </div>
-    `;
+    ).innerHTML =
+      '<div class="error">' +
+      '請輸入股票代號，例如 2303 或 NVDA。' +
+      '</div>';
 
     return;
   }
 
 
-  input.value =
+  el("symbolInput").value =
     symbol;
 
 
-  result.innerHTML = `
-    <div class="loading">
-      正在分析 ${escapeHTML(symbol)}…
-    </div>
-  `;
+  var button =
+    el("searchButton");
 
 
-  try {
+  button.disabled =
+    true;
 
-    const response =
+  button.textContent =
+    "分析中…";
+
+
+  el(
+    "analysisResult"
+  ).innerHTML =
+    '<div class="loading">' +
+    '正在分析 ' +
+    safe(symbol) +
+    '…' +
+    '</div>';
+
+
+  el(
+    "analysisSection"
+  ).scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+
+
+  try{
+
+    var url =
+      "/api/stock?symbol=" +
+      encodeURIComponent(
+        symbol
+      ) +
+      "&t=" +
+      Date.now();
+
+
+    var response =
       await fetch(
-        `/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
+        url,
         {
           cache:"no-store"
         }
       );
 
 
-    const d =
+    var data =
       await response.json();
 
 
     if (
       !response.ok ||
-      d.ok === false
-    ) {
+      data.ok === false
+    ){
 
       throw new Error(
-        d.error ||
+        data.error ||
         "股票資料取得失敗"
       );
     }
 
 
-    const rows =
-      Array.isArray(d.rows)
-        ? d.rows
-        : [];
+    buildAnalysis(
+      data
+    );
 
 
-    if (
-      rows.length < 60
-    ) {
+  }catch(error){
 
-      throw new Error(
-        "歷史資料不足，暫時無法計算完整技術指標。"
-      );
-    }
+    console.error(
+      error
+    );
 
 
-    const closes =
-      rows.map(
-        x =>
-          Number(x.close)
-      );
+    el(
+      "analysisResult"
+    ).innerHTML =
+      '<div class="error">' +
+      '分析失敗：' +
+      safe(
+        error.message
+      ) +
+      '</div>';
 
 
-    const dailyClose =
-      closes.at(-1);
+  }finally{
 
+    button.disabled =
+      false;
 
-    let liveStock = null;
-
-
-    if (
-      d.market === "TW" &&
-      currentRadarData
-    ) {
-
-      const all = [
-
-        ...(currentRadarData.radar || []),
-
-        ...(currentRadarData.longWatch || []),
-
-        ...(currentRadarData.volumeLeaders || []),
-
-        ...(currentRadarData.momentumLeaders || [])
-
-      ];
-
-
-      liveStock =
-        all.find(
-          x =>
-            String(x.symbol) ===
-            symbol
-        ) || null;
-    }
-
-
-    const price =
-      liveStock &&
-      Number.isFinite(
-        Number(liveStock.price)
-      )
-        ? Number(
-            liveStock.price
-          )
-        : Number.isFinite(
-            Number(d.livePrice)
-          )
-          ? Number(
-              d.livePrice
-            )
-          : dailyClose;
-
-
-    const ma20 =
-      SMA(
-        closes,
-        20
-      );
-
-
-    const ma60 =
-      SMA(
-        closes,
-        60
-      );
-
-
-    const rsi =
-      RSI(
-        closes,
-        14
-      );
-
-
-    const macd =
-      EMA(
-        closes.slice(-80),
-        12
-      ) -
-      EMA(
-        closes.slice(-80),
-        26
-      );
-
-
-    const atr =
-      ATR(
-        rows,
-        14
-      );
-
-
-    const prior20 =
-      rows.slice(
-        -21,
-        -1
-      );
-
-
-    const resistance =
-      Math.max(
-        ...prior20.map(
-          x =>
-            Number(x.high)
-        )
-      );
-
-
-    const prior10 =
-      rows.slice(-10);
-
-
-    const recentLow =
-      Math.min(
-        ...prior10.map(
-          x =>
-            Number(x.low)
-        )
-      );
-
-
-    const maSupport =
-      Math.min(
-        ma20,
-        price
-      );
-
-
-    const support =
-      Math.max(
-        recentLow,
-        maSupport -
-        atr * .5
-      );
-
-
-    let trend =
-      "整理";
-
-
-    if (
-      price > ma20 &&
-      ma20 > ma60
-    ) {
-
-      trend =
-        "多頭";
-
-    } else if (
-      price < ma20 &&
-      ma20 < ma60
-    ) {
-
-      trend =
-        "偏弱";
-    }
-
-
-    const breakoutConfirmed =
-      price > resistance &&
-      price > ma20;
-
-
-    /* 支撐回踩 */
-
-    const swingEntryLow =
-      Math.max(
-        support,
-        ma20 -
-        atr * .5
-      );
-
-
-    const swingEntryHigh =
-      ma20 +
-      atr * .35;
-
-
-    const swingStop =
-      Math.min(
-        support -
-        atr * .5,
-
-        swingEntryLow -
-        atr
-      );
-
-
-    const swingRisk =
-      Math.max(
-        price -
-        swingStop,
-
-        atr
-      );
-
-
-    const swingTP1 =
-      price +
-      swingRisk * 1.5;
-
-
-    const swingTP2 =
-      price +
-      swingRisk * 2.5;
-
-
-    const swingTP3 =
-      price +
-      swingRisk * 4;
-
-
-    let swingStatus =
-      "等待回踩";
-
-
-    if (
-      price >= swingEntryLow &&
-      price <= swingEntryHigh
-    ) {
-
-      swingStatus =
-        "進入支撐觀察區";
-    }
-
-
-    /* 高 R 突破 */
-
-    const breakEntryLow =
-      resistance -
-      atr * .25;
-
-
-    const breakEntryHigh =
-      resistance +
-      atr * .35;
-
-
-    const breakStop =
-      resistance -
-      atr * .8;
-
-
-    const breakRisk =
-      Math.max(
-        resistance -
-        breakStop,
-
-        atr * .5
-      );
-
-
-    const breakTP2R =
-      resistance +
-      breakRisk * 2;
-
-
-    const breakTP3R =
-      resistance +
-      breakRisk * 3;
-
-
-    const breakTP5R =
-      resistance +
-      breakRisk * 5;
-
-
-    const breakTP7R =
-      resistance +
-      breakRisk * 7;
-
-
-    let breakStatus =
-      "等待突破";
-
-
-    if (
-      breakoutConfirmed
-    ) {
-
-      breakStatus =
-        "突破成立・等待回測";
-    }
-
-
-    if (
-      price >
-      resistance +
-      1.5 * atr
-    ) {
-
-      breakStatus =
-        "距突破區偏遠・避免追價";
-    }
-
-
-    const change =
-      liveStock
-        ? Number(
-            liveStock.changePercent
-          )
-        : Number(
-            d.changePercent || 0
-          );
-
-
-    const currency =
-      d.currency === "USD"
-        ? "USD"
-        : "TWD";
-
-
-    const currencySymbol =
-      currency === "USD"
-        ? "$"
-        : "NT$";
-
-
-    const marketClass =
-      d.market === "US"
-        ? "us"
-        : "tw";
-
-
-    const marketText =
-      d.market === "US"
-        ? "🇺🇸 美股"
-        : "🇹🇼 台股";
-
-
-    result.innerHTML = `
-
-      <div class="analysis-header">
-
-        <div>
-
-          <div class="analysis-symbol">
-            ${escapeHTML(symbol)}
-          </div>
-
-          <div class="analysis-name">
-            ${escapeHTML(d.name || "")}
-          </div>
-
-          <div class="market-badge ${marketClass}">
-            ${marketText}
-            ·
-            ${escapeHTML(currency)}
-            ·
-            ${escapeHTML(trend)}
-          </div>
-
-        </div>
-
-
-        <div>
-
-          <div class="analysis-price">
-            ${currencySymbol}${fmt(price)}
-          </div>
-
-          <div class="analysis-change ${changeClass(change)}">
-            ${signed(change)}
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="metric-grid">
-
-        <div class="metric">
-          <div class="metric-name">
-            MA20
-          </div>
-          <div class="metric-value">
-            ${fmt(ma20)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            MA60
-          </div>
-          <div class="metric-value">
-            ${fmt(ma60)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            RSI 14
-          </div>
-          <div class="metric-value">
-            ${fmt(rsi,1)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            MACD
-          </div>
-          <div class="metric-value">
-            ${fmt(macd)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            ATR
-          </div>
-          <div class="metric-value">
-            ${fmt(atr)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            支撐
-          </div>
-          <div class="metric-value">
-            ${fmt(support)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            20日壓力
-          </div>
-          <div class="metric-value">
-            ${fmt(resistance)}
-          </div>
-        </div>
-
-
-        <div class="metric">
-          <div class="metric-name">
-            趨勢
-          </div>
-          <div class="metric-value">
-            ${escapeHTML(trend)}
-          </div>
-        </div>
-
-      </div>
-
-
-      <div class="strategy green-strategy">
-
-        <div class="strategy-title">
-          🟢 支撐回踩波段
-        </div>
-
-        <div class="strategy-status">
-          ${escapeHTML(swingStatus)}
-        </div>
-
-
-        <div class="strategy-grid">
-
-          <div class="strategy-item">
-            <span>入場觀察區</span>
-            <strong>
-              ${fmt(swingEntryLow)}
-              ～
-              ${fmt(swingEntryHigh)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>結構失效</span>
-            <strong>
-              ${fmt(swingStop)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>TP1 · 1.5R</span>
-            <strong>
-              ${fmt(swingTP1)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>TP2 · 2.5R</span>
-            <strong>
-              ${fmt(swingTP2)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>TP3 · 4R</span>
-            <strong>
-              ${fmt(swingTP3)}
-            </strong>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="strategy purple-strategy">
-
-        <div class="strategy-title">
-          🟣 高 R 突破回測
-        </div>
-
-        <div class="strategy-status">
-          ${escapeHTML(breakStatus)}
-        </div>
-
-
-        <div class="strategy-grid">
-
-          <div class="strategy-item">
-            <span>突破觀察區</span>
-            <strong>
-              ${fmt(breakEntryLow)}
-              ～
-              ${fmt(breakEntryHigh)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>結構失效</span>
-            <strong>
-              ${fmt(breakStop)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>2R</span>
-            <strong>
-              ${fmt(breakTP2R)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>3R</span>
-            <strong>
-              ${fmt(breakTP3R)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>5R</span>
-            <strong>
-              ${fmt(breakTP5R)}
-            </strong>
-          </div>
-
-
-          <div class="strategy-item">
-            <span>延伸 · 7R</span>
-            <strong>
-              ${fmt(breakTP7R)}
-            </strong>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="data-note">
-        資料來源：${escapeHTML(d.liveSource || "FinMind")}
-        ${d.latestDate ? ` · 最新交易日 ${escapeHTML(d.latestDate)}` : ""}
-        <br>
-        ${
-          d.market === "US"
-            ? "美股目前使用日行情進行技術分析，畫面價格不是盤中即時報價。"
-            : "台股個股技術指標使用日行情；首頁異動雷達使用盤中即時資料。"
-        }
-      </div>
-    `;
-
-
-  } catch(error) {
-
-    result.innerHTML = `
-      <div class="error">
-        分析失敗：${escapeHTML(error.message)}
-      </div>
-    `;
+    button.textContent =
+      "分析";
   }
 }
 
 
-/* ===============================
-   Enter 搜尋
-================================ */
+/* =========================
+   BUILD ANALYSIS
+========================= */
 
-document
-  .getElementById(
-    "symbolInput"
-  )
-  .addEventListener(
-    "keydown",
-    event => {
+function buildAnalysis(data){
 
-      if (
-        event.key === "Enter"
-      ) {
+  var rows =
+    Array.isArray(data.rows)
+      ? data.rows
+      : [];
 
-        analyzeStock();
+
+  if (
+    rows.length < 60
+  ){
+
+    throw new Error(
+      "歷史資料不足，無法計算完整技術指標。"
+    );
+  }
+
+
+  var closes = [];
+
+  for (
+    var i = 0;
+    i < rows.length;
+    i++
+  ){
+
+    var close =
+      Number(
+        rows[i].close
+      );
+
+    if (
+      Number.isFinite(close)
+    ){
+      closes.push(close);
+    }
+  }
+
+
+  if (
+    closes.length < 60
+  ){
+
+    throw new Error(
+      "有效日 K 資料不足。"
+    );
+  }
+
+
+  var symbol =
+    String(
+      data.symbol || ""
+    );
+
+
+  var dailyPrice =
+    Number(
+      data.livePrice
+    );
+
+
+  var price =
+    dailyPrice;
+
+
+  /* 台股：
+     若雷達內有該股票，
+     優先使用盤中價格
+  */
+
+  if (
+    data.market === "TW" &&
+    radarData
+  ){
+
+    var groups = [
+      radarData.radar || [],
+      radarData.longWatch || [],
+      radarData.volumeLeaders || [],
+      radarData.momentumLeaders || []
+    ];
+
+
+    var found = null;
+
+
+    for (
+      var g = 0;
+      g < groups.length;
+      g++
+    ){
+
+      for (
+        var x = 0;
+        x < groups[g].length;
+        x++
+      ){
+
+        if (
+          String(
+            groups[g][x].symbol
+          ) === symbol
+        ){
+
+          found =
+            groups[g][x];
+
+          break;
+        }
+      }
+
+
+      if (found){
+        break;
       }
     }
-  );
 
 
-/* ===============================
-   自動轉大寫
-================================ */
+    if (
+      found &&
+      Number.isFinite(
+        Number(found.price)
+      )
+    ){
 
-document
-  .getElementById(
-    "symbolInput"
-  )
-  .addEventListener(
-    "input",
-    event => {
-
-      const start =
-        event.target
-          .selectionStart;
-
-      event.target.value =
-        event.target.value
-          .toUpperCase();
-
-      try {
-        event.target
-          .setSelectionRange(
-            start,
-            start
-          );
-      } catch {}
+      price =
+        Number(
+          found.price
+        );
     }
+  }
+
+
+  if (
+    !Number.isFinite(price)
+  ){
+
+    price =
+      closes[
+        closes.length - 1
+      ];
+  }
+
+
+  var ma20 =
+    SMA(
+      closes,
+      20
+    );
+
+
+  var ma60 =
+    SMA(
+      closes,
+      60
+    );
+
+
+  var rsi =
+    RSI(
+      closes,
+      14
+    );
+
+
+  var recent =
+    closes.slice(-80);
+
+
+  var macd =
+    EMA(
+      recent,
+      12
+    ) -
+    EMA(
+      recent,
+      26
+    );
+
+
+  var atr =
+    ATR(
+      rows,
+      14
+    );
+
+
+  var prior20 =
+    rows.slice(
+      -21,
+      -1
+    );
+
+
+  var highs = [];
+
+
+  for (
+    var p = 0;
+    p < prior20.length;
+    p++
+  ){
+
+    highs.push(
+      Number(
+        prior20[p].high
+      )
+    );
+  }
+
+
+  var resistance =
+    Math.max.apply(
+      null,
+      highs
+    );
+
+
+  var prior10 =
+    rows.slice(-10);
+
+
+  var lows = [];
+
+
+  for (
+    var l = 0;
+    l < prior10.length;
+    l++
+  ){
+
+    lows.push(
+      Number(
+        prior10[l].low
+      )
+    );
+  }
+
+
+  var recentLow =
+    Math.min.apply(
+      null,
+      lows
+    );
+
+
+  var support =
+    Math.max(
+      recentLow,
+      Math.min(
+        ma20,
+        price
+      ) -
+      atr * 0.5
+    );
+
+
+  var trend =
+    "整理";
+
+
+  if (
+    price > ma20 &&
+    ma20 > ma60
+  ){
+
+    trend =
+      "多頭";
+
+  }else if(
+    price < ma20 &&
+    ma20 < ma60
+  ){
+
+    trend =
+      "偏弱";
+  }
+
+
+  /* 支撐回踩 */
+
+  var swingEntryLow =
+    Math.max(
+      support,
+      ma20 -
+      atr * 0.5
+    );
+
+
+  var swingEntryHigh =
+    ma20 +
+    atr * 0.35;
+
+
+  var swingStop =
+    Math.min(
+      support -
+      atr * 0.5,
+
+      swingEntryLow -
+      atr
+    );
+
+
+  var swingRisk =
+    Math.max(
+      price -
+      swingStop,
+      atr
+    );
+
+
+  var swingTP1 =
+    price +
+    swingRisk * 1.5;
+
+
+  var swingTP2 =
+    price +
+    swingRisk * 2.5;
+
+
+  var swingTP3 =
+    price +
+    swingRisk * 4;
+
+
+  var swingStatus =
+    "等待回踩";
+
+
+  if (
+    price >=
+      swingEntryLow &&
+    price <=
+      swingEntryHigh
+  ){
+
+    swingStatus =
+      "進入支撐觀察區";
+  }
+
+
+  /* 突破回測 */
+
+  var breakEntryLow =
+    resistance -
+    atr * 0.25;
+
+
+  var breakEntryHigh =
+    resistance +
+    atr * 0.35;
+
+
+  var breakStop =
+    resistance -
+    atr * 0.8;
+
+
+  var breakRisk =
+    Math.max(
+      resistance -
+      breakStop,
+
+      atr * 0.5
+    );
+
+
+  var target2R =
+    resistance +
+    breakRisk * 2;
+
+
+  var target3R =
+    resistance +
+    breakRisk * 3;
+
+
+  var target5R =
+    resistance +
+    breakRisk * 5;
+
+
+  var target7R =
+    resistance +
+    breakRisk * 7;
+
+
+  var breakStatus =
+    "等待突破";
+
+
+  if (
+    price > resistance &&
+    price > ma20
+  ){
+
+    breakStatus =
+      "突破成立・等待回測";
+  }
+
+
+  if (
+    price >
+    resistance +
+    atr * 1.5
+  ){
+
+    breakStatus =
+      "距突破區偏遠・避免追價";
+  }
+
+
+  var changePercent =
+    Number(
+      data.changePercent
+    );
+
+
+  var currency =
+    data.currency === "USD"
+      ? "USD"
+      : "TWD";
+
+
+  var money =
+    currency === "USD"
+      ? "$"
+      : "NT$";
+
+
+  var marketText =
+    data.market === "US"
+      ? "🇺🇸 美股"
+      : "🇹🇼 台股";
+
+
+  var marketClass =
+    data.market === "US"
+      ? "us"
+      : "tw";
+
+
+  var priceSource =
+    data.market === "TW"
+      ? "台股技術指標使用日 K；若即時雷達包含此股票，畫面價格優先使用雷達盤中價格。"
+      : "美股目前使用 FinMind 日行情進行技術分析，並非盤中即時報價。";
+
+
+  el(
+    "analysisResult"
+  ).innerHTML =
+
+    '<div class="analysis-head">' +
+
+      '<div>' +
+
+        '<div class="analysis-symbol">' +
+          safe(symbol) +
+        '</div>' +
+
+        '<div class="analysis-name">' +
+          safe(
+            data.name ||
+            ""
+          ) +
+        '</div>' +
+
+        '<div class="market ' +
+          marketClass +
+        '">' +
+          marketText +
+          ' · ' +
+          safe(currency) +
+          ' · ' +
+          safe(trend) +
+        '</div>' +
+
+      '</div>' +
+
+
+      '<div>' +
+
+        '<div class="analysis-price">' +
+          money +
+          formatNumber(
+            price,
+            2
+          ) +
+        '</div>' +
+
+        '<div class="analysis-change ' +
+          priceClass(
+            changePercent
+          ) +
+        '">' +
+          percent(
+            changePercent
+          ) +
+        '</div>' +
+
+      '</div>' +
+
+    '</div>' +
+
+
+    '<div class="metrics">' +
+
+      metric(
+        "MA20",
+        formatNumber(ma20)
+      ) +
+
+      metric(
+        "MA60",
+        formatNumber(ma60)
+      ) +
+
+      metric(
+        "RSI 14",
+        formatNumber(rsi,1)
+      ) +
+
+      metric(
+        "MACD",
+        formatNumber(macd)
+      ) +
+
+      metric(
+        "ATR",
+        formatNumber(atr)
+      ) +
+
+      metric(
+        "支撐",
+        formatNumber(support)
+      ) +
+
+      metric(
+        "20日壓力",
+        formatNumber(
+          resistance
+        )
+      ) +
+
+      metric(
+        "趨勢",
+        trend
+      ) +
+
+    '</div>' +
+
+
+    strategyBlock(
+      "green",
+      "🟢 支撐回踩波段",
+      swingStatus,
+      [
+        [
+          "入場觀察區",
+          formatNumber(
+            swingEntryLow
+          ) +
+          " ～ " +
+          formatNumber(
+            swingEntryHigh
+          )
+        ],
+        [
+          "結構失效",
+          formatNumber(
+            swingStop
+          )
+        ],
+        [
+          "TP1 · 1.5R",
+          formatNumber(
+            swingTP1
+          )
+        ],
+        [
+          "TP2 · 2.5R",
+          formatNumber(
+            swingTP2
+          )
+        ],
+        [
+          "TP3 · 4R",
+          formatNumber(
+            swingTP3
+          )
+        ]
+      ]
+    ) +
+
+
+    strategyBlock(
+      "purple",
+      "🟣 高 R 突破回測",
+      breakStatus,
+      [
+        [
+          "突破觀察區",
+          formatNumber(
+            breakEntryLow
+          ) +
+          " ～ " +
+          formatNumber(
+            breakEntryHigh
+          )
+        ],
+        [
+          "結構失效",
+          formatNumber(
+            breakStop
+          )
+        ],
+        [
+          "2R",
+          formatNumber(
+            target2R
+          )
+        ],
+        [
+          "3R",
+          formatNumber(
+            target3R
+          )
+        ],
+        [
+          "5R",
+          formatNumber(
+            target5R
+          )
+        ],
+        [
+          "延伸 · 7R",
+          formatNumber(
+            target7R
+          )
+        ]
+      ]
+    ) +
+
+
+    '<div class="data-note">' +
+
+      '資料來源：' +
+      safe(
+        data.liveSource ||
+        "FinMind"
+      ) +
+
+      (
+        data.latestDate
+          ? ' · 最新交易日 ' +
+            safe(
+              data.latestDate
+            )
+          : ''
+      ) +
+
+      '<br>' +
+
+      safe(
+        priceSource
+      ) +
+
+    '</div>';
+}
+
+
+function metric(
+  name,
+  value
+){
+
+  return (
+    '<div class="metric">' +
+      '<span>' +
+        safe(name) +
+      '</span>' +
+      '<strong>' +
+        safe(value) +
+      '</strong>' +
+    '</div>'
   );
+}
 
 
-/* ===============================
-   啟動
-================================ */
+function strategyBlock(
+  color,
+  title,
+  status,
+  items
+){
+
+  var html =
+    '<div class="strategy ' +
+    color +
+    '">' +
+
+      '<div class="strategy-title">' +
+        safe(title) +
+      '</div>' +
+
+      '<div class="strategy-status">' +
+        safe(status) +
+      '</div>' +
+
+      '<div class="strategy-grid">';
+
+
+  for (
+    var i = 0;
+    i < items.length;
+    i++
+  ){
+
+    html +=
+      '<div class="strategy-item">' +
+
+        '<span>' +
+          safe(
+            items[i][0]
+          ) +
+        '</span>' +
+
+        '<strong>' +
+          safe(
+            items[i][1]
+          ) +
+        '</strong>' +
+
+      '</div>';
+  }
+
+
+  html +=
+      '</div>' +
+    '</div>';
+
+
+  return html;
+}
+
+
+/* =========================
+   RADAR
+========================= */
+
+async function loadRadar(){
+
+  var button =
+    el("refreshButton");
+
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    "掃描中…";
+
+
+  try{
+
+    var response =
+      await fetch(
+        "/api/radar?t=" +
+        Date.now(),
+        {
+          cache:"no-store"
+        }
+      );
+
+
+    var data =
+      await response.json();
+
+
+    if (
+      !response.ok ||
+      !data.ok
+    ){
+
+      throw new Error(
+        data.error ||
+        "雷達資料取得失敗"
+      );
+    }
+
+
+    radarData =
+      data;
+
+
+    el(
+      "scanCount"
+    ).textContent =
+      formatNumber(
+        data.scanned,
+        0
+      );
+
+
+    el(
+      "radarCount"
+    ).textContent =
+      formatNumber(
+        data.found,
+        0
+      );
+
+
+    el(
+      "longCount"
+    ).textContent =
+      formatNumber(
+        data.longWatchCount,
+        0
+      );
+
+
+    el(
+      "updateText"
+    ).textContent =
+      "FinMind Sponsor 即時資料 · 更新 " +
+      new Date()
+        .toLocaleTimeString(
+          "zh-TW",
+          {
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+          }
+        );
+
+
+    renderStocks(
+      "longGrid",
+      data.longWatch || [],
+      true
+    );
+
+
+    renderStocks(
+      "radarGrid",
+      data.radar || [],
+      false
+    );
+
+
+    countdownSeconds =
+      refreshSeconds;
+
+
+  }catch(error){
+
+    console.error(error);
+
+
+    el(
+      "updateText"
+    ).textContent =
+      "即時雷達連線失敗";
+
+
+  }finally{
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "↻ 立即掃描";
+  }
+}
+
+
+/* =========================
+   RENDER STOCKS
+========================= */
+
+function renderStocks(
+  target,
+  list,
+  longMode
+){
+
+  var root =
+    el(target);
+
+
+  if (
+    !Array.isArray(list) ||
+    list.length === 0
+  ){
+
+    root.innerHTML =
+      '<div class="card">' +
+        '<div class="analysis-empty">' +
+          '目前沒有符合條件的股票。' +
+        '</div>' +
+      '</div>';
+
+    return;
+  }
+
+
+  var html = "";
+
+
+  for (
+    var i = 0;
+    i < list.length;
+    i++
+  ){
+
+    var stock =
+      list[i];
+
+
+    var priority =
+      longMode &&
+      stock.longStatus ===
+      "優先觀察";
+
+
+    html +=
+      '<article class="stock-card ' +
+      (
+        priority
+          ? "priority"
+          : ""
+      ) +
+      '" data-stock="' +
+      safe(
+        stock.symbol
+      ) +
+      '">' +
+
+
+        '<div class="stock-top">' +
+
+          '<div>' +
+
+            '<div class="symbol">' +
+              safe(
+                longMode
+                  ? (
+                      stock.longEmoji ||
+                      "🚀"
+                    )
+                  : (
+                      stock.emoji ||
+                      "🔥"
+                    )
+              ) +
+              ' ' +
+              safe(
+                stock.symbol
+              ) +
+            '</div>' +
+
+            '<div class="name">' +
+              safe(
+                stock.name ||
+                "台股"
+              ) +
+              ' · ' +
+              safe(
+                longMode
+                  ? stock.longStatus
+                  : stock.level
+              ) +
+            '</div>' +
+
+          '</div>' +
+
+
+          '<div class="score">' +
+
+            '<strong>' +
+              safe(
+                stock.score
+              ) +
+            '</strong>' +
+
+            '<span>' +
+              '異動分數' +
+            '</span>' +
+
+          '</div>' +
+
+        '</div>' +
+
+
+        '<div class="price-row">' +
+
+          '<div class="price">' +
+            formatNumber(
+              stock.price
+            ) +
+          '</div>' +
+
+          '<div class="' +
+            priceClass(
+              stock.changePercent
+            ) +
+          '">' +
+            percent(
+              stock.changePercent
+            ) +
+          '</div>' +
+
+        '</div>' +
+
+
+        '<div class="chips">' +
+
+          '<div class="chip green">' +
+            '量比 ' +
+            formatNumber(
+              stock.volumeRatio,
+              1
+            ) +
+            'x' +
+          '</div>' +
+
+          '<div class="chip">' +
+            '高點 ' +
+            formatNumber(
+              stock.high
+            ) +
+          '</div>' +
+
+          '<div class="chip">' +
+            '位置 ' +
+            formatNumber(
+              stock.dayPosition,
+              0
+            ) +
+            '%' +
+          '</div>' +
+
+          '<div class="chip">' +
+            '總量 ' +
+            formatNumber(
+              stock.totalVolume,
+              0
+            ) +
+          '</div>' +
+
+        '</div>';
+
+
+    if (
+      Array.isArray(
+        stock.reasons
+      ) &&
+      stock.reasons.length
+    ){
+
+      html +=
+        '<div class="reasons">';
+
+
+      var maxReasons =
+        Math.min(
+          stock.reasons.length,
+          4
+        );
+
+
+      for (
+        var r = 0;
+        r < maxReasons;
+        r++
+      ){
+
+        html +=
+          '✓ ' +
+          safe(
+            stock.reasons[r]
+          );
+
+
+        if (
+          r <
+          maxReasons - 1
+        ){
+          html += "<br>";
+        }
+      }
+
+
+      html +=
+        '</div>';
+    }
+
+
+    if (
+      longMode
+    ){
+
+      html +=
+        '<div class="levels">' +
+
+          '<div class="level">' +
+            '觀察區 ' +
+            formatNumber(
+              stock.observationLow
+            ) +
+            ' ～ ' +
+            formatNumber(
+              stock.observationHigh
+            ) +
+          '</div>' +
+
+          '<div class="level">' +
+            '失效 ' +
+            formatNumber(
+              stock.invalidation
+            ) +
+          '</div>' +
+
+          '<div class="level">' +
+            'TP1 ' +
+            formatNumber(
+              stock.target1
+            ) +
+          '</div>' +
+
+        '</div>';
+    }
+
+
+    html +=
+      '</article>';
+  }
+
+
+  root.innerHTML =
+    html;
+
+
+  var cards =
+    root.querySelectorAll(
+      "[data-stock]"
+    );
+
+
+  for (
+    var c = 0;
+    c < cards.length;
+    c++
+  ){
+
+    cards[c]
+      .addEventListener(
+        "click",
+        function(){
+
+          var symbol =
+            this.getAttribute(
+              "data-stock"
+            );
+
+
+          el(
+            "symbolInput"
+          ).value =
+            symbol;
+
+
+          analyzeStock();
+        }
+      );
+  }
+}
+
+
+/* =========================
+   COUNTDOWN
+========================= */
+
+setInterval(
+  function(){
+
+    countdownSeconds--;
+
+
+    if (
+      countdownSeconds <= 0
+    ){
+
+      countdownSeconds =
+        refreshSeconds;
+
+      loadRadar();
+    }
+
+
+    var minutes =
+      Math.floor(
+        countdownSeconds /
+        60
+      );
+
+
+    var seconds =
+      countdownSeconds %
+      60;
+
+
+    el(
+      "countdown"
+    ).textContent =
+      String(
+        minutes
+      ).padStart(
+        2,
+        "0"
+      ) +
+      ":" +
+      String(
+        seconds
+      ).padStart(
+        2,
+        "0"
+      );
+
+  },
+  1000
+);
+
+
+/* =========================
+   START
+========================= */
 
 loadRadar();
-
-startCountdown();
 
 </script>
 
