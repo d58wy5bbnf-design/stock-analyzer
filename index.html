@@ -10,38 +10,48 @@
 
 body{
   margin:0;
-  background:#071426;
-  color:#eaf2ff;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+  background:#061426;
+  color:#eef5ff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
 .wrap{
   max-width:760px;
   margin:auto;
-  padding:22px 15px 50px
+  padding:22px 15px 60px;
 }
 
-h1{font-size:28px;margin:8px 0}
+h1{
+  font-size:28px;
+  margin:8px 0;
+}
 
 .sub{
   color:#91a5c1;
-  margin-bottom:20px
+  margin-bottom:20px;
+  line-height:1.6;
 }
 
 .search{
   display:flex;
-  gap:9px
+  gap:9px;
 }
 
 .search input{
   flex:1;
+  min-width:0;
   background:#0e2037;
   border:1px solid #284360;
   border-radius:14px;
   color:white;
   padding:16px;
   font-size:17px;
-  text-transform:uppercase
+  text-transform:uppercase;
+  outline:none;
+}
+
+.search input:focus{
+  border-color:#3dd8a5;
 }
 
 .search button{
@@ -51,13 +61,13 @@ h1{font-size:28px;margin:8px 0}
   font-weight:800;
   background:#39d3a0;
   color:#062016;
-  font-size:16px
+  font-size:16px;
 }
 
 .hint{
   font-size:13px;
   color:#7088a7;
-  margin:9px 2px 22px
+  margin:9px 2px 22px;
 }
 
 .status{
@@ -66,79 +76,34 @@ h1{font-size:28px;margin:8px 0}
   border:1px solid #284766;
   border-radius:14px;
   padding:14px;
-  margin:15px 0
+  margin:15px 0;
 }
 
 .hero{
   display:none;
   background:linear-gradient(135deg,#112b49,#0d2037);
   border:1px solid #315477;
-  border-radius:20px;
+  border-radius:22px;
   padding:20px;
-  margin-top:16px
+  margin-top:16px;
 }
 
 .ticker{
   font-size:14px;
-  color:#8fa8c7
+  color:#8fa8c7;
 }
 
 .price{
-  font-size:37px;
+  font-size:38px;
   font-weight:900;
-  margin:5px 0
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-top:14px
-}
-
-.card{
-  background:#0c1d32;
-  border:1px solid #203b59;
-  border-radius:18px;
-  padding:17px
-}
-
-.card h3{
-  font-size:15px;
-  margin:0 0 11px;
-  color:#a9bdd5
-}
-
-.val{
-  font-size:25px;
-  font-weight:850
-}
-
-.pct{
-  font-size:13px;
-  margin-top:5px;
-  color:#8da5c2
-}
-
-.green{color:#46e2ad}
-.red{color:#ff7585}
-.amber{color:#ffc66b}
-
-.wide{
-  grid-column:1/-1
-}
-
-.analysis{
-  line-height:1.75;
-  color:#d7e4f4;
-  font-size:15px
+  margin:5px 0;
 }
 
 .metrics{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-  margin-top:12px
+  margin-top:13px;
 }
 
 .pill{
@@ -146,52 +111,191 @@ h1{font-size:28px;margin:8px 0}
   border:1px solid #294766;
   padding:8px 10px;
   border-radius:999px;
-  font-size:13px
+  font-size:13px;
 }
 
-/* 入場區間 */
-
-.entry-card{
-  background:linear-gradient(135deg,#0c2930,#0b2133);
-  border:1px solid #2e8d82;
+.sectionTitle{
+  margin:27px 3px 12px;
+  font-size:20px;
+  font-weight:850;
 }
 
-.entry-title{
-  color:#46e2ad!important;
-  font-size:17px!important;
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
 }
 
-.entry-price{
-  font-size:29px;
+.card{
+  background:#0c1d32;
+  border:1px solid #203b59;
+  border-radius:20px;
+  padding:18px;
+}
+
+.card h3{
+  font-size:15px;
+  margin:0 0 12px;
+  color:#a9bdd5;
+}
+
+.val{
+  font-size:27px;
+  font-weight:900;
+}
+
+.pct{
+  font-size:13px;
+  margin-top:6px;
+  color:#8da5c2;
+}
+
+.wide{
+  grid-column:1/-1;
+}
+
+.green{color:#46e2ad}
+.red{color:#ff7585}
+.amber{color:#ffc66b}
+.blue{color:#69b7ff}
+
+.report{
+  display:none;
+  margin-top:16px;
+}
+
+.reportCard{
+  background:#0c1d32;
+  border:1px solid #244362;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:13px;
+}
+
+.reportCard.support{
+  border-color:#17636b;
+  background:linear-gradient(135deg,#0b2838,#0c2034);
+}
+
+.reportCard.entry{
+  border-color:#1d7664;
+  background:linear-gradient(135deg,#0b2d32,#0c2034);
+}
+
+.reportCard.breakout{
+  border-color:#225c86;
+  background:linear-gradient(135deg,#0c2944,#0c2034);
+}
+
+.reportCard.risk{
+  border-color:#76563d;
+  background:linear-gradient(135deg,#292238,#142039);
+}
+
+.reportCard.summary{
+  border-color:#315477;
+  background:linear-gradient(135deg,#102d4c,#0c1d32);
+}
+
+.reportCard h2{
+  margin:0 0 17px;
+  font-size:18px;
+}
+
+.bigLevel{
+  font-size:32px;
+  font-weight:900;
+  margin:5px 0 3px;
+}
+
+.range{
+  font-size:30px;
   font-weight:900;
   color:#46e2ad;
-  margin:8px 0 14px
+  margin:6px 0;
+}
+
+.label{
+  color:#7f98b7;
+  font-size:13px;
+  margin-bottom:4px;
 }
 
 .reason{
-  background:#102a3d;
-  padding:13px;
-  border-radius:12px;
-  margin-top:12px;
+  color:#d7e4f4;
+  line-height:1.75;
+  font-size:15px;
+  margin-top:13px;
 }
 
-.stop{
-  margin-top:14px;
-  padding:12px;
-  border-radius:12px;
-  background:#301c29;
-  border:1px solid #653447;
+.divider{
+  height:1px;
+  background:#233c57;
+  margin:18px 0;
 }
 
-.stop strong{
-  color:#ff7585
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:flex-start;
+  margin:11px 0;
+}
+
+.row .left{
+  color:#9eb2ca;
+  font-size:14px;
+}
+
+.row .right{
+  text-align:right;
+  font-weight:800;
+}
+
+.tag{
+  display:inline-block;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#132b46;
+  border:1px solid #294a6b;
+  color:#bcd0e6;
+  font-size:12px;
+  margin:3px 3px 3px 0;
 }
 
 .action{
+  background:#102a3c;
+  border-left:4px solid #39d3a0;
+  padding:13px 14px;
+  border-radius:10px;
+  line-height:1.7;
   margin-top:14px;
-  padding:12px;
-  border-radius:12px;
-  background:#172a42;
+}
+
+.warning{
+  background:#2a2230;
+  border-left:4px solid #ff9d5c;
+  padding:13px 14px;
+  border-radius:10px;
+  line-height:1.7;
+  margin-top:14px;
+}
+
+.analysis{
+  line-height:1.75;
+  color:#d7e4f4;
+  font-size:15px;
+}
+
+.score{
+  font-size:34px;
+  font-weight:900;
+}
+
+.mini{
+  color:#8098b5;
+  font-size:12px;
+  line-height:1.55;
 }
 
 @media(max-width:520px){
@@ -199,6 +303,7 @@ h1{font-size:28px;margin:8px 0}
   .wide{grid-column:auto}
   .search button{padding:0 13px}
   .price{font-size:32px}
+  .bigLevel,.range{font-size:27px}
 }
 </style>
 </head>
@@ -210,56 +315,74 @@ h1{font-size:28px;margin:8px 0}
 <h1>📈 股票技術分析器</h1>
 
 <div class="sub">
-輸入股票代號，自動計算支撐、壓力、入場區間與技術指標
+輸入股票代號，自動分析趨勢、支撐壓力、技術指標與入場觀察區間。
 </div>
 
 <div class="search">
 <input id="symbol"
-placeholder="例如 2330 / NVDA / AAPL"
-autocomplete="off">
-
+       placeholder="例如 2330 / NVDA / AAPL"
+       autocomplete="off">
 <button id="go">開始分析</button>
 </div>
 
 <div class="hint">
-台股直接輸入 2330；美股輸入 NVDA、AAPL 等。免 API Key。
+台股直接輸入 2330；美股輸入 NVDA、AAPL 等。分析依歷史價格與技術指標自動計算。
 </div>
 
 <div id="status" class="status"></div>
 
 <section id="hero" class="hero">
+
 <div class="ticker" id="title"></div>
 <div class="price" id="price"></div>
+
 <div class="metrics" id="metrics"></div>
+
 </section>
 
-<div id="grid" class="grid"></div>
+<div id="report" class="report"></div>
 
 </div>
 
 <script>
 
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-const fmt=n=>Number(n).toLocaleString(
-  undefined,
-  {maximumFractionDigits:2}
-);
+const fmt = n =>
+Number(n).toLocaleString(undefined,{
+maximumFractionDigits:2
+});
 
 function sma(a,n){
   let s=a.slice(-n);
   return s.reduce((x,y)=>x+y,0)/s.length;
 }
 
+function ema(a,n){
+  if(!a.length)return 0;
+  let k=2/(n+1);
+  let v=a[0];
+
+  for(let i=1;i<a.length;i++){
+    v=a[i]*k+v*(1-k);
+  }
+
+  return v;
+}
+
 function rsi(a,n=14){
 
-  let g=0,l=0;
+  if(a.length<n+1)return 50;
+
+  let g=0;
+  let l=0;
 
   for(let i=a.length-n;i<a.length;i++){
 
     let d=a[i]-a[i-1];
 
-    d>0 ? g+=d : l-=d;
+    if(d>0)g+=d;
+    else l-=d;
   }
 
   if(!l)return 100;
@@ -269,37 +392,47 @@ function rsi(a,n=14){
   return 100-100/(1+rs);
 }
 
-function ema(a,n){
-
-  let k=2/(n+1);
-  let v=a[0];
-
-  for(let i=1;i<a.length;i++)
-    v=a[i]*k+v*(1-k);
-
-  return v;
-}
-
 function pct(x,p){
   return (x/p-1)*100;
 }
 
-function card(t,v,p,cls=''){
+function absPct(x,p){
+  return Math.abs((x/p-1)*100);
+}
 
-  return `
-  <div class="card">
+function average(arr){
+  if(!arr.length)return 0;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
 
-    <h3>${t}</h3>
+function clamp(v,min,max){
+  return Math.max(min,Math.min(max,v));
+}
 
-    <div class="val ${cls}">
-      ${fmt(v)}
-    </div>
+function distanceText(level,price){
 
-    <div class="pct">
-      距現價 ${p>=0?'+':''}${p.toFixed(2)}%
-    </div>
+  let p=pct(level,price);
 
-  </div>`;
+  if(p>0){
+    return `距現價上方 ${Math.abs(p).toFixed(1)}%`;
+  }
+
+  if(p<0){
+    return `距現價下方 ${Math.abs(p).toFixed(1)}%`;
+  }
+
+  return `接近現價`;
+}
+
+function volatility(rows){
+
+  let recent=rows.slice(-20);
+
+  let ranges=recent.map(x=>
+    ((x.high-x.low)/x.close)*100
+  );
+
+  return average(ranges);
 }
 
 async function run(){
@@ -309,10 +442,11 @@ async function run(){
   if(!s)return;
 
   $('status').style.display='block';
-  $('status').textContent='正在抓取行情並分析…';
+  $('status').textContent='正在抓取行情、計算技術結構與入場區間…';
 
   $('hero').style.display='none';
-  $('grid').innerHTML='';
+  $('report').style.display='none';
+  $('report').innerHTML='';
 
   try{
 
@@ -322,40 +456,24 @@ async function run(){
 
     let d=await r.json();
 
-    if(!r.ok)
+    if(!r.ok){
       throw Error(d.error||'分析失敗');
+    }
 
     let rows=d.rows;
 
+    if(!rows || rows.length<30){
+      throw Error('歷史行情不足');
+    }
+
     let closes=rows.map(x=>x.close);
+    let highs=rows.map(x=>x.high);
+    let lows=rows.map(x=>x.low);
 
     let price=closes.at(-1);
 
-    let recent20=rows.slice(-20);
-    let recent60=rows.slice(-60);
-
-    /* 支撐壓力 */
-
-    let sup1=Math.min(
-      ...recent20.map(x=>x.low)
-    );
-
-    let sup2=Math.min(
-      ...recent60.map(x=>x.low)
-    );
-
-    let res1=Math.max(
-      ...recent20.map(x=>x.high)
-    );
-
-    let res2=Math.max(
-      ...recent60.map(x=>x.high)
-    );
-
-    /* 技術指標 */
-
     let ma20=sma(closes,20);
-    let ma60=sma(closes,60);
+    let ma60=sma(closes,Math.min(60,closes.length));
 
     let rv=rsi(closes);
 
@@ -363,169 +481,314 @@ async function run(){
       ema(closes.slice(-80),12)-
       ema(closes.slice(-80),26);
 
+    let recent10=rows.slice(-10);
+    let recent20=rows.slice(-20);
+    let recent60=rows.slice(-Math.min(60,rows.length));
 
-    /* =========================
-       波動幅度
-       ========================= */
+    let low10=Math.min(...recent10.map(x=>x.low));
+    let low20=Math.min(...recent20.map(x=>x.low));
+    let low60=Math.min(...recent60.map(x=>x.low));
 
-    let ranges=recent20.map(x=>x.high-x.low);
+    let high10=Math.max(...recent10.map(x=>x.high));
+    let high20=Math.max(...recent20.map(x=>x.high));
+    let high60=Math.max(...recent60.map(x=>x.high));
 
-    let avgRange=
-      ranges.reduce((a,b)=>a+b,0)/
-      ranges.length;
+    let vol=volatility(rows);
 
+    /* ==============================
+       支撐計算
+    ============================== */
 
-    /* =========================
-       自動尋找合理入場中心
-       ========================= */
+    let supportCandidates=[
+      {name:'MA20',value:ma20},
+      {name:'MA60',value:ma60},
+      {name:'近10日低點',value:low10},
+      {name:'近20日低點',value:low20},
+      {name:'近60日低點',value:low60}
+    ]
+    .filter(x=>
+      Number.isFinite(x.value) &&
+      x.value<=price*1.015
+    )
+    .sort((a,b)=>b.value-a.value);
 
-    let candidates=[
-      sup1,
-      ma20,
-      ma60
-    ].filter(
-      x=>Number.isFinite(x) &&
-      x<=price*1.03
+    let support1=
+      supportCandidates[0]?.value || low20;
+
+    let support2=
+      supportCandidates.find(
+        x=>x.value<support1*0.985
+      )?.value || low60;
+
+    if(support2>support1){
+      [support1,support2]=[support2,support1];
+    }
+
+    /* ==============================
+       壓力計算
+    ============================== */
+
+    let resistanceCandidates=[
+      high10,
+      high20,
+      high60
+    ]
+    .filter(x=>x>=price*0.995)
+    .sort((a,b)=>a-b);
+
+    let resistance1=
+      resistanceCandidates[0] || high20;
+
+    let resistance2=
+      resistanceCandidates.find(
+        x=>x>resistance1*1.02
+      ) || high60;
+
+    /* ==============================
+       入場觀察區
+    ============================== */
+
+    let entryCenter=support1;
+
+    /*
+      依近期波動率決定區間寬度，
+      避免所有股票都用固定百分比。
+    */
+
+    let zoneWidth=
+      clamp(vol*0.35,0.6,2.2)/100;
+
+    let entryLow=
+      entryCenter*(1-zoneWidth);
+
+    let entryHigh=
+      entryCenter*(1+zoneWidth);
+
+    /*
+      不讓區間下緣低於第二支撐太多
+    */
+
+    entryLow=Math.max(
+      entryLow,
+      support2*1.003
     );
 
-    let entryCenter;
+    if(entryLow>entryHigh){
+      entryLow=entryCenter*0.99;
+    }
 
-    if(candidates.length){
+    /* ==============================
+       結構失效位置
+    ============================== */
 
-      entryCenter=
-        candidates.reduce(
-          (a,b)=>
-          Math.abs(price-b)<
-          Math.abs(price-a)
-          ?b:a
-        );
+    let invalidation=
+      support2*(1-clamp(vol*0.18,0.3,1)/100);
+
+    /* ==============================
+       趨勢
+    ============================== */
+
+    let trendTitle='';
+    let trendText='';
+    let trendClass='amber';
+
+    if(price>ma20 && ma20>ma60){
+
+      trendTitle='偏多結構';
+
+      trendText=
+      '目前價格位於 MA20 與 MA60 上方，而且 MA20 高於 MA60，短中期價格結構相對偏強。';
+
+      trendClass='green';
+
+    }else if(price<ma20 && ma20<ma60){
+
+      trendTitle='偏弱結構';
+
+      trendText=
+      '目前價格位於 MA20 與 MA60 下方，而且短期均線低於中期均線，反彈時需留意上方套牢與均線壓力。';
+
+      trendClass='red';
 
     }else{
 
-      entryCenter=sup1;
+      trendTitle='整理／轉折結構';
 
+      trendText=
+      '目前價格與均線排列沒有形成明確同方向結構，市場較可能處於整理或趨勢轉折階段。';
+
+      trendClass='amber';
     }
 
+    /* ==============================
+       RSI 解釋
+    ============================== */
 
-    /* 入場區間寬度 */
+    let rsiText='';
 
-    let zoneWidth=Math.max(
-      avgRange*0.35,
-      price*0.006
-    );
+    if(rv>=70){
 
-    let entryLow=
-      Math.max(
-        sup2,
-        entryCenter-zoneWidth
-      );
+      rsiText=
+      `RSI 為 ${rv.toFixed(1)}，位於較高區域。代表近期買盤動能較強，但同時要留意短線漲幅過快後的震盪風險。`;
 
-    let entryHigh=
-      Math.min(
-        price,
-        entryCenter+zoneWidth
-      );
+    }else if(rv<=30){
 
-    if(entryLow>entryHigh){
+      rsiText=
+      `RSI 為 ${rv.toFixed(1)}，位於較低區域。代表近期賣壓較重，可觀察支撐附近是否開始出現止跌。`;
 
-      entryLow=entryCenter-zoneWidth;
-      entryHigh=entryCenter+zoneWidth;
+    }else if(rv>=55){
 
+      rsiText=
+      `RSI 為 ${rv.toFixed(1)}，位於中性偏強區域，動能目前沒有明顯過熱。`;
+
+    }else if(rv<=45){
+
+      rsiText=
+      `RSI 為 ${rv.toFixed(1)}，位於中性偏弱區域，短線仍需等待買盤轉強。`;
+
+    }else{
+
+      rsiText=
+      `RSI 為 ${rv.toFixed(1)}，位於中性區域，目前沒有明顯超買或超賣訊號。`;
     }
 
+    /* ==============================
+       MACD 解釋
+    ============================== */
 
-    /* =========================
-       結構失效位置
-       ========================= */
+    let macdText=
+      macd>0
+      ?`MACD 動能值為 ${macd.toFixed(2)}，目前位於正值區域，近期價格動能相對偏強。`
+      :`MACD 動能值為 ${macd.toFixed(2)}，目前位於負值區域，近期價格動能相對偏弱。`;
 
-    let stopLevel=
-      Math.min(sup1,entryLow)
-      -avgRange*0.45;
+    /* ==============================
+       入場狀態
+    ============================== */
 
+    let entryStatus='';
+    let entryAction='';
 
-    /* =========================
-       入場理由
-       ========================= */
+    if(price>entryHigh){
 
-    let reasons=[];
+      let dist=
+        ((price/entryHigh)-1)*100;
 
-    if(Math.abs(entryCenter-sup1)/price<0.03)
-      reasons.push(
-        `接近近 20 日支撐 ${fmt(sup1)}`
-      );
+      entryStatus='目前尚未進入入場觀察區';
 
-    if(Math.abs(entryCenter-ma20)/price<0.03)
-      reasons.push(
-        `靠近 MA20 ${fmt(ma20)}`
-      );
+      if(dist>5){
 
-    if(Math.abs(entryCenter-ma60)/price<0.03)
-      reasons.push(
-        `靠近 MA60 ${fmt(ma60)}`
-      );
-
-    if(rv<40)
-      reasons.push(
-        `RSI ${rv.toFixed(1)} 偏低，短線已接近弱勢區`
-      );
-
-    else if(rv<60)
-      reasons.push(
-        `RSI ${rv.toFixed(1)} 位於中性區`
-      );
-
-    if(reasons.length===0)
-      reasons.push(
-        '此區為目前距離現價較近的技術支撐帶'
-      );
-
-
-    /* =========================
-       操作狀態
-       ========================= */
-
-    let distance=
-      pct(entryHigh,price);
-
-    let actionText;
-
-    if(price>=entryLow && price<=entryHigh){
-
-      actionText=
-      '🟢 現價已進入技術入場觀察區，可等待止跌或轉強訊號確認。';
-
-    }
-
-    else if(price>entryHigh){
-
-      let away=
-        (price/entryHigh-1)*100;
-
-      if(away>5){
-
-        actionText=
-        `🟡 現價距離入場區約 ${away.toFixed(1)}%，不宜直接追價，可等待回踩。`;
+        entryAction=
+        `目前價格高於觀察區上緣約 ${dist.toFixed(1)}%。若以回踩策略來看，現價距離主要支撐較遠，追價後可承受的下方空間會變大。較適合等待價格靠近觀察區，或改等上方壓力突破後的回測確認。`;
 
       }else{
 
-        actionText=
-        '🟡 現價位於入場區上方，可觀察是否回踩支撐後止穩。';
-
+        entryAction=
+        `目前價格距離觀察區上緣約 ${dist.toFixed(1)}%。價格已不算太遠，但仍建議觀察是否回踩支撐，而不是單純因為接近支撐就直接判定轉強。`;
       }
 
+    }else if(price>=entryLow && price<=entryHigh){
+
+      entryStatus='目前已進入入場觀察區';
+
+      entryAction=
+      '價格目前正在技術支撐觀察區內。這裡不是「碰到就買」的訊號，接下來更重要的是觀察是否停止破底、重新站回短線關鍵價、出現較明顯下影線，或量價開始改善。';
+
+    }else{
+
+      entryStatus='目前已跌破原入場觀察區';
+
+      entryAction=
+      '價格已經落到原本觀察區下方，因此不能再把原區間直接視為有效支撐。接下來應優先觀察第二支撐與結構失效位置，而不是急著攤平。';
     }
 
-    else{
+    /* ==============================
+       支撐原因
+    ============================== */
 
-      actionText=
-      '🔴 現價已跌到原先規劃區下方，先確認支撐是否失效，不宜只因價格變低就進場。';
+    let supportReasons=[];
 
+    if(absPct(ma20,support1)<1.5)
+      supportReasons.push('MA20 靠近此區');
+
+    if(absPct(ma60,support1)<1.5)
+      supportReasons.push('MA60 靠近此區');
+
+    if(absPct(low10,support1)<1.5)
+      supportReasons.push('近期10日低點');
+
+    if(absPct(low20,support1)<1.5)
+      supportReasons.push('20日波段低點');
+
+    if(absPct(low60,support1)<1.5)
+      supportReasons.push('中期60日低點');
+
+    if(!supportReasons.length)
+      supportReasons.push('距現價最近的主要技術結構位');
+
+    /* ==============================
+       共振程度
+    ============================== */
+
+    let confluence=supportReasons.length;
+
+    let confluenceText=
+      confluence>=3
+      ?'此區有多項技術條件接近，屬於相對明顯的技術共振區。'
+      :confluence===2
+      ?'此區有兩項技術條件接近，具一定參考價值。'
+      :'目前此區的技術條件共振不強，因此價格到達後更需要等待確認訊號。';
+
+    /* ==============================
+       突破分析
+    ============================== */
+
+    let breakoutText='';
+
+    if(price>=resistance1){
+
+      breakoutText=
+      '目前價格已經接近或站上原先的第一壓力。此時重點不只是「有沒有突破」，還要觀察突破後是否能持續站穩，以及回測原壓力時是否轉為支撐。';
+
+    }else{
+
+      breakoutText=
+      `目前第一個較重要的上方觀察位置約在 ${fmt(resistance1)}。若價格向上突破，應再觀察收盤能否站穩，而不是只看盤中瞬間穿越。`;
     }
 
+    /* ==============================
+       簡易結構評分
+       不是買賣評分，只表示技術條件強弱
+    ============================== */
 
-    /* =========================
+    let score=50;
+
+    if(price>ma20)score+=10;
+    else score-=10;
+
+    if(ma20>ma60)score+=10;
+    else score-=10;
+
+    if(macd>0)score+=10;
+    else score-=10;
+
+    if(rv>50 && rv<70)score+=8;
+
+    if(rv>75)score-=5;
+
+    if(price<support1)score-=10;
+
+    score=clamp(score,0,100);
+
+    let scoreText=
+      score>=70
+      ?'目前多項技術條件偏強'
+      :score<=35
+      ?'目前多項技術條件偏弱'
+      :'目前技術條件較混合';
+
+    /* ==============================
        HERO
-       ========================= */
+    ============================== */
 
     $('title').textContent=
       `${d.name} · ${d.symbol}`;
@@ -533,223 +796,415 @@ async function run(){
     $('price').textContent=
       `${fmt(price)} ${d.currency}`;
 
-    $('metrics').innerHTML=`
-      <span class="pill">
-      MA20 ${fmt(ma20)}
-      </span>
-
-      <span class="pill">
-      MA60 ${fmt(ma60)}
-      </span>
-
-      <span class="pill">
-      RSI ${rv.toFixed(1)}
-      </span>
-
-      <span class="pill">
-      MACD ${macd.toFixed(2)}
-      </span>
-    `;
+    $('metrics').innerHTML=
+      `<span class="pill">MA20 ${fmt(ma20)}</span>
+       <span class="pill">MA60 ${fmt(ma60)}</span>
+       <span class="pill">RSI ${rv.toFixed(1)}</span>
+       <span class="pill">MACD ${macd.toFixed(2)}</span>`;
 
     $('hero').style.display='block';
 
+    /* ==============================
+       完整報告
+    ============================== */
 
-    /* =========================
-       趨勢說明
-       ========================= */
+    $('report').innerHTML=`
 
-    let trend=
+    <div class="sectionTitle">📋 今日技術分析摘要</div>
 
-      price>ma20 && ma20>ma60
+    <div class="reportCard summary">
 
-      ?'短中期價格結構維持在均線上方，目前結構相對偏強。'
+      <div class="row">
+        <div class="left">目前結構</div>
+        <div class="right ${trendClass}">
+          ${trendTitle}
+        </div>
+      </div>
 
-      :price<ma20 && ma20<ma60
+      <div class="row">
+        <div class="left">現價</div>
+        <div class="right">
+          ${fmt(price)}
+        </div>
+      </div>
 
-      ?'短中期價格位於均線下方，目前結構偏弱，反彈時需留意上方壓力。'
+      <div class="row">
+        <div class="left">入場觀察區</div>
+        <div class="right green">
+          ${fmt(entryLow)} ～ ${fmt(entryHigh)}
+        </div>
+      </div>
 
-      :'目前均線結構交錯，較偏整理。';
+      <div class="row">
+        <div class="left">第一支撐</div>
+        <div class="right">
+          ${fmt(support1)}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="left">第二支撐</div>
+        <div class="right">
+          ${fmt(support2)}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="left">第一壓力</div>
+        <div class="right amber">
+          ${fmt(resistance1)}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="left">結構失效參考</div>
+        <div class="right red">
+          ${fmt(invalidation)}
+        </div>
+      </div>
+
+    </div>
 
 
-    let rsitxt=
+    <div class="sectionTitle">🎯 入場觀察區間</div>
 
-      rv>70
+    <div class="reportCard entry">
 
-      ?'RSI 位於較高區間，短線過熱風險提高。'
+      <div class="label">
+        技術面回踩觀察區
+      </div>
 
-      :rv<30
+      <div class="range">
+        ${fmt(entryLow)} ～ ${fmt(entryHigh)}
+      </div>
 
-      ?'RSI 位於較低區間，可觀察是否出現止跌或轉強訊號。'
+      <div class="pct">
+        區間中心 ${fmt(entryCenter)}
+        ・${distanceText(entryCenter,price)}
+      </div>
 
-      :'RSI 位於中性區間。';
+      <div class="divider"></div>
+
+      <h2>為什麼抓這個區間？</h2>
+
+      <div>
+        ${supportReasons
+          .map(x=>`<span class="tag">${x}</span>`)
+          .join('')
+        }
+      </div>
+
+      <div class="reason">
+        本區間以距離現價較近的有效支撐結構為核心，
+        再依近期價格波動程度向上下延伸，而不是只使用單一固定百分比。
+        ${confluenceText}
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>📍 現在的位置</h2>
+
+      <div class="reason">
+        <strong>${entryStatus}</strong><br>
+        ${entryAction}
+      </div>
+
+      <div class="action">
+        <strong>到達區間後觀察：</strong><br>
+        ① 是否停止持續創低<br>
+        ② 是否重新站回短線支撐<br>
+        ③ K 棒是否出現止跌特徵<br>
+        ④ 跌破後是否快速收回<br>
+        ⑤ 價格與動能是否同步改善
+      </div>
+
+    </div>
 
 
-    /* =========================
-       顯示結果
-       ========================= */
+    <div class="sectionTitle">🛡️ 支撐觀察</div>
 
-    $('grid').innerHTML=
+    <div class="reportCard support">
 
-      card(
-        '🛡️ 第一支撐',
-        sup1,
-        pct(sup1,price),
-        'green'
-      )
-
-      +
-
-      card(
-        '🛡️ 第二支撐',
-        sup2,
-        pct(sup2,price),
-        'green'
-      )
-
-      +
-
-      card(
-        '⚡ 第一壓力',
-        res1,
-        pct(res1,price),
-        'amber'
-      )
-
-      +
-
-      card(
-        '🔥 第二壓力',
-        res2,
-        pct(res2,price),
-        'red'
-      )
-
-      +
-
-      `
-
-      <div class="card wide entry-card">
-
-        <h3 class="entry-title">
-        🎯 建議入場觀察區間
-        </h3>
-
-        <div class="entry-price">
-        ${fmt(entryLow)}
-        ～
-        ${fmt(entryHigh)}
+      <div class="row">
+        <div>
+          <div class="label">近端支撐</div>
+          <div class="bigLevel green">
+            ${fmt(support1)}
+          </div>
         </div>
 
-        <div class="analysis">
+        <div class="right">
+          ${distanceText(support1,price)}
+        </div>
+      </div>
 
-          <div class="reason">
+      <div class="reason">
+        這是目前現價下方較接近的技術結構位置。
+        價格回到這裡時，重點是觀察市場是否真的出現承接，
+        而不是單純因為「碰到支撐」就假設一定反彈。
+      </div>
 
-            <strong>為什麼是這個區間？</strong>
+      <div class="divider"></div>
 
-            <br><br>
+      <div class="row">
 
-            ${reasons.join('；')}。
-
-            此區間同時考慮近期波動幅度，
-            避免只用單一價格作為進場依據。
-
+        <div>
+          <div class="label">第二支撐</div>
+          <div class="bigLevel">
+            ${fmt(support2)}
           </div>
+        </div>
 
-          <div class="action">
-
-            <strong>目前策略</strong>
-
-            <br><br>
-
-            ${actionText}
-
-          </div>
-
-          <div class="stop">
-
-            <strong>🛑 結構失效參考</strong>
-
-            <br><br>
-
-            約 ${fmt(stopLevel)}
-
-            <br>
-
-            若價格有效跌破此區，
-            代表目前支撐結構可能已經改變，
-            應重新分析，而不是直接攤平。
-
-          </div>
-
+        <div class="right">
+          ${distanceText(support2,price)}
         </div>
 
       </div>
 
+      <div class="reason">
+        如果第一支撐無法守住，
+        此處是下一個需要觀察的結構位置。
+        若價格一路跌破第一支撐而沒有快速收回，
+        原本的短線結構會明顯轉弱。
+      </div>
 
-      <div class="card wide">
+    </div>
 
-        <h3>
-        📊 結構觀察
-        </h3>
 
-        <div class="analysis">
+    <div class="sectionTitle">⚡ 突破／壓力觀察</div>
 
-          ${trend}
+    <div class="reportCard breakout">
 
-          ${rsitxt}
+      <div class="label">
+        第一關鍵壓力
+      </div>
 
-          <br><br>
+      <div class="bigLevel amber">
+        ${fmt(resistance1)}
+      </div>
 
-          <strong>支撐：</strong>
+      <div class="pct">
+        ${distanceText(resistance1,price)}
+      </div>
 
-          近 20 日低點
-          ${fmt(sup1)}，
-          近 60 日低點
-          ${fmt(sup2)}。
+      <div class="reason">
+        ${breakoutText}
+      </div>
 
-          <br>
+      <div class="action">
+        <strong>突破後不要只看「穿過去」：</strong><br>
+        更重要的是觀察價格能否站穩，
+        以及後續回測此區時，原本的壓力是否轉成支撐。
+      </div>
 
-          <strong>壓力：</strong>
+      <div class="divider"></div>
 
-          近 20 日高點
-          ${fmt(res1)}，
-          近 60 日高點
-          ${fmt(res2)}。
+      <div class="label">
+        第二壓力／中期參考
+      </div>
 
-          <br><br>
+      <div class="bigLevel">
+        ${fmt(resistance2)}
+      </div>
 
-          本工具依歷史價格與規則式技術分析計算，
-          入場區間屬技術觀察區，
-          不代表價格一定會在該處止跌。
+      <div class="pct">
+        ${distanceText(resistance2,price)}
+      </div>
 
+    </div>
+
+
+    <div class="sectionTitle">📊 趨勢與動能</div>
+
+    <div class="reportCard">
+
+      <h2 class="${trendClass}">
+        ${trendTitle}
+      </h2>
+
+      <div class="reason">
+        ${trendText}
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <div class="left">MA20</div>
+        <div class="right">
+          ${fmt(ma20)}
         </div>
+      </div>
+
+      <div class="row">
+        <div class="left">MA60</div>
+        <div class="right">
+          ${fmt(ma60)}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>RSI 動能</h2>
+
+      <div class="reason">
+        ${rsiText}
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>MACD 動能</h2>
+
+      <div class="reason">
+        ${macdText}
+      </div>
+
+    </div>
+
+
+    <div class="sectionTitle">🧭 情境推演</div>
+
+    <div class="reportCard">
+
+      <h2>情境 A｜回踩入場觀察區</h2>
+
+      <div class="reason">
+        若價格回到
+        <strong class="green">
+        ${fmt(entryLow)}～${fmt(entryHigh)}
+        </strong>，
+        先觀察支撐是否產生反應。
+        如果價格在區間內止跌並重新轉強，
+        原本的支撐邏輯仍然存在。
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>情境 B｜沒有回踩直接上漲</h2>
+
+      <div class="reason">
+        若價格沒有回到入場觀察區，
+        而是直接向
+        <strong class="amber">
+        ${fmt(resistance1)}
+        </strong>
+        推進，則原本的回踩策略不需要硬追。
+        可以改為觀察壓力突破後是否站穩，以及回測是否守住。
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>情境 C｜跌破主要支撐</h2>
+
+      <div class="reason">
+        若價格跌破
+        <strong>${fmt(support1)}</strong>
+        且無法快速收回，
+        下一個觀察位置會轉向
+        <strong>${fmt(support2)}</strong>。
+        此時短線結構已經比原先弱。
+      </div>
+
+    </div>
+
+
+    <div class="sectionTitle">⛔ 結構失效參考</div>
+
+    <div class="reportCard risk">
+
+      <div class="label">
+        本次支撐分析失效參考
+      </div>
+
+      <div class="bigLevel red">
+        ${fmt(invalidation)}
+      </div>
+
+      <div class="pct">
+        ${distanceText(invalidation,price)}
+      </div>
+
+      <div class="reason">
+        此價位位於第二支撐下方並加入近期波動緩衝。
+        如果價格有效跌破此區，
+        代表目前用來建立「回踩支撐」的分析前提已明顯遭到破壞。
+      </div>
+
+      <div class="warning">
+        <strong>注意：</strong><br>
+        「失效位置」不是保證價格一定會反轉的位置，
+        而是代表目前這一套技術分析邏輯需要重新計算。
+      </div>
+
+    </div>
+
+
+    <div class="sectionTitle">🧠 技術結構總結</div>
+
+    <div class="reportCard summary">
+
+      <div class="label">
+        技術條件強弱指標
+      </div>
+
+      <div class="score ${trendClass}">
+        ${score} / 100
+      </div>
+
+      <div class="reason">
+        ${scoreText}。
+        此數值只整合價格相對均線、均線排列、
+        RSI 與 MACD 等技術條件，
+        <strong>不是買進／賣出評分，也不代表未來上漲機率。</strong>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="analysis">
+
+        <strong>目前最重要的三個位置：</strong><br><br>
+
+        🟢 回踩觀察：
+        ${fmt(entryLow)}～${fmt(entryHigh)}
+        <br>
+
+        🟠 上方壓力：
+        ${fmt(resistance1)}
+        <br>
+
+        🔴 結構失效：
+        ${fmt(invalidation)}
 
       </div>
-      `;
+
+    </div>
 
 
+    <div class="mini">
+      本工具使用歷史價格、均線、RSI、MACD、近期高低點與波動率進行規則式技術分析。
+      技術分析存在失效與假突破可能，顯示的價位為觀察參考，不代表保證成交、獲利或個人化投資建議。
+    </div>
+
+    `;
+
+    $('report').style.display='block';
     $('status').style.display='none';
 
-  }
+  }catch(e){
 
-  catch(e){
+    $('status').style.display='block';
 
     $('status').textContent=
       '❌ '+e.message+
-      '。如果是剛下載的檔案，請注意這個版本需要部署後使用，不能直接用 iPhone「檔案」開啟。';
-
+      '。如果剛修改 GitHub，請等待 Vercel 完成重新部署後再試一次。';
   }
-
 }
-
 
 $('go').onclick=run;
 
 $('symbol').addEventListener(
   'keydown',
   e=>{
-    if(e.key==='Enter')
-      run();
+    if(e.key==='Enter')run();
   }
 );
 
