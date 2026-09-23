@@ -1,56 +1,1428 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>波段技術分析器</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html{
+  background:#000;
+}
+
 body{
-margin:0;
-background:#000000;
-color:#f5f5f7;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+  margin:0;
+  background:#000000;
+  color:#f5f5f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.wrap{
+  width:100%;
+  max-width:780px;
+  margin:auto;
+  padding:22px 15px 70px;
+}
+
+h1{
+  font-size:28px;
+  margin:8px 0;
+  letter-spacing:-.5px;
+}
+
+.sub{
+  color:#8e8e93;
+  margin-bottom:20px;
+  line-height:1.6;
+  font-size:14px;
+}
+
+.search{
+  display:flex;
+  gap:9px;
+}
+
+.search input{
+  flex:1;
+  min-width:0;
+  background:#0a0a0a;
+  border:1px solid #292929;
+  border-radius:14px;
+  color:#fff;
+  padding:16px;
+  font-size:17px;
+  text-transform:uppercase;
+  outline:none;
+}
+
+.search input:focus{
+  border-color:#46e2ad;
+}
+
+.search button{
+  border:0;
+  border-radius:14px;
+  padding:0 18px;
+  font-weight:850;
+  background:#46e2ad;
+  color:#001c14;
+  font-size:16px;
+}
+
+.hint{
+  font-size:12px;
+  color:#666;
+  margin:10px 2px 22px;
+  line-height:1.6;
+}
+
+.status{
+  display:none;
+  background:#0a0a0a;
+  border:1px solid #292929;
+  border-radius:14px;
+  padding:14px;
+  margin:15px 0;
+  line-height:1.6;
 }
 
 .hero{
-background:#0a0a0a;
-border:1px solid #292929;
+  display:none;
+  background:#0a0a0a;
+  border:1px solid #292929;
+  border-radius:22px;
+  padding:20px;
+  margin-top:16px;
+}
+
+.ticker{
+  font-size:14px;
+  color:#8e8e93;
+}
+
+.price{
+  font-size:39px;
+  font-weight:900;
+  margin:6px 0;
+  letter-spacing:-1px;
+}
+
+.metrics{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.pill{
+  background:#111;
+  border:1px solid #292929;
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:12px;
+  color:#d5d5d7;
+}
+
+.report{
+  display:none;
+  margin-top:18px;
+}
+
+.sectionTitle{
+  margin:30px 3px 12px;
+  font-size:20px;
+  font-weight:900;
 }
 
 .card{
-background:#0b0b0b;
-border:1px solid #292929;
+  background:#0b0b0b;
+  border:1px solid #292929;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:13px;
 }
 
 .entry{
-background:#0b0f0e;
-border-color:#1d7664;
+  background:#0b0f0e;
+  border-color:#1d7664;
 }
 
 .tp1{
-background:#0b0f0d;
-border-color:#427a54;
+  background:#0b0f0d;
+  border-color:#427a54;
 }
 
 .tp2{
-background:#0c0f0b;
-border-color:#517642;
+  background:#0c0f0b;
+  border-color:#517642;
 }
 
 .tp3{
-background:#0f0e09;
-border-color:#756c3c;
+  background:#0f0e09;
+  border-color:#756c3c;
 }
 
 .stop{
-background:#100a0c;
-border-color:#8a4b52;
+  background:#100a0c;
+  border-color:#8a4b52;
 }
 
 .pressure{
-background:#0e0d09;
-border-color:#6d593c;
+  background:#0e0d09;
+  border-color:#6d593c;
 }
 
 .summary{
-background:#0a0a0a;
-border-color:#303030;
+  background:#0a0a0a;
+  border-color:#303030;
 }
 
 .planBox{
-background:#080808;
-border:1px solid #292929;
+  background:#080808;
+  border:1px solid #292929;
+  border-radius:15px;
+  padding:14px;
 }
+
+.label{
+  font-size:13px;
+  color:#777;
+  margin-bottom:5px;
+}
+
+.big{
+  font-size:31px;
+  font-weight:900;
+  margin:4px 0;
+  letter-spacing:-.5px;
+}
+
+.green{
+  color:#46e2ad;
+}
+
+.red{
+  color:#ff6678;
+}
+
+.amber{
+  color:#ffc45c;
+}
+
+.blue{
+  color:#64b5ff;
+}
+
+.white{
+  color:#fff;
+}
+
+.small{
+  font-size:13px;
+  color:#8e8e93;
+  margin-top:6px;
+  line-height:1.6;
+}
+
+.reason{
+  color:#d4d4d7;
+  line-height:1.8;
+  font-size:15px;
+  margin-top:14px;
+}
+
+.divider{
+  height:1px;
+  background:#262626;
+  margin:18px 0;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px;
+  margin:12px 0;
+}
+
+.left{
+  color:#8e8e93;
+  font-size:14px;
+}
+
+.right{
+  text-align:right;
+  font-weight:850;
+}
+
+.action{
+  background:#091713;
+  border-left:4px solid #46e2ad;
+  padding:14px;
+  border-radius:10px;
+  line-height:1.75;
+  margin-top:15px;
+  font-size:14px;
+}
+
+.warning{
+  background:#190b0f;
+  border-left:4px solid #ff6678;
+  padding:14px;
+  border-radius:10px;
+  line-height:1.75;
+  margin-top:15px;
+  font-size:14px;
+}
+
+.target{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.targetNumber{
+  width:42px;
+  height:42px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border:1px solid #333;
+  border-radius:50%;
+  font-size:18px;
+  font-weight:900;
+}
+
+.rr{
+  font-size:12px;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#111;
+  border:1px solid #303030;
+  margin-top:9px;
+  display:inline-block;
+  color:#bbb;
+}
+
+.plan{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+
+.planBox .n{
+  font-size:20px;
+  font-weight:900;
+  margin-top:5px;
+}
+
+.tag{
+  display:inline-block;
+  background:#111;
+  border:1px solid #303030;
+  border-radius:999px;
+  padding:7px 9px;
+  margin:3px 3px 3px 0;
+  color:#bbb;
+  font-size:12px;
+}
+
+.note{
+  font-size:12px;
+  line-height:1.7;
+  color:#666;
+  margin-top:22px;
+}
+
+@media(max-width:520px){
+  .search button{
+    padding:0 13px;
+  }
+
+  .price{
+    font-size:34px;
+  }
+
+  .big{
+    font-size:27px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <h1>📈 波段技術分析器</h1>
+
+  <div class="sub">
+    自動分析趨勢、支撐壓力、波段入場觀察區、三段止盈與結構失效位置。
+  </div>
+
+  <div class="search">
+    <input
+      id="symbol"
+      placeholder="例如 2330 / NVDA / AAPL"
+      autocomplete="off"
+    >
+    <button id="go">開始分析</button>
+  </div>
+
+  <div class="hint">
+    台股直接輸入 2330；美股輸入 NVDA、AAPL。波段結構主要依日 K 歷史資料計算。
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <section id="hero" class="hero">
+    <div id="title" class="ticker"></div>
+    <div id="price" class="price"></div>
+    <div id="metrics" class="metrics"></div>
+  </section>
+
+  <div id="report" class="report"></div>
+
+</div>
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const fmt = n => {
+  if(!Number.isFinite(Number(n))) return "--";
+  return Number(n).toLocaleString(undefined,{
+    maximumFractionDigits:2
+  });
+};
+
+function sma(arr,n){
+  const data=arr.slice(-Math.min(n,arr.length));
+  if(!data.length) return 0;
+  return data.reduce((a,b)=>a+b,0)/data.length;
+}
+
+function ema(arr,n){
+  if(!arr.length) return 0;
+
+  const k=2/(n+1);
+  let value=arr[0];
+
+  for(let i=1;i<arr.length;i++){
+    value=arr[i]*k+value*(1-k);
+  }
+
+  return value;
+}
+
+function rsi(arr,n=14){
+
+  if(arr.length<n+1) return 50;
+
+  let gain=0;
+  let loss=0;
+
+  for(let i=arr.length-n;i<arr.length;i++){
+
+    const diff=arr[i]-arr[i-1];
+
+    if(diff>0){
+      gain+=diff;
+    }else{
+      loss-=diff;
+    }
+  }
+
+  if(loss===0) return 100;
+
+  const rs=(gain/n)/(loss/n);
+
+  return 100-(100/(1+rs));
+}
+
+function average(arr){
+  if(!arr.length) return 0;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+
+function clamp(v,min,max){
+  return Math.max(min,Math.min(max,v));
+}
+
+function pct(level,base){
+  if(!base) return 0;
+  return (level/base-1)*100;
+}
+
+function absPct(a,b){
+  if(!b) return 0;
+  return Math.abs((a/b-1)*100);
+}
+
+function distance(level,price){
+
+  const p=pct(level,price);
+
+  if(p>0){
+    return `距現價上方 ${Math.abs(p).toFixed(1)}%`;
+  }
+
+  if(p<0){
+    return `距現價下方 ${Math.abs(p).toFixed(1)}%`;
+  }
+
+  return "接近現價";
+}
+
+function atr(rows,n=14){
+
+  const data=rows.slice(-(n+1));
+
+  if(data.length<2) return 0;
+
+  const values=[];
+
+  for(let i=1;i<data.length;i++){
+
+    const high=data[i].high;
+    const low=data[i].low;
+    const prevClose=data[i-1].close;
+
+    values.push(
+      Math.max(
+        high-low,
+        Math.abs(high-prevClose),
+        Math.abs(low-prevClose)
+      )
+    );
+  }
+
+  return average(values);
+}
+
+async function run(){
+
+  const symbol=$("symbol").value.trim();
+
+  if(!symbol) return;
+
+  $("status").style.display="block";
+  $("status").textContent=
+    "正在分析趨勢、支撐壓力、入場區與三段止盈…";
+
+  $("hero").style.display="none";
+  $("report").style.display="none";
+  $("report").innerHTML="";
+
+  try{
+
+    const response=await fetch(
+      "/api/stock?symbol="+encodeURIComponent(symbol)
+    );
+
+    const d=await response.json();
+
+    if(!response.ok){
+      throw new Error(d.error||"分析失敗");
+    }
+
+    const rows=(d.rows||[]).filter(x=>
+      Number.isFinite(x.close) &&
+      Number.isFinite(x.high) &&
+      Number.isFinite(x.low)
+    );
+
+    if(rows.length<30){
+      throw new Error("歷史行情資料不足");
+    }
+
+    const closes=rows.map(x=>x.close);
+
+    const price=closes.at(-1);
+
+    const ma20=sma(closes,20);
+    const ma60=sma(closes,60);
+
+    const rsiValue=rsi(closes,14);
+
+    const macd=
+      ema(closes.slice(-80),12)-
+      ema(closes.slice(-80),26);
+
+    const atrValue=atr(rows,14);
+    const atrPct=atrValue/price*100;
+
+    const r10=rows.slice(-10);
+    const r20=rows.slice(-20);
+    const r60=rows.slice(-Math.min(60,rows.length));
+
+    const low10=Math.min(...r10.map(x=>x.low));
+    const low20=Math.min(...r20.map(x=>x.low));
+    const low60=Math.min(...r60.map(x=>x.low));
+
+    const high10=Math.max(...r10.map(x=>x.high));
+    const high20=Math.max(...r20.map(x=>x.high));
+    const high60=Math.max(...r60.map(x=>x.high));
+
+
+    /* ============================
+       支撐候選
+    ============================ */
+
+    const supportCandidates=[
+      {name:"MA20",value:ma20},
+      {name:"MA60",value:ma60},
+      {name:"10日低點",value:low10},
+      {name:"20日低點",value:low20},
+      {name:"60日低點",value:low60}
+    ]
+    .filter(x=>
+      Number.isFinite(x.value) &&
+      x.value<=price*1.015
+    )
+    .sort((a,b)=>b.value-a.value);
+
+    let support1=
+      supportCandidates[0]?.value || low20;
+
+    let support2=
+      supportCandidates.find(
+        x=>x.value<support1-Math.max(atrValue*.45,price*.006)
+      )?.value || low60;
+
+    if(support2>support1){
+      const tmp=support1;
+      support1=support2;
+      support2=tmp;
+    }
+
+
+    /* ============================
+       支撐形成原因
+    ============================ */
+
+    const supportReasons=[];
+
+    if(absPct(ma20,support1)<=1.5){
+      supportReasons.push("MA20 接近");
+    }
+
+    if(absPct(ma60,support1)<=1.5){
+      supportReasons.push("MA60 接近");
+    }
+
+    if(absPct(low10,support1)<=1.5){
+      supportReasons.push("近期10日低點");
+    }
+
+    if(absPct(low20,support1)<=1.5){
+      supportReasons.push("20日波段低點");
+    }
+
+    if(absPct(low60,support1)<=1.5){
+      supportReasons.push("60日中期低點");
+    }
+
+    if(!supportReasons.length){
+      supportReasons.push("距現價最近的主要技術結構");
+    }
+
+
+    /* ============================
+       入場觀察區
+    ============================ */
+
+    const entryCenter=support1;
+
+    const entryWidth=clamp(
+      atrValue*.35,
+      price*.004,
+      price*.018
+    );
+
+    let entryLow=entryCenter-entryWidth;
+    let entryHigh=entryCenter+entryWidth;
+
+    if(entryLow<=support2){
+      entryLow=support2+atrValue*.15;
+    }
+
+    if(entryLow>=entryHigh){
+      entryLow=entryCenter-atrValue*.25;
+      entryHigh=entryCenter+atrValue*.25;
+    }
+
+    const strategyEntry=(entryLow+entryHigh)/2;
+
+
+    /* ============================
+       結構失效 / 停損
+    ============================ */
+
+    let stop=Math.min(
+      support2-atrValue*.35,
+      strategyEntry-atrValue*1.15
+    );
+
+    if(
+      !Number.isFinite(stop) ||
+      stop<=0 ||
+      stop>=strategyEntry
+    ){
+      stop=strategyEntry-Math.max(
+        atrValue*1.25,
+        strategyEntry*.025
+      );
+    }
+
+    const risk=strategyEntry-stop;
+
+
+    /* ============================
+       壓力候選
+    ============================ */
+
+    const resistanceCandidates=[
+      high10,
+      high20,
+      high60
+    ]
+    .filter(x=>
+      Number.isFinite(x) &&
+      x>strategyEntry
+    )
+    .sort((a,b)=>a-b);
+
+    let resistance1=
+      resistanceCandidates[0] ||
+      strategyEntry+risk*1.5;
+
+    let resistance2=
+      resistanceCandidates.find(
+        x=>x>resistance1+atrValue*.5
+      ) ||
+      strategyEntry+risk*2.5;
+
+
+    /* ============================
+       TP1 / TP2 / TP3
+    ============================ */
+
+    const target1R=strategyEntry+risk*1.25;
+    const target2R=strategyEntry+risk*2;
+    const target3R=strategyEntry+risk*3;
+
+    let tp1=target1R;
+
+    if(
+      resistance1>strategyEntry &&
+      resistance1<target1R
+    ){
+      tp1=resistance1;
+    }
+
+    if(tp1<=strategyEntry){
+      tp1=target1R;
+    }
+
+    let tp2=target2R;
+
+    if(
+      resistance2>tp1 &&
+      resistance2<target2R
+    ){
+      tp2=resistance2;
+    }
+
+    tp2=Math.max(
+      tp2,
+      tp1+Math.max(atrValue*.5,risk*.35)
+    );
+
+    let tp3=Math.max(
+      target3R,
+      tp2+Math.max(atrValue,risk*.5)
+    );
+
+
+    /* ============================
+       R 倍數
+    ============================ */
+
+    const rr1=(tp1-strategyEntry)/risk;
+    const rr2=(tp2-strategyEntry)/risk;
+    const rr3=(tp3-strategyEntry)/risk;
+
+
+    /* ============================
+       趨勢
+    ============================ */
+
+    let trend="整理／轉折";
+    let trendClass="amber";
+    let trendReason=
+      "目前均線與價格排列尚未形成一致方向，較偏整理或轉折階段。";
+
+    if(
+      price>ma20 &&
+      ma20>ma60 &&
+      macd>0
+    ){
+      trend="偏多趨勢";
+      trendClass="green";
+
+      trendReason=
+        "目前價格位於 MA20 與 MA60 上方，MA20 同時高於 MA60，MACD 動能亦為正值，短中期結構相對偏強。";
+    }
+    else if(
+      price<ma20 &&
+      ma20<ma60 &&
+      macd<0
+    ){
+      trend="偏弱趨勢";
+      trendClass="red";
+
+      trendReason=
+        "目前價格位於主要均線下方，MA20 低於 MA60，且 MACD 動能偏弱，反彈時需留意上方壓力。";
+    }
+
+
+    /* ============================
+       RSI 說明
+    ============================ */
+
+    let rsiText="";
+
+    if(rsiValue>=70){
+      rsiText=
+        `RSI ${rsiValue.toFixed(1)}，位於較高區域。動能偏強，但短線波動與回檔風險也可能增加。`;
+    }
+    else if(rsiValue<=30){
+      rsiText=
+        `RSI ${rsiValue.toFixed(1)}，位於較低區域。賣壓較重，可觀察支撐附近是否出現止跌。`;
+    }
+    else if(rsiValue>=55){
+      rsiText=
+        `RSI ${rsiValue.toFixed(1)}，位於中性偏強區，動能目前相對有利。`;
+    }
+    else if(rsiValue<=45){
+      rsiText=
+        `RSI ${rsiValue.toFixed(1)}，位於中性偏弱區，短線仍需要等待動能改善。`;
+    }
+    else{
+      rsiText=
+        `RSI ${rsiValue.toFixed(1)}，位於中性區域，目前沒有明顯超買或超賣。`;
+    }
+
+
+    /* ============================
+       目前位置判斷
+    ============================ */
+
+    let currentStatus="";
+    let currentClass="amber";
+
+    if(price>entryHigh){
+
+      const away=(price/entryHigh-1)*100;
+
+      currentStatus=
+        `目前價格位於入場觀察區上方，距區間上緣約 ${away.toFixed(1)}%。若採回踩型波段策略，目前主要是等待價格接近支撐，而不是把現價直接視為相同風險位置。`;
+
+      currentClass="amber";
+    }
+    else if(
+      price>=entryLow &&
+      price<=entryHigh
+    ){
+      currentStatus=
+        "目前價格已進入波段觀察區。進入區間本身不是確認訊號，接下來要觀察是否停止破底、重新站回短線結構，或動能開始改善。";
+
+      currentClass="green";
+    }
+    else if(price>stop){
+
+      currentStatus=
+        "目前價格已跌破原本的入場觀察區，但尚未跌破結構失效位置。這代表支撐正在接受測試，原先結構已經轉弱。";
+
+      currentClass="amber";
+    }
+    else{
+      currentStatus=
+        "目前價格已低於本次計算出的結構失效位置，原先的回踩多方假設已不再適用，需要重新分析新的支撐結構。";
+
+      currentClass="red";
+    }
+
+
+    /* ============================
+       HERO
+    ============================ */
+
+    $("title").textContent=
+      `${d.name} · ${d.symbol}`;
+
+    $("price").textContent=
+      `${fmt(price)} ${d.currency||""}`;
+
+    $("metrics").innerHTML=`
+      <span class="pill">MA20 ${fmt(ma20)}</span>
+      <span class="pill">MA60 ${fmt(ma60)}</span>
+      <span class="pill">RSI ${rsiValue.toFixed(1)}</span>
+      <span class="pill">MACD ${macd.toFixed(2)}</span>
+      <span class="pill">ATR ${fmt(atrValue)}</span>
+    `;
+
+    $("hero").style.display="block";
+
+
+    /* ============================
+       REPORT
+    ============================ */
+
+    $("report").innerHTML=`
+
+      <div class="sectionTitle">
+        📋 波段策略總覽
+      </div>
+
+      <div class="card summary">
+
+        <div class="row">
+          <div class="left">目前趨勢</div>
+          <div class="right ${trendClass}">
+            ${trend}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">目前價格</div>
+          <div class="right white">
+            ${fmt(price)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">🎯 入場觀察區</div>
+          <div class="right green">
+            ${fmt(entryLow)} ～ ${fmt(entryHigh)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">💰 第一止盈 TP1</div>
+          <div class="right green">
+            ${fmt(tp1)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">💰 第二止盈 TP2</div>
+          <div class="right green">
+            ${fmt(tp2)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">🔥 第三止盈 TP3</div>
+          <div class="right amber">
+            ${fmt(tp3)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">🛑 結構失效</div>
+          <div class="right red">
+            ${fmt(stop)}
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="reason ${currentClass}">
+          ${currentStatus}
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        🎯 入場觀察區
+      </div>
+
+      <div class="card entry">
+
+        <div class="label">
+          波段回踩觀察區
+        </div>
+
+        <div class="big green">
+          ${fmt(entryLow)} ～ ${fmt(entryHigh)}
+        </div>
+
+        <div class="small">
+          策略計算中心價 ${fmt(strategyEntry)}
+          ・${distance(strategyEntry,price)}
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="label">
+          為什麼抓這個位置？
+        </div>
+
+        <div>
+          ${supportReasons
+            .map(x=>`<span class="tag">${x}</span>`)
+            .join("")
+          }
+        </div>
+
+        <div class="reason">
+          系統先從 MA20、MA60、近期 10／20／60 日低點尋找距離現價較近的技術結構，再利用 ATR 波動程度建立一個價格區間。
+          因此這裡不是單純用「跌 3% 就進場」這類固定百分比計算。
+        </div>
+
+        <div class="action">
+          <strong>進入區間後主要觀察：</strong><br><br>
+          ① 價格是否停止持續創低<br>
+          ② 跌破支撐後能否快速收回<br>
+          ③ 是否重新站回短線結構<br>
+          ④ RSI 是否停止惡化<br>
+          ⑤ MACD 動能是否開始改善
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        🛡️ 支撐觀察
+      </div>
+
+      <div class="card">
+
+        <div class="label">
+          第一支撐｜近端
+        </div>
+
+        <div class="big green">
+          ${fmt(support1)}
+        </div>
+
+        <div class="small">
+          ${distance(support1,price)}
+        </div>
+
+        <div class="reason">
+          這是目前距離現價較近的主要技術結構。
+          價格回到這裡時，重點不是假設「碰到一定反彈」，而是觀察是否真的出現承接。
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="label">
+          第二支撐｜防守
+        </div>
+
+        <div class="big">
+          ${fmt(support2)}
+        </div>
+
+        <div class="small">
+          ${distance(support2,price)}
+        </div>
+
+        <div class="reason">
+          如果第一支撐無法守住，第二支撐就是下一個需要觀察的結構。
+          若連第二支撐附近都持續遭到賣壓破壞，原本的波段多方假設會明顯轉弱。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        💰 第一止盈 TP1
+      </div>
+
+      <div class="card tp1">
+
+        <div class="target">
+
+          <div>
+            <div class="label">
+              第一段獲利觀察
+            </div>
+
+            <div class="big green">
+              ${fmt(tp1)}
+            </div>
+          </div>
+
+          <div class="targetNumber">
+            ①
+          </div>
+
+        </div>
+
+        <div class="small">
+          相對策略中心價
+          ${pct(tp1,strategyEntry)>=0?"+":""}
+          ${pct(tp1,strategyEntry).toFixed(1)}%
+        </div>
+
+        <div class="rr">
+          約 ${rr1.toFixed(2)}R
+        </div>
+
+        <div class="reason">
+          TP1 是第一個降低部位風險的觀察位置。
+          系統會同時考慮第一段 R 倍數與近期歷史壓力，避免第一止盈完全忽略前方結構。
+        </div>
+
+        <div class="action">
+          <strong>範例管理方式：</strong><br>
+          行情到達 TP1 後，可將後續風險管理提高至接近成本區，
+          避免已經出現一段有利移動後，仍承擔完整原始風險。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        💰 第二止盈 TP2
+      </div>
+
+      <div class="card tp2">
+
+        <div class="target">
+
+          <div>
+            <div class="label">
+              波段主要獲利區
+            </div>
+
+            <div class="big green">
+              ${fmt(tp2)}
+            </div>
+          </div>
+
+          <div class="targetNumber">
+            ②
+          </div>
+
+        </div>
+
+        <div class="small">
+          相對策略中心價
+          +${pct(tp2,strategyEntry).toFixed(1)}%
+        </div>
+
+        <div class="rr">
+          約 ${rr2.toFixed(2)}R
+        </div>
+
+        <div class="reason">
+          TP2 是第二階段的波段目標。
+          如果價格已經突破 TP1 並持續形成較高的低點，
+          代表原本的支撐反彈有進一步延伸的可能。
+        </div>
+
+        <div class="action">
+          到達 TP2 後，剩餘部位可以改用較近的波段低點、
+          MA20 或其他移動式結構管理風險。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        🔥 第三止盈 TP3
+      </div>
+
+      <div class="card tp3">
+
+        <div class="target">
+
+          <div>
+            <div class="label">
+              趨勢延伸目標
+            </div>
+
+            <div class="big amber">
+              ${fmt(tp3)}
+            </div>
+          </div>
+
+          <div class="targetNumber">
+            ③
+          </div>
+
+        </div>
+
+        <div class="small">
+          相對策略中心價
+          +${pct(tp3,strategyEntry).toFixed(1)}%
+        </div>
+
+        <div class="rr">
+          約 ${rr3.toFixed(2)}R
+        </div>
+
+        <div class="reason">
+          TP3 屬於趨勢延伸目標。
+          它不是預測價格一定會到達，而是當行情持續突破前方壓力時，
+          用來管理剩餘趨勢部位的參考位置。
+        </div>
+
+        <div class="action">
+          如果價格在到達 TP3 前已經出現明顯結構轉弱，
+          就不需要為了等待固定目標而忽略新的市場資訊。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        🛑 止損區／認賠失效線
+      </div>
+
+      <div class="card stop">
+
+        <div class="label">
+          本次波段多方結構失效參考
+        </div>
+
+        <div class="big red">
+          ${fmt(stop)}
+        </div>
+
+        <div class="small">
+          ${distance(stop,price)}
+        </div>
+
+        <div class="reason">
+          這個位置不是固定設定 -3% 或 -5%。
+          系統會參考第二支撐與 ATR 波動緩衝，
+          判斷價格跌到哪裡之後，原本「支撐後反彈」的技術假設已經明顯受到破壞。
+        </div>
+
+        <div class="warning">
+          <strong>🔴 認賠規則範例</strong><br><br>
+
+          如果原本建立這套波段策略的理由是支撐有效，
+          而價格後續有效跌破
+          <strong>${fmt(stop)}</strong>，
+          原本的分析前提就不再成立。<br><br>
+
+          此時應重新分析新的市場結構，
+          而不是因為價格下跌，就一直把原本的失效位置往下移。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        ⚡ 壓力／突破觀察
+      </div>
+
+      <div class="card pressure">
+
+        <div class="row">
+          <div class="left">
+            第一壓力
+          </div>
+
+          <div class="right amber">
+            ${fmt(resistance1)}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="left">
+            第二壓力
+          </div>
+
+          <div class="right amber">
+            ${fmt(resistance2)}
+          </div>
+        </div>
+
+        <div class="reason">
+          價格接近壓力時，不能只看盤中是否瞬間穿越。
+          更重要的是突破後能否站穩，以及後續回測時，
+          原本的壓力是否轉成新的支撐。
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        📊 趨勢與動能
+      </div>
+
+      <div class="card">
+
+        <div class="big ${trendClass}">
+          ${trend}
+        </div>
+
+        <div class="reason">
+          ${trendReason}
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <div class="left">MA20</div>
+          <div class="right">${fmt(ma20)}</div>
+        </div>
+
+        <div class="row">
+          <div class="left">MA60</div>
+          <div class="right">${fmt(ma60)}</div>
+        </div>
+
+        <div class="row">
+          <div class="left">RSI 14</div>
+          <div class="right">${rsiValue.toFixed(1)}</div>
+        </div>
+
+        <div class="row">
+          <div class="left">MACD 動能</div>
+          <div class="right">${macd.toFixed(2)}</div>
+        </div>
+
+        <div class="row">
+          <div class="left">ATR 14</div>
+          <div class="right">
+            ${fmt(atrValue)}
+            (${atrPct.toFixed(1)}%)
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="reason">
+          ${rsiText}
+        </div>
+
+      </div>
+
+
+      <div class="sectionTitle">
+        🧭 波段策略流程
+      </div>
+
+      <div class="card summary">
+
+        <div class="plan">
+
+          <div class="planBox">
+            <div class="label">STEP 1</div>
+            <div class="n green">等待</div>
+            <div class="small">
+              ${fmt(entryLow)}～${fmt(entryHigh)}
+            </div>
+          </div>
+
+          <div class="planBox">
+            <div class="label">STEP 2</div>
+            <div class="n white">確認</div>
+            <div class="small">
+              觀察止跌與轉強
+            </div>
+          </div>
+
+          <div class="planBox">
+            <div class="label">STEP 3</div>
+            <div class="n green">TP1</div>
+            <div class="small">
+              ${fmt(tp1)}
+            </div>
+          </div>
+
+          <div class="planBox">
+            <div class="label">STEP 4</div>
+            <div class="n green">TP2</div>
+            <div class="small">
+              ${fmt(tp2)}
+            </div>
+          </div>
+
+          <div class="planBox">
+            <div class="label">STEP 5</div>
+            <div class="n amber">TP3</div>
+            <div class="small">
+              ${fmt(tp3)}
+            </div>
+          </div>
+
+          <div class="planBox">
+            <div class="label">結構失效</div>
+            <div class="n red">
+              ${fmt(stop)}
+            </div>
+            <div class="small">
+              原策略重新分析
+            </div>
+          </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="reason">
+          <strong>整套邏輯：</strong><br><br>
+
+          等待價格接近支撐觀察區
+          → 確認價格是否止跌
+          → 行情若往有利方向發展，依 TP1、TP2、TP3 管理
+          → 行情若反向跌破結構失效位置，原本的交易假設失效。<br><br>
+
+          核心不是猜最低點，而是事先定義清楚：
+          <strong>哪裡觀察、哪裡是壓力、哪裡分段管理、什麼情況代表原本判斷錯了。</strong>
+        </div>
+
+      </div>
+
+
+      <div class="note">
+        ⚠️ 本工具為規則式技術分析。入場觀察區、TP1／TP2／TP3、
+        支撐壓力與結構失效位置皆由歷史行情、均線、RSI、MACD、
+        ATR 與近期高低點計算。它們不是保證價格會到達的預測，
+        也不代表個人化投資建議。盤中跳空、滑價與流動性也可能使實際成交價格不同。
+      </div>
+    `;
+
+    $("report").style.display="block";
+    $("status").style.display="none";
+
+  }
+  catch(e){
+
+    $("status").style.display="block";
+
+    $("status").textContent=
+      "❌ "+e.message+
+      "。如果你剛剛才 Commit，請等 Vercel 完成重新部署後再試一次。";
+  }
+}
+
+$("go").onclick=run;
+
+$("symbol").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    run();
+  }
+});
+
+</script>
+
+</body>
+</html>
