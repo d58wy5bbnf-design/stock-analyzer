@@ -1,10 +1,759 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>股票技術分析器</title><style>
-*{box-sizing:border-box}body{margin:0;background:#071426;color:#eaf2ff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:760px;margin:auto;padding:22px 15px 50px}h1{font-size:28px;margin:8px 0}.sub{color:#91a5c1;margin-bottom:20px}.search{display:flex;gap:9px}.search input{flex:1;background:#0e2037;border:1px solid #284360;border-radius:14px;color:white;padding:16px;font-size:17px;text-transform:uppercase}.search button{border:0;border-radius:14px;padding:0 18px;font-weight:800;background:#39d3a0;color:#062016;font-size:16px}.hint{font-size:13px;color:#7088a7;margin:9px 2px 22px}.status{display:none;background:#10243d;border:1px solid #284766;border-radius:14px;padding:14px;margin:15px 0}.hero{display:none;background:linear-gradient(135deg,#112b49,#0d2037);border:1px solid #315477;border-radius:20px;padding:20px;margin-top:16px}.ticker{font-size:14px;color:#8fa8c7}.price{font-size:37px;font-weight:900;margin:5px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.card{background:#0c1d32;border:1px solid #203b59;border-radius:18px;padding:17px}.card h3{font-size:15px;margin:0 0 11px;color:#a9bdd5}.val{font-size:25px;font-weight:850}.pct{font-size:13px;margin-top:5px;color:#8da5c2}.green{color:#46e2ad}.red{color:#ff7585}.amber{color:#ffc66b}.wide{grid-column:1/-1}.analysis{line-height:1.7;color:#d7e4f4;font-size:15px}.metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{background:#142a44;border:1px solid #294766;padding:8px 10px;border-radius:999px;font-size:13px}@media(max-width:520px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.search button{padding:0 13px}.price{font-size:32px}}
-</style></head><body><div class="wrap"><h1>📈 股票技術分析器</h1><div class="sub">輸入股票代號，自動計算支撐、壓力與技術指標</div><div class="search"><input id="symbol" placeholder="例如 2330 / NVDA / AAPL" autocomplete="off"><button id="go">開始分析</button></div><div class="hint">台股直接輸入 2330；美股輸入 NVDA、AAPL 等。免 API Key。</div><div id="status" class="status"></div><section id="hero" class="hero"><div class="ticker" id="title"></div><div class="price" id="price"></div><div class="metrics" id="metrics"></div></section><div id="grid" class="grid"></div></div><script>
-const $=id=>document.getElementById(id); const fmt=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
-function sma(a,n){let s=a.slice(-n);return s.reduce((x,y)=>x+y,0)/s.length} function rsi(a,n=14){let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];d>0?g+=d:l-=d}if(!l)return 100;let rs=(g/n)/(l/n);return 100-100/(1+rs)}
-function ema(a,n){let k=2/(n+1),v=a[0];for(let i=1;i<a.length;i++)v=a[i]*k+v*(1-k);return v} function pct(x,p){return (x/p-1)*100}
-function card(t,v,p,cls=''){return `<div class="card"><h3>${t}</h3><div class="val ${cls}">${fmt(v)}</div><div class="pct">距現價 ${p>=0?'+':''}${p.toFixed(2)}%</div></div>`}
-async function run(){let s=$('symbol').value.trim();if(!s)return;$('status').style.display='block';$('status').textContent='正在抓取行情並分析…';$('hero').style.display='none';$('grid').innerHTML='';try{let r=await fetch('/api/stock?symbol='+encodeURIComponent(s));let d=await r.json();if(!r.ok)throw Error(d.error||'分析失敗');let rows=d.rows, closes=rows.map(x=>x.close), price=closes.at(-1);let recent20=rows.slice(-20), recent60=rows.slice(-60);let sup1=Math.min(...recent20.map(x=>x.low)),sup2=Math.min(...recent60.map(x=>x.low)),res1=Math.max(...recent20.map(x=>x.high)),res2=Math.max(...recent60.map(x=>x.high));let ma20=sma(closes,20),ma60=sma(closes,60),rv=rsi(closes),macd=ema(closes.slice(-80),12)-ema(closes.slice(-80),26);$('title').textContent=`${d.name} · ${d.symbol}`;$('price').textContent=`${fmt(price)} ${d.currency}`;$('metrics').innerHTML=`<span class="pill">MA20 ${fmt(ma20)}</span><span class="pill">MA60 ${fmt(ma60)}</span><span class="pill">RSI ${rv.toFixed(1)}</span><span class="pill">MACD ${macd.toFixed(2)}</span>`;$('hero').style.display='block';let trend=price>ma20&&ma20>ma60?'短中期價格結構維持在均線上方。':price<ma20&&ma20<ma60?'短中期價格位於均線下方，反彈時可留意上方壓力。':'目前均線結構交錯，較偏整理。';let rsitxt=rv>70?'RSI 位於較高區間，短線波動可能放大。':rv<30?'RSI 位於較低區間，可觀察是否出現止跌訊號。':'RSI 位於中性區間。';$('grid').innerHTML=card('🛡️ 第一支撐',sup1,pct(sup1,price),'green')+card('🛡️ 第二支撐',sup2,pct(sup2,price),'green')+card('⚡ 第一壓力',res1,pct(res1,price),'amber')+card('🔥 第二壓力',res2,pct(res2,price),'red')+`<div class="card wide"><h3>結構觀察</h3><div class="analysis">${trend} ${rsitxt}<br><br>第一支撐取近 20 個交易日低點、第二支撐取近 60 個交易日低點；壓力則以相同期間高點計算。這是規則式技術分析，不代表買賣建議。</div></div>`;$('status').style.display='none'}catch(e){$('status').textContent='❌ '+e.message+'。如果是剛下載的檔案，請注意這個版本需要部署後使用，不能直接用 iPhone「檔案」開啟。'}}
-$('go').onclick=run;$('symbol').addEventListener('keydown',e=>{if(e.key==='Enter')run()});
-</script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>股票技術分析器</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#071426;
+  color:#eaf2ff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+
+.wrap{
+  max-width:760px;
+  margin:auto;
+  padding:22px 15px 50px
+}
+
+h1{font-size:28px;margin:8px 0}
+
+.sub{
+  color:#91a5c1;
+  margin-bottom:20px
+}
+
+.search{
+  display:flex;
+  gap:9px
+}
+
+.search input{
+  flex:1;
+  background:#0e2037;
+  border:1px solid #284360;
+  border-radius:14px;
+  color:white;
+  padding:16px;
+  font-size:17px;
+  text-transform:uppercase
+}
+
+.search button{
+  border:0;
+  border-radius:14px;
+  padding:0 18px;
+  font-weight:800;
+  background:#39d3a0;
+  color:#062016;
+  font-size:16px
+}
+
+.hint{
+  font-size:13px;
+  color:#7088a7;
+  margin:9px 2px 22px
+}
+
+.status{
+  display:none;
+  background:#10243d;
+  border:1px solid #284766;
+  border-radius:14px;
+  padding:14px;
+  margin:15px 0
+}
+
+.hero{
+  display:none;
+  background:linear-gradient(135deg,#112b49,#0d2037);
+  border:1px solid #315477;
+  border-radius:20px;
+  padding:20px;
+  margin-top:16px
+}
+
+.ticker{
+  font-size:14px;
+  color:#8fa8c7
+}
+
+.price{
+  font-size:37px;
+  font-weight:900;
+  margin:5px 0
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:14px
+}
+
+.card{
+  background:#0c1d32;
+  border:1px solid #203b59;
+  border-radius:18px;
+  padding:17px
+}
+
+.card h3{
+  font-size:15px;
+  margin:0 0 11px;
+  color:#a9bdd5
+}
+
+.val{
+  font-size:25px;
+  font-weight:850
+}
+
+.pct{
+  font-size:13px;
+  margin-top:5px;
+  color:#8da5c2
+}
+
+.green{color:#46e2ad}
+.red{color:#ff7585}
+.amber{color:#ffc66b}
+
+.wide{
+  grid-column:1/-1
+}
+
+.analysis{
+  line-height:1.75;
+  color:#d7e4f4;
+  font-size:15px
+}
+
+.metrics{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px
+}
+
+.pill{
+  background:#142a44;
+  border:1px solid #294766;
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:13px
+}
+
+/* 入場區間 */
+
+.entry-card{
+  background:linear-gradient(135deg,#0c2930,#0b2133);
+  border:1px solid #2e8d82;
+}
+
+.entry-title{
+  color:#46e2ad!important;
+  font-size:17px!important;
+}
+
+.entry-price{
+  font-size:29px;
+  font-weight:900;
+  color:#46e2ad;
+  margin:8px 0 14px
+}
+
+.reason{
+  background:#102a3d;
+  padding:13px;
+  border-radius:12px;
+  margin-top:12px;
+}
+
+.stop{
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  background:#301c29;
+  border:1px solid #653447;
+}
+
+.stop strong{
+  color:#ff7585
+}
+
+.action{
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  background:#172a42;
+}
+
+@media(max-width:520px){
+  .grid{grid-template-columns:1fr}
+  .wide{grid-column:auto}
+  .search button{padding:0 13px}
+  .price{font-size:32px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>📈 股票技術分析器</h1>
+
+<div class="sub">
+輸入股票代號，自動計算支撐、壓力、入場區間與技術指標
+</div>
+
+<div class="search">
+<input id="symbol"
+placeholder="例如 2330 / NVDA / AAPL"
+autocomplete="off">
+
+<button id="go">開始分析</button>
+</div>
+
+<div class="hint">
+台股直接輸入 2330；美股輸入 NVDA、AAPL 等。免 API Key。
+</div>
+
+<div id="status" class="status"></div>
+
+<section id="hero" class="hero">
+<div class="ticker" id="title"></div>
+<div class="price" id="price"></div>
+<div class="metrics" id="metrics"></div>
+</section>
+
+<div id="grid" class="grid"></div>
+
+</div>
+
+<script>
+
+const $=id=>document.getElementById(id);
+
+const fmt=n=>Number(n).toLocaleString(
+  undefined,
+  {maximumFractionDigits:2}
+);
+
+function sma(a,n){
+  let s=a.slice(-n);
+  return s.reduce((x,y)=>x+y,0)/s.length;
+}
+
+function rsi(a,n=14){
+
+  let g=0,l=0;
+
+  for(let i=a.length-n;i<a.length;i++){
+
+    let d=a[i]-a[i-1];
+
+    d>0 ? g+=d : l-=d;
+  }
+
+  if(!l)return 100;
+
+  let rs=(g/n)/(l/n);
+
+  return 100-100/(1+rs);
+}
+
+function ema(a,n){
+
+  let k=2/(n+1);
+  let v=a[0];
+
+  for(let i=1;i<a.length;i++)
+    v=a[i]*k+v*(1-k);
+
+  return v;
+}
+
+function pct(x,p){
+  return (x/p-1)*100;
+}
+
+function card(t,v,p,cls=''){
+
+  return `
+  <div class="card">
+
+    <h3>${t}</h3>
+
+    <div class="val ${cls}">
+      ${fmt(v)}
+    </div>
+
+    <div class="pct">
+      距現價 ${p>=0?'+':''}${p.toFixed(2)}%
+    </div>
+
+  </div>`;
+}
+
+async function run(){
+
+  let s=$('symbol').value.trim();
+
+  if(!s)return;
+
+  $('status').style.display='block';
+  $('status').textContent='正在抓取行情並分析…';
+
+  $('hero').style.display='none';
+  $('grid').innerHTML='';
+
+  try{
+
+    let r=await fetch(
+      '/api/stock?symbol='+encodeURIComponent(s)
+    );
+
+    let d=await r.json();
+
+    if(!r.ok)
+      throw Error(d.error||'分析失敗');
+
+    let rows=d.rows;
+
+    let closes=rows.map(x=>x.close);
+
+    let price=closes.at(-1);
+
+    let recent20=rows.slice(-20);
+    let recent60=rows.slice(-60);
+
+    /* 支撐壓力 */
+
+    let sup1=Math.min(
+      ...recent20.map(x=>x.low)
+    );
+
+    let sup2=Math.min(
+      ...recent60.map(x=>x.low)
+    );
+
+    let res1=Math.max(
+      ...recent20.map(x=>x.high)
+    );
+
+    let res2=Math.max(
+      ...recent60.map(x=>x.high)
+    );
+
+    /* 技術指標 */
+
+    let ma20=sma(closes,20);
+    let ma60=sma(closes,60);
+
+    let rv=rsi(closes);
+
+    let macd=
+      ema(closes.slice(-80),12)-
+      ema(closes.slice(-80),26);
+
+
+    /* =========================
+       波動幅度
+       ========================= */
+
+    let ranges=recent20.map(x=>x.high-x.low);
+
+    let avgRange=
+      ranges.reduce((a,b)=>a+b,0)/
+      ranges.length;
+
+
+    /* =========================
+       自動尋找合理入場中心
+       ========================= */
+
+    let candidates=[
+      sup1,
+      ma20,
+      ma60
+    ].filter(
+      x=>Number.isFinite(x) &&
+      x<=price*1.03
+    );
+
+    let entryCenter;
+
+    if(candidates.length){
+
+      entryCenter=
+        candidates.reduce(
+          (a,b)=>
+          Math.abs(price-b)<
+          Math.abs(price-a)
+          ?b:a
+        );
+
+    }else{
+
+      entryCenter=sup1;
+
+    }
+
+
+    /* 入場區間寬度 */
+
+    let zoneWidth=Math.max(
+      avgRange*0.35,
+      price*0.006
+    );
+
+    let entryLow=
+      Math.max(
+        sup2,
+        entryCenter-zoneWidth
+      );
+
+    let entryHigh=
+      Math.min(
+        price,
+        entryCenter+zoneWidth
+      );
+
+    if(entryLow>entryHigh){
+
+      entryLow=entryCenter-zoneWidth;
+      entryHigh=entryCenter+zoneWidth;
+
+    }
+
+
+    /* =========================
+       結構失效位置
+       ========================= */
+
+    let stopLevel=
+      Math.min(sup1,entryLow)
+      -avgRange*0.45;
+
+
+    /* =========================
+       入場理由
+       ========================= */
+
+    let reasons=[];
+
+    if(Math.abs(entryCenter-sup1)/price<0.03)
+      reasons.push(
+        `接近近 20 日支撐 ${fmt(sup1)}`
+      );
+
+    if(Math.abs(entryCenter-ma20)/price<0.03)
+      reasons.push(
+        `靠近 MA20 ${fmt(ma20)}`
+      );
+
+    if(Math.abs(entryCenter-ma60)/price<0.03)
+      reasons.push(
+        `靠近 MA60 ${fmt(ma60)}`
+      );
+
+    if(rv<40)
+      reasons.push(
+        `RSI ${rv.toFixed(1)} 偏低，短線已接近弱勢區`
+      );
+
+    else if(rv<60)
+      reasons.push(
+        `RSI ${rv.toFixed(1)} 位於中性區`
+      );
+
+    if(reasons.length===0)
+      reasons.push(
+        '此區為目前距離現價較近的技術支撐帶'
+      );
+
+
+    /* =========================
+       操作狀態
+       ========================= */
+
+    let distance=
+      pct(entryHigh,price);
+
+    let actionText;
+
+    if(price>=entryLow && price<=entryHigh){
+
+      actionText=
+      '🟢 現價已進入技術入場觀察區，可等待止跌或轉強訊號確認。';
+
+    }
+
+    else if(price>entryHigh){
+
+      let away=
+        (price/entryHigh-1)*100;
+
+      if(away>5){
+
+        actionText=
+        `🟡 現價距離入場區約 ${away.toFixed(1)}%，不宜直接追價，可等待回踩。`;
+
+      }else{
+
+        actionText=
+        '🟡 現價位於入場區上方，可觀察是否回踩支撐後止穩。';
+
+      }
+
+    }
+
+    else{
+
+      actionText=
+      '🔴 現價已跌到原先規劃區下方，先確認支撐是否失效，不宜只因價格變低就進場。';
+
+    }
+
+
+    /* =========================
+       HERO
+       ========================= */
+
+    $('title').textContent=
+      `${d.name} · ${d.symbol}`;
+
+    $('price').textContent=
+      `${fmt(price)} ${d.currency}`;
+
+    $('metrics').innerHTML=`
+      <span class="pill">
+      MA20 ${fmt(ma20)}
+      </span>
+
+      <span class="pill">
+      MA60 ${fmt(ma60)}
+      </span>
+
+      <span class="pill">
+      RSI ${rv.toFixed(1)}
+      </span>
+
+      <span class="pill">
+      MACD ${macd.toFixed(2)}
+      </span>
+    `;
+
+    $('hero').style.display='block';
+
+
+    /* =========================
+       趨勢說明
+       ========================= */
+
+    let trend=
+
+      price>ma20 && ma20>ma60
+
+      ?'短中期價格結構維持在均線上方，目前結構相對偏強。'
+
+      :price<ma20 && ma20<ma60
+
+      ?'短中期價格位於均線下方，目前結構偏弱，反彈時需留意上方壓力。'
+
+      :'目前均線結構交錯，較偏整理。';
+
+
+    let rsitxt=
+
+      rv>70
+
+      ?'RSI 位於較高區間，短線過熱風險提高。'
+
+      :rv<30
+
+      ?'RSI 位於較低區間，可觀察是否出現止跌或轉強訊號。'
+
+      :'RSI 位於中性區間。';
+
+
+    /* =========================
+       顯示結果
+       ========================= */
+
+    $('grid').innerHTML=
+
+      card(
+        '🛡️ 第一支撐',
+        sup1,
+        pct(sup1,price),
+        'green'
+      )
+
+      +
+
+      card(
+        '🛡️ 第二支撐',
+        sup2,
+        pct(sup2,price),
+        'green'
+      )
+
+      +
+
+      card(
+        '⚡ 第一壓力',
+        res1,
+        pct(res1,price),
+        'amber'
+      )
+
+      +
+
+      card(
+        '🔥 第二壓力',
+        res2,
+        pct(res2,price),
+        'red'
+      )
+
+      +
+
+      `
+
+      <div class="card wide entry-card">
+
+        <h3 class="entry-title">
+        🎯 建議入場觀察區間
+        </h3>
+
+        <div class="entry-price">
+        ${fmt(entryLow)}
+        ～
+        ${fmt(entryHigh)}
+        </div>
+
+        <div class="analysis">
+
+          <div class="reason">
+
+            <strong>為什麼是這個區間？</strong>
+
+            <br><br>
+
+            ${reasons.join('；')}。
+
+            此區間同時考慮近期波動幅度，
+            避免只用單一價格作為進場依據。
+
+          </div>
+
+          <div class="action">
+
+            <strong>目前策略</strong>
+
+            <br><br>
+
+            ${actionText}
+
+          </div>
+
+          <div class="stop">
+
+            <strong>🛑 結構失效參考</strong>
+
+            <br><br>
+
+            約 ${fmt(stopLevel)}
+
+            <br>
+
+            若價格有效跌破此區，
+            代表目前支撐結構可能已經改變，
+            應重新分析，而不是直接攤平。
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card wide">
+
+        <h3>
+        📊 結構觀察
+        </h3>
+
+        <div class="analysis">
+
+          ${trend}
+
+          ${rsitxt}
+
+          <br><br>
+
+          <strong>支撐：</strong>
+
+          近 20 日低點
+          ${fmt(sup1)}，
+          近 60 日低點
+          ${fmt(sup2)}。
+
+          <br>
+
+          <strong>壓力：</strong>
+
+          近 20 日高點
+          ${fmt(res1)}，
+          近 60 日高點
+          ${fmt(res2)}。
+
+          <br><br>
+
+          本工具依歷史價格與規則式技術分析計算，
+          入場區間屬技術觀察區，
+          不代表價格一定會在該處止跌。
+
+        </div>
+
+      </div>
+      `;
+
+
+    $('status').style.display='none';
+
+  }
+
+  catch(e){
+
+    $('status').textContent=
+      '❌ '+e.message+
+      '。如果是剛下載的檔案，請注意這個版本需要部署後使用，不能直接用 iPhone「檔案」開啟。';
+
+  }
+
+}
+
+
+$('go').onclick=run;
+
+$('symbol').addEventListener(
+  'keydown',
+  e=>{
+    if(e.key==='Enter')
+      run();
+  }
+);
+
+</script>
+
+</body>
+</html>
