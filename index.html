@@ -1,2272 +1,1479 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<title>妖子平台2.0</title>
+<title>妖子平台2.1</title>
 
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="妖子平台2.0">
-<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-title" content="妖子平台2.1">
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
-html,body{
+body{
   margin:0;
   background:#000;
-  color:#f5f5f7;
+  color:#f5f5f5;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
-.wrap{
-  max-width:800px;
+.container{
+  max-width:900px;
   margin:auto;
-  padding:22px 15px 70px;
+  padding:42px 18px 100px;
 }
 
 h1{
-  font-size:29px;
-  margin:8px 0;
+  font-size:38px;
+  margin:0 0 12px;
 }
 
-.sub{
+.subtitle{
   color:#888;
-  line-height:1.65;
-  margin-bottom:20px;
+  font-size:18px;
+  line-height:1.7;
+  margin-bottom:30px;
+}
+
+.card{
+  background:#0b0b0b;
+  border:1px solid #252525;
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:18px;
+}
+
+.radarTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.sectionTitle{
+  font-size:22px;
+  font-weight:800;
+}
+
+.small{
+  color:#777;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.green{
+  color:#46ddb2;
+}
+
+.orange{
+  color:#ff9c46;
+}
+
+.yellow{
+  color:#ffd75e;
+}
+
+.red{
+  color:#ff6969;
+}
+
+.blue{
+  color:#71a7ff;
+}
+
+.purple{
+  color:#bd8cff;
+}
+
+button{
+  border:0;
+  border-radius:15px;
+  padding:13px 16px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.refresh{
+  background:#171717;
+  color:#eee;
+  border:1px solid #333;
+  white-space:nowrap;
 }
 
 .search{
   display:flex;
-  gap:9px;
+  gap:10px;
+  margin:20px 0 8px;
 }
 
-.search input{
-  flex:1;
+input{
   min-width:0;
-  background:#0a0a0a;
-  border:1px solid #292929;
-  border-radius:14px;
-  color:white;
-  padding:16px;
-  font-size:17px;
+  flex:1;
+  background:#0b0b0b;
+  color:#fff;
+  border:1px solid #333;
+  border-radius:18px;
+  padding:18px;
+  font-size:18px;
   outline:none;
-  text-transform:uppercase;
 }
 
-.search input:focus{border-color:#46e2ad}
-
-.search button{
-  border:0;
-  border-radius:14px;
-  padding:0 17px;
-  background:#46e2ad;
-  color:#001b13;
-  font-size:16px;
-  font-weight:900;
+input:focus{
+  border-color:#46ddb2;
 }
 
-.hint{
-  color:#666;
-  font-size:12px;
-  margin:10px 2px 20px;
-  line-height:1.6;
+.analyze{
+  background:#46ddb2;
+  color:#00291e;
+  min-width:112px;
 }
 
-.status{
-  display:none;
-  padding:15px;
-  background:#0a0a0a;
-  border:1px solid #292929;
-  border-radius:14px;
-  margin:15px 0;
-  line-height:1.7;
-}
-
-.hero{
-  display:none;
-  background:#0a0a0a;
-  border:1px solid #292929;
-  border-radius:22px;
-  padding:20px;
-  margin-top:16px;
-}
-
-.ticker{
-  color:#888;
-  font-size:14px;
-}
-
-.liveLabel{
-  display:inline-block;
+.radarItem{
+  background:#111;
+  border:1px solid #272727;
+  border-radius:18px;
+  padding:17px;
   margin-top:13px;
-  padding:5px 9px;
-  border-radius:999px;
-  background:#081811;
-  border:1px solid #1d7659;
-  color:#46e2ad;
-  font-size:11px;
-  font-weight:800;
+  cursor:pointer;
 }
 
-.price{
-  font-size:41px;
-  font-weight:900;
-  margin:7px 0 2px;
+.radarHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
 }
 
-.change{
+.symbol{
+  font-size:21px;
+  font-weight:850;
+}
+
+.score{
   font-size:16px;
-  font-weight:850;
-  margin-bottom:12px;
-}
-
-.liveGrid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:15px;
-}
-
-.liveItem{
-  padding:11px;
-  background:#080808;
-  border:1px solid #252525;
-  border-radius:12px;
-}
-
-.liveItem .k{
-  color:#666;
-  font-size:11px;
-}
-
-.liveItem .v{
-  font-weight:850;
-  margin-top:4px;
-  font-size:14px;
-}
-
-.update{
-  color:#666;
-  font-size:11px;
-  margin-top:12px;
-  line-height:1.6;
+  font-weight:800;
 }
 
 .metrics{
   display:flex;
   flex-wrap:wrap;
-  gap:7px;
-  margin-top:15px;
-}
-
-.pill{
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid #292929;
-  background:#111;
-  color:#ccc;
-  font-size:12px;
-}
-
-.report{display:none}
-
-.strategyHeader{
-  margin-top:32px;
-  margin-bottom:12px;
-  padding:18px;
-  border-radius:20px;
-}
-
-.strategy1Header{
-  background:linear-gradient(135deg,#081711,#080808);
-  border:1px solid #1d7659;
-}
-
-.strategy2Header{
-  background:linear-gradient(135deg,#160d1e,#080808);
-  border:1px solid #7946a8;
-}
-
-.strategyHeader h2{
-  margin:0 0 7px;
-  font-size:22px;
-}
-
-.strategyHeader p{
-  margin:0;
-  color:#aaa;
-  font-size:13px;
-  line-height:1.7;
-}
-
-.sectionTitle{
-  margin:26px 3px 11px;
-  font-size:19px;
-  font-weight:900;
-}
-
-.card{
-  background:#0b0b0b;
-  border:1px solid #292929;
-  border-radius:20px;
-  padding:19px;
-  margin-bottom:12px;
-}
-
-.greenCard{
-  background:#090e0c;
-  border-color:#245c48;
-}
-
-.purpleCard{
-  background:#0e0912;
-  border-color:#55306f;
-}
-
-.redCard{
-  background:#10090b;
-  border-color:#733841;
-}
-
-.amberCard{
-  background:#100e08;
-  border-color:#66542f;
-}
-
-.blueCard{
-  background:#080d12;
-  border-color:#284d6d;
-}
-
-.label{
-  color:#777;
-  font-size:12px;
-  margin-bottom:5px;
-}
-
-.big{
-  font-size:30px;
-  font-weight:900;
-  margin:5px 0;
-}
-
-.green{color:#46e2ad}
-.red{color:#ff6678}
-.amber{color:#ffc45c}
-.purple{color:#c784ff}
-.blue{color:#68b9ff}
-
-.small{
-  color:#888;
-  font-size:12px;
-  line-height:1.65;
-  margin-top:6px;
-}
-
-.reason{
-  color:#d0d0d2;
-  font-size:14px;
-  line-height:1.85;
-  margin-top:13px;
-}
-
-.divider{
-  height:1px;
-  background:#252525;
-  margin:17px 0;
-}
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:15px;
-  margin:12px 0;
-}
-
-.left{
-  color:#888;
-  font-size:14px;
-}
-
-.right{
-  font-weight:850;
-  text-align:right;
+  gap:8px;
+  margin-top:12px;
 }
 
 .tag{
-  display:inline-block;
-  border:1px solid #303030;
-  background:#111;
-  border-radius:999px;
-  padding:6px 9px;
-  margin:3px 3px 3px 0;
+  background:#191919;
+  border:1px solid #292929;
+  padding:7px 9px;
+  border-radius:10px;
+  font-size:13px;
   color:#bbb;
+}
+
+.reason{
+  color:#aaa;
+  font-size:14px;
+  line-height:1.7;
+  margin-top:11px;
+}
+
+.quote{
+  margin-top:18px;
+}
+
+.bigPrice{
+  font-size:42px;
+  font-weight:850;
+  margin:5px 0;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+
+.metric{
+  background:#111;
+  border:1px solid #222;
+  border-radius:14px;
+  padding:13px;
+}
+
+.metricLabel{
+  color:#777;
   font-size:12px;
 }
 
-.statusBox{
-  padding:14px;
-  border-radius:12px;
-  margin-top:14px;
-  line-height:1.75;
-  font-size:14px;
-}
-
-.statusGreen{
-  background:#081811;
-  border-left:4px solid #46e2ad;
-}
-
-.statusPurple{
-  background:#150b1d;
-  border-left:4px solid #c784ff;
-}
-
-.statusRed{
-  background:#190a0e;
-  border-left:4px solid #ff6678;
-}
-
-.statusAmber{
-  background:#181308;
-  border-left:4px solid #ffc45c;
-}
-
-.explainBox{
-  background:#080808;
-  border:1px solid #252525;
-  border-radius:14px;
-  padding:14px;
-  margin-top:12px;
-  line-height:1.8;
-  font-size:14px;
-  color:#cfcfd2;
-}
-
-.checkBox{
-  background:#07120e;
-  border-left:4px solid #46e2ad;
-  border-radius:11px;
-  padding:14px;
-  margin-top:14px;
-  line-height:1.8;
-  font-size:14px;
-}
-
-.warningBox{
-  background:#170d07;
-  border-left:4px solid #ffc45c;
-  border-radius:11px;
-  padding:14px;
-  margin-top:14px;
-  line-height:1.8;
-  font-size:14px;
-}
-
-.stopBox{
-  background:#18090d;
-  border-left:4px solid #ff6678;
-  border-radius:11px;
-  padding:14px;
-  margin-top:14px;
-  line-height:1.8;
-  font-size:14px;
-}
-
-.targets{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
-  margin-top:14px;
-}
-
-.target{
-  padding:13px 7px;
-  background:#080808;
-  border:1px solid #292929;
-  border-radius:14px;
-  text-align:center;
-}
-
-.target .t{
-  font-size:11px;
-  color:#777;
-}
-
-.target .v{
-  font-size:18px;
-  font-weight:900;
+.metricValue{
+  font-size:17px;
+  font-weight:750;
   margin-top:5px;
 }
 
-.target .r{
-  font-size:11px;
-  color:#777;
-  margin-top:4px;
+.strategy{
+  border-left:3px solid #46ddb2;
 }
 
-.flow{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
+.strategy.purpleBorder{
+  border-left-color:#bd8cff;
 }
 
-.flowBox{
-  padding:13px;
-  border-radius:14px;
-  background:#080808;
-  border:1px solid #292929;
+.row{
+  padding:9px 0;
+  border-bottom:1px solid #1d1d1d;
+  line-height:1.6;
 }
 
-.flowBox .n{
-  font-size:18px;
-  font-weight:900;
-  margin-top:4px;
+.row:last-child{
+  border-bottom:0;
 }
 
-.note{
+.loading{
+  color:#999;
+  padding:20px 0;
+  text-align:center;
+}
+
+.error{
+  color:#ff6969;
+  padding:15px 0;
+  line-height:1.6;
+}
+
+.hidden{
+  display:none;
+}
+
+.disclaimer{
   color:#666;
   font-size:12px;
   line-height:1.7;
   margin-top:25px;
 }
 
-@media(max-width:520px){
-  .price{font-size:36px}
-  .big{font-size:26px}
-  .search button{padding:0 12px}
+@media(max-width:600px){
+  .container{
+    padding-top:36px;
+  }
+
+  h1{
+    font-size:34px;
+  }
+
+  .search{
+    align-items:stretch;
+  }
+
+  input{
+    width:100%;
+  }
+
+  .analyze{
+    min-width:105px;
+  }
+
+  .bigPrice{
+    font-size:38px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="container">
 
-<h1>妖子平台2.0</h1>
+<h1>妖子平台2.1</h1>
 
-<div class="sub">
+<div class="subtitle">
 即時行情 × 雙策略波段技術分析<br>
-支撐回踩｜高 R 突破回測
+支撐回踩｜高 R 突破回測｜異動雷達
 </div>
 
-<div class="search">
-<input id="symbol" placeholder="2330 / NVDA / AAPL" autocomplete="off">
-<button id="go">開始分析</button>
-</div>
 
-<div class="hint">
-台股輸入 2330；美股輸入 NVDA、AAPL。最新行情與日 K 技術分析分開處理。
-</div>
+<!-- 雷達 -->
 
-<div id="status" class="status"></div>
+<div class="card">
 
-<section id="hero" class="hero">
+  <div class="radarTop">
 
-<div id="title" class="ticker"></div>
+    <div>
+      <div class="sectionTitle">
+        🔥 今日異動雷達
+      </div>
 
-<div class="liveLabel">
-● 最新行情
-</div>
+      <div class="small" id="radarStatus">
+        正在載入今日掃描結果…
+      </div>
 
-<div id="price" class="price"></div>
+      <div class="small" id="countdown">
+      </div>
+    </div>
 
-<div id="change" class="change"></div>
+    <button
+      class="refresh"
+      onclick="loadRadar(true)">
+      ↻ 立即掃描
+    </button>
 
-<div class="liveGrid">
+  </div>
 
-<div class="liveItem">
-<div class="k">昨收</div>
-<div id="previousClose" class="v">--</div>
-</div>
-
-<div class="liveItem">
-<div class="k">今日高</div>
-<div id="dayHigh" class="v">--</div>
-</div>
-
-<div class="liveItem">
-<div class="k">今日低</div>
-<div id="dayLow" class="v">--</div>
-</div>
-
-<div class="liveItem">
-<div class="k">行情來源</div>
-<div id="liveSource" class="v">--</div>
-</div>
+  <div id="radarList">
+    <div class="loading">
+      掃描中…
+    </div>
+  </div>
 
 </div>
 
-<div id="updateTime" class="update"></div>
 
-<div id="metrics" class="metrics"></div>
+<!-- 個股搜尋 -->
 
-</section>
+<div class="card">
 
-<div id="report" class="report"></div>
+  <div class="sectionTitle">
+    🔎 個股完整分析
+  </div>
+
+  <div class="search">
+
+    <input
+      id="symbol"
+      placeholder="輸入台股代號，例如 2330"
+      inputmode="numeric"
+      autocomplete="off">
+
+    <button
+      class="analyze"
+      onclick="analyzeStock()">
+      開始分析
+    </button>
+
+  </div>
+
+  <div class="small">
+    點擊上方異動雷達的股票，也會自動帶入完整分析。
+  </div>
 
 </div>
+
+
+<div id="result"></div>
+
+
+<div class="disclaimer">
+本平台為規則式技術分析與異動條件偵測工具，
+異動分數代表符合技術條件的程度，不代表未來上漲機率，
+亦不構成買賣建議。市場存在風險，請自行評估。
+</div>
+
+</div>
+
 
 <script>
 
-const $=id=>document.getElementById(id);
+/* =============================
+   基本工具
+============================= */
 
-const fmt=n=>{
-  if(!Number.isFinite(Number(n)))return "--";
-  return Number(n).toLocaleString(undefined,{
-    maximumFractionDigits:2
-  });
-};
+const $ = id =>
+  document.getElementById(id);
 
-function avg(a){
-  if(!a.length)return 0;
-  return a.reduce((x,y)=>x+y,0)/a.length;
+function num(v,d=2){
+
+  const n=Number(v);
+
+  if(!Number.isFinite(n))
+    return "--";
+
+  return n.toFixed(d);
 }
 
-function sma(a,n){
-  return avg(a.slice(-Math.min(n,a.length)));
+function money(v){
+
+  const n=Number(v);
+
+  if(!Number.isFinite(n))
+    return "--";
+
+  if(n>=1000)
+    return n.toFixed(0);
+
+  return n.toFixed(2);
 }
 
-function ema(a,n){
-  if(!a.length)return 0;
-  let k=2/(n+1);
-  let v=a[0];
 
-  for(let i=1;i<a.length;i++){
-    v=a[i]*k+v*(1-k);
+/* =============================
+   雷達
+============================= */
+
+let nextRefresh =
+  Date.now()+300000;
+
+let radarLoading=false;
+
+
+async function loadRadar(manual=false){
+
+  if(radarLoading)
+    return;
+
+  radarLoading=true;
+
+  $("radarStatus").textContent =
+    manual
+    ? "正在重新掃描…"
+    : "正在取得異動雷達…";
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/radar?t="+Date.now(),
+        {
+          cache:"no-store"
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if(!response.ok)
+      throw new Error(
+        data.error ||
+        "雷達讀取失敗"
+      );
+
+    renderRadar(data);
+
+    nextRefresh =
+      Date.now()+300000;
+
+  }catch(error){
+
+    $("radarList").innerHTML =
+      `<div class="error">
+        ⚠️ ${error.message}
+      </div>`;
+
+    $("radarStatus").textContent =
+      "雷達暫時無法取得";
+
+  }finally{
+
+    radarLoading=false;
+  }
+}
+
+
+function renderRadar(data){
+
+  const radar =
+    Array.isArray(data.radar)
+    ? data.radar
+    : [];
+
+  const now =
+    new Date();
+
+  $("radarStatus").textContent =
+    `已掃描 ${data.scanned ?? "--"} 檔｜顯示 ${radar.length} 檔｜最後更新 ${now.toLocaleTimeString("zh-TW",{
+      hour:"2-digit",
+      minute:"2-digit"
+    })}`;
+
+  if(!radar.length){
+
+    $("radarList").innerHTML =
+      `<div class="loading">
+        今日暫無明顯異動訊號
+      </div>`;
+
+    return;
   }
 
-  return v;
+
+  $("radarList").innerHTML =
+    radar.map(x=>{
+
+      let levelClass="green";
+
+      if(x.level==="強異動")
+        levelClass="red";
+
+      else if(x.level==="異動")
+        levelClass="orange";
+
+      else if(x.level==="蓄勢")
+        levelClass="yellow";
+
+
+      const reasons =
+        Array.isArray(x.reasons)
+        ? x.reasons
+        : [];
+
+      const warnings =
+        Array.isArray(x.warnings)
+        ? x.warnings
+        : [];
+
+
+      return `
+
+      <div
+        class="radarItem"
+        onclick="openStock('${x.symbol}')">
+
+        <div class="radarHead">
+
+          <div>
+
+            <div class="symbol">
+              ${x.emoji || "📊"}
+              ${x.symbol}
+            </div>
+
+            <div class="${levelClass}"
+                 style="margin-top:5px;font-weight:800">
+
+              ${x.level || "觀察"}
+
+            </div>
+
+          </div>
+
+
+          <div style="text-align:right">
+
+            <div class="score">
+              異動分數 ${num(x.score,0)}
+            </div>
+
+            <div class="${
+              Number(x.changePercent)>=0
+              ? "green"
+              : "red"
+            }"
+            style="margin-top:5px">
+
+              ${
+                Number(x.changePercent)>=0
+                ? "+"
+                : ""
+              }${num(x.changePercent)}%
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="metrics">
+
+          <span class="tag">
+            股價 ${money(x.price)}
+          </span>
+
+          <span class="tag">
+            量比 ${num(x.volumeRatio,1)}x
+          </span>
+
+          <span class="tag">
+            RSI ${num(x.rsi,0)}
+          </span>
+
+          <span class="tag">
+            ${
+              x.breakout
+              ? "✓ 已突破20日高"
+              : "距20日高 "+num(x.distanceToHigh,1)+"%"
+            }
+          </span>
+
+        </div>
+
+
+        <div class="reason">
+
+          ${
+            reasons.length
+            ? "✓ "+reasons.join("<br>✓ ")
+            : "目前為條件觀察"
+          }
+
+          ${
+            warnings.length
+            ? `<br><span class="orange">
+                ⚠ ${warnings.join("<br>⚠ ")}
+               </span>`
+            : ""
+          }
+
+        </div>
+
+        <div class="small"
+             style="margin-top:10px">
+
+          點擊查看完整雙策略分析 →
+
+        </div>
+
+      </div>`;
+
+    }).join("");
 }
 
-function rsi(a,n=14){
 
-  if(a.length<n+1)return 50;
+/* =============================
+   5分鐘倒數
+============================= */
 
-  let g=0,l=0;
+setInterval(()=>{
 
-  for(let i=a.length-n;i<a.length;i++){
+  const remain =
+    Math.max(
+      0,
+      nextRefresh-Date.now()
+    );
 
-    let d=a[i]-a[i-1];
+  const totalSeconds =
+    Math.floor(
+      remain/1000
+    );
 
-    if(d>0)g+=d;
-    else l-=d;
+  const min =
+    Math.floor(
+      totalSeconds/60
+    );
+
+  const sec =
+    totalSeconds%60;
+
+  $("countdown").textContent =
+    `每 5 分鐘自動更新｜下次掃描 ${min}:${String(sec).padStart(2,"0")}`;
+
+},1000);
+
+
+/* =============================
+   每5分鐘自動刷新
+============================= */
+
+setInterval(()=>{
+
+  loadRadar(false);
+
+},300000);
+
+
+/* =============================
+   點雷達股票
+============================= */
+
+function openStock(symbol){
+
+  $("symbol").value =
+    symbol;
+
+  analyzeStock();
+
+  setTimeout(()=>{
+
+    $("result")
+      .scrollIntoView({
+        behavior:"smooth"
+      });
+
+  },150);
+}
+
+
+/* =============================
+   技術指標
+============================= */
+
+function SMA(arr,p){
+
+  if(arr.length<p)
+    return null;
+
+  const a=
+    arr.slice(-p);
+
+  return a.reduce(
+    (s,v)=>s+v,
+    0
+  )/p;
+}
+
+
+function EMA(arr,p){
+
+  if(!arr.length)
+    return null;
+
+  const k=
+    2/(p+1);
+
+  let value=
+    arr[0];
+
+  for(let i=1;i<arr.length;i++){
+
+    value=
+      arr[i]*k+
+      value*(1-k);
   }
 
-  if(!l)return 100;
-
-  let rs=(g/n)/(l/n);
-
-  return 100-100/(1+rs);
+  return value;
 }
 
-function atr(rows,n=14){
 
-  let d=rows.slice(-(n+1));
+function RSI(arr,p=14){
+
+  if(arr.length<p+1)
+    return null;
+
+  let gains=0;
+  let losses=0;
+
+  for(
+    let i=arr.length-p;
+    i<arr.length;
+    i++
+  ){
+
+    const diff=
+      arr[i]-arr[i-1];
+
+    if(diff>0)
+      gains+=diff;
+    else
+      losses-=diff;
+  }
+
+  if(losses===0)
+    return 100;
+
+  const rs=
+    (gains/p)/
+    (losses/p);
+
+  return 100-
+    100/(1+rs);
+}
+
+
+function ATR(rows,p=14){
+
+  if(rows.length<p+1)
+    return null;
+
   let tr=[];
 
-  for(let i=1;i<d.length;i++){
+  for(
+    let i=rows.length-p;
+    i<rows.length;
+    i++
+  ){
+
+    const current=
+      rows[i];
+
+    const prev=
+      rows[i-1];
 
     tr.push(
       Math.max(
-        d[i].high-d[i].low,
-        Math.abs(d[i].high-d[i-1].close),
-        Math.abs(d[i].low-d[i-1].close)
+        current.high-current.low,
+        Math.abs(
+          current.high-prev.close
+        ),
+        Math.abs(
+          current.low-prev.close
+        )
       )
     );
   }
 
-  return avg(tr);
+  return tr.reduce(
+    (a,b)=>a+b,
+    0
+  )/tr.length;
 }
 
-function clamp(x,min,max){
-  return Math.max(min,Math.min(max,x));
-}
 
-function pct(x,b){
-  if(!b)return 0;
-  return (x/b-1)*100;
-}
+/* =============================
+   個股分析
+============================= */
 
-function absPct(a,b){
-  return Math.abs(pct(a,b));
-}
+async function analyzeStock(){
 
-function dist(level,price){
+  const symbol=
+    $("symbol")
+    .value
+    .trim()
+    .toUpperCase();
 
-  let p=pct(level,price);
+  if(!symbol)
+    return;
 
-  if(p>0)
-    return `距最新行情上方 ${Math.abs(p).toFixed(1)}%`;
-
-  if(p<0)
-    return `距最新行情下方 ${Math.abs(p).toFixed(1)}%`;
-
-  return "接近最新行情";
-}
-
-function recentSwingLow(rows){
-
-  let data=rows.slice(-20);
-  let candidates=[];
-
-  for(let i=2;i<data.length-2;i++){
-
-    if(
-      data[i].low<=data[i-1].low &&
-      data[i].low<=data[i-2].low &&
-      data[i].low<=data[i+1].low &&
-      data[i].low<=data[i+2].low
-    ){
-      candidates.push(data[i].low);
-    }
-  }
-
-  if(!candidates.length){
-    return Math.min(...data.map(x=>x.low));
-  }
-
-  return candidates.at(-1);
-}
-
-function recentSwingHigh(rows){
-
-  let data=rows.slice(-30);
-  let candidates=[];
-
-  for(let i=2;i<data.length-2;i++){
-
-    if(
-      data[i].high>=data[i-1].high &&
-      data[i].high>=data[i-2].high &&
-      data[i].high>=data[i+1].high &&
-      data[i].high>=data[i+2].high
-    ){
-      candidates.push(data[i].high);
-    }
-  }
-
-  if(!candidates.length){
-    return Math.max(...data.map(x=>x.high));
-  }
-
-  return candidates.at(-1);
-}
-
-function formatMarketTime(timestamp){
-
-  if(!Number.isFinite(Number(timestamp)))
-    return "更新時間：--";
+  $("result").innerHTML=
+    `<div class="card loading">
+      正在分析 ${symbol}…
+    </div>`;
 
   try{
 
-    return "行情時間："+new Date(
-      Number(timestamp)*1000
-    ).toLocaleString("zh-TW",{
-      timeZone:"Asia/Taipei",
-      month:"2-digit",
-      day:"2-digit",
-      hour:"2-digit",
-      minute:"2-digit",
-      second:"2-digit",
-      hour12:false
-    });
+    const response=
+      await fetch(
+        `/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
+        {
+          cache:"no-store"
+        }
+      );
 
-  }catch{
-    return "行情時間：--";
-  }
-}
+    const d=
+      await response.json();
 
-async function run(){
+    if(!response.ok)
+      throw new Error(
+        d.error ||
+        "行情取得失敗"
+      );
 
-  let symbol=$("symbol").value.trim();
 
-  if(!symbol)return;
+    const rows=
+      Array.isArray(d.rows)
+      ? d.rows
+      : [];
 
-  $("status").style.display="block";
-  $("status").textContent=
-    "妖子平台2.0 正在取得最新行情並分析市場結構…";
 
-  $("hero").style.display="none";
-  $("report").style.display="none";
+    if(rows.length<60)
+      throw new Error(
+        "歷史資料不足"
+      );
 
-  try{
 
-    let response=await fetch(
-      "/api/stock?symbol="+encodeURIComponent(symbol),
-      {cache:"no-store"}
-    );
+    const closes=
+      rows.map(
+        x=>Number(x.close)
+      );
 
-    let d=await response.json();
 
-    if(!response.ok){
-      throw Error(d.error||"分析失敗");
-    }
+    const dailyClose=
+      closes.at(-1);
 
-    let rows=(d.rows||[]).filter(x=>
-      Number.isFinite(Number(x.close)) &&
-      Number.isFinite(Number(x.high)) &&
-      Number.isFinite(Number(x.low))
-    ).map(x=>({
-      ...x,
-      close:Number(x.close),
-      high:Number(x.high),
-      low:Number(x.low),
-      open:Number(x.open),
-      volume:Number(x.volume)
-    }));
 
-    if(rows.length<30){
-      throw Error("歷史行情資料不足");
-    }
-
-    let closes=rows.map(x=>x.close);
-
-    /*
-      dailyClose = 技術分析歷史日K的最後收盤
-      price = 最新行情
-    */
-
-    let dailyClose=closes.at(-1);
-
-    let price=
-      Number.isFinite(Number(d.livePrice))
+    const price=
+      Number.isFinite(
+        Number(d.livePrice)
+      )
       ? Number(d.livePrice)
       : dailyClose;
 
-    let previousClose=
-      Number.isFinite(Number(d.previousClose))
-      ? Number(d.previousClose)
-      : null;
 
-    let change=
-      Number.isFinite(Number(d.change))
-      ? Number(d.change)
-      : (
-          previousClose
-          ? price-previousClose
-          : null
-        );
+    const ma20=
+      SMA(closes,20);
 
-    let changePercent=
-      Number.isFinite(Number(d.changePercent))
-      ? Number(d.changePercent)
-      : (
-          previousClose
-          ? (price/previousClose-1)*100
-          : null
-        );
+    const ma60=
+      SMA(closes,60);
 
-    let dayHigh=
-      Number.isFinite(Number(d.dayHigh))
-      ? Number(d.dayHigh)
-      : null;
+    const rsi=
+      RSI(closes,14);
 
-    let dayLow=
-      Number.isFinite(Number(d.dayLow))
-      ? Number(d.dayLow)
-      : null;
+    const macd=
+      EMA(
+        closes.slice(-80),
+        12
+      )-
+      EMA(
+        closes.slice(-80),
+        26
+      );
+
+    const atr=
+      ATR(rows,14);
 
 
     /*
-      技術指標：
-      繼續使用歷史日K
+      前20日壓力
+      不包含最新一天
     */
 
-    let ma20=sma(closes,20);
-    let ma60=sma(closes,60);
+    const prior20=
+      rows.slice(
+        -21,
+        -1
+      );
 
-    let rv=rsi(closes);
-
-    let macd=
-      ema(closes.slice(-80),12)-
-      ema(closes.slice(-80),26);
-
-    let ATR=atr(rows);
-
-    if(!Number.isFinite(ATR)||ATR<=0){
-      throw Error("ATR 波動資料不足");
-    }
-
-    let ATRpct=ATR/price*100;
-
-    let r10=rows.slice(-10);
-    let r20=rows.slice(-20);
-    let r60=rows.slice(-Math.min(60,rows.length));
-
-    let low10=Math.min(...r10.map(x=>x.low));
-    let low20=Math.min(...r20.map(x=>x.low));
-    let low60=Math.min(...r60.map(x=>x.low));
-
-    let high10=Math.max(...r10.map(x=>x.high));
-    let high20=Math.max(...r20.map(x=>x.high));
-    let high60=Math.max(...r60.map(x=>x.high));
-
-    let swingLow=recentSwingLow(rows);
-    let swingHigh=recentSwingHigh(rows);
+    const resistance=
+      Math.max(
+        ...prior20.map(
+          x=>Number(x.high)
+        )
+      );
 
 
-    /* =========================
-       趨勢
-    ========================= */
+    /*
+      近期支撐
+    */
 
-    let trend="整理／轉折";
-    let trendClass="amber";
+    const prior10=
+      rows.slice(-10);
 
-    let trendExplanation=
-      "目前最新價格、MA20、MA60 與 MACD 尚未形成完全一致的方向，市場比較接近整理或轉折階段。";
-
-    if(price>ma20 && ma20>ma60 && macd>0){
-
-      trend="偏多趨勢";
-      trendClass="green";
-
-      trendExplanation=
-        "最新行情位於 MA20 上方、MA20 高於 MA60，而且 MACD 動能為正，短中期技術結構偏多。若最新價格已經離支撐過遠，仍需注意追價後風險報酬下降。";
-
-    }else if(price<ma20 && ma20<ma60 && macd<0){
-
-      trend="偏弱趨勢";
-      trendClass="red";
-
-      trendExplanation=
-        "最新行情位於主要均線下方、MA20 低於 MA60，而且 MACD 動能偏弱。反彈時均線與前方壓力區可能形成阻力。";
-    }
+    const recentLow=
+      Math.min(
+        ...prior10.map(
+          x=>Number(x.low)
+        )
+      );
 
 
-    let rsiExplanation="";
-
-    if(rv>=78){
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 位於非常偏高的動能區。這不代表一定立即下跌，但代表短線漲幅較大，若同時遠離主要支撐，追價風險會提高。`;
-
-    }else if(rv>=70){
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 位於偏高區，多方動能仍強，但短線過熱與震盪風險增加。`;
-
-    }else if(rv>=55){
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 位於中性偏強區，買方動能相對有利，尚未進入極端過熱區。`;
-
-    }else if(rv>=45){
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 接近中性區，需要搭配均線、支撐與突破結構判斷。`;
-
-    }else if(rv>=30){
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 屬於偏弱區，短線賣壓較明顯。`;
-
-    }else{
-
-      rsiExplanation=
-        `RSI ${rv.toFixed(1)} 已進入較低區域。超賣不代表一定反彈，仍需確認支撐是否真正產生承接。`;
-    }
+    const maSupport=
+      Math.min(
+        ma20,
+        price
+      );
 
 
-    /* =========================
-       策略一
-    ========================= */
+    const support=
+      Math.max(
+        recentLow,
+        maSupport-atr*0.5
+      );
 
-    let supports=[
-      {name:"MA20",value:ma20},
-      {name:"MA60",value:ma60},
-      {name:"10日低點",value:low10},
-      {name:"20日低點",value:low20},
-      {name:"60日低點",value:low60},
-      {name:"近期波段低點",value:swingLow}
-    ]
-    .filter(x=>
-      Number.isFinite(x.value)&&
-      x.value<=price*1.015
+
+    /*
+      趨勢
+    */
+
+    let trend=
+      "整理";
+
+    if(
+      price>ma20 &&
+      ma20>ma60
     )
-    .sort((a,b)=>b.value-a.value);
-
-
-    let support1=
-      supports[0]?.value||low20;
-
-
-    let support2=
-      supports.find(
-        x=>x.value<
-        support1-Math.max(ATR*.45,price*.006)
-      )?.value||low60;
-
-
-    if(support2>support1){
-      [support1,support2]=[support2,support1];
-    }
-
-
-    let reasons=[];
-
-    if(absPct(ma20,support1)<1.5)
-      reasons.push("MA20 共振");
-
-    if(absPct(ma60,support1)<1.5)
-      reasons.push("MA60 共振");
-
-    if(absPct(low10,support1)<1.5)
-      reasons.push("10日低點");
-
-    if(absPct(low20,support1)<1.5)
-      reasons.push("20日低點");
-
-    if(absPct(swingLow,support1)<1.5)
-      reasons.push("近期波段低點");
-
-    if(!reasons.length)
-      reasons.push("距最新行情最近的主要支撐");
-
-
-    let width=
-      clamp(
-        ATR*.35,
-        price*.004,
-        price*.018
-      );
-
-
-    let entry1Low=
-      support1-width;
-
-    let entry1High=
-      support1+width;
-
-
-    if(entry1Low<=support2){
-      entry1Low=
-        support2+ATR*.15;
-    }
-
-
-    let entry1=
-      (entry1Low+entry1High)/2;
-
-
-    let stop1=
-      Math.min(
-        support2-ATR*.35,
-        entry1-ATR*1.15
-      );
-
-
-    if(stop1>=entry1||stop1<=0){
-      stop1=
-        entry1-ATR*1.25;
-    }
-
-
-    let risk1=
-      entry1-stop1;
-
-
-    let pressureCandidates=[
-      high10,
-      high20,
-      high60,
-      swingHigh
-    ]
-    .filter(x=>x>entry1)
-    .sort((a,b)=>a-b);
-
-
-    let pressure1=
-      pressureCandidates[0]||
-      entry1+risk1*1.5;
-
-
-    let pressure2=
-      pressureCandidates.find(
-        x=>x>pressure1+ATR*.5
-      )||
-      entry1+risk1*3;
-
-
-    let tp1=
-      Math.min(
-        entry1+risk1*1.5,
-        pressure1
-      );
-
-
-    if(tp1<=entry1){
-      tp1=
-        entry1+risk1*1.5;
-    }
-
-
-    let tp2=
-      Math.max(
-        entry1+risk1*2.5,
-        tp1+ATR*.7
-      );
-
-
-    let tp3=
-      Math.max(
-        entry1+risk1*4,
-        tp2+ATR
-      );
-
-
-    let recentHighest=
-      Math.max(
-        ...rows.slice(-20).map(x=>x.high)
-      );
-
-
-    let trailing1=
-      Math.max(
-        recentHighest-ATR*2,
-        stop1
-      );
-
-
-    let extension1=
-      Math.max(
-        tp3+ATR*1.5,
-        entry1+risk1*5
-      );
-
-
-    let chaseDistance=
-      (price-entry1High)/ATR;
-
-
-    let strategy1Status="";
-    let strategy1StatusClass="statusAmber";
-
-
-    if(price<stop1){
-
-      strategy1Status=
-        "最新行情已跌破策略一結構失效位置，原本支撐回踩的分析前提已受到破壞，應重新分析市場結構。";
-
-      strategy1StatusClass="statusRed";
-
-    }else if(
-      price>=entry1Low &&
-      price<=entry1High
-    ){
-
-      strategy1Status=
-        "最新行情已進入策略一觀察區。進入區間不代表已確認反彈，接下來需要觀察是否停止創低、收回支撐與動能改善。";
-
-      strategy1StatusClass="statusGreen";
-
-    }else if(
-      price>entry1High &&
-      chaseDistance>1.5
-    ){
-
-      strategy1Status=
-        `最新行情距離策略一觀察區約 ${chaseDistance.toFixed(1)} ATR，距離偏遠。現價與原本支撐進場的風險報酬已經不同。`;
-
-      strategy1StatusClass="statusAmber";
-
-    }else if(price>entry1High){
-
-      strategy1Status=
-        "最新行情仍位於策略一觀察區上方。支撐回踩策略主要等待價格靠近支撐，而不是隨價格上漲不斷把觀察區往上移。";
-
-    }else{
-
-      strategy1Status=
-        "最新行情位於主要觀察區下方、但尚未跌破最終結構失效位置。第一支撐正在受到測試。";
-    }
-
-
-    /* =========================
-       策略二
-    ========================= */
-
-    let priorRows=rows.slice(0,-1);
-    let prior20=priorRows.slice(-20);
-
-    let breakoutLevel=
-      Math.max(...prior20.map(x=>x.high));
-
-
-    let entry2Low=
-      breakoutLevel-ATR*.20;
-
-    let entry2High=
-      breakoutLevel+ATR*.20;
-
-    let entry2=
-      (entry2Low+entry2High)/2;
-
-
-    let stop2=
-      Math.min(
-        entry2-ATR*.75,
-        swingLow-ATR*.10
-      );
-
-
-    let maxStopDistance=
-      ATR*1.05;
-
-
-    if(entry2-stop2>maxStopDistance){
-      stop2=
-        entry2-maxStopDistance;
-    }
-
-
-    if(stop2>=entry2){
-      stop2=
-        entry2-ATR*.75;
-    }
-
-
-    let risk2=
-      entry2-stop2;
-
-
-    let htp1=
-      entry2+risk2*2;
-
-    let htp2=
-      entry2+risk2*3;
-
-    let htp3=
-      entry2+risk2*5;
-
-    let extension2=
-      entry2+risk2*7;
-
-
-    let trailing2=
-      Math.max(
-        recentHighest-ATR*1.8,
-        stop2
-      );
+      trend="多頭";
+
+    else if(
+      price<ma20 &&
+      ma20<ma60
+    )
+      trend="偏弱";
 
 
     /*
-      突破判斷改用最新行情
+      突破
     */
 
-    let breakoutConfirmed=
-      price>breakoutLevel &&
+    const breakoutConfirmed=
+      price>resistance &&
       price>ma20;
 
 
-    let breakoutATRDistance=
-      (price-breakoutLevel)/ATR;
+    /*
+      支撐回踩策略
+    */
+
+    const swingEntryLow=
+      Math.max(
+        support,
+        ma20-atr*0.5
+      );
+
+    const swingEntryHigh=
+      ma20+atr*0.35;
+
+    const swingStop=
+      Math.min(
+        support-atr*0.5,
+        swingEntryLow-atr
+      );
+
+    const swingRisk=
+      Math.max(
+        price-swingStop,
+        atr
+      );
+
+    const swingTP1=
+      price+swingRisk*1.5;
+
+    const swingTP2=
+      price+swingRisk*2.5;
+
+    const swingTP3=
+      price+swingRisk*4;
 
 
-    let highRQuality=
-      ma20>ma60 &&
-      macd>0 &&
-      rv>=50 &&
-      rv<78;
+    /*
+      高R突破回測
+    */
+
+    const breakEntryLow=
+      resistance-atr*0.25;
+
+    const breakEntryHigh=
+      resistance+atr*0.35;
+
+    const breakStop=
+      resistance-atr*0.8;
+
+    const breakRisk=
+      Math.max(
+        resistance-breakStop,
+        atr*0.5
+      );
+
+    const breakTP1=
+      resistance+
+      breakRisk*2;
+
+    const breakTP2=
+      resistance+
+      breakRisk*3;
+
+    const breakTP3=
+      resistance+
+      breakRisk*5;
+
+    const breakTP4=
+      resistance+
+      breakRisk*7;
 
 
-    let strategy2Status="";
-    let strategy2Class="statusPurple";
+    /*
+      高R狀態
+    */
+
+    let breakoutStatus=
+      "等待突破";
+
+    let breakoutText=
+      "目前尚未有效突破近期壓力，先觀察價格是否帶動能站上壓力區。";
 
 
-    if(!highRQuality){
+    if(breakoutConfirmed){
 
-      strategy2Status=
-        "目前趨勢或動能條件尚未完全符合高 R 突破回測模式。這套策略保持等待，不強行製造訊號。";
+      breakoutStatus=
+        "突破成立・等待回測";
 
-      strategy2Class="statusAmber";
-
-    }else if(
-      !breakoutConfirmed &&
-      price<breakoutLevel
-    ){
-
-      strategy2Status=
-        `最新行情尚未突破 ${fmt(breakoutLevel)}。目前仍屬上方壓力，策略二等待突破。`;
-
-    }else if(
-      breakoutATRDistance>1.5
-    ){
-
-      strategy2Status=
-        `雖然已突破，但最新行情距突破位約 ${breakoutATRDistance.toFixed(1)} ATR，距離偏遠。高 R 策略等待回測，不把追高位置視為相同風險的觀察區。`;
-
-      strategy2Class="statusAmber";
-
-    }else if(
-      price>=entry2Low &&
-      price<=entry2High
-    ){
-
-      strategy2Status=
-        "最新行情已進入突破回測觀察區。重點是確認原本壓力能否轉為支撐，並重新形成向上結構。";
-
-      strategy2Class="statusGreen";
-
-    }else if(breakoutConfirmed){
-
-      strategy2Status=
-        `突破條件已出現。目前等待價格回測 ${fmt(entry2Low)}～${fmt(entry2High)} 附近，確認原壓力是否轉成支撐。`;
-
-    }else{
-
-      strategy2Status=
-        "目前等待更清楚的突破與回測結構。";
+      breakoutText=
+        "價格已站上近期壓力。高 R 策略不追價，優先觀察是否回測突破區後仍能守住。";
     }
-
-
-    /* =========================
-       最新行情 HERO
-    ========================= */
-
-    $("title").textContent=
-      `${d.name||d.symbol} · ${d.symbol}`;
-
-    $("price").textContent=
-      `${fmt(price)} ${d.currency||""}`;
 
 
     if(
-      Number.isFinite(change) &&
-      Number.isFinite(changePercent)
+      breakoutConfirmed &&
+      price>
+      resistance+
+      atr*1.5
     ){
 
-      let positive=change>0;
-      let negative=change<0;
+      breakoutStatus=
+        "距突破區偏遠";
 
-      let cls=
-        positive
-        ? "green"
-        : negative
-        ? "red"
-        : "";
-
-      let sign=
-        positive?"+":"";
-
-      $("change").className=
-        "change "+cls;
-
-      $("change").textContent=
-        `${sign}${fmt(change)}  (${sign}${changePercent.toFixed(2)}%)`;
-
-    }else{
-
-      $("change").className="change";
-      $("change").textContent="漲跌資料 --";
+      breakoutText=
+        "價格已明顯離開突破區，風險報酬可能下降；等待新的結構或回測會更符合這套規則。";
     }
 
 
-    $("previousClose").textContent=
-      fmt(previousClose);
+    /*
+      回踩狀態
+    */
 
-    $("dayHigh").textContent=
-      fmt(dayHigh);
+    let swingStatus=
+      "等待回踩";
 
-    $("dayLow").textContent=
-      fmt(dayLow);
+    if(
+      price>=swingEntryLow &&
+      price<=swingEntryHigh
+    ){
 
-    $("liveSource").textContent=
-      d.liveSource||"最新行情";
+      swingStatus=
+        "進入支撐觀察區";
+    }
 
-    $("updateTime").textContent=
-      formatMarketTime(d.liveTime);
 
+    const change=
+      Number(d.change);
 
-    $("metrics").innerHTML=`
-      <span class="pill">MA20 ${fmt(ma20)}</span>
-      <span class="pill">MA60 ${fmt(ma60)}</span>
-      <span class="pill">RSI ${rv.toFixed(1)}</span>
-      <span class="pill">MACD ${macd.toFixed(2)}</span>
-      <span class="pill">ATR ${fmt(ATR)} (${ATRpct.toFixed(1)}%)</span>
-    `;
+    const changePercent=
+      Number(d.changePercent);
 
-    $("hero").style.display="block";
 
+    $("result").innerHTML=`
 
-    /* =========================
-       報告
-    ========================= */
+      <div class="card quote">
 
-    $("report").innerHTML=`
-
-    <div class="sectionTitle">
-      📊 市場結構總覽
-    </div>
-
-    <div class="card">
-
-      <div class="row">
-        <div class="left">目前趨勢</div>
-        <div class="right ${trendClass}">
-          ${trend}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">最新行情</div>
-        <div class="right">
-          ${fmt(price)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">最近日 K 收盤</div>
-        <div class="right">
-          ${fmt(dailyClose)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">MA20</div>
-        <div class="right">
-          ${fmt(ma20)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">MA60</div>
-        <div class="right">
-          ${fmt(ma60)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">RSI 14</div>
-        <div class="right">
-          ${rv.toFixed(1)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">MACD 動能</div>
-        <div class="right">
-          ${macd.toFixed(2)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">ATR 14</div>
-        <div class="right">
-          ${fmt(ATR)} (${ATRpct.toFixed(1)}%)
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="reason">
-        <strong>目前結構怎麼看？</strong><br><br>
-        ${trendExplanation}
-      </div>
-
-      <div class="reason">
-        <strong>RSI 怎麼看？</strong><br><br>
-        ${rsiExplanation}
-      </div>
-
-    </div>
-
-
-    <div class="strategyHeader strategy1Header">
-
-      <h2>
-        🟢 策略一｜支撐回踩波段
-      </h2>
-
-      <p>
-        先找主要支撐，再等待價格回到合理區域。
-        重點不是猜最低點，而是觀察支撐附近是否真正出現承接。
-      </p>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🎯 入場觀察區
-    </div>
-
-    <div class="card greenCard">
-
-      <div class="label">
-        主要回踩觀察區
-      </div>
-
-      <div class="big green">
-        ${fmt(entry1Low)} ～ ${fmt(entry1High)}
-      </div>
-
-      <div class="small">
-        中心價 ${fmt(entry1)} ・ ${dist(entry1,price)}
-      </div>
-
-      <div class="divider"></div>
-
-      ${reasons.map(x=>
-        `<span class="tag">${x}</span>`
-      ).join("")}
-
-      <div class="reason">
-
-        <strong>為什麼抓這個區間？</strong><br><br>
-
-        系統會同時檢查 MA20、MA60、
-        10／20／60 日低點與近期 Swing Low，
-        找出距離最新行情較近的重要技術支撐。<br><br>
-
-        找到主要支撐後，
-        再利用 ATR 衡量近期正常波動，
-        把單一價位擴展成合理的觀察區。<br><br>
-
-        真實市場很少精準碰到某一個價格就反轉，
-        所以使用區間比只看單一價格更符合實際波動。
-
-      </div>
-
-      <div class="statusBox ${strategy1StatusClass}">
-        <strong>🚦目前狀態</strong><br><br>
-        ${strategy1Status}
-      </div>
-
-      <div class="checkBox">
-
-        <strong>進入觀察區後，看這 5 件事：</strong><br><br>
-
-        ① 是否停止持續創新低<br>
-        ② 跌破支撐後能否快速收回<br>
-        ③ 收盤是否重新站回短線結構<br>
-        ④ RSI 是否停止惡化或開始回升<br>
-        ⑤ MACD／短線動能是否開始改善
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🛡️ 支撐觀察
-    </div>
-
-    <div class="card">
-
-      <div class="label">
-        第一支撐｜主要承接區
-      </div>
-
-      <div class="big green">
-        ${fmt(support1)}
-      </div>
-
-      <div class="small">
-        ${dist(support1,price)}
-      </div>
-
-      <div class="reason">
-
-        <strong>為什麼是第一支撐？</strong><br><br>
-
-        這是系統從 MA20、MA60、近期低點與波段低點中，
-        找出的近端主要技術支撐。<br><br>
-
-        如果目前波段仍健康，
-        價格回到這附近時應開始觀察承接、
-        止跌或重新轉強的跡象。
-
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="label">
-        第二支撐｜下一層防守
-      </div>
-
-      <div class="big">
-        ${fmt(support2)}
-      </div>
-
-      <div class="small">
-        ${dist(support2,price)}
-      </div>
-
-      <div class="reason">
-
-        第一支撐被跌破不代表整個波段一定立即結束。<br><br>
-
-        第二支撐代表下一層重要結構。
-        如果連第二支撐都有效跌破且無法快速收回，
-        原本多方支撐的可信度就會明顯降低。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      ⚡ 壓力／突破觀察
-    </div>
-
-    <div class="card amberCard">
-
-      <div class="row">
-        <div class="left">第一壓力</div>
-        <div class="right amber">
-          ${fmt(pressure1)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">第二壓力</div>
-        <div class="right amber">
-          ${fmt(pressure2)}
-        </div>
-      </div>
-
-      <div class="reason">
-
-        <strong>壓力不是碰到就一定下跌。</strong><br><br>
-
-        這些位置主要參考近期 10／20／60 日高點以及 Swing High。<br><br>
-
-        價格接近壓力後，
-        重點是能否有效突破。
-        若突破後站穩並在回測時把原壓力轉為支撐，
-        代表趨勢結構進一步增強。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      💰 TP1／TP2／TP3
-    </div>
-
-    <div class="card">
-
-      <div class="targets">
-
-        <div class="target">
-          <div class="t">TP1</div>
-          <div class="v green">${fmt(tp1)}</div>
-          <div class="r">
-            ${((tp1-entry1)/risk1).toFixed(1)}R
-          </div>
+        <div class="small">
+          ${d.name || symbol}
+          ・${d.symbol || symbol}
         </div>
 
-        <div class="target">
-          <div class="t">TP2</div>
-          <div class="v green">${fmt(tp2)}</div>
-          <div class="r">
-            ${((tp2-entry1)/risk1).toFixed(1)}R
-          </div>
+        <div class="bigPrice">
+          ${money(price)}
+          <span style="font-size:16px;color:#777">
+            ${d.currency || "TWD"}
+          </span>
         </div>
 
-        <div class="target">
-          <div class="t">TP3</div>
-          <div class="v amber">${fmt(tp3)}</div>
-          <div class="r">
-            ${((tp3-entry1)/risk1).toFixed(1)}R
-          </div>
+        <div class="${
+          change>=0
+          ? "green"
+          : "red"
+        }"
+        style="font-size:18px;font-weight:800">
+
+          ${
+            change>=0
+            ? "+"
+            : ""
+          }${num(change)}
+
+          （${
+            changePercent>=0
+            ? "+"
+            : ""
+          }${num(changePercent)}%）
+
         </div>
 
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="green">
-          TP1｜${fmt(tp1)}
-        </strong><br><br>
-
-        第一段主要是開始降低原始風險的區域。
-        系統同時考慮 R 倍數與前方壓力，
-        而不是只使用固定上漲百分比。
-
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="green">
-          TP2｜${fmt(tp2)}
-        </strong><br><br>
-
-        第二段屬於主要波段延伸區。
-        如果價格突破 TP1 並持續形成更高高點與更高低點，
-        代表原本反彈逐漸發展成較完整趨勢。
-
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="amber">
-          TP3｜${fmt(tp3)}
-        </strong><br><br>
-
-        TP3 是較遠的趨勢目標，
-        不是保證一定到達，也不是強制全部結束的位置。<br><br>
-
-        如果趨勢結構仍完整，
-        剩餘趨勢部位可以改觀察 ATR 移動保護。
-
-      </div>
-
-
-      <div class="divider"></div>
-
-      <div class="row">
-        <div class="left">趨勢延伸參考</div>
-        <div class="right amber">
-          ${fmt(extension1)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">ATR 移動保護</div>
-        <div class="right blue">
-          ${fmt(trailing1)}
-        </div>
-      </div>
-
-      <div class="checkBox">
-
-        <strong>波段管理邏輯：</strong><br><br>
-
-        TP1 → 開始降低原始風險<br>
-        TP2 → 進一步保護已有成果<br>
-        TP3 → 判斷趨勢是否仍完整<br>
-        TP3 後 → 觀察 MA20、波段低點與 ATR 移動保護
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🛑 策略一｜結構失效／認賠線
-    </div>
-
-    <div class="card redCard">
-
-      <div class="label">
-        支撐回踩結構失效
-      </div>
-
-      <div class="big red">
-        ${fmt(stop1)}
-      </div>
-
-      <div class="small">
-        ${dist(stop1,price)}
-      </div>
-
-      <div class="reason">
-
-        <strong>為什麼不是固定 -3% 或 -5%？</strong><br><br>
-
-        不同股票正常波動不同，
-        固定百分比可能對某些股票太緊，
-        對另一些股票又太寬。<br><br>
-
-        系統參考第二支撐與 ATR 波動緩衝。
-        如果主要支撐與正常波動緩衝都有效跌破，
-        原本「支撐後反彈」的分析假設就受到破壞。
-
-      </div>
-
-      <div class="stopBox">
-
-        <strong>🔴 認賠／重新分析原則</strong><br><br>
-
-        原策略建立在
-        <strong>
-          ${fmt(entry1Low)}～${fmt(entry1High)}
-        </strong>
-        附近存在主要支撐。<br><br>
-
-        若有效跌破
-        <strong>${fmt(stop1)}</strong>，
-        代表原分析前提已改變，
-        應重新計算市場結構，而不是持續把原失效位置往下移。
-
-      </div>
-
-    </div>
-
-
-    <div class="strategyHeader strategy2Header">
-
-      <h2>
-        🟣 策略二｜高 R 突破回測
-      </h2>
-
-      <p>
-        先讓市場證明能突破，再等待原壓力轉為支撐。
-        使用較窄的結構失效距離，換取較高的潛在 R 倍數。
-      </p>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      ⚡ 關鍵突破位
-    </div>
-
-    <div class="card purpleCard">
-
-      <div class="label">
-        前 20 個交易日高點
-      </div>
-
-      <div class="big purple">
-        ${fmt(breakoutLevel)}
-      </div>
-
-      <div class="small">
-        ${dist(breakoutLevel,price)}
-      </div>
-
-      <div class="reason">
-
-        <strong>為什麼使用前 20 日高點？</strong><br><br>
-
-        這裡刻意不包含最新一根日 K。<br><br>
-
-        系統先固定過去 20 個交易日的歷史壓力，
-        再使用最新行情判斷目前是否已經突破這個位置。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🎯 精準回測觀察區
-    </div>
-
-    <div class="card purpleCard">
-
-      <div class="label">
-        突破回測區
-      </div>
-
-      <div class="big purple">
-        ${fmt(entry2Low)} ～ ${fmt(entry2High)}
-      </div>
-
-      <div class="small">
-        中心價 ${fmt(entry2)} ・ 突破位 ± 0.20 ATR
-      </div>
-
-      <div class="reason">
-
-        <strong>為什麼比策略一窄？</strong><br><br>
-
-        策略二不是直接猜底。
-        它先要求市場突破歷史壓力，
-        再等待價格回測原突破位置。<br><br>
-
-        如果原壓力真的轉成支撐，
-        價格理論上不應大幅跌回突破結構下方。
-        因此可以使用較窄的失效距離。
-
-      </div>
-
-      <div class="statusBox ${strategy2Class}">
-
-        <strong>🚦目前狀態</strong><br><br>
-
-        ${strategy2Status}
-
-      </div>
-
-      <div class="checkBox">
-
-        <strong>突破回測確認重點：</strong><br><br>
-
-        ① 是否突破前 20 日高點<br>
-        ② 回測是否守住原突破位<br>
-        ③ 跌破後能否快速收回<br>
-        ④ 是否重新形成較高低點<br>
-        ⑤ MA20 是否仍維持強勢結構<br>
-        ⑥ MACD 是否仍保持正動能
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🔍 策略二｜條件檢查
-    </div>
-
-    <div class="card">
-
-      <div class="row">
-        <div class="left">最新行情 > MA20</div>
-        <div class="right ${price>ma20?"green":"red"}">
-          ${price>ma20?"✓ 符合":"✕ 未符合"}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">MA20 > MA60</div>
-        <div class="right ${ma20>ma60?"green":"red"}">
-          ${ma20>ma60?"✓ 符合":"✕ 未符合"}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">MACD > 0</div>
-        <div class="right ${macd>0?"green":"red"}">
-          ${macd>0?"✓ 符合":"✕ 未符合"}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">RSI 50～78</div>
-        <div class="right ${(rv>=50&&rv<78)?"green":"red"}">
-          ${(rv>=50&&rv<78)?"✓ 符合":"✕ 未符合"}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">突破前 20 日高點</div>
-        <div class="right ${breakoutConfirmed?"green":"amber"}">
-          ${breakoutConfirmed?"✓ 已突破":"等待突破"}
-        </div>
-      </div>
-
-      <div class="reason">
-
-        高 R 的來源不是把目標價隨便拉遠。<br><br>
-
-        核心是
-        <strong>
-          趨勢方向＋有效突破＋回測確認＋明確失效位置。
-        </strong><br><br>
-
-        條件不足時，策略保持等待。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🚀 策略二｜2R／3R／5R
-    </div>
-
-    <div class="card purpleCard">
-
-      <div class="targets">
-
-        <div class="target">
-          <div class="t">2R</div>
-          <div class="v purple">
-            ${fmt(htp1)}
-          </div>
-          <div class="r">第一目標</div>
-        </div>
-
-        <div class="target">
-          <div class="t">3R</div>
-          <div class="v purple">
-            ${fmt(htp2)}
-          </div>
-          <div class="r">第二目標</div>
-        </div>
-
-        <div class="target">
-          <div class="t">5R</div>
-          <div class="v amber">
-            ${fmt(htp3)}
-          </div>
-          <div class="r">趨勢目標</div>
-        </div>
-
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="purple">
-          2R｜${fmt(htp1)}
-        </strong><br><br>
-
-        潛在有利距離約為原始風險的 2 倍。
-        這是第一個主要高 R 觀察位置。
-
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="purple">
-          3R｜${fmt(htp2)}
-        </strong><br><br>
-
-        如果價格持續突破 2R，
-        並維持更高高點與更高低點，
-        代表突破行情正在進一步延伸。
-
-      </div>
-
-
-      <div class="explainBox">
-
-        <strong class="amber">
-          5R｜${fmt(htp3)}
-        </strong><br><br>
-
-        5R 屬於強趨勢延伸目標，
-        並不是每一次突破都一定會到達。<br><br>
-
-        高 R 的概念是在失效距離相對明確的情況下，
-        讓成功趨勢保留更大的延伸空間。
-
-      </div>
-
-
-      <div class="divider"></div>
-
-      <div class="row">
-        <div class="left">7R 延伸參考</div>
-        <div class="right amber">
-          ${fmt(extension2)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">ATR 移動保護</div>
-        <div class="right blue">
-          ${fmt(trailing2)}
-        </div>
-      </div>
-
-
-      <div class="warningBox">
-
-        <strong>⚠️ 高 R 不等於高勝率</strong><br><br>
-
-        因為策略二使用較緊的結構失效，
-        正常震盪也可能更容易碰到失效位置。<br><br>
-
-        它追求的是較小風險對較大潛在趨勢，
-        不是保證每一筆都比策略一容易成功。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🛑 策略二｜高 R 結構失效
-    </div>
-
-    <div class="card redCard">
-
-      <div class="label">
-        突破回測失效參考
-      </div>
-
-      <div class="big red">
-        ${fmt(stop2)}
-      </div>
-
-      <div class="small">
-        相對回測中心約
-        ${Math.abs(pct(stop2,entry2)).toFixed(1)}%
-      </div>
-
-      <div class="reason">
-
-        策略二的前提是原本壓力已突破，
-        而且回測後應轉成支撐。<br><br>
-
-        如果價格重新明顯跌回突破結構下方，
-        代表「壓力轉支撐」的假設開始失效，
-        所以它的失效線通常比策略一靠近。
-
-      </div>
-
-      <div class="stopBox">
-
-        <strong>🔴 高 R 失效原則</strong><br><br>
-
-        回測觀察區：
-        <strong>
-          ${fmt(entry2Low)}～${fmt(entry2High)}
-        </strong><br><br>
-
-        結構失效：
-        <strong>${fmt(stop2)}</strong><br><br>
-
-        若突破後重新有效跌破失效位置，
-        原本的突破回測假設需要重新評估。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🔥 趨勢續抱模式
-    </div>
-
-    <div class="card blueCard">
-
-      <div class="label">
-        近期 20 日最高價
-      </div>
-
-      <div class="big">
-        ${fmt(recentHighest)}
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="row">
-        <div class="left">策略一 ATR 保護</div>
-        <div class="right blue">
-          ${fmt(trailing1)}
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="left">策略二 ATR 保護</div>
-        <div class="right purple">
-          ${fmt(trailing2)}
-        </div>
-      </div>
-
-      <div class="reason">
-
-        ATR 移動保護會隨近期高點提高。
-        目的不是精準抓到最高點，
-        而是在趨勢仍完整時保留延伸空間，
-        同時提供動態風險參考。
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      🧭 兩套策略怎麼分？
-    </div>
-
-    <div class="card">
-
-      <div class="flow">
-
-        <div class="flowBox">
-
-          <div class="label">策略一</div>
-
-          <div class="n green">
-            支撐回踩
+        <div class="grid">
+
+          <div class="metric">
+            <div class="metricLabel">
+              前收
+            </div>
+            <div class="metricValue">
+              ${money(d.previousClose)}
+            </div>
           </div>
 
-          <div class="small">
-            找支撐 → 等回踩 → 看止跌 → TP1／2／3 → 趨勢續抱
+          <div class="metric">
+            <div class="metricLabel">
+              當日高點
+            </div>
+            <div class="metricValue">
+              ${money(d.dayHigh)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              當日低點
+            </div>
+            <div class="metricValue">
+              ${money(d.dayLow)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              趨勢結構
+            </div>
+            <div class="metricValue">
+              ${trend}
+            </div>
           </div>
 
         </div>
 
+        <div class="small"
+             style="margin-top:14px">
 
-        <div class="flowBox">
+          資料來源：
+          ${d.liveSource || "市場行情資料"}
 
-          <div class="label">策略二</div>
+        </div>
 
-          <div class="n purple">
-            突破回測
+      </div>
+
+
+      <div class="card">
+
+        <div class="sectionTitle">
+          📊 技術指標
+        </div>
+
+        <div class="grid">
+
+          <div class="metric">
+            <div class="metricLabel">
+              MA20
+            </div>
+            <div class="metricValue">
+              ${money(ma20)}
+            </div>
           </div>
 
-          <div class="small">
-            等突破 → 等回測 → 確認支撐 → 2R／3R／5R → 趨勢續抱
+          <div class="metric">
+            <div class="metricLabel">
+              MA60
+            </div>
+            <div class="metricValue">
+              ${money(ma60)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              RSI 14
+            </div>
+            <div class="metricValue">
+              ${num(rsi,1)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              MACD 動能
+            </div>
+            <div class="metricValue">
+              ${num(macd,2)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              ATR
+            </div>
+            <div class="metricValue">
+              ${money(atr)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metricLabel">
+              20日壓力
+            </div>
+            <div class="metricValue">
+              ${money(resistance)}
+            </div>
           </div>
 
         </div>
 
       </div>
 
-      <div class="divider"></div>
 
-      <div class="reason">
+      <div class="card">
 
-        <strong class="green">
-          策略一
-        </strong>
-        使用較寬的支撐區與失效空間，
-        主要觀察支撐是否出現承接。<br><br>
-
-        <strong class="purple">
-          策略二
-        </strong>
-        要求市場先突破，再等回測確認。
-        失效距離通常較窄，因此潛在 R 倍數較高，
-        但也可能更容易因震盪觸及失效位置。<br><br>
-
-        <strong>
-          兩套策略的觀察區與失效線是獨立的。
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <div class="sectionTitle">
-      📋 快速總覽
-    </div>
-
-    <div class="card">
-
-      <div class="row">
-        <div class="left">最新行情</div>
-        <div class="right">
-          ${fmt(price)}
+        <div class="sectionTitle">
+          🧭 市場結構
         </div>
-      </div>
 
-      <div class="row">
-        <div class="left">市場趨勢</div>
-        <div class="right ${trendClass}">
-          ${trend}
+        <div class="row">
+          趨勢：
+          <strong>${trend}</strong>
         </div>
-      </div>
 
-      <div class="divider"></div>
-
-      <div class="row">
-        <div class="left">🟢 策略一觀察區</div>
-        <div class="right green">
-          ${fmt(entry1Low)}～${fmt(entry1High)}
+        <div class="row">
+          近期支撐：
+          <strong>
+            ${money(support)}
+          </strong>
         </div>
-      </div>
 
-      <div class="row">
-        <div class="left">策略一失效</div>
-        <div class="right red">
-          ${fmt(stop1)}
+        <div class="row">
+          近期壓力：
+          <strong>
+            ${money(resistance)}
+          </strong>
         </div>
-      </div>
 
-      <div class="row">
-        <div class="left">TP1</div>
-        <div class="right">${fmt(tp1)}</div>
-      </div>
-
-      <div class="row">
-        <div class="left">TP2</div>
-        <div class="right">${fmt(tp2)}</div>
-      </div>
-
-      <div class="row">
-        <div class="left">TP3</div>
-        <div class="right amber">${fmt(tp3)}</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="row">
-        <div class="left">🟣 關鍵突破位</div>
-        <div class="right purple">
-          ${fmt(breakoutLevel)}
+        <div class="row">
+          突破狀態：
+          <strong class="${
+            breakoutConfirmed
+            ? "green"
+            : "yellow"
+          }">
+            ${
+              breakoutConfirmed
+              ? "已站上壓力"
+              : "尚未突破"
+            }
+          </strong>
         </div>
+
       </div>
 
-      <div class="row">
-        <div class="left">策略二回測區</div>
-        <div class="right purple">
-          ${fmt(entry2Low)}～${fmt(entry2High)}
+
+      <div class="card strategy">
+
+        <div class="sectionTitle green">
+          🟢 支撐回踩波段
         </div>
-      </div>
 
-      <div class="row">
-        <div class="left">策略二失效</div>
-        <div class="right red">
-          ${fmt(stop2)}
+        <div class="small"
+             style="margin:8px 0 12px">
+          核心：順勢等待價格回到支撐附近，
+          而不是在離支撐過遠的位置追價。
         </div>
-      </div>
 
-      <div class="row">
-        <div class="left">2R</div>
-        <div class="right">${fmt(htp1)}</div>
-      </div>
-
-      <div class="row">
-        <div class="left">3R</div>
-        <div class="right">${fmt(htp2)}</div>
-      </div>
-
-      <div class="row">
-        <div class="left">5R</div>
-        <div class="right amber">${fmt(htp3)}</div>
-      </div>
-
-      <div class="row">
-        <div class="left">7R 延伸</div>
-        <div class="right amber">
-          ${fmt(extension2)}
+        <div class="row">
+          狀態：
+          <strong>
+            ${swingStatus}
+          </strong>
         </div>
+
+        <div class="row">
+          入場觀察區：
+          <strong>
+            ${money(swingEntryLow)}
+            ～
+            ${money(swingEntryHigh)}
+          </strong>
+        </div>
+
+        <div class="row">
+          結構失效：
+          <strong class="red">
+            ${money(swingStop)}
+          </strong>
+        </div>
+
+        <div class="row">
+          TP1：
+          ${money(swingTP1)}
+        </div>
+
+        <div class="row">
+          TP2：
+          ${money(swingTP2)}
+        </div>
+
+        <div class="row">
+          TP3：
+          ${money(swingTP3)}
+        </div>
+
+        <div class="row">
+          趨勢延伸：
+          若突破 TP3 後結構仍維持，
+          可用 ATR／前波低點方式追蹤，
+          而非固定猜最高點。
+        </div>
+
       </div>
 
-    </div>
 
+      <div class="card strategy purpleBorder">
 
-    <div class="note">
+        <div class="sectionTitle purple">
+          🟣 高 R 突破回測
+        </div>
 
-      ⚠️ 妖子平台2.0 為規則式技術分析工具。<br><br>
+        <div class="small"
+             style="margin:8px 0 12px">
+          核心：先等突破成立，再觀察突破區是否轉為支撐。
+          高 R 不代表高勝率。
+        </div>
 
-      「最新行情」與歷史日 K 技術指標採不同用途：
-      最新行情用於目前價格、漲跌與即時位置判斷；
-      MA、RSI、MACD、ATR、支撐壓力則以歷史日 K 計算。<br><br>
+        <div class="row">
+          狀態：
+          <strong>
+            ${breakoutStatus}
+          </strong>
+        </div>
 
-      Yahoo 免費行情可能存在延遲，
-      不等同券商交易所逐筆 Tick 報價。支撐、壓力、
-      TP、R 倍數與結構失效皆為技術分析參考，
-      並非未來價格保證。
+        <div class="row">
+          ${breakoutText}
+        </div>
 
-    </div>
+        <div class="row">
+          突破關鍵價：
+          <strong>
+            ${money(resistance)}
+          </strong>
+        </div>
+
+        <div class="row">
+          回測觀察區：
+          <strong>
+            ${money(breakEntryLow)}
+            ～
+            ${money(breakEntryHigh)}
+          </strong>
+        </div>
+
+        <div class="row">
+          結構失效：
+          <strong class="red">
+            ${money(breakStop)}
+          </strong>
+        </div>
+
+        <div class="row">
+          2R：
+          ${money(breakTP1)}
+        </div>
+
+        <div class="row">
+          3R：
+          ${money(breakTP2)}
+        </div>
+
+        <div class="row">
+          5R：
+          ${money(breakTP3)}
+        </div>
+
+        <div class="row">
+          7R 延伸：
+          ${money(breakTP4)}
+        </div>
+
+      </div>
 
     `;
 
 
-    $("report").style.display="block";
-    $("status").style.display="none";
+  }catch(error){
 
-  }catch(e){
+    $("result").innerHTML=
 
-    $("status").style.display="block";
+      `<div class="card error">
 
-    $("status").textContent=
-      "❌ "+e.message+
-      "。如果剛剛才 Commit，請等待 Vercel 完成部署後再重新整理。";
+        ⚠️ ${error.message}
 
+      </div>`;
   }
 }
 
 
-$("go").onclick=run;
+/* Enter 開始分析 */
 
-
-$("symbol").addEventListener(
+$("symbol")
+.addEventListener(
   "keydown",
   e=>{
-    if(e.key==="Enter")run();
+
+    if(e.key==="Enter")
+      analyzeStock();
+
   }
 );
+
+
+/* 第一次開啟網站立即掃描 */
+
+loadRadar(false);
 
 </script>
 
