@@ -10,191 +10,194 @@ export default async function handler(req, res) {
       });
     }
 
-    // 台股純數字自動加 .TW
-    const symbol = /^\d{4,6}$/.test(raw)
-      ? `${raw}.TW`
-      : raw;
-
     /*
-      只向 Yahoo 發送一次請求
-      6mo / 1d：
-      - rows 給 MA、RSI、MACD、ATR、支撐壓力
-      - meta.regularMarketPrice 給最新行情
+      妖子平台2.0
+      台股資料來源：FinMind
+      Yahoo 已完全移除
     */
 
+    if (!/^\d{4,6}$/.test(raw)) {
+      return res.status(400).json({
+        error: "目前此版本先支援台股，例如 2330、2303"
+      });
+    }
+
+    const stockId = raw;
+
+    /*
+      抓約 10 個月資料
+      確保扣掉假日後仍足夠計算 MA60
+    */
+
+    const now = new Date();
+
+    const start = new Date();
+    start.setMonth(start.getMonth() - 10);
+
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+
+      return `${y}-${m}-${day}`;
+    }
+
+    const startDate = formatDate(start);
+    const endDate = formatDate(now);
+
     const url =
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
-      `?range=6mo&interval=1d&includePrePost=false&events=div%2Csplits`;
+      "https://api.finmindtrade.com/api/v4/data" +
+      "?dataset=TaiwanStockPrice" +
+      `&data_id=${encodeURIComponent(stockId)}` +
+      `&start_date=${encodeURIComponent(startDate)}` +
+      `&end_date=${encodeURIComponent(endDate)}`;
+
+    /*
+      FinMind API
+    */
 
     const response = await fetch(url, {
+      method: "GET",
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-        "Accept": "application/json,text/plain,*/*",
-        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8"
+        "Accept": "application/json",
+        "User-Agent": "YaoZi-Platform-2.0"
       }
     });
 
     if (!response.ok) {
       console.error(
-        "Yahoo HTTP error:",
+        "FinMind HTTP:",
         response.status,
         response.statusText
       );
 
       throw new Error(
-        `Yahoo 行情暫時無法取得 (${response.status})`
+        `台股資料暫時無法取得 (${response.status})`
       );
     }
 
-    const data = await response.json();
-
-    const result =
-      data?.chart?.result?.[0];
-
-    if (!result) {
-      const yahooError =
-        data?.chart?.error?.description;
-
-      return res.status(404).json({
-        error:
-          yahooError ||
-          "找不到這個股票代號"
-      });
-    }
-
-    const meta =
-      result.meta || {};
-
-    const quote =
-      result.indicators?.quote?.[0] || {};
-
-    const timestamps =
-      result.timestamp || [];
+    const json = await response.json();
 
     /*
-      歷史日 K
-    */
-
-    const rows = timestamps
-      .map((time, i) => ({
-        time: Number(time),
-
-        open:
-          Number(quote.open?.[i]),
-
-        high:
-          Number(quote.high?.[i]),
-
-        low:
-          Number(quote.low?.[i]),
-
-        close:
-          Number(quote.close?.[i]),
-
-        volume:
-          Number(quote.volume?.[i])
-      }))
-      .filter(x =>
-        Number.isFinite(x.time) &&
-        Number.isFinite(x.close) &&
-        Number.isFinite(x.high) &&
-        Number.isFinite(x.low)
-      );
-
-    if (rows.length < 30) {
-      throw new Error(
-        "歷史行情資料不足"
-      );
-    }
-
-    /*
-      最新行情
-
-      優先使用 regularMarketPrice。
-      如果 Yahoo 沒有提供，
-      才退回最新一根日 K close。
-    */
-
-    let livePrice =
-      Number(meta.regularMarketPrice);
-
-    let liveSource =
-      "Yahoo 最新行情";
-
-    if (!Number.isFinite(livePrice)) {
-      livePrice =
-        rows.at(-1).close;
-
-      liveSource =
-        "最新日K收盤價";
-    }
-
-    /*
-      行情時間
-    */
-
-    let liveTime =
-      Number(meta.regularMarketTime);
-
-    if (!Number.isFinite(liveTime)) {
-      liveTime =
-        rows.at(-1).time;
-    }
-
-    /*
-      昨收
-    */
-
-    let previousClose =
-      Number(meta.previousClose);
-
-    if (!Number.isFinite(previousClose)) {
-      previousClose =
-        Number(meta.chartPreviousClose);
-    }
-
-    /*
-      再沒有昨收時，
-      使用倒數第二根日 K
+      FinMind 有時 HTTP 200，
+      但 API 本身可能回錯誤訊息
     */
 
     if (
-      !Number.isFinite(previousClose) &&
-      rows.length >= 2
+      json?.status &&
+      Number(json.status) !== 200
     ) {
-      previousClose =
-        rows.at(-2).close;
+      throw new Error(
+        json?.msg ||
+        "台股資料來源暫時無法取得"
+      );
+    }
+
+    const data = Array.isArray(json?.data)
+      ? json.data
+      : [];
+
+    if (!data.length) {
+      return res.status(404).json({
+        error: `找不到台股 ${stockId} 的行情資料`
+      });
     }
 
     /*
-      今日高低
-
-      Yahoo 的 chart meta 不一定都會提供
-      regularMarketDayHigh / DayLow，
-      所以先嘗試 meta。
+      依日期排序
     */
 
-    let dayHigh =
-      Number(meta.regularMarketDayHigh);
-
-    let dayLow =
-      Number(meta.regularMarketDayLow);
+    data.sort((a, b) =>
+      String(a.date).localeCompare(String(b.date))
+    );
 
     /*
-      如果 meta 沒有，
-      使用最後一根日 K 高低作備援。
+      轉換成 index.html 原本需要的格式
+
+      time
+      open
+      high
+      low
+      close
+      volume
     */
 
-    if (!Number.isFinite(dayHigh)) {
-      dayHigh =
-        rows.at(-1).high;
+    const rows = data
+      .map(item => {
+        const time =
+          new Date(
+            `${item.date}T13:30:00+08:00`
+          ).getTime() / 1000;
+
+        return {
+          time,
+
+          open:
+            Number(item.open),
+
+          high:
+            Number(item.max),
+
+          low:
+            Number(item.min),
+
+          close:
+            Number(item.close),
+
+          volume:
+            Number(item.Trading_Volume)
+        };
+      })
+      .filter(x =>
+        Number.isFinite(x.time) &&
+        Number.isFinite(x.open) &&
+        Number.isFinite(x.high) &&
+        Number.isFinite(x.low) &&
+        Number.isFinite(x.close)
+      );
+
+    if (rows.length < 60) {
+      throw new Error(
+        "歷史行情資料不足，暫時無法完成技術分析"
+      );
     }
 
-    if (!Number.isFinite(dayLow)) {
-      dayLow =
-        rows.at(-1).low;
-    }
+    /*
+      最新一筆
+    */
+
+    const latest =
+      rows.at(-1);
+
+    const previous =
+      rows.length >= 2
+        ? rows.at(-2)
+        : null;
+
+    /*
+      最新價格
+
+      注意：
+      TaiwanStockPrice 為日行情資料。
+      不把它假裝成交易所逐筆 Tick 即時價。
+    */
+
+    const livePrice =
+      Number(latest.close);
+
+    const previousClose =
+      previous
+        ? Number(previous.close)
+        : null;
+
+    const dayHigh =
+      Number(latest.high);
+
+    const dayLow =
+      Number(latest.low);
+
+    const liveTime =
+      Number(latest.time);
 
     /*
       漲跌
@@ -216,32 +219,89 @@ export default async function handler(req, res) {
     }
 
     /*
-      不要讓 Vercel 快取太久
+      嘗試取得股票名稱
+
+      使用 TaiwanStockInfo
+      如果失敗不影響主要分析
+    */
+
+    let stockName =
+      stockId;
+
+    try {
+      const infoUrl =
+        "https://api.finmindtrade.com/api/v4/data" +
+        "?dataset=TaiwanStockInfo";
+
+      const infoResponse =
+        await fetch(infoUrl, {
+          headers: {
+            "Accept": "application/json",
+            "User-Agent": "YaoZi-Platform-2.0"
+          }
+        });
+
+      if (infoResponse.ok) {
+        const infoJson =
+          await infoResponse.json();
+
+        const infoData =
+          Array.isArray(infoJson?.data)
+            ? infoJson.data
+            : [];
+
+        const found =
+          infoData.find(
+            x =>
+              String(x.stock_id) ===
+              stockId
+          );
+
+        if (found?.stock_name) {
+          stockName =
+            found.stock_name;
+        }
+      }
+    } catch (e) {
+      /*
+        股票名稱抓不到沒關係
+        主行情照常回傳
+      */
+      console.log(
+        "Stock name unavailable"
+      );
+    }
+
+    /*
+      Cache
+
+      日行情不用每秒重新打 API
     */
 
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=5, stale-while-revalidate=10"
+      "public, s-maxage=30, stale-while-revalidate=60"
     );
+
+    /*
+      回傳格式保持跟目前 index.html 相容
+    */
 
     return res.status(200).json({
       symbol:
-        meta.symbol || symbol,
+        stockId,
 
       name:
-        meta.shortName ||
-        meta.longName ||
-        meta.symbol ||
-        symbol,
+        stockName,
 
       currency:
-        meta.currency || "",
+        "TWD",
 
       exchange:
-        meta.exchangeName || "",
+        "TW",
 
       marketState:
-        meta.marketState || "",
+        "",
 
       /*
         最新行情
@@ -254,7 +314,8 @@ export default async function handler(req, res) {
 
       liveTime,
 
-      liveSource,
+      liveSource:
+        "FinMind 台股最新日行情",
 
       previousClose,
 
@@ -267,7 +328,7 @@ export default async function handler(req, res) {
       dayLow,
 
       /*
-        技術分析歷史資料
+        技術分析資料
       */
 
       rows
@@ -275,14 +336,14 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error(
-      "stock API error:",
+      "妖子平台 stock API:",
       error
     );
 
     return res.status(500).json({
       error:
         error?.message ||
-        "股票資料取得失敗"
+        "台股資料取得失敗"
     });
   }
 }
