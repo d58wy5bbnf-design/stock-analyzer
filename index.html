@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<title>妖子平台 2.8</title>
+<title>妖子平台 2.9</title>
 
 <meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,7 +36,7 @@ html{
 body{
   margin:0;
   background:
-    radial-gradient(circle at top,rgba(43,111,84,.08),transparent 28%),
+    radial-gradient(circle at top,rgba(43,111,84,.09),transparent 28%),
     var(--bg);
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
@@ -55,6 +55,8 @@ button{cursor:pointer}
 }
 
 .hidden{display:none!important}
+
+/* HEADER */
 
 .header{margin-bottom:24px}
 
@@ -87,6 +89,8 @@ button{cursor:pointer}
   font-weight:900;
 }
 
+/* COMMON */
+
 .card{
   background:rgba(11,14,12,.97);
   border:1px solid var(--border);
@@ -117,7 +121,19 @@ button{cursor:pointer}
   margin:0 3px 13px;
 }
 
-/* 搜尋 */
+.big-section-title{
+  margin:31px 5px 15px;
+  font-size:24px;
+  font-weight:950;
+}
+
+.divider{
+  height:1px;
+  background:#282d2a;
+  margin:21px 0;
+}
+
+/* SEARCH */
 
 .search-title{
   color:var(--muted);
@@ -178,7 +194,7 @@ button{cursor:pointer}
   font-size:10px;
 }
 
-/* 自選 */
+/* WATCHLIST */
 
 .watch-section{margin-top:25px}
 
@@ -256,7 +272,7 @@ button{cursor:pointer}
   border-color:rgba(255,200,90,.5);
 }
 
-/* 雷達 */
+/* RADAR */
 
 .refresh{
   border:1px solid #303532;
@@ -373,7 +389,7 @@ button{cursor:pointer}
 
 .chip.green{color:var(--green)}
 
-/* 分析頁 */
+/* ANALYSIS */
 
 .back-btn{
   min-height:48px;
@@ -476,13 +492,135 @@ button{cursor:pointer}
   font-size:15px;
 }
 
-.big-section-title{
-  margin:31px 5px 15px;
-  font-size:24px;
-  font-weight:950;
+/* =========================
+   STRATEGY MATCHER
+========================= */
+
+.matcher{
+  margin-top:20px;
+  border:1px solid rgba(112,183,255,.45);
+  border-radius:25px;
+  padding:22px;
+  background:
+    radial-gradient(circle at top right,rgba(112,183,255,.09),transparent 40%),
+    #0a0d0c;
 }
 
-/* 總覽 */
+.matcher.positive{
+  border-color:rgba(69,224,173,.48);
+}
+
+.matcher.purple{
+  border-color:rgba(174,99,255,.5);
+}
+
+.matcher.orange{
+  border-color:rgba(255,159,67,.52);
+}
+
+.matcher.wait{
+  border-color:rgba(255,200,90,.35);
+}
+
+.matcher-kicker{
+  color:#858c88;
+  font-size:12px;
+}
+
+.matcher-title{
+  margin-top:8px;
+  font-size:17px;
+  font-weight:850;
+}
+
+.matcher-strategy{
+  margin-top:13px;
+  font-size:29px;
+  line-height:1.25;
+  font-weight:950;
+  letter-spacing:-.8px;
+}
+
+.matcher-strategy.green{color:var(--green)}
+.matcher-strategy.purple{color:#c899ff}
+.matcher-strategy.orange{color:var(--orange)}
+.matcher-strategy.yellow{color:var(--yellow)}
+
+.matcher-note{
+  margin-top:13px;
+  color:#c8cdca;
+  font-size:13px;
+  line-height:1.9;
+}
+
+.matcher-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:18px;
+}
+
+.matcher-score{
+  background:#070908;
+  border:1px solid #252a27;
+  border-radius:14px;
+  padding:12px 7px;
+  text-align:center;
+}
+
+.matcher-score span{
+  display:block;
+  color:#858b87;
+  font-size:9px;
+  line-height:1.4;
+}
+
+.matcher-score strong{
+  display:block;
+  margin-top:6px;
+  font-size:18px;
+}
+
+.matcher-reasons{
+  margin-top:18px;
+}
+
+.matcher-reason{
+  padding:9px 0;
+  border-bottom:1px solid #202522;
+  color:#cdd1ce;
+  font-size:12px;
+  line-height:1.6;
+}
+
+.matcher-reason:last-child{
+  border-bottom:0;
+}
+
+.matcher-levels{
+  margin-top:17px;
+  background:#070908;
+  border-radius:16px;
+  padding:15px;
+}
+
+.matcher-level-row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:8px 0;
+  font-size:12px;
+}
+
+.matcher-level-row span{
+  color:#8d938f;
+}
+
+.matcher-level-row strong{
+  text-align:right;
+}
+
+/* OVERVIEW */
 
 .overview-card{
   background:#0b0e0c;
@@ -530,19 +668,13 @@ button{cursor:pointer}
 .overview-value.purple{color:#c899ff}
 .overview-value.orange{color:var(--orange)}
 
-.divider{
-  height:1px;
-  background:#282d2a;
-  margin:21px 0;
-}
-
 .overview-text{
   color:#d0d4d1;
   font-size:14px;
   line-height:2;
 }
 
-/* TP SL 上下 */
+/* TP / SL */
 
 .target-stack{
   display:grid;
@@ -574,47 +706,30 @@ button{cursor:pointer}
   border-color:rgba(69,224,173,.28);
 }
 
-.target-box.entry .target-value{
-  color:var(--green);
-}
-
-.target-box.tp .target-value{
-  color:var(--green);
-}
-
-.target-box.tp3 .target-value{
-  color:var(--yellow);
-}
+.target-box.entry .target-value{color:var(--green)}
+.target-box.tp .target-value{color:var(--green)}
+.target-box.tp3 .target-value{color:var(--yellow)}
 
 .target-box.stop{
   border-color:rgba(255,105,118,.30);
 }
 
-.target-box.stop .target-value{
-  color:var(--red);
-}
+.target-box.stop .target-value{color:var(--red)}
 
 .target-box.purple{
   border-color:rgba(174,99,255,.32);
 }
 
-.target-box.purple .target-value{
-  color:#c899ff;
-}
-
-.target-box.extend .target-value{
-  color:#c899ff;
-}
+.target-box.purple .target-value{color:#c899ff}
+.target-box.extend .target-value{color:#c899ff}
 
 .target-box.orange{
   border-color:rgba(255,159,67,.35);
 }
 
-.target-box.orange .target-value{
-  color:var(--orange);
-}
+.target-box.orange .target-value{color:var(--orange)}
 
-/* 入場卡 */
+/* ENTRY */
 
 .entry-card{
   border:1px solid rgba(69,224,173,.58);
@@ -649,13 +764,8 @@ button{cursor:pointer}
   letter-spacing:-1px;
 }
 
-.entry-card.purple .entry-price{
-  color:#c899ff;
-}
-
-.entry-card.orange .entry-price{
-  color:var(--orange);
-}
+.entry-card.purple .entry-price{color:#c899ff}
+.entry-card.orange .entry-price{color:var(--orange)}
 
 .entry-sub{
   margin-top:9px;
@@ -691,7 +801,7 @@ button{cursor:pointer}
   line-height:2;
 }
 
-/* 策略判讀 */
+/* STRATEGY */
 
 .strategy-card{
   border-radius:24px;
@@ -723,9 +833,7 @@ button{cursor:pointer}
   font-size:13px;
 }
 
-.strategy-status strong{
-  color:var(--text);
-}
+.strategy-status strong{color:var(--text)}
 
 .check-list{margin-top:19px}
 
@@ -763,7 +871,7 @@ button{cursor:pointer}
   line-height:1.9;
 }
 
-/* 綜合 */
+/* BRAIN */
 
 .brain-card{
   border:1px solid rgba(112,183,255,.28);
@@ -830,20 +938,28 @@ button{cursor:pointer}
 
 <main class="app">
 
-<!-- 首頁 -->
+<!-- HOME -->
 
 <div id="homePage">
 
 <header class="header">
+
   <div class="header-row">
+
     <div>
       <div class="brand">妖子平台</div>
-      <div class="subtitle">🇹🇼 台股即時異動 · 🇺🇸 美股技術分析</div>
+      <div class="subtitle">
+        🇹🇼 台股即時異動 · 🇺🇸 美股技術分析
+      </div>
     </div>
 
-    <div class="version">2.8 LIVE</div>
+    <div class="version">2.9 LIVE</div>
+
   </div>
+
 </header>
+
+<!-- SEARCH -->
 
 <section class="card">
 
@@ -870,7 +986,7 @@ button{cursor:pointer}
   </form>
 
   <div class="search-help">
-    可直接輸入台積電、聯電、鴻海，也可輸入 2330、2303、NVDA、AAPL。
+    可輸入台積電、聯電、鴻海，也可以輸入 2330、2303、NVDA、AAPL。
   </div>
 
   <div class="examples">
@@ -883,14 +999,16 @@ button{cursor:pointer}
 
 </section>
 
-<!-- 自選 -->
+<!-- WATCHLIST -->
 
 <section class="watch-section">
 
   <div class="section-head">
     <div>
       <div class="section-title">⭐ 我的自選股</div>
-      <div class="section-sub">每台裝置獨立保存 · 點擊直接分析</div>
+      <div class="section-sub">
+        每台裝置獨立保存 · 點擊直接分析
+      </div>
     </div>
   </div>
 
@@ -898,7 +1016,7 @@ button{cursor:pointer}
 
 </section>
 
-<!-- 掃描 -->
+<!-- MARKET -->
 
 <section class="section">
 
@@ -906,7 +1024,9 @@ button{cursor:pointer}
 
     <div>
       <div class="section-title">⚡ 台股即時市場掃描</div>
-      <div id="updateText" class="section-sub">正在連線 FinMind…</div>
+      <div id="updateText" class="section-sub">
+        正在連線 FinMind…
+      </div>
     </div>
 
     <button id="refreshButton" class="refresh" type="button">
@@ -946,7 +1066,9 @@ button{cursor:pointer}
   <div class="section-head">
     <div>
       <div class="section-title">🚀 今日做多觀察</div>
-      <div class="section-sub">即時量價與盤中強度條件篩選</div>
+      <div class="section-sub">
+        即時量價與盤中強度條件篩選
+      </div>
     </div>
   </div>
 
@@ -961,7 +1083,9 @@ button{cursor:pointer}
   <div class="section-head">
     <div>
       <div class="section-title">🔥 台股即時異動雷達</div>
-      <div class="section-sub">分數代表技術條件符合程度</div>
+      <div class="section-sub">
+        分數代表技術條件符合程度
+      </div>
     </div>
   </div>
 
@@ -972,12 +1096,12 @@ button{cursor:pointer}
 </section>
 
 <div class="footer">
-  妖子平台 2.8 · FinMind Market Data
+  妖子平台 2.9 · FinMind Market Data
 </div>
 
 </div>
 
-<!-- 分析頁 -->
+<!-- ANALYSIS -->
 
 <div id="analysisPage" class="hidden">
 
@@ -987,7 +1111,7 @@ button{cursor:pointer}
 
   <div class="analysis-heading">
     <h1>📊 個股技術分析</h1>
-    <p>波段回踩 · 高 R 回測 · 強勢續攻</p>
+    <p>策略匹配 · 波段回踩 · 高 R 回測 · 強勢續攻</p>
   </div>
 
   <div id="analysisResult">
@@ -1011,6 +1135,10 @@ var homeScroll=0;
 var currentStock=null;
 
 var WATCH_KEY="yaozi_watchlist";
+
+/* =========================
+   UTIL
+========================= */
 
 function el(id){
   return document.getElementById(id);
@@ -1060,7 +1188,7 @@ function normalizeSearch(value){
 }
 
 /* =========================
-   自選股
+   WATCHLIST
 ========================= */
 
 function getWatchlist(){
@@ -1167,7 +1295,7 @@ function renderWatchlist(){
           '</div>'+
 
           '<div class="watch-open">'+
-            '查看完整三策略分析 →'+
+            '查看策略匹配分析 →'+
           '</div>'+
 
         '</div>'+
@@ -1195,7 +1323,7 @@ function renderWatchlist(){
 }
 
 /* =========================
-   指標
+   INDICATORS
 ========================= */
 
 function SMA(values,period){
@@ -1284,7 +1412,7 @@ function ATR(rows,period){
 }
 
 /* =========================
-   頁面
+   PAGE
 ========================= */
 
 function openAnalysis(){
@@ -1311,7 +1439,7 @@ el("backTop").onclick=backHome;
 el("backBottom").onclick=backHome;
 
 /* =========================
-   搜尋
+   SEARCH
 ========================= */
 
 el("stockSearchForm").addEventListener("submit",function(event){
@@ -1370,16 +1498,17 @@ async function analyze(searchValue){
   }catch(error){
     el("analysisResult").innerHTML=
       '<div class="error">'+
-      '分析失敗：'+safe(error.message)+
+        '分析失敗：'+safe(error.message)+
       '</div>';
   }
 }
 
 /* =========================
-   分析
+   ANALYSIS
 ========================= */
 
 function buildAnalysis(data){
+
   var rows=Array.isArray(data.rows)?data.rows:[];
 
   if(rows.length<60){
@@ -1394,9 +1523,10 @@ function buildAnalysis(data){
   var price=Number(data.livePrice);
   var live=null;
 
-  /* 雷達即時價格 */
+  /* 使用雷達即時價格 */
 
   if(data.market==="TW"&&radarData){
+
     var groups=[
       radarData.radar||[],
       radarData.longWatch||[],
@@ -1405,7 +1535,9 @@ function buildAnalysis(data){
     ];
 
     for(var g=0;g<groups.length;g++){
+
       for(var z=0;z<groups[g].length;z++){
+
         if(String(groups[g][z].symbol)===symbol){
           live=groups[g][z];
           break;
@@ -1425,7 +1557,7 @@ function buildAnalysis(data){
   }
 
   /* =========================
-     指標
+     INDICATORS
   ========================= */
 
   var ma20=SMA(closes,20);
@@ -1484,7 +1616,7 @@ function buildAnalysis(data){
   }
 
   /* =========================
-     🟢 波段回踩
+     🟢 SWING
   ========================= */
 
   var entryLow=Math.max(
@@ -1521,8 +1653,7 @@ function buildAnalysis(data){
   var tp2=center+setupRisk*2.5;
   var tp3=center+setupRisk*4;
 
-  var swingStatus=
-    "等待價格接近支撐";
+  var swingStatus="等待價格接近支撐";
 
   if(price>=entryLow&&price<=entryHigh){
     swingStatus="已進入回踩觀察區";
@@ -1533,7 +1664,7 @@ function buildAnalysis(data){
   }
 
   /* =========================
-     🟣 高 R 突破回測
+     🟣 HIGH R
   ========================= */
 
   var breakLow=
@@ -1582,12 +1713,10 @@ function buildAnalysis(data){
       ?(price-resistance)/atr
       :0;
 
-  var breakStatus=
-    "等待突破壓力";
+  var breakStatus="等待突破壓力";
 
   if(breakout){
-    breakStatus=
-      "突破成立，等待回測";
+    breakStatus="突破成立，等待回測";
   }
 
   if(
@@ -1595,33 +1724,23 @@ function buildAnalysis(data){
     price>=breakLow&&
     price<=breakHigh
   ){
-    breakStatus=
-      "已進入回測觀察區";
+    breakStatus="已進入回測觀察區";
   }
 
   if(
     breakout&&
     breakDistanceATR>1.5
   ){
-    breakStatus=
-      "突破後距離偏遠";
+    breakStatus="突破後距離偏遠";
   }
 
   if(price<breakStop){
-    breakStatus=
-      "高 R 結構失效";
+    breakStatus="高 R 結構失效";
   }
 
   /* =========================
-     🔥 強勢續攻策略
+     🔥 SURGE
   ========================= */
-
-  /*
-    用途：
-    已經突破主要壓力，
-    但沒有回踩到原突破區，
-    且趨勢仍維持強勢。
-  */
 
   var surgeAboveMA20=
     atr>0
@@ -1645,29 +1764,14 @@ function buildAnalysis(data){
   var surgeBreakout=
     price>resistance;
 
-  /*
-    已經突破，但不在原高 R 回測區。
-  */
-
   var surgeNoRetest=
     price>breakHigh;
-
-  /*
-    避免追太遠：
-    突破位最多 3 ATR，
-    MA20 最多 4 ATR。
-  */
 
   var surgeNotExtended=
     surgeAboveBreakout>=0&&
     surgeAboveBreakout<=3&&
     surgeAboveMA20>=0&&
     surgeAboveMA20<=4;
-
-  /*
-    續攻觀察區：
-    以現價附近的小幅震盪區計算。
-  */
 
   var surgeEntryLow=
     price-atr*.20;
@@ -1678,10 +1782,6 @@ function buildAnalysis(data){
   var surgeCenter=
     (surgeEntryLow+surgeEntryHigh)/2;
 
-  /*
-    最近 3 根 K 低點。
-  */
-
   var recent3Low=Math.min.apply(
     null,
     rows.slice(-3).map(function(row){
@@ -1689,16 +1789,8 @@ function buildAnalysis(data){
     })
   );
 
-  /*
-    ATR 失效線。
-  */
-
   var surgeATRStop=
     surgeCenter-atr*1.2;
-
-  /*
-    SL 不設得過度寬鬆。
-  */
 
   var surgeStop=Math.max(
     recent3Low-atr*.15,
@@ -1717,25 +1809,17 @@ function buildAnalysis(data){
     !Number.isFinite(surgeRisk)||
     surgeRisk<=0
   ){
-    surgeRisk=
-      atr*1.2;
+    surgeRisk=atr*1.2;
   }
 
   var surgeTP1=
-    surgeCenter+
-    surgeRisk*1.5;
+    surgeCenter+surgeRisk*1.5;
 
   var surgeTP2=
-    surgeCenter+
-    surgeRisk*2.5;
+    surgeCenter+surgeRisk*2.5;
 
   var surgeTP3=
-    surgeCenter+
-    surgeRisk*4;
-
-  /*
-    完整續攻條件。
-  */
+    surgeCenter+surgeRisk*4;
 
   var surgeQualified=
     surgeTrendStrong&&
@@ -1744,37 +1828,353 @@ function buildAnalysis(data){
     surgeNoRetest&&
     surgeNotExtended;
 
-  var surgeStatus=
-    "等待強勢續攻條件";
+  var surgeStatus="等待強勢續攻條件";
 
-  if(
-    surgeBreakout&&
-    !surgeNoRetest
-  ){
-    surgeStatus=
-      "仍接近突破區，優先觀察高 R 回測";
+  if(surgeBreakout&&!surgeNoRetest){
+    surgeStatus="仍接近突破區，優先觀察回測結構";
   }
 
   if(surgeQualified){
-    surgeStatus=
-      "🔥 強勢續攻觀察";
+    surgeStatus="🔥 強勢續攻觀察";
   }
 
-  if(
-    surgeBreakout&&
-    !surgeNotExtended
-  ){
-    surgeStatus=
-      "⚠️ 過度延伸，不列入續攻觀察";
+  if(surgeBreakout&&!surgeNotExtended){
+    surgeStatus="⚠️ 過度延伸";
   }
 
   if(price<surgeStop){
-    surgeStatus=
-      "續攻結構失效";
+    surgeStatus="續攻結構失效";
   }
 
   /* =========================
-     波段判讀
+     🧠 STRATEGY MATCHER
+  ========================= */
+
+  /*
+    這不是預測勝率。
+    分數只代表目前價格結構
+    與三套規則的符合程度。
+  */
+
+  var swingScore=0;
+  var highRScore=0;
+  var surgeScore=0;
+
+  /* 波段 */
+
+  if(price>ma60)swingScore+=15;
+  if(ma20>ma60)swingScore+=15;
+  if(rsi>=45&&rsi<=70)swingScore+=15;
+  if(macd>=0)swingScore+=10;
+
+  if(price>=entryLow&&price<=entryHigh){
+    swingScore+=45;
+  }else{
+    var swingDistanceATR=
+      atr>0
+        ?Math.abs(price-center)/atr
+        :99;
+
+    if(swingDistanceATR<=.75){
+      swingScore+=30;
+    }else if(swingDistanceATR<=1.5){
+      swingScore+=15;
+    }
+  }
+
+  if(price<stop){
+    swingScore=0;
+  }
+
+  /* 高 R */
+
+  if(price>ma20)highRScore+=10;
+  if(ma20>ma60)highRScore+=15;
+  if(macd>0)highRScore+=15;
+  if(rsi>=50&&rsi<=78)highRScore+=15;
+
+  if(breakout){
+    highRScore+=20;
+  }
+
+  if(
+    price>=breakLow&&
+    price<=breakHigh
+  ){
+    highRScore+=25;
+  }else if(
+    breakout&&
+    breakDistanceATR<=1
+  ){
+    highRScore+=15;
+  }
+
+  if(breakDistanceATR>1.5){
+    highRScore-=20;
+  }
+
+  if(price<breakStop){
+    highRScore=0;
+  }
+
+  /* 續攻 */
+
+  if(price>ma20)surgeScore+=10;
+  if(ma20>ma60)surgeScore+=15;
+  if(macd>0)surgeScore+=15;
+  if(rsi>=60&&rsi<=85)surgeScore+=20;
+  if(surgeBreakout)surgeScore+=15;
+  if(surgeNoRetest)surgeScore+=10;
+  if(surgeNotExtended)surgeScore+=15;
+
+  if(!surgeBreakout){
+    surgeScore-=20;
+  }
+
+  if(!surgeNotExtended){
+    surgeScore-=35;
+  }
+
+  swingScore=Math.max(0,Math.min(100,swingScore));
+  highRScore=Math.max(0,Math.min(100,highRScore));
+  surgeScore=Math.max(0,Math.min(100,surgeScore));
+
+  /*
+    預設不強迫選策略。
+  */
+
+  var matchName="⏳ 暫無明確策略匹配";
+  var matchClass="yellow";
+  var matchBoxClass="wait";
+  var matchNote=
+    "目前價格結構與三套策略的條件都不夠完整，系統先等待新的價格確認。";
+
+  var matchEntry="等待確認";
+  var matchStop="--";
+  var matchTP1="--";
+
+  var matchReasons=[];
+
+  /*
+    過度延伸優先擋掉追價。
+  */
+
+  var severeExtended=
+    surgeBreakout&&
+    (
+      surgeAboveBreakout>3||
+      surgeAboveMA20>4
+    );
+
+  var bestScore=Math.max(
+    swingScore,
+    highRScore,
+    surgeScore
+  );
+
+  if(severeExtended){
+
+    matchName="⚠️ 目前位置過度延伸";
+    matchClass="yellow";
+    matchBoxClass="wait";
+
+    matchNote=
+      "股價雖然強勢，但已明顯偏離突破位置或 MA20。系統目前不把這個位置歸類為三套策略中的理想觀察位置。";
+
+    matchReasons.push(
+      "距突破位 "+fmt(surgeAboveBreakout,1)+" ATR"
+    );
+
+    matchReasons.push(
+      "距 MA20 "+fmt(surgeAboveMA20,1)+" ATR"
+    );
+
+    matchReasons.push(
+      "等待新的支撐、整理或回測結構"
+    );
+
+  }else if(bestScore>=55){
+
+    /*
+      續攻必須真的符合核心條件，
+      不能單靠分數勝出。
+    */
+
+    if(
+      surgeScore===bestScore&&
+      surgeQualified
+    ){
+
+      matchName="🔥 強勢續攻策略";
+      matchClass="orange";
+      matchBoxClass="orange";
+
+      matchNote=
+        "目前價格已突破主要壓力，而且沒有回到原突破區；趨勢與動能仍維持強勢，且尚未超過系統設定的最大延伸範圍。";
+
+      matchEntry=
+        fmt(surgeEntryLow)+" ～ "+fmt(surgeEntryHigh);
+
+      matchStop=
+        fmt(surgeStop);
+
+      matchTP1=
+        fmt(surgeTP1);
+
+      matchReasons.push(
+        "✓ 價格 > MA20 > MA60"
+      );
+
+      matchReasons.push(
+        "✓ 已突破 20 日壓力"
+      );
+
+      matchReasons.push(
+        "✓ MACD > 0"
+      );
+
+      matchReasons.push(
+        "✓ RSI "+fmt(rsi,1)+" 位於強勢區"
+      );
+
+      matchReasons.push(
+        "✓ 沒有回到原突破回測區"
+      );
+
+      matchReasons.push(
+        "✓ 距突破位 "+fmt(surgeAboveBreakout,1)+" ATR，尚未過度延伸"
+      );
+
+    }else if(
+      highRScore>=swingScore&&
+      highRScore>=surgeScore&&
+      breakout&&
+      breakDistanceATR<=1.5
+    ){
+
+      matchName="🟣 高 R 突破回測策略";
+      matchClass="purple";
+      matchBoxClass="purple";
+
+      matchNote=
+        "目前價格已突破主要壓力，且與突破區距離仍在高 R 策略可觀察範圍內。這套劇本主要等待突破位置轉為支撐。";
+
+      matchEntry=
+        fmt(breakLow)+" ～ "+fmt(breakHigh);
+
+      matchStop=
+        fmt(breakStop);
+
+      matchTP1=
+        fmt(highTp1);
+
+      matchReasons.push(
+        "✓ 已突破 20 日壓力 "+fmt(resistance)
+      );
+
+      if(ma20>ma60){
+        matchReasons.push(
+          "✓ MA20 > MA60"
+        );
+      }
+
+      if(macd>0){
+        matchReasons.push(
+          "✓ MACD > 0"
+        );
+      }
+
+      matchReasons.push(
+        "✓ 距突破位 "+fmt(breakDistanceATR,1)+" ATR"
+      );
+
+      matchReasons.push(
+        "✓ 主要觀察突破後回測是否守住"
+      );
+
+    }else if(swingScore>=55){
+
+      matchName="🟢 支撐回踩波段策略";
+      matchClass="green";
+      matchBoxClass="positive";
+
+      matchNote=
+        "目前價格與 MA20／近期支撐結構的距離較符合回踩型劇本，主要觀察價格在支撐區附近能否止跌並重新轉強。";
+
+      matchEntry=
+        fmt(entryLow)+" ～ "+fmt(entryHigh);
+
+      matchStop=
+        fmt(stop);
+
+      matchTP1=
+        fmt(tp1);
+
+      if(ma20>ma60){
+        matchReasons.push(
+          "✓ MA20 > MA60"
+        );
+      }
+
+      matchReasons.push(
+        "✓ 回踩觀察區 "+fmt(entryLow)+" ～ "+fmt(entryHigh)
+      );
+
+      matchReasons.push(
+        "✓ MA20 "+fmt(ma20)
+      );
+
+      matchReasons.push(
+        "✓ RSI "+fmt(rsi,1)
+      );
+
+      matchReasons.push(
+        "✓ 以支撐結構作為失效依據"
+      );
+    }
+  }
+
+  /*
+    如果最高分不低，
+    但因核心條件未滿足沒有被選，
+    顯示等待。
+  */
+
+  if(!matchReasons.length){
+
+    if(price<ma20){
+      matchReasons.push(
+        "△ 現價尚未穩定站在 MA20 上方"
+      );
+    }
+
+    if(ma20<=ma60){
+      matchReasons.push(
+        "△ MA20 尚未高於 MA60"
+      );
+    }
+
+    if(!breakout){
+      matchReasons.push(
+        "△ 尚未突破 20 日壓力 "+fmt(resistance)
+      );
+    }
+
+    if(rsi<50){
+      matchReasons.push(
+        "△ RSI "+fmt(rsi,1)+"，動能尚未進入偏強區"
+      );
+    }
+
+    if(!matchReasons.length){
+      matchReasons.push(
+        "△ 條件介於多套策略之間，等待更明確的價格結構"
+      );
+    }
+  }
+
+  /* =========================
+     CHECKS
   ========================= */
 
   var swingChecks=[];
@@ -1782,24 +2182,24 @@ function buildAnalysis(data){
   if(price>ma20){
     swingChecks.push([
       "good",
-      "✓ 現價位於 MA20 上方，短期趨勢尚未破壞。"
+      "✓ 現價位於 MA20 上方。"
     ]);
   }else{
     swingChecks.push([
       "warn",
-      "△ 現價位於 MA20 下方，需要觀察能否重新站回。"
+      "△ 現價位於 MA20 下方。"
     ]);
   }
 
   if(ma20>ma60){
     swingChecks.push([
       "good",
-      "✓ MA20 高於 MA60，中期均線結構偏多。"
+      "✓ MA20 高於 MA60。"
     ]);
   }else{
     swingChecks.push([
       "warn",
-      "△ MA20 尚未高於 MA60，多頭排列尚未完整。"
+      "△ MA20 尚未高於 MA60。"
     ]);
   }
 
@@ -1811,74 +2211,46 @@ function buildAnalysis(data){
   }else if(rsi>=50){
     swingChecks.push([
       "good",
-      "✓ RSI "+fmt(rsi,1)+"，目前仍維持偏強區。"
+      "✓ RSI "+fmt(rsi,1)+"，位於偏強區。"
     ]);
   }else{
     swingChecks.push([
       "warn",
-      "△ RSI "+fmt(rsi,1)+"，短線動能相對較弱。"
+      "△ RSI "+fmt(rsi,1)+"，短線動能偏弱。"
     ]);
   }
-
-  /* =========================
-     高 R 判讀
-  ========================= */
 
   var breakChecks=[];
 
   if(price>ma20&&ma20>ma60){
     breakChecks.push([
       "good",
-      "✓ 股價、MA20、MA60 維持較完整的偏多排列。"
+      "✓ 股價 > MA20 > MA60。"
     ]);
   }else{
     breakChecks.push([
       "warn",
-      "△ 均線結構尚未完全符合強勢突破排列。"
+      "△ 均線結構尚未完整符合突破排列。"
     ]);
   }
 
   if(macd>0){
     breakChecks.push([
       "good",
-      "✓ MACD "+fmt(macd,2)+"，目前位於正值區。"
+      "✓ MACD "+fmt(macd,2)+" 為正值。"
     ]);
   }else{
     breakChecks.push([
       "warn",
-      "△ MACD 位於負值區，突破動能仍需確認。"
-    ]);
-  }
-
-  if(rsi>=50&&rsi<=78){
-    breakChecks.push([
-      "good",
-      "✓ RSI 位於 50～78 的偏強區間。"
-    ]);
-  }else if(rsi>78){
-    breakChecks.push([
-      "warn",
-      "⚠ RSI 已超過 78，需要注意價格與突破區距離。"
-    ]);
-  }else{
-    breakChecks.push([
-      "warn",
-      "△ RSI 尚未進入較強動能區。"
+      "△ MACD 位於負值區。"
     ]);
   }
 
   if(breakout){
     breakChecks.push([
       "good",
-      "✓ 現價已突破 20 日壓力 "+fmt(resistance)+"。"
+      "✓ 已突破 20 日壓力 "+fmt(resistance)+"。"
     ]);
-
-    if(breakDistanceATR>1.5){
-      breakChecks.push([
-        "warn",
-        "⚠ 現價距突破位置約 "+fmt(breakDistanceATR,1)+" ATR。"
-      ]);
-    }
   }else{
     breakChecks.push([
       "warn",
@@ -1886,28 +2258,31 @@ function buildAnalysis(data){
     ]);
   }
 
-  /* =========================
-     續攻判讀
-  ========================= */
+  if(breakout&&breakDistanceATR>1.5){
+    breakChecks.push([
+      "warn",
+      "⚠ 距突破位置 "+fmt(breakDistanceATR,1)+" ATR。"
+    ]);
+  }
 
   var surgeChecks=[];
 
   if(price>ma20&&ma20>ma60){
     surgeChecks.push([
       "good",
-      "✓ 價格 > MA20 > MA60，趨勢排列符合續攻條件。"
+      "✓ 價格 > MA20 > MA60。"
     ]);
   }else{
     surgeChecks.push([
       "warn",
-      "△ 均線排列尚未符合強勢續攻條件。"
+      "△ 均線排列尚未符合續攻條件。"
     ]);
   }
 
   if(macd>0){
     surgeChecks.push([
       "good",
-      "✓ MACD 為正值，動能仍偏正向。"
+      "✓ MACD 為正值。"
     ]);
   }else{
     surgeChecks.push([
@@ -1919,107 +2294,58 @@ function buildAnalysis(data){
   if(rsi>=60&&rsi<=85){
     surgeChecks.push([
       "good",
-      "✓ RSI "+fmt(rsi,1)+"，位於續攻策略的強勢動能區。"
+      "✓ RSI "+fmt(rsi,1)+" 位於續攻強勢區。"
     ]);
   }else if(rsi>85){
     surgeChecks.push([
       "warn",
-      "⚠ RSI "+fmt(rsi,1)+"，短線動能過熱。"
+      "⚠ RSI "+fmt(rsi,1)+"，短線過熱。"
     ]);
   }else{
     surgeChecks.push([
       "warn",
-      "△ RSI "+fmt(rsi,1)+"，尚未達到續攻策略的動能條件。"
+      "△ RSI "+fmt(rsi,1)+" 尚未達續攻條件。"
     ]);
   }
 
   if(surgeBreakout){
     surgeChecks.push([
       "good",
-      "✓ 現價已位於 20 日壓力 "+fmt(resistance)+" 上方。"
+      "✓ 已突破 20 日壓力。"
     ]);
   }else{
     surgeChecks.push([
       "warn",
-      "△ 尚未突破 20 日主要壓力。"
+      "△ 尚未突破主要壓力。"
     ]);
   }
 
   if(surgeNoRetest){
     surgeChecks.push([
       "good",
-      "✓ 價格沒有回到原高 R 回測區，符合「不回踩」劇本。"
+      "✓ 尚未回到原突破回測區。"
     ]);
   }else{
     surgeChecks.push([
       "warn",
-      "△ 價格仍接近原突破回測區，高 R 回測劇本較符合目前位置。"
+      "△ 目前仍接近突破回測區。"
     ]);
   }
 
   if(surgeNotExtended){
     surgeChecks.push([
       "good",
-      "✓ 尚未超過續攻策略設定的最大延伸範圍。"
+      "✓ 尚未超過續攻策略最大延伸範圍。"
     ]);
   }else{
     surgeChecks.push([
       "warn",
-      "⚠ 價格已過度偏離突破位或 MA20，不列入相同續攻風險區。"
+      "⚠ 價格已過度延伸。"
     ]);
   }
 
   /* =========================
-     波段文字
-  ========================= */
-
-  var overviewText="";
-
-  if(price>entryHigh){
-    overviewText=
-      "目前價格位於回踩觀察區上方，距策略中心價約 "+
-      Math.abs(distanceEntry).toFixed(1)+
-      "%。回踩型波段策略主要等待價格接近支撐結構。";
-  }else if(price>=entryLow&&price<=entryHigh){
-    overviewText=
-      "目前價格已進入系統計算的回踩觀察區，接下來主要觀察支撐是否守住，以及價格是否重新轉強。";
-  }else{
-    overviewText=
-      "目前價格已低於原回踩觀察區，需要重新確認支撐結構是否仍有效。";
-  }
-
-  /* =========================
-     入場原因
-  ========================= */
-
-  var reasons=[];
-
-  if(Math.abs(ma20-center)<=atr){
-    reasons.push("MA20 接近");
-  }
-
-  if(Math.abs(ma60-center)<=atr*1.5){
-    reasons.push("MA60 接近");
-  }
-
-  if(Math.abs(low10-center)<=atr){
-    reasons.push("10日低點");
-  }
-
-  if(Math.abs(low20-center)<=atr*1.5){
-    reasons.push("20日低點");
-  }
-
-  if(Math.abs(low60-center)<=atr*2){
-    reasons.push("60日結構");
-  }
-
-  if(!reasons.length){
-    reasons.push("ATR 支撐帶");
-  }
-
-  /* =========================
-     綜合判讀
+     BRAIN
   ========================= */
 
   var brain=[];
@@ -2032,14 +2358,14 @@ function buildAnalysis(data){
   }else{
     brain.push([
       "warn",
-      "△ 趨勢：目前尚未形成完整多頭排列。"
+      "△ 趨勢：尚未形成完整多頭排列。"
     ]);
   }
 
   if(rsi>85){
     brain.push([
       "warn",
-      "⚠ 動能：RSI 已進入非常強勢／偏熱區域，需要特別注意價格延伸程度。"
+      "⚠ 動能：RSI 已進入非常強勢／偏熱區。"
     ]);
   }else if(rsi>=60){
     brain.push([
@@ -2060,38 +2386,18 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(surgeQualified){
-    brain.push([
-      "good",
-      "🔥 續攻劇本：已突破且沒有回踩原突破區，目前仍符合強勢續攻觀察條件。"
-    ]);
-  }else if(surgeBreakout&&!surgeNotExtended){
-    brain.push([
-      "warn",
-      "⚠ 續攻劇本：雖然已突破，但價格延伸程度過大。"
-    ]);
-  }else if(!breakout){
-    brain.push([
-      "warn",
-      "△ 突破劇本：目前仍需等待主要壓力有效突破。"
-    ]);
-  }
+  brain.push([
+    "good",
+    "🧠 策略匹配："+
+    matchName.replace(/[🟢🟣🔥⚠️⏳]/g,"").trim()+
+    "。"
+  ]);
 
-  var brainSummary="";
-
-  if(surgeQualified){
-    brainSummary=
-      "目前價格已突破主要壓力，而且沒有回到原突破回測區；趨勢、MACD 與 RSI 仍符合強勢續攻條件，因此系統額外啟用「強勢續攻觀察」劇本。這套策略的風險基準與高 R 回測策略不同。";
-  }else if(price>ma20&&ma20>ma60){
-    brainSummary=
-      "目前技術結構偏多。系統同時追蹤回踩、高 R 突破回測，以及突破後不回踩的強勢續攻三種不同技術劇本。";
-  }else{
-    brainSummary=
-      "目前趨勢尚未形成完整強勢排列，三套策略都需要更多價格確認。";
-  }
+  var brainSummary=
+    "系統會先辨識目前價格位置，再比較回踩、高 R 回測與強勢續攻三種技術劇本。匹配結果代表目前結構與規則的符合程度，不代表未來報酬或勝率。";
 
   /* =========================
-     資料
+     DATA
   ========================= */
 
   var change=
@@ -2116,10 +2422,12 @@ function buildAnalysis(data){
   };
 
   /* =========================
-     畫面
+     HTML
   ========================= */
 
   var html=
+
+  /* HERO */
 
   '<div class="hero-card">'+
 
@@ -2137,7 +2445,9 @@ function buildAnalysis(data){
 
       '<div>'+
         '<div class="hero-price">'+money+fmt(price)+'</div>'+
-        '<div class="hero-change '+pclass(change)+'">'+pct(change)+'</div>'+
+        '<div class="hero-change '+pclass(change)+'">'+
+          pct(change)+
+        '</div>'+
       '</div>'+
 
     '</div>'+
@@ -2158,7 +2468,78 @@ function buildAnalysis(data){
   '</div>'+
 
   /* =========================
-     🟢 波段
+     🧠 MATCHER
+  ========================= */
+
+  '<div class="big-section-title">'+
+    '🧠 自動策略匹配分析'+
+  '</div>'+
+
+  '<div class="matcher '+safe(matchBoxClass)+'">'+
+
+    '<div class="matcher-kicker">'+
+      '目前價格結構較符合'+
+    '</div>'+
+
+    '<div class="matcher-strategy '+safe(matchClass)+'">'+
+      safe(matchName)+
+    '</div>'+
+
+    '<div class="matcher-note">'+
+      safe(matchNote)+
+    '</div>'+
+
+    '<div class="matcher-grid">'+
+
+      '<div class="matcher-score">'+
+        '<span>🟢 波段<br>符合度</span>'+
+        '<strong>'+swingScore+'</strong>'+
+      '</div>'+
+
+      '<div class="matcher-score">'+
+        '<span>🟣 高 R<br>符合度</span>'+
+        '<strong>'+highRScore+'</strong>'+
+      '</div>'+
+
+      '<div class="matcher-score">'+
+        '<span>🔥 續攻<br>符合度</span>'+
+        '<strong>'+surgeScore+'</strong>'+
+      '</div>'+
+
+    '</div>'+
+
+    '<div class="matcher-reasons">'+
+      renderMatcherReasons(matchReasons)+
+    '</div>'+
+
+    '<div class="matcher-levels">'+
+
+      '<div class="matcher-level-row">'+
+        '<span>目前價格</span>'+
+        '<strong>'+fmt(price)+'</strong>'+
+      '</div>'+
+
+      '<div class="matcher-level-row">'+
+        '<span>對應觀察區</span>'+
+        '<strong>'+safe(matchEntry)+'</strong>'+
+      '</div>'+
+
+      '<div class="matcher-level-row">'+
+        '<span>結構失效 SL</span>'+
+        '<strong class="down">'+safe(matchStop)+'</strong>'+
+      '</div>'+
+
+      '<div class="matcher-level-row">'+
+        '<span>第一目標 TP1</span>'+
+        '<strong class="up">'+safe(matchTP1)+'</strong>'+
+      '</div>'+
+
+    '</div>'+
+
+  '</div>'+
+
+  /* =========================
+     🟢 SWING
   ========================= */
 
   '<div class="big-section-title">📋 波段策略總覽</div>'+
@@ -2166,9 +2547,9 @@ function buildAnalysis(data){
   '<div class="overview-card">'+
 
     overviewRow(
-      "目前趨勢",
-      trend,
-      trend==="偏多趨勢"?"green":""
+      "目前狀態",
+      swingStatus,
+      price>=entryLow&&price<=entryHigh?"green":""
     )+
 
     overviewRow(
@@ -2216,7 +2597,7 @@ function buildAnalysis(data){
     '<div class="divider"></div>'+
 
     '<div class="overview-text">'+
-      safe(overviewText)+
+      '波段策略等待價格接近 MA20、近期低點與 ATR 支撐帶，再觀察支撐是否守住。'+
     '</div>'+
 
   '</div>'+
@@ -2238,14 +2619,15 @@ function buildAnalysis(data){
 
     '<div class="divider"></div>'+
 
-    '<div class="reason-title">為什麼抓這個位置？</div>'+
-
     '<div class="reason-tags">'+
-      renderTags(reasons)+
+      '<div class="reason-tag">MA20 '+fmt(ma20)+'</div>'+
+      '<div class="reason-tag">MA60 '+fmt(ma60)+'</div>'+
+      '<div class="reason-tag">10日低點 '+fmt(low10)+'</div>'+
+      '<div class="reason-tag">ATR '+fmt(atr)+'</div>'+
     '</div>'+
 
     '<div class="detail-text">'+
-      '系統從 MA20、MA60、近期低點與 ATR 尋找回踩支撐區。'+
+      '這個區域代表回踩型技術劇本的觀察位置。若價格跌破結構失效位置，原本的回踩劇本需要重新評估。'+
     '</div>'+
 
   '</div>'+
@@ -2265,13 +2647,13 @@ function buildAnalysis(data){
     '</div>'+
 
     '<div class="explain-box">'+
-      '等待價格回到支撐帶，再觀察是否出現止跌與重新轉強；若跌破 SL，原回踩結構需要重新評估。'+
+      '主要等待價格回到支撐帶，再觀察止跌與重新轉強。TP 與 SL 依回踩觀察區中心及結構風險計算。'+
     '</div>'+
 
   '</div>'+
 
   /* =========================
-     🟣 高 R
+     🟣 HIGH R
   ========================= */
 
   '<div class="big-section-title">🟣 高 R 策略總覽</div>'+
@@ -2341,10 +2723,9 @@ function buildAnalysis(data){
     '<div class="divider"></div>'+
 
     '<div class="overview-text">'+
-      '先等待突破 '+fmt(resistance)+
+      '高 R 劇本先等待突破 '+fmt(resistance)+
       '，再觀察 '+fmt(breakLow)+' ～ '+fmt(breakHigh)+
-      ' 的回測區。策略中心價 '+fmt(breakCenter)+
-      '，1R 約 '+fmt(breakRisk)+'。'+
+      ' 是否形成突破後回測支撐。'+
     '</div>'+
 
   '</div>'+
@@ -2377,7 +2758,7 @@ function buildAnalysis(data){
   '</div>'+
 
   /* =========================
-     🔥 強勢續攻
+     🔥 SURGE
   ========================= */
 
   '<div class="big-section-title">🔥 強勢續攻策略</div>'+
@@ -2447,9 +2828,7 @@ function buildAnalysis(data){
     '<div class="divider"></div>'+
 
     '<div class="overview-text">'+
-      '這套策略專門處理「已突破主要壓力，但價格沒有回踩原突破區」的強勢走勢。'+
-      '只有趨勢、MACD、RSI、突破與延伸程度同時符合條件時，才會顯示「🔥 強勢續攻觀察」。'+
-      '若距離突破位或 MA20 已過遠，系統會改為「過度延伸」。'+
+      '強勢續攻劇本處理已突破、沒有回到原突破區，但趨勢與動能仍維持強勢的情況。若價格延伸過大，系統會標示過度延伸。'+
     '</div>'+
 
   '</div>'+
@@ -2458,7 +2837,7 @@ function buildAnalysis(data){
 
   '<div class="entry-card orange">'+
 
-    '<div class="entry-label">強勢股不回踩劇本</div>'+
+    '<div class="entry-label">突破後不回踩劇本</div>'+
 
     '<div class="entry-price">'+
       fmt(surgeEntryLow)+' ～ '+fmt(surgeEntryHigh)+
@@ -2466,24 +2845,22 @@ function buildAnalysis(data){
 
     '<div class="entry-sub">'+
       '策略中心價 '+fmt(surgeCenter)+
-      ' · 1R 風險 '+fmt(surgeRisk)+
+      ' · 1R '+fmt(surgeRisk)+
     '</div>'+
 
     '<div class="divider"></div>'+
-
-    '<div class="reason-title">續攻策略檢查</div>'+
 
     '<div class="reason-tags">'+
       '<div class="reason-tag">價格 > MA20 > MA60</div>'+
       '<div class="reason-tag">MACD > 0</div>'+
       '<div class="reason-tag">RSI 60～85</div>'+
       '<div class="reason-tag">突破 20 日壓力</div>'+
-      '<div class="reason-tag">沒有回踩突破區</div>'+
+      '<div class="reason-tag">不回踩突破區</div>'+
       '<div class="reason-tag">限制過度延伸</div>'+
     '</div>'+
 
     '<div class="detail-text">'+
-      '續攻策略不要求價格重新回到原突破位，而是觀察突破後仍維持強勢的價格結構。若價格延伸過大，這套策略會自動降低適用性。'+
+      '續攻策略不要求價格回到原突破位，而是觀察強勢突破後是否仍維持趨勢與動能。'+
     '</div>'+
 
   '</div>'+
@@ -2503,13 +2880,13 @@ function buildAnalysis(data){
     '</div>'+
 
     '<div class="explain-box">'+
-      '此策略與高 R 回測不同：高 R 策略等待價格回到原突破區；強勢續攻策略則處理價格沒有明顯回踩、仍持續維持強勢的情況。SL 為結構失效參考，TP 依 1R 的 1.5 / 2.5 / 4 倍計算。'+
+      '高 R 策略等待回測；強勢續攻則處理價格沒有明顯回測的走勢。若距離突破位或 MA20 過遠，系統不會把它視為相同的續攻觀察位置。'+
     '</div>'+
 
   '</div>'+
 
   /* =========================
-     綜合
+     BRAIN
   ========================= */
 
   '<div class="big-section-title">🧠 系統綜合判讀</div>'+
@@ -2528,7 +2905,7 @@ function buildAnalysis(data){
     '資料來源：'+safe(data.liveSource||"FinMind")+
     (data.latestDate?' · 最新交易日 '+safe(data.latestDate):'')+
     '<br>'+
-    '三套策略為規則式技術分析，用於區分不同價格結構；入場區、TP、SL 與 R 倍數不代表未來價格一定到達目標。'+
+    '策略匹配分數代表目前價格結構與規則的符合程度，不是上漲機率或預測勝率。入場觀察區、TP、SL 與 R 倍數皆為規則式技術分析結果。'+
   '</div>';
 
   el("analysisResult").innerHTML=html;
@@ -2541,7 +2918,7 @@ function buildAnalysis(data){
 }
 
 /* =========================
-   元件
+   COMPONENTS
 ========================= */
 
 function indicator(name,value){
@@ -2573,14 +2950,6 @@ function targetBox(label,value,type){
   );
 }
 
-function renderTags(tags){
-  return tags.map(function(tag){
-    return (
-      '<div class="reason-tag">'+safe(tag)+'</div>'
-    );
-  }).join("");
-}
-
 function renderChecks(checks){
   return checks.map(function(item){
     return (
@@ -2601,14 +2970,26 @@ function renderBrain(items){
   }).join("");
 }
 
+function renderMatcherReasons(items){
+  return items.map(function(item){
+    return (
+      '<div class="matcher-reason">'+
+        safe(item)+
+      '</div>'
+    );
+  }).join("");
+}
+
 /* =========================
-   雷達
+   RADAR
 ========================= */
 
 el("refreshButton").onclick=loadRadar;
 
 async function loadRadar(){
+
   try{
+
     var response=await fetch(
       "/api/radar?t="+Date.now(),
       {cache:"no-store"}
@@ -2650,17 +3031,22 @@ async function loadRadar(){
     countdownSeconds=300;
 
   }catch(error){
+
     el("updateText").textContent=
       "即時雷達連線失敗";
   }
 }
 
 function renderStocks(target,list,longMode){
+
   var root=el(target);
 
   if(!list.length){
+
     root.innerHTML=
-      '<div class="card">目前沒有符合條件的股票</div>';
+      '<div class="card">'+
+        '目前沒有符合條件的股票'+
+      '</div>';
 
     return;
   }
@@ -2668,7 +3054,9 @@ function renderStocks(target,list,longMode){
   var html="";
 
   list.forEach(function(stock){
+
     html+=
+
       '<article class="stock-card '+
       (
         longMode&&
@@ -2721,7 +3109,9 @@ function renderStocks(target,list,longMode){
   root.innerHTML=html;
 
   root.querySelectorAll("[data-stock]").forEach(function(card){
+
     card.onclick=function(){
+
       var symbol=this.dataset.stock;
 
       el("symbolInput").value=symbol;
@@ -2732,10 +3122,11 @@ function renderStocks(target,list,longMode){
 }
 
 /* =========================
-   5 分鐘更新
+   AUTO REFRESH
 ========================= */
 
 setInterval(function(){
+
   countdownSeconds--;
 
   if(countdownSeconds<=0){
@@ -2756,7 +3147,7 @@ setInterval(function(){
 
 },1000);
 
-/* 啟動 */
+/* START */
 
 renderWatchlist();
 loadRadar();
