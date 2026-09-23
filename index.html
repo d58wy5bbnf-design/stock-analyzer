@@ -2,7 +2,6 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
 <title>妖子平台2.0</title>
@@ -29,7 +28,7 @@ html,body{
 }
 
 h1{
-  font-size:28px;
+  font-size:29px;
   margin:8px 0;
 }
 
@@ -57,9 +56,7 @@ h1{
   text-transform:uppercase;
 }
 
-.search input:focus{
-  border-color:#46e2ad;
-}
+.search input:focus{border-color:#46e2ad}
 
 .search button{
   border:0;
@@ -102,17 +99,67 @@ h1{
   font-size:14px;
 }
 
+.liveLabel{
+  display:inline-block;
+  margin-top:13px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#081811;
+  border:1px solid #1d7659;
+  color:#46e2ad;
+  font-size:11px;
+  font-weight:800;
+}
+
 .price{
-  font-size:39px;
+  font-size:41px;
   font-weight:900;
-  margin:5px 0;
+  margin:7px 0 2px;
+}
+
+.change{
+  font-size:16px;
+  font-weight:850;
+  margin-bottom:12px;
+}
+
+.liveGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:15px;
+}
+
+.liveItem{
+  padding:11px;
+  background:#080808;
+  border:1px solid #252525;
+  border-radius:12px;
+}
+
+.liveItem .k{
+  color:#666;
+  font-size:11px;
+}
+
+.liveItem .v{
+  font-weight:850;
+  margin-top:4px;
+  font-size:14px;
+}
+
+.update{
+  color:#666;
+  font-size:11px;
+  margin-top:12px;
+  line-height:1.6;
 }
 
 .metrics{
   display:flex;
   flex-wrap:wrap;
   gap:7px;
-  margin-top:14px;
+  margin-top:15px;
 }
 
 .pill{
@@ -124,9 +171,7 @@ h1{
   font-size:12px;
 }
 
-.report{
-  display:none;
-}
+.report{display:none}
 
 .strategyHeader{
   margin-top:32px;
@@ -391,7 +436,7 @@ h1{
 }
 
 @media(max-width:520px){
-  .price{font-size:34px}
+  .price{font-size:36px}
   .big{font-size:26px}
   .search button{padding:0 12px}
 }
@@ -405,7 +450,8 @@ h1{
 <h1>妖子平台2.0</h1>
 
 <div class="sub">
-雙策略波段技術分析｜支撐回踩 × 高 R 突破回測
+即時行情 × 雙策略波段技術分析<br>
+支撐回踩｜高 R 突破回測
 </div>
 
 <div class="search">
@@ -414,15 +460,51 @@ h1{
 </div>
 
 <div class="hint">
-台股直接輸入 2330；美股輸入 NVDA、AAPL。系統依歷史日 K 與技術結構自動計算。
+台股輸入 2330；美股輸入 NVDA、AAPL。最新行情與日 K 技術分析分開處理。
 </div>
 
 <div id="status" class="status"></div>
 
 <section id="hero" class="hero">
+
 <div id="title" class="ticker"></div>
+
+<div class="liveLabel">
+● 最新行情
+</div>
+
 <div id="price" class="price"></div>
+
+<div id="change" class="change"></div>
+
+<div class="liveGrid">
+
+<div class="liveItem">
+<div class="k">昨收</div>
+<div id="previousClose" class="v">--</div>
+</div>
+
+<div class="liveItem">
+<div class="k">今日高</div>
+<div id="dayHigh" class="v">--</div>
+</div>
+
+<div class="liveItem">
+<div class="k">今日低</div>
+<div id="dayLow" class="v">--</div>
+</div>
+
+<div class="liveItem">
+<div class="k">行情來源</div>
+<div id="liveSource" class="v">--</div>
+</div>
+
+</div>
+
+<div id="updateTime" class="update"></div>
+
 <div id="metrics" class="metrics"></div>
+
 </section>
 
 <div id="report" class="report"></div>
@@ -451,7 +533,6 @@ function sma(a,n){
 
 function ema(a,n){
   if(!a.length)return 0;
-
   let k=2/(n+1);
   let v=a[0];
 
@@ -520,12 +601,12 @@ function dist(level,price){
   let p=pct(level,price);
 
   if(p>0)
-    return `距現價上方 ${Math.abs(p).toFixed(1)}%`;
+    return `距最新行情上方 ${Math.abs(p).toFixed(1)}%`;
 
   if(p<0)
-    return `距現價下方 ${Math.abs(p).toFixed(1)}%`;
+    return `距最新行情下方 ${Math.abs(p).toFixed(1)}%`;
 
-  return "接近現價";
+  return "接近最新行情";
 }
 
 function recentSwingLow(rows){
@@ -576,6 +657,30 @@ function recentSwingHigh(rows){
   return candidates.at(-1);
 }
 
+function formatMarketTime(timestamp){
+
+  if(!Number.isFinite(Number(timestamp)))
+    return "更新時間：--";
+
+  try{
+
+    return "行情時間："+new Date(
+      Number(timestamp)*1000
+    ).toLocaleString("zh-TW",{
+      timeZone:"Asia/Taipei",
+      month:"2-digit",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit",
+      second:"2-digit",
+      hour12:false
+    });
+
+  }catch{
+    return "行情時間：--";
+  }
+}
+
 async function run(){
 
   let symbol=$("symbol").value.trim();
@@ -584,7 +689,7 @@ async function run(){
 
   $("status").style.display="block";
   $("status").textContent=
-    "妖子平台2.0 正在分析市場結構與兩套波段策略…";
+    "妖子平台2.0 正在取得最新行情並分析市場結構…";
 
   $("hero").style.display="none";
   $("report").style.display="none";
@@ -592,7 +697,8 @@ async function run(){
   try{
 
     let response=await fetch(
-      "/api/stock?symbol="+encodeURIComponent(symbol)
+      "/api/stock?symbol="+encodeURIComponent(symbol),
+      {cache:"no-store"}
     );
 
     let d=await response.json();
@@ -602,10 +708,17 @@ async function run(){
     }
 
     let rows=(d.rows||[]).filter(x=>
-      Number.isFinite(x.close)&&
-      Number.isFinite(x.high)&&
-      Number.isFinite(x.low)
-    );
+      Number.isFinite(Number(x.close)) &&
+      Number.isFinite(Number(x.high)) &&
+      Number.isFinite(Number(x.low))
+    ).map(x=>({
+      ...x,
+      close:Number(x.close),
+      high:Number(x.high),
+      low:Number(x.low),
+      open:Number(x.open),
+      volume:Number(x.volume)
+    }));
 
     if(rows.length<30){
       throw Error("歷史行情資料不足");
@@ -613,7 +726,56 @@ async function run(){
 
     let closes=rows.map(x=>x.close);
 
-    let price=closes.at(-1);
+    /*
+      dailyClose = 技術分析歷史日K的最後收盤
+      price = 最新行情
+    */
+
+    let dailyClose=closes.at(-1);
+
+    let price=
+      Number.isFinite(Number(d.livePrice))
+      ? Number(d.livePrice)
+      : dailyClose;
+
+    let previousClose=
+      Number.isFinite(Number(d.previousClose))
+      ? Number(d.previousClose)
+      : null;
+
+    let change=
+      Number.isFinite(Number(d.change))
+      ? Number(d.change)
+      : (
+          previousClose
+          ? price-previousClose
+          : null
+        );
+
+    let changePercent=
+      Number.isFinite(Number(d.changePercent))
+      ? Number(d.changePercent)
+      : (
+          previousClose
+          ? (price/previousClose-1)*100
+          : null
+        );
+
+    let dayHigh=
+      Number.isFinite(Number(d.dayHigh))
+      ? Number(d.dayHigh)
+      : null;
+
+    let dayLow=
+      Number.isFinite(Number(d.dayLow))
+      ? Number(d.dayLow)
+      : null;
+
+
+    /*
+      技術指標：
+      繼續使用歷史日K
+    */
 
     let ma20=sma(closes,20);
     let ma60=sma(closes,60);
@@ -626,7 +788,7 @@ async function run(){
 
     let ATR=atr(rows);
 
-    if(!Number.isFinite(ATR) || ATR<=0){
+    if(!Number.isFinite(ATR)||ATR<=0){
       throw Error("ATR 波動資料不足");
     }
 
@@ -649,14 +811,14 @@ async function run(){
 
 
     /* =========================
-       整體趨勢
+       趨勢
     ========================= */
 
     let trend="整理／轉折";
     let trendClass="amber";
 
     let trendExplanation=
-      "目前價格、MA20、MA60 與 MACD 尚未形成完全一致的方向，市場比較接近整理或轉折階段。這種環境下，支撐與突破都需要更多確認。";
+      "目前最新價格、MA20、MA60 與 MACD 尚未形成完全一致的方向，市場比較接近整理或轉折階段。";
 
     if(price>ma20 && ma20>ma60 && macd>0){
 
@@ -664,7 +826,7 @@ async function run(){
       trendClass="green";
 
       trendExplanation=
-        "現價位於 MA20 上方、MA20 高於 MA60，而且 MACD 動能為正，短中期結構偏多。若價格已經離主要支撐很遠，仍要留意追價後的風險報酬會變差。";
+        "最新行情位於 MA20 上方、MA20 高於 MA60，而且 MACD 動能為正，短中期技術結構偏多。若最新價格已經離支撐過遠，仍需注意追價後風險報酬下降。";
 
     }else if(price<ma20 && ma20<ma60 && macd<0){
 
@@ -672,51 +834,47 @@ async function run(){
       trendClass="red";
 
       trendExplanation=
-        "現價位於主要均線下方、MA20 低於 MA60，而且 MACD 動能偏弱。反彈時均線與前方套牢／前高區可能形成壓力，因此需要更嚴格等待止跌或重新轉強。";
+        "最新行情位於主要均線下方、MA20 低於 MA60，而且 MACD 動能偏弱。反彈時均線與前方壓力區可能形成阻力。";
     }
 
-
-    /* =========================
-       RSI 解讀
-    ========================= */
 
     let rsiExplanation="";
 
     if(rv>=78){
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 已位於非常偏高的動能區。這不代表一定立刻下跌，但代表短線漲幅已大，若同時遠離支撐，追價風險會提高。`;
+        `RSI ${rv.toFixed(1)} 位於非常偏高的動能區。這不代表一定立即下跌，但代表短線漲幅較大，若同時遠離主要支撐，追價風險會提高。`;
 
     }else if(rv>=70){
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 位於偏高區，多方動能仍強，但短線過熱與震盪風險也開始增加。`;
+        `RSI ${rv.toFixed(1)} 位於偏高區，多方動能仍強，但短線過熱與震盪風險增加。`;
 
     }else if(rv>=55){
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 位於中性偏強區，買方動能相對有利，而且尚未進入極端過熱區。`;
+        `RSI ${rv.toFixed(1)} 位於中性偏強區，買方動能相對有利，尚未進入極端過熱區。`;
 
     }else if(rv>=45){
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 接近中性區，目前沒有非常明顯的單邊動能，需要搭配均線、支撐與突破結構一起判斷。`;
+        `RSI ${rv.toFixed(1)} 接近中性區，需要搭配均線、支撐與突破結構判斷。`;
 
     }else if(rv>=30){
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 屬於偏弱區，短線賣壓較明顯。若要觀察反彈，需要確認價格是否真正停止創低。`;
+        `RSI ${rv.toFixed(1)} 屬於偏弱區，短線賣壓較明顯。`;
 
     }else{
 
       rsiExplanation=
-        `RSI ${rv.toFixed(1)} 已進入較低區域。超賣不等於一定反彈，仍需確認支撐是否真正產生承接。`;
+        `RSI ${rv.toFixed(1)} 已進入較低區域。超賣不代表一定反彈，仍需確認支撐是否真正產生承接。`;
     }
 
 
-    /* =================================================
-       策略一｜支撐回踩波段
-    ================================================= */
+    /* =========================
+       策略一
+    ========================= */
 
     let supports=[
       {name:"MA20",value:ma20},
@@ -727,7 +885,7 @@ async function run(){
       {name:"近期波段低點",value:swingLow}
     ]
     .filter(x=>
-      Number.isFinite(x.value) &&
+      Number.isFinite(x.value)&&
       x.value<=price*1.015
     )
     .sort((a,b)=>b.value-a.value);
@@ -745,8 +903,7 @@ async function run(){
 
 
     if(support2>support1){
-      [support1,support2]=
-      [support2,support1];
+      [support1,support2]=[support2,support1];
     }
 
 
@@ -768,7 +925,7 @@ async function run(){
       reasons.push("近期波段低點");
 
     if(!reasons.length)
-      reasons.push("距現價最近的主要支撐");
+      reasons.push("距最新行情最近的主要支撐");
 
 
     let width=
@@ -803,7 +960,7 @@ async function run(){
       );
 
 
-    if(stop1>=entry1 || stop1<=0){
+    if(stop1>=entry1||stop1<=0){
       stop1=
         entry1-ATR*1.25;
     }
@@ -893,7 +1050,7 @@ async function run(){
     if(price<stop1){
 
       strategy1Status=
-        "目前已跌破策略一的結構失效位置。原本支撐回踩的分析前提已受到破壞，這組價位需要重新計算。";
+        "最新行情已跌破策略一結構失效位置，原本支撐回踩的分析前提已受到破壞，應重新分析市場結構。";
 
       strategy1StatusClass="statusRed";
 
@@ -903,7 +1060,7 @@ async function run(){
     ){
 
       strategy1Status=
-        "目前已進入策略一觀察區。進入區間不等於確認反彈，接下來要看是否停止創低、收回支撐，以及動能是否改善。";
+        "最新行情已進入策略一觀察區。進入區間不代表已確認反彈，接下來需要觀察是否停止創低、收回支撐與動能改善。";
 
       strategy1StatusClass="statusGreen";
 
@@ -913,37 +1070,31 @@ async function run(){
     ){
 
       strategy1Status=
-        `目前距離策略一觀察區約 ${chaseDistance.toFixed(1)} ATR，距離偏遠。即使趨勢仍強，現價與原本支撐進場的風險報酬已經不同。`;
+        `最新行情距離策略一觀察區約 ${chaseDistance.toFixed(1)} ATR，距離偏遠。現價與原本支撐進場的風險報酬已經不同。`;
 
       strategy1StatusClass="statusAmber";
 
     }else if(price>entry1High){
 
       strategy1Status=
-        "目前仍位於策略一觀察區上方。支撐回踩策略主要等待價格靠近支撐，而不是隨著價格上漲不斷把進場區往上移。";
+        "最新行情仍位於策略一觀察區上方。支撐回踩策略主要等待價格靠近支撐，而不是隨價格上漲不斷把觀察區往上移。";
 
     }else{
 
       strategy1Status=
-        "目前已位於主要觀察區下方、但尚未跌破最終結構失效位置。第一支撐正在受到測試，需要觀察能否快速收回。";
+        "最新行情位於主要觀察區下方、但尚未跌破最終結構失效位置。第一支撐正在受到測試。";
     }
 
 
-    /* =================================================
-       策略二｜高 R 突破回測
-    ================================================= */
+    /* =========================
+       策略二
+    ========================= */
 
-    let priorRows=
-      rows.slice(0,-1);
-
-    let prior20=
-      priorRows.slice(-20);
-
+    let priorRows=rows.slice(0,-1);
+    let prior20=priorRows.slice(-20);
 
     let breakoutLevel=
-      Math.max(
-        ...prior20.map(x=>x.high)
-      );
+      Math.max(...prior20.map(x=>x.high));
 
 
     let entry2Low=
@@ -1003,12 +1154,12 @@ async function run(){
       );
 
 
-    let latest=
-      rows.at(-1);
-
+    /*
+      突破判斷改用最新行情
+    */
 
     let breakoutConfirmed=
-      latest.close>breakoutLevel &&
+      price>breakoutLevel &&
       price>ma20;
 
 
@@ -1030,7 +1181,7 @@ async function run(){
     if(!highRQuality){
 
       strategy2Status=
-        "目前趨勢或動能條件尚未完全符合高 R 突破回測模式。這套策略先保持等待，不強行製造訊號。";
+        "目前趨勢或動能條件尚未完全符合高 R 突破回測模式。這套策略保持等待，不強行製造訊號。";
 
       strategy2Class="statusAmber";
 
@@ -1040,16 +1191,14 @@ async function run(){
     ){
 
       strategy2Status=
-        `目前尚未有效突破 ${fmt(breakoutLevel)}。這裡仍屬於上方壓力，策略二先等待市場完成突破。`;
-
-      strategy2Class="statusPurple";
+        `最新行情尚未突破 ${fmt(breakoutLevel)}。目前仍屬上方壓力，策略二等待突破。`;
 
     }else if(
       breakoutATRDistance>1.5
     ){
 
       strategy2Status=
-        `價格雖然已經突破，但目前距突破位約 ${breakoutATRDistance.toFixed(1)} ATR。距離已偏遠，高 R 策略等待回測，不把遠離突破位的位置視為相同風險的進場區。`;
+        `雖然已突破，但最新行情距突破位約 ${breakoutATRDistance.toFixed(1)} ATR，距離偏遠。高 R 策略等待回測，不把追高位置視為相同風險的觀察區。`;
 
       strategy2Class="statusAmber";
 
@@ -1059,16 +1208,14 @@ async function run(){
     ){
 
       strategy2Status=
-        "目前已進入突破回測觀察區。接下來重點是確認原本的壓力能否轉為支撐，並重新出現向上結構。";
+        "最新行情已進入突破回測觀察區。重點是確認原本壓力能否轉為支撐，並重新形成向上結構。";
 
       strategy2Class="statusGreen";
 
     }else if(breakoutConfirmed){
 
       strategy2Status=
-        `突破條件已出現。目前等待價格回測 ${fmt(entry2Low)}～${fmt(entry2High)} 附近，再觀察壓力是否轉成支撐。`;
-
-      strategy2Class="statusPurple";
+        `突破條件已出現。目前等待價格回測 ${fmt(entry2Low)}～${fmt(entry2High)} 附近，確認原壓力是否轉成支撐。`;
 
     }else{
 
@@ -1078,29 +1225,77 @@ async function run(){
 
 
     /* =========================
-       HERO
+       最新行情 HERO
     ========================= */
 
     $("title").textContent=
-      `${d.name} · ${d.symbol}`;
+      `${d.name||d.symbol} · ${d.symbol}`;
 
     $("price").textContent=
       `${fmt(price)} ${d.currency||""}`;
+
+
+    if(
+      Number.isFinite(change) &&
+      Number.isFinite(changePercent)
+    ){
+
+      let positive=change>0;
+      let negative=change<0;
+
+      let cls=
+        positive
+        ? "green"
+        : negative
+        ? "red"
+        : "";
+
+      let sign=
+        positive?"+":"";
+
+      $("change").className=
+        "change "+cls;
+
+      $("change").textContent=
+        `${sign}${fmt(change)}  (${sign}${changePercent.toFixed(2)}%)`;
+
+    }else{
+
+      $("change").className="change";
+      $("change").textContent="漲跌資料 --";
+    }
+
+
+    $("previousClose").textContent=
+      fmt(previousClose);
+
+    $("dayHigh").textContent=
+      fmt(dayHigh);
+
+    $("dayLow").textContent=
+      fmt(dayLow);
+
+    $("liveSource").textContent=
+      d.liveSource||"最新行情";
+
+    $("updateTime").textContent=
+      formatMarketTime(d.liveTime);
+
 
     $("metrics").innerHTML=`
       <span class="pill">MA20 ${fmt(ma20)}</span>
       <span class="pill">MA60 ${fmt(ma60)}</span>
       <span class="pill">RSI ${rv.toFixed(1)}</span>
       <span class="pill">MACD ${macd.toFixed(2)}</span>
-      <span class="pill">ATR ${fmt(ATR)}</span>
+      <span class="pill">ATR ${fmt(ATR)} (${ATRpct.toFixed(1)}%)</span>
     `;
 
     $("hero").style.display="block";
 
 
-    /* =================================================
+    /* =========================
        報告
-    ================================================= */
+    ========================= */
 
     $("report").innerHTML=`
 
@@ -1118,9 +1313,16 @@ async function run(){
       </div>
 
       <div class="row">
-        <div class="left">現價</div>
+        <div class="left">最新行情</div>
         <div class="right">
           ${fmt(price)}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="left">最近日 K 收盤</div>
+        <div class="right">
+          ${fmt(dailyClose)}
         </div>
       </div>
 
@@ -1155,8 +1357,7 @@ async function run(){
       <div class="row">
         <div class="left">ATR 14</div>
         <div class="right">
-          ${fmt(ATR)}
-          (${ATRpct.toFixed(1)}%)
+          ${fmt(ATR)} (${ATRpct.toFixed(1)}%)
         </div>
       </div>
 
@@ -1175,10 +1376,6 @@ async function run(){
     </div>
 
 
-    <!-- =========================
-         策略一
-    ========================== -->
-
     <div class="strategyHeader strategy1Header">
 
       <h2>
@@ -1186,8 +1383,8 @@ async function run(){
       </h2>
 
       <p>
-        先找市場主要支撐，再等待價格回到合理區域。
-        重點不是猜最低點，而是在支撐附近觀察市場是否真正止跌。
+        先找主要支撐，再等待價格回到合理區域。
+        重點不是猜最低點，而是觀察支撐附近是否真正出現承接。
       </p>
 
     </div>
@@ -1204,14 +1401,11 @@ async function run(){
       </div>
 
       <div class="big green">
-        ${fmt(entry1Low)}
-        ～
-        ${fmt(entry1High)}
+        ${fmt(entry1Low)} ～ ${fmt(entry1High)}
       </div>
 
       <div class="small">
-        中心價 ${fmt(entry1)}
-        ・${dist(entry1,price)}
+        中心價 ${fmt(entry1)} ・ ${dist(entry1,price)}
       </div>
 
       <div class="divider"></div>
@@ -1222,20 +1416,18 @@ async function run(){
 
       <div class="reason">
 
-        <strong>
-          為什麼抓這個區間？
-        </strong><br><br>
+        <strong>為什麼抓這個區間？</strong><br><br>
 
         系統會同時檢查 MA20、MA60、
-        10／20／60 日低點以及近期 Swing Low，
-        找出距離目前價格最近的重要支撐。<br><br>
+        10／20／60 日低點與近期 Swing Low，
+        找出距離最新行情較近的重要技術支撐。<br><br>
 
         找到主要支撐後，
-        再使用 ATR 衡量這檔股票近期正常的每日波動，
-        把單一支撐價擴展成一個合理的觀察區。<br><br>
+        再利用 ATR 衡量近期正常波動，
+        把單一價位擴展成合理的觀察區。<br><br>
 
-        因為真實市場很少剛好碰到某一個精確價格就反轉，
-        所以使用「區間」會比只看單一價位更符合實際波動。
+        真實市場很少精準碰到某一個價格就反轉，
+        所以使用區間比只看單一價格更符合實際波動。
 
       </div>
 
@@ -1246,11 +1438,9 @@ async function run(){
 
       <div class="checkBox">
 
-        <strong>
-          進入觀察區後，看這 5 件事：
-        </strong><br><br>
+        <strong>進入觀察區後，看這 5 件事：</strong><br><br>
 
-        ① 價格是否停止持續創新低<br>
+        ① 是否停止持續創新低<br>
         ② 跌破支撐後能否快速收回<br>
         ③ 收盤是否重新站回短線結構<br>
         ④ RSI 是否停止惡化或開始回升<br>
@@ -1281,14 +1471,13 @@ async function run(){
 
       <div class="reason">
 
-        <strong>為什麼這裡是第一支撐？</strong><br><br>
+        <strong>為什麼是第一支撐？</strong><br><br>
 
-        這是系統從 MA20、MA60、
-        近期低點與波段低點中，
+        這是系統從 MA20、MA60、近期低點與波段低點中，
         找出的近端主要技術支撐。<br><br>
 
-        如果目前波段仍然健康，
-        價格回到這附近時通常應該開始看到承接、
+        如果目前波段仍健康，
+        價格回到這附近時應開始觀察承接、
         止跌或重新轉強的跡象。
 
       </div>
@@ -1309,12 +1498,10 @@ async function run(){
 
       <div class="reason">
 
-        第一支撐被跌破，
-        不代表整個波段一定立刻結束。<br><br>
+        第一支撐被跌破不代表整個波段一定立即結束。<br><br>
 
-        第二支撐代表下一層較重要的結構。
-        如果連第二支撐都有效跌破，
-        而且沒有快速收回，
+        第二支撐代表下一層重要結構。
+        如果連第二支撐都有效跌破且無法快速收回，
         原本多方支撐的可信度就會明顯降低。
 
       </div>
@@ -1346,14 +1533,11 @@ async function run(){
 
         <strong>壓力不是碰到就一定下跌。</strong><br><br>
 
-        這些位置主要來自近期
-        10／20／60 日高點以及 Swing High。<br><br>
+        這些位置主要參考近期 10／20／60 日高點以及 Swing High。<br><br>
 
         價格接近壓力後，
-        重點是觀察能否有效突破。<br><br>
-
-        如果突破後能夠站穩，
-        並在回測時把原本壓力轉成支撐，
+        重點是能否有效突破。
+        若突破後站穩並在回測時把原壓力轉為支撐，
         代表趨勢結構進一步增強。
 
       </div>
@@ -1371,9 +1555,7 @@ async function run(){
 
         <div class="target">
           <div class="t">TP1</div>
-          <div class="v green">
-            ${fmt(tp1)}
-          </div>
+          <div class="v green">${fmt(tp1)}</div>
           <div class="r">
             ${((tp1-entry1)/risk1).toFixed(1)}R
           </div>
@@ -1381,9 +1563,7 @@ async function run(){
 
         <div class="target">
           <div class="t">TP2</div>
-          <div class="v green">
-            ${fmt(tp2)}
-          </div>
+          <div class="v green">${fmt(tp2)}</div>
           <div class="r">
             ${((tp2-entry1)/risk1).toFixed(1)}R
           </div>
@@ -1391,9 +1571,7 @@ async function run(){
 
         <div class="target">
           <div class="t">TP3</div>
-          <div class="v amber">
-            ${fmt(tp3)}
-          </div>
+          <div class="v amber">${fmt(tp3)}</div>
           <div class="r">
             ${((tp3-entry1)/risk1).toFixed(1)}R
           </div>
@@ -1408,14 +1586,9 @@ async function run(){
           TP1｜${fmt(tp1)}
         </strong><br><br>
 
-        第一段主要是開始降低原始風險的區域。<br><br>
-
-        系統會同時考慮 R 倍數與前方壓力，
-        而不是單純使用固定上漲百分比。<br><br>
-
-        如果行情從觀察區順利往有利方向移動，
-        到達第一段後，風險管理的重點就可以開始從
-        「避免失敗」轉向「保護已經形成的成果」。
+        第一段主要是開始降低原始風險的區域。
+        系統同時考慮 R 倍數與前方壓力，
+        而不是只使用固定上漲百分比。
 
       </div>
 
@@ -1426,11 +1599,9 @@ async function run(){
           TP2｜${fmt(tp2)}
         </strong><br><br>
 
-        第二段屬於主要波段延伸區。<br><br>
-
-        如果價格能突破 TP1，
-        並且持續形成更高高點與更高低點，
-        代表原本的反彈已逐漸發展成較完整的趨勢。
+        第二段屬於主要波段延伸區。
+        如果價格突破 TP1 並持續形成更高高點與更高低點，
+        代表原本反彈逐漸發展成較完整趨勢。
 
       </div>
 
@@ -1442,12 +1613,10 @@ async function run(){
         </strong><br><br>
 
         TP3 是較遠的趨勢目標，
-        但它不是強制全部結束的位置。<br><br>
+        不是保證一定到達，也不是強制全部結束的位置。<br><br>
 
-        如果價格仍然維持 MA20 上方，
-        並持續形成 Higher High / Higher Low，
-        剩餘趨勢部位可以改用移動式保護，
-        讓強勢行情保留繼續延伸的空間。
+        如果趨勢結構仍完整，
+        剩餘趨勢部位可以改觀察 ATR 移動保護。
 
       </div>
 
@@ -1455,34 +1624,27 @@ async function run(){
       <div class="divider"></div>
 
       <div class="row">
-        <div class="left">
-          趨勢延伸參考
-        </div>
+        <div class="left">趨勢延伸參考</div>
         <div class="right amber">
           ${fmt(extension1)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          ATR 移動保護
-        </div>
+        <div class="left">ATR 移動保護</div>
         <div class="right blue">
           ${fmt(trailing1)}
         </div>
       </div>
 
-
       <div class="checkBox">
 
-        <strong>
-          波段管理邏輯：
-        </strong><br><br>
+        <strong>波段管理邏輯：</strong><br><br>
 
         TP1 → 開始降低原始風險<br>
         TP2 → 進一步保護已有成果<br>
         TP3 → 判斷趨勢是否仍完整<br>
-        TP3 後 → 觀察 MA20、近期波段低點與 ATR 移動保護
+        TP3 後 → 觀察 MA20、波段低點與 ATR 移動保護
 
       </div>
 
@@ -1509,51 +1671,37 @@ async function run(){
 
       <div class="reason">
 
-        <strong>
-          為什麼不是固定 -3% 或 -5%？
-        </strong><br><br>
+        <strong>為什麼不是固定 -3% 或 -5%？</strong><br><br>
 
-        不同股票的正常波動幅度不同，
-        因此固定百分比可能對某些股票太緊，
+        不同股票正常波動不同，
+        固定百分比可能對某些股票太緊，
         對另一些股票又太寬。<br><br>
 
-        系統會參考第二支撐與 ATR 波動緩衝，
-        讓價格有一定正常震盪空間。<br><br>
-
-        但如果連主要支撐與正常波動緩衝都有效跌破，
-        原本「支撐後反彈」的分析假設就已經受到破壞。
+        系統參考第二支撐與 ATR 波動緩衝。
+        如果主要支撐與正常波動緩衝都有效跌破，
+        原本「支撐後反彈」的分析假設就受到破壞。
 
       </div>
 
-
       <div class="stopBox">
 
-        <strong>
-          🔴 認賠／重新分析原則
-        </strong><br><br>
+        <strong>🔴 認賠／重新分析原則</strong><br><br>
 
-        原本策略建立在
+        原策略建立在
         <strong>
           ${fmt(entry1Low)}～${fmt(entry1High)}
         </strong>
         附近存在主要支撐。<br><br>
 
-        如果價格有效跌破
+        若有效跌破
         <strong>${fmt(stop1)}</strong>，
-        就不應該因為不想面對虧損，
-        而不斷把原本的失效位置往下移。<br><br>
-
-        這代表原分析前提已經改變，
-        應重新計算新的市場結構。
+        代表原分析前提已改變，
+        應重新計算市場結構，而不是持續把原失效位置往下移。
 
       </div>
 
     </div>
 
-
-    <!-- =========================
-         策略二
-    ========================== -->
 
     <div class="strategyHeader strategy2Header">
 
@@ -1562,10 +1710,8 @@ async function run(){
       </h2>
 
       <p>
-        先讓市場證明它能突破，
-        再等待原壓力轉成支撐。
-        使用較窄的結構失效距離，
-        換取較高的潛在 R 倍數。
+        先讓市場證明能突破，再等待原壓力轉為支撐。
+        使用較窄的結構失效距離，換取較高的潛在 R 倍數。
       </p>
 
     </div>
@@ -1591,18 +1737,12 @@ async function run(){
 
       <div class="reason">
 
-        <strong>
-          為什麼使用前 20 日高點？
-        </strong><br><br>
+        <strong>為什麼使用前 20 日高點？</strong><br><br>
 
-        這裡刻意不包含今天。<br><br>
+        這裡刻意不包含最新一根日 K。<br><br>
 
-        因為如果今天正在創新高，
-        不能拿今天自己的新高，
-        再判斷今天自己有沒有突破。<br><br>
-
-        所以系統先固定前 20 個交易日的歷史壓力，
-        再判斷目前價格是否真正突破這個位置。
+        系統先固定過去 20 個交易日的歷史壓力，
+        再使用最新行情判斷目前是否已經突破這個位置。
 
       </div>
 
@@ -1620,59 +1760,45 @@ async function run(){
       </div>
 
       <div class="big purple">
-        ${fmt(entry2Low)}
-        ～
-        ${fmt(entry2High)}
+        ${fmt(entry2Low)} ～ ${fmt(entry2High)}
       </div>
 
       <div class="small">
-        中心價 ${fmt(entry2)}
-        ・突破位 ± 0.20 ATR
+        中心價 ${fmt(entry2)} ・ 突破位 ± 0.20 ATR
       </div>
 
       <div class="reason">
 
-        <strong>
-          為什麼這個區間比策略一窄？
-        </strong><br><br>
+        <strong>為什麼比策略一窄？</strong><br><br>
 
-        因為策略二不是直接猜底。<br><br>
-
+        策略二不是直接猜底。
         它先要求市場突破歷史壓力，
-        然後再等待價格回測原突破位置。<br><br>
+        再等待價格回測原突破位置。<br><br>
 
-        如果原本壓力真的已經轉成支撐，
-        理論上價格不應該大幅跌回突破結構下方。<br><br>
-
-        因此策略二可以使用較窄的結構失效距離，
-        這也是高 R 潛力的主要來源之一。
+        如果原壓力真的轉成支撐，
+        價格理論上不應大幅跌回突破結構下方。
+        因此可以使用較窄的失效距離。
 
       </div>
 
-
       <div class="statusBox ${strategy2Class}">
 
-        <strong>
-          🚦目前狀態
-        </strong><br><br>
+        <strong>🚦目前狀態</strong><br><br>
 
         ${strategy2Status}
 
       </div>
 
-
       <div class="checkBox">
 
-        <strong>
-          突破回測確認重點：
-        </strong><br><br>
+        <strong>突破回測確認重點：</strong><br><br>
 
-        ① 是否真的突破前 20 日高點<br>
+        ① 是否突破前 20 日高點<br>
         ② 回測是否守住原突破位<br>
-        ③ 跌破後是否能快速收回<br>
+        ③ 跌破後能否快速收回<br>
         ④ 是否重新形成較高低點<br>
-        ⑤ MA20 是否仍保持強勢結構<br>
-        ⑥ MACD 是否仍維持正動能
+        ⑤ MA20 是否仍維持強勢結構<br>
+        ⑥ MACD 是否仍保持正動能
 
       </div>
 
@@ -1686,45 +1812,35 @@ async function run(){
     <div class="card">
 
       <div class="row">
-        <div class="left">
-          價格 > MA20
-        </div>
+        <div class="left">最新行情 > MA20</div>
         <div class="right ${price>ma20?"green":"red"}">
           ${price>ma20?"✓ 符合":"✕ 未符合"}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          MA20 > MA60
-        </div>
+        <div class="left">MA20 > MA60</div>
         <div class="right ${ma20>ma60?"green":"red"}">
           ${ma20>ma60?"✓ 符合":"✕ 未符合"}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          MACD > 0
-        </div>
+        <div class="left">MACD > 0</div>
         <div class="right ${macd>0?"green":"red"}">
           ${macd>0?"✓ 符合":"✕ 未符合"}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          RSI 50～78
-        </div>
+        <div class="left">RSI 50～78</div>
         <div class="right ${(rv>=50&&rv<78)?"green":"red"}">
           ${(rv>=50&&rv<78)?"✓ 符合":"✕ 未符合"}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          突破前 20 日高點
-        </div>
+        <div class="left">突破前 20 日高點</div>
         <div class="right ${breakoutConfirmed?"green":"amber"}">
           ${breakoutConfirmed?"✓ 已突破":"等待突破"}
         </div>
@@ -1732,15 +1848,14 @@ async function run(){
 
       <div class="reason">
 
-        高 R 的來源不是把止盈價隨便拉得很遠。<br><br>
+        高 R 的來源不是把目標價隨便拉遠。<br><br>
 
-        它真正依賴的是：
+        核心是
         <strong>
-          趨勢方向＋有效突破＋回測確認＋較明確的失效位置。
+          趨勢方向＋有效突破＋回測確認＋明確失效位置。
         </strong><br><br>
 
-        條件不足時，
-        這套策略應該保持等待。
+        條件不足時，策略保持等待。
 
       </div>
 
@@ -1760,9 +1875,7 @@ async function run(){
           <div class="v purple">
             ${fmt(htp1)}
           </div>
-          <div class="r">
-            第一目標
-          </div>
+          <div class="r">第一目標</div>
         </div>
 
         <div class="target">
@@ -1770,9 +1883,7 @@ async function run(){
           <div class="v purple">
             ${fmt(htp2)}
           </div>
-          <div class="r">
-            第二目標
-          </div>
+          <div class="r">第二目標</div>
         </div>
 
         <div class="target">
@@ -1780,9 +1891,7 @@ async function run(){
           <div class="v amber">
             ${fmt(htp3)}
           </div>
-          <div class="r">
-            趨勢目標
-          </div>
+          <div class="r">趨勢目標</div>
         </div>
 
       </div>
@@ -1794,11 +1903,8 @@ async function run(){
           2R｜${fmt(htp1)}
         </strong><br><br>
 
-        代表從策略二中心價計算，
-        潛在有利距離約為原始風險的 2 倍。<br><br>
-
-        這是第一個主要高 R 觀察位置，
-        也可以用來確認突破是否真的開始形成有效趨勢。
+        潛在有利距離約為原始風險的 2 倍。
+        這是第一個主要高 R 觀察位置。
 
       </div>
 
@@ -1809,13 +1915,9 @@ async function run(){
           3R｜${fmt(htp2)}
         </strong><br><br>
 
-        如果價格能持續突破 2R，
-        並保持 Higher High / Higher Low，
-        代表突破行情正在進一步延伸。<br><br>
-
-        到這個階段，
-        風險管理的重點會逐漸從原始失效，
-        轉向保護已形成的波段成果。
+        如果價格持續突破 2R，
+        並維持更高高點與更高低點，
+        代表突破行情正在進一步延伸。
 
       </div>
 
@@ -1829,9 +1931,8 @@ async function run(){
         5R 屬於強趨勢延伸目標，
         並不是每一次突破都一定會到達。<br><br>
 
-        高 R 的核心不是預測價格一定漲到這裡，
-        而是在失效距離相對明確的前提下，
-        讓真正成功的趨勢保留更大的延伸空間。
+        高 R 的概念是在失效距離相對明確的情況下，
+        讓成功趨勢保留更大的延伸空間。
 
       </div>
 
@@ -1839,34 +1940,29 @@ async function run(){
       <div class="divider"></div>
 
       <div class="row">
-        <div class="left">
-          7R 延伸參考
-        </div>
+        <div class="left">7R 延伸參考</div>
         <div class="right amber">
           ${fmt(extension2)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          ATR 移動保護
-        </div>
+        <div class="left">ATR 移動保護</div>
         <div class="right blue">
           ${fmt(trailing2)}
         </div>
       </div>
 
+
       <div class="warningBox">
 
-        <strong>
-          ⚠️ 高 R 不等於高勝率
-        </strong><br><br>
+        <strong>⚠️ 高 R 不等於高勝率</strong><br><br>
 
-        因為策略二使用比較緊的結構失效，
+        因為策略二使用較緊的結構失效，
         正常震盪也可能更容易碰到失效位置。<br><br>
 
-        它追求的是「小風險對較大潛在趨勢」，
-        而不是保證每一筆都比策略一更容易成功。
+        它追求的是較小風險對較大潛在趨勢，
+        不是保證每一筆都比策略一容易成功。
 
       </div>
 
@@ -1894,28 +1990,18 @@ async function run(){
 
       <div class="reason">
 
-        <strong>
-          為什麼這條失效線比策略一靠近？
-        </strong><br><br>
-
-        策略二的前提是：
-        原本的壓力已經突破，
-        而且回測後應該轉成支撐。<br><br>
+        策略二的前提是原本壓力已突破，
+        而且回測後應轉成支撐。<br><br>
 
         如果價格重新明顯跌回突破結構下方，
-        代表「壓力轉支撐」的假設開始失效。<br><br>
-
-        因此這套策略不需要像策略一一樣，
-        給價格非常大的回撤空間。
+        代表「壓力轉支撐」的假設開始失效，
+        所以它的失效線通常比策略一靠近。
 
       </div>
 
-
       <div class="stopBox">
 
-        <strong>
-          🔴 高 R 失效原則
-        </strong><br><br>
+        <strong>🔴 高 R 失效原則</strong><br><br>
 
         回測觀察區：
         <strong>
@@ -1923,15 +2009,10 @@ async function run(){
         </strong><br><br>
 
         結構失效：
-        <strong>
-          ${fmt(stop2)}
-        </strong><br><br>
+        <strong>${fmt(stop2)}</strong><br><br>
 
         若突破後重新有效跌破失效位置，
-        就代表原本的突破回測假設需要重新評估。<br><br>
-
-        不能因為 5R、7R 的上方空間很漂亮，
-        就忽略下方原本已經定義好的失效條件。
+        原本的突破回測假設需要重新評估。
 
       </div>
 
@@ -1955,18 +2036,14 @@ async function run(){
       <div class="divider"></div>
 
       <div class="row">
-        <div class="left">
-          策略一 ATR 保護
-        </div>
+        <div class="left">策略一 ATR 保護</div>
         <div class="right blue">
           ${fmt(trailing1)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略二 ATR 保護
-        </div>
+        <div class="left">策略二 ATR 保護</div>
         <div class="right purple">
           ${fmt(trailing2)}
         </div>
@@ -1974,21 +2051,10 @@ async function run(){
 
       <div class="reason">
 
-        <strong>
-          為什麼需要移動保護？
-        </strong><br><br>
-
-        固定 TP 的問題是，
-        有時候真正的大趨勢才剛開始，
-        價格就已經到達原本目標。<br><br>
-
-        ATR 移動保護會隨著近期最高價提高。
-        如果價格持續創高，
-        保護位置也會逐步向上。<br><br>
-
-        目的不是精準賣在最高點，
-        而是讓強勢行情有延伸空間，
-        同時避免已形成的趨勢最後完全回到原始風險區。
+        ATR 移動保護會隨近期高點提高。
+        目的不是精準抓到最高點，
+        而是在趨勢仍完整時保留延伸空間，
+        同時提供動態風險參考。
 
       </div>
 
@@ -2005,9 +2071,7 @@ async function run(){
 
         <div class="flowBox">
 
-          <div class="label">
-            策略一
-          </div>
+          <div class="label">策略一</div>
 
           <div class="n green">
             支撐回踩
@@ -2022,9 +2086,7 @@ async function run(){
 
         <div class="flowBox">
 
-          <div class="label">
-            策略二
-          </div>
+          <div class="label">策略二</div>
 
           <div class="n purple">
             突破回測
@@ -2038,42 +2100,26 @@ async function run(){
 
       </div>
 
-
       <div class="divider"></div>
-
 
       <div class="reason">
 
         <strong class="green">
-          策略一的特色
-        </strong><br><br>
-
-        入場區通常較低、範圍較寬，
-        給正常波動比較大的空間。
-        比較重視「主要支撐是否產生承接」。<br><br>
-
+          策略一
+        </strong>
+        使用較寬的支撐區與失效空間，
+        主要觀察支撐是否出現承接。<br><br>
 
         <strong class="purple">
-          策略二的特色
-        </strong><br><br>
-
-        不先猜底，
-        而是要求價格先突破，
-        再等原壓力轉成支撐。<br><br>
-
-        因為失效距離通常比較窄，
-        所以成功趨勢可能形成更高的 R 倍數；
-        相對地，也更容易因正常震盪觸及失效位置。<br><br>
-
+          策略二
+        </strong>
+        要求市場先突破，再等回測確認。
+        失效距離通常較窄，因此潛在 R 倍數較高，
+        但也可能更容易因震盪觸及失效位置。<br><br>
 
         <strong>
-          兩套策略的進場區與失效線是獨立的。
-        </strong><br><br>
-
-        不要拿策略一比較寬的止損，
-        去套策略二的高 R 進場；
-        也不要拿策略二很緊的失效線，
-        去套策略一的支撐回踩。
+          兩套策略的觀察區與失效線是獨立的。
+        </strong>
 
       </div>
 
@@ -2081,15 +2127,20 @@ async function run(){
 
 
     <div class="sectionTitle">
-      📋 本次分析快速總覽
+      📋 快速總覽
     </div>
 
     <div class="card">
 
       <div class="row">
-        <div class="left">
-          市場趨勢
+        <div class="left">最新行情</div>
+        <div class="right">
+          ${fmt(price)}
         </div>
+      </div>
+
+      <div class="row">
+        <div class="left">市場趨勢</div>
         <div class="right ${trendClass}">
           ${trend}
         </div>
@@ -2098,110 +2149,74 @@ async function run(){
       <div class="divider"></div>
 
       <div class="row">
-        <div class="left">
-          🟢 策略一觀察區
-        </div>
+        <div class="left">🟢 策略一觀察區</div>
         <div class="right green">
           ${fmt(entry1Low)}～${fmt(entry1High)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略一失效
-        </div>
+        <div class="left">策略一失效</div>
         <div class="right red">
           ${fmt(stop1)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略一 TP1
-        </div>
-        <div class="right">
-          ${fmt(tp1)}
-        </div>
+        <div class="left">TP1</div>
+        <div class="right">${fmt(tp1)}</div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略一 TP2
-        </div>
-        <div class="right">
-          ${fmt(tp2)}
-        </div>
+        <div class="left">TP2</div>
+        <div class="right">${fmt(tp2)}</div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略一 TP3
-        </div>
-        <div class="right amber">
-          ${fmt(tp3)}
-        </div>
+        <div class="left">TP3</div>
+        <div class="right amber">${fmt(tp3)}</div>
       </div>
 
       <div class="divider"></div>
 
       <div class="row">
-        <div class="left">
-          🟣 關鍵突破位
-        </div>
+        <div class="left">🟣 關鍵突破位</div>
         <div class="right purple">
           ${fmt(breakoutLevel)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略二回測區
-        </div>
+        <div class="left">策略二回測區</div>
         <div class="right purple">
           ${fmt(entry2Low)}～${fmt(entry2High)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          策略二失效
-        </div>
+        <div class="left">策略二失效</div>
         <div class="right red">
           ${fmt(stop2)}
         </div>
       </div>
 
       <div class="row">
-        <div class="left">
-          2R
-        </div>
-        <div class="right">
-          ${fmt(htp1)}
-        </div>
+        <div class="left">2R</div>
+        <div class="right">${fmt(htp1)}</div>
       </div>
 
       <div class="row">
-        <div class="left">
-          3R
-        </div>
-        <div class="right">
-          ${fmt(htp2)}
-        </div>
+        <div class="left">3R</div>
+        <div class="right">${fmt(htp2)}</div>
       </div>
 
       <div class="row">
-        <div class="left">
-          5R
-        </div>
-        <div class="right amber">
-          ${fmt(htp3)}
-        </div>
+        <div class="left">5R</div>
+        <div class="right amber">${fmt(htp3)}</div>
       </div>
 
       <div class="row">
-        <div class="left">
-          7R 延伸
-        </div>
+        <div class="left">7R 延伸</div>
         <div class="right amber">
           ${fmt(extension2)}
         </div>
@@ -2212,15 +2227,16 @@ async function run(){
 
     <div class="note">
 
-      ⚠️ 妖子平台2.0 為規則式技術分析工具。
-      支撐、壓力、入場觀察區、TP、R 倍數、
-      ATR 移動保護與結構失效，
-      均由歷史行情與預先設定的技術規則計算。<br><br>
+      ⚠️ 妖子平台2.0 為規則式技術分析工具。<br><br>
 
-      這些價位是策略分析與風險管理參考，
-      不是未來價格保證。
-      高 R 不代表較高勝率，
-      實際市場亦可能出現跳空、滑價與流動性差異。
+      「最新行情」與歷史日 K 技術指標採不同用途：
+      最新行情用於目前價格、漲跌與即時位置判斷；
+      MA、RSI、MACD、ATR、支撐壓力則以歷史日 K 計算。<br><br>
+
+      Yahoo 免費行情可能存在延遲，
+      不等同券商交易所逐筆 Tick 報價。支撐、壓力、
+      TP、R 倍數與結構失效皆為技術分析參考，
+      並非未來價格保證。
 
     </div>
 
@@ -2230,15 +2246,13 @@ async function run(){
     $("report").style.display="block";
     $("status").style.display="none";
 
-  }
-
-  catch(e){
+  }catch(e){
 
     $("status").style.display="block";
 
     $("status").textContent=
       "❌ "+e.message+
-      "。如果剛 Commit，請等待 Vercel 完成重新部署後再試。";
+      "。如果剛剛才 Commit，請等待 Vercel 完成部署後再重新整理。";
 
   }
 }
