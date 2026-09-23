@@ -2,15 +2,21 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>妖子平台 2.6</title>
 
-<meta name="theme-color" content="#050807">
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+
+<title>妖子平台 2.7</title>
+
+<meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="妖子平台">
 
 <style>
+
 *{box-sizing:border-box}
 
 :root{
@@ -34,27 +40,52 @@ html{
 body{
   margin:0;
   background:
-    radial-gradient(circle at top,rgba(43,111,84,.08),transparent 28%),
+    radial-gradient(
+      circle at top,
+      rgba(43,111,84,.08),
+      transparent 28%
+    ),
     var(--bg);
+
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "PingFang TC",
+    "Noto Sans TC",
+    sans-serif;
 }
 
-button,input{font:inherit}
-button{cursor:pointer}
+button,input{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
 
 .app{
   width:min(100%,900px);
   margin:auto;
+
   padding:
     calc(22px + env(safe-area-inset-top))
     16px
     calc(60px + env(safe-area-inset-bottom));
 }
 
-.hidden{display:none!important}
+.hidden{
+  display:none!important;
+}
 
-.header{margin-bottom:24px}
+/* =========================
+   Header
+========================= */
+
+.header{
+  margin-bottom:24px;
+}
 
 .header-row{
   display:flex;
@@ -78,22 +109,41 @@ button{cursor:pointer}
 .version{
   padding:7px 11px;
   border-radius:999px;
+
   color:var(--green);
-  border:1px solid rgba(69,224,173,.25);
-  background:rgba(69,224,173,.07);
+
+  border:
+    1px solid
+    rgba(69,224,173,.25);
+
+  background:
+    rgba(69,224,173,.07);
+
   font-size:12px;
   font-weight:900;
 }
 
+/* =========================
+   通用
+========================= */
+
 .card{
-  background:rgba(11,14,12,.97);
-  border:1px solid var(--border);
+  background:
+    rgba(11,14,12,.97);
+
+  border:
+    1px solid var(--border);
+
   border-radius:21px;
+
   padding:16px;
+
   margin-bottom:15px;
 }
 
-.section{margin-top:27px}
+.section{
+  margin-top:27px;
+}
 
 .section-title{
   font-size:20px;
@@ -112,67 +162,104 @@ button{cursor:pointer}
   justify-content:space-between;
   align-items:center;
   gap:10px;
-  margin:0 3px 13px;
+
+  margin:
+    0 3px 13px;
 }
 
-/* 搜尋 */
+/* =========================
+   搜尋
+========================= */
 
 .search-title{
   color:var(--muted);
   font-size:12px;
-  margin:0 0 10px 4px;
+
+  margin:
+    0 0 10px 4px;
 }
 
 .search-form{
   display:grid;
-  grid-template-columns:1fr 100px;
+
+  grid-template-columns:
+    1fr 100px;
+
   gap:9px;
 }
 
 .search-input{
   width:100%;
   height:53px;
-  border:1px solid #303532;
+
+  border:
+    1px solid #303532;
+
   border-radius:15px;
-  padding:0 15px;
+
+  padding:
+    0 15px;
+
   background:#070908;
   color:white;
+
   outline:none;
-  font-size:17px;
-  text-transform:uppercase;
+
+  font-size:16px;
 }
 
 .search-input:focus{
-  border-color:rgba(69,224,173,.6);
+  border-color:
+    rgba(69,224,173,.6);
 }
 
 .search-btn{
   border:0;
   border-radius:15px;
+
   background:var(--green);
   color:#06130e;
+
   font-weight:950;
+}
+
+.search-help{
+  margin-top:10px;
+  color:#777d79;
+  font-size:10px;
+  line-height:1.6;
 }
 
 .examples{
   display:flex;
   flex-wrap:wrap;
   gap:7px;
+
   margin-top:11px;
 }
 
 .example{
-  border:1px solid #292e2b;
+  border:
+    1px solid #292e2b;
+
   background:#111412;
   color:#a6aca8;
+
   border-radius:999px;
-  padding:6px 10px;
+
+  padding:
+    6px 10px;
+
   font-size:10px;
 }
 
-/* 自選股 */
+/* =========================
+   自選股
+========================= */
 
-.watch-section{margin-top:25px}
+.watch-section{
+  margin-top:25px;
+}
 
 .watch-grid{
   display:grid;
@@ -184,9 +271,15 @@ button{cursor:pointer}
   justify-content:space-between;
   align-items:center;
   gap:12px;
+
   background:#0b0e0c;
-  border:1px solid rgba(255,200,90,.20);
+
+  border:
+    1px solid
+    rgba(255,200,90,.20);
+
   border-radius:17px;
+
   padding:14px;
 }
 
@@ -215,19 +308,30 @@ button{cursor:pointer}
 .watch-remove{
   width:38px;
   height:38px;
-  border:1px solid #303532;
+
+  border:
+    1px solid #303532;
+
   background:#101311;
   color:#888e8a;
+
   border-radius:12px;
+
   font-size:17px;
 }
 
 .empty-watch{
   color:#777d79;
-  border:1px dashed #292e2b;
+
+  border:
+    1px dashed #292e2b;
+
   border-radius:16px;
+
   padding:18px;
+
   text-align:center;
+
   font-size:12px;
   line-height:1.7;
 }
@@ -235,42 +339,71 @@ button{cursor:pointer}
 .favorite-btn{
   width:100%;
   min-height:48px;
+
   margin-top:15px;
+
   border-radius:15px;
-  border:1px solid rgba(255,200,90,.28);
-  background:rgba(255,200,90,.06);
+
+  border:
+    1px solid
+    rgba(255,200,90,.28);
+
+  background:
+    rgba(255,200,90,.06);
+
   color:var(--yellow);
+
   font-weight:900;
 }
 
 .favorite-btn.active{
-  background:rgba(255,200,90,.12);
-  border-color:rgba(255,200,90,.5);
+  background:
+    rgba(255,200,90,.12);
+
+  border-color:
+    rgba(255,200,90,.5);
 }
 
-/* 雷達 */
+/* =========================
+   雷達
+========================= */
 
 .refresh{
-  border:1px solid #303532;
+  border:
+    1px solid #303532;
+
   background:#111412;
   color:#d7dbd8;
+
   border-radius:12px;
-  padding:9px 11px;
+
+  padding:
+    9px 11px;
+
   font-size:12px;
 }
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+
+  grid-template-columns:
+    repeat(4,1fr);
+
   gap:8px;
 }
 
 .stat{
   text-align:center;
+
   background:#0a0d0b;
-  border:1px solid #252a27;
+
+  border:
+    1px solid #252a27;
+
   border-radius:14px;
-  padding:12px 4px;
+
+  padding:
+    12px 4px;
 }
 
 .stat strong{
@@ -280,8 +413,11 @@ button{cursor:pointer}
 
 .stat span{
   display:block;
+
   margin-top:5px;
+
   color:var(--muted);
+
   font-size:9px;
 }
 
@@ -292,14 +428,20 @@ button{cursor:pointer}
 
 .stock-card{
   padding:15px;
+
   border-radius:18px;
-  border:1px solid #292e2b;
+
+  border:
+    1px solid #292e2b;
+
   background:#0b0e0c;
+
   cursor:pointer;
 }
 
 .stock-card.priority{
-  border-color:rgba(69,224,173,.28);
+  border-color:
+    rgba(69,224,173,.28);
 }
 
 .stock-top{
@@ -319,7 +461,9 @@ button{cursor:pointer}
   margin-top:4px;
 }
 
-.score{text-align:right}
+.score{
+  text-align:right;
+}
 
 .score strong{
   display:block;
@@ -335,6 +479,7 @@ button{cursor:pointer}
   display:flex;
   gap:9px;
   align-items:baseline;
+
   margin-top:13px;
 }
 
@@ -351,30 +496,49 @@ button{cursor:pointer}
   display:flex;
   flex-wrap:wrap;
   gap:6px;
+
   margin-top:11px;
 }
 
 .chip{
-  border:1px solid #292e2b;
+  border:
+    1px solid #292e2b;
+
   background:#131614;
+
   border-radius:9px;
-  padding:5px 8px;
+
+  padding:
+    5px 8px;
+
   color:#bcc1be;
+
   font-size:10px;
 }
 
-.chip.green{color:var(--green)}
+.chip.green{
+  color:var(--green);
+}
 
-/* 分析頁 */
+/* =========================
+   分析頁
+========================= */
 
 .back-btn{
   min-height:48px;
-  border:1px solid #303532;
+
+  border:
+    1px solid #303532;
+
   border-radius:15px;
+
   background:#0e110f;
   color:#eee;
+
   font-weight:850;
-  padding:0 15px;
+
+  padding:
+    0 15px;
 }
 
 .back-btn.full{
@@ -383,7 +547,8 @@ button{cursor:pointer}
 }
 
 .analysis-heading{
-  margin:24px 3px 15px;
+  margin:
+    24px 3px 15px;
 }
 
 .analysis-heading h1{
@@ -393,14 +558,21 @@ button{cursor:pointer}
 
 .analysis-heading p{
   color:var(--muted);
+
   font-size:12px;
-  margin:7px 0 0;
+
+  margin:
+    7px 0 0;
 }
 
 .hero-card{
   background:#0b0e0c;
-  border:1px solid #292e2b;
+
+  border:
+    1px solid #292e2b;
+
   border-radius:24px;
+
   padding:21px;
 }
 
@@ -435,25 +607,41 @@ button{cursor:pointer}
 
 .market-pill{
   display:inline-block;
+
   margin-top:12px;
-  border:1px solid #303532;
+
+  border:
+    1px solid #303532;
+
   border-radius:999px;
-  padding:6px 10px;
+
+  padding:
+    6px 10px;
+
   color:var(--green);
+
   font-size:11px;
 }
 
 .indicator-strip{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+
+  grid-template-columns:
+    repeat(2,1fr);
+
   gap:8px;
+
   margin-top:20px;
 }
 
 .indicator{
   background:#070a08;
-  border:1px solid #242925;
+
+  border:
+    1px solid #242925;
+
   border-radius:14px;
+
   padding:12px;
 }
 
@@ -464,29 +652,45 @@ button{cursor:pointer}
 
 .indicator strong{
   display:block;
+
   margin-top:5px;
+
   font-size:15px;
 }
 
 .big-section-title{
-  margin:31px 5px 15px;
+  margin:
+    31px 5px 15px;
+
   font-size:24px;
   font-weight:950;
 }
 
-/* 大字總覽 */
+/* =========================
+   策略總覽
+========================= */
 
 .overview-card{
   background:#0b0e0c;
-  border:1px solid #303532;
+
+  border:
+    1px solid #303532;
+
   border-radius:24px;
+
   padding:22px;
 }
 
 .overview-card.purple-card{
-  border-color:rgba(174,99,255,.42);
+  border-color:
+    rgba(174,99,255,.42);
+
   background:
-    radial-gradient(circle at top right,rgba(174,99,255,.05),transparent 38%),
+    radial-gradient(
+      circle at top right,
+      rgba(174,99,255,.05),
+      transparent 38%
+    ),
     #0b0e0c;
 }
 
@@ -494,8 +698,11 @@ button{cursor:pointer}
   display:flex;
   justify-content:space-between;
   align-items:center;
+
   gap:15px;
-  margin:16px 0;
+
+  margin:
+    16px 0;
 }
 
 .overview-label{
@@ -505,42 +712,154 @@ button{cursor:pointer}
 
 .overview-value{
   text-align:right;
+
   font-size:18px;
   font-weight:950;
 }
 
-.overview-value.green{color:var(--green)}
-.overview-value.yellow{color:var(--yellow)}
-.overview-value.red{color:var(--red)}
-.overview-value.purple{color:#c899ff}
+.overview-value.green{
+  color:var(--green);
+}
+
+.overview-value.yellow{
+  color:var(--yellow);
+}
+
+.overview-value.red{
+  color:var(--red);
+}
+
+.overview-value.purple{
+  color:#c899ff;
+}
 
 .divider{
   height:1px;
   background:#282d2a;
-  margin:21px 0;
+
+  margin:
+    21px 0;
 }
 
 .overview-text{
   color:#d0d4d1;
+
   font-size:14px;
+
   line-height:2;
 }
 
-/* 入場大卡 */
+/* =========================
+   TP / SL 上下大字版
+========================= */
+
+.target-stack{
+  display:grid;
+  gap:11px;
+
+  margin-top:18px;
+}
+
+.target-box{
+  width:100%;
+
+  background:#070a08;
+
+  border:
+    1px solid #252a27;
+
+  border-radius:18px;
+
+  padding:
+    17px 18px;
+}
+
+.target-box .target-label{
+  color:#8d938f;
+
+  font-size:13px;
+
+  margin-bottom:8px;
+}
+
+.target-box .target-value{
+  font-size:27px;
+  font-weight:950;
+
+  letter-spacing:-.5px;
+}
+
+.target-box.entry{
+  border-color:
+    rgba(69,224,173,.28);
+}
+
+.target-box.entry .target-value{
+  color:var(--green);
+}
+
+.target-box.tp .target-value{
+  color:var(--green);
+}
+
+.target-box.tp3 .target-value{
+  color:var(--yellow);
+}
+
+.target-box.stop{
+  border-color:
+    rgba(255,105,118,.30);
+}
+
+.target-box.stop .target-value{
+  color:var(--red);
+}
+
+.target-box.purple{
+  border-color:
+    rgba(174,99,255,.32);
+}
+
+.target-box.purple .target-value{
+  color:#c899ff;
+}
+
+.target-box.extend .target-value{
+  color:#c899ff;
+}
+
+/* =========================
+   入場卡
+========================= */
 
 .entry-card{
-  border:1px solid rgba(69,224,173,.58);
+  border:
+    1px solid
+    rgba(69,224,173,.58);
+
   border-radius:24px;
+
   padding:22px;
+
   background:
-    radial-gradient(circle at top right,rgba(69,224,173,.06),transparent 40%),
+    radial-gradient(
+      circle at top right,
+      rgba(69,224,173,.06),
+      transparent 40%
+    ),
     #0a0e0c;
 }
 
 .entry-card.purple{
-  border-color:rgba(174,99,255,.55);
+  border-color:
+    rgba(174,99,255,.55);
+
   background:
-    radial-gradient(circle at top right,rgba(174,99,255,.07),transparent 40%),
+    radial-gradient(
+      circle at top right,
+      rgba(174,99,255,.07),
+      transparent 40%
+    ),
     #0a0e0c;
 }
 
@@ -551,26 +870,35 @@ button{cursor:pointer}
 
 .entry-price{
   color:var(--green);
+
   font-size:31px;
   font-weight:950;
+
   margin-top:10px;
+
   letter-spacing:-1px;
 }
 
-.entry-card.purple .entry-price{
+.entry-card.purple
+.entry-price{
   color:#c899ff;
 }
 
 .entry-sub{
   margin-top:9px;
+
   color:#969c98;
+
   font-size:12px;
+
   line-height:1.7;
 }
 
 .reason-title{
   color:#929894;
+
   font-size:14px;
+
   margin-bottom:13px;
 }
 
@@ -578,38 +906,56 @@ button{cursor:pointer}
   display:flex;
   flex-wrap:wrap;
   gap:7px;
+
   margin-bottom:18px;
 }
 
 .reason-tag{
-  border:1px solid #343936;
+  border:
+    1px solid #343936;
+
   border-radius:999px;
-  padding:7px 11px;
+
+  padding:
+    7px 11px;
+
   color:#c2c7c4;
+
   font-size:11px;
 }
 
 .detail-text{
   font-size:14px;
+
   color:#d2d6d3;
+
   line-height:2;
 }
 
-/* 策略細節 */
+/* =========================
+   詳細策略
+========================= */
 
 .strategy-card{
   border-radius:24px;
+
   padding:22px;
+
   background:#0b0e0c;
+
   margin-top:15px;
 }
 
 .strategy-card.green{
-  border:1px solid rgba(69,224,173,.35);
+  border:
+    1px solid
+    rgba(69,224,173,.35);
 }
 
 .strategy-card.purple{
-  border:1px solid rgba(174,99,255,.40);
+  border:
+    1px solid
+    rgba(174,99,255,.40);
 }
 
 .strategy-name{
@@ -619,137 +965,177 @@ button{cursor:pointer}
 
 .strategy-status{
   color:#999f9b;
+
   margin-top:7px;
+
   font-size:13px;
 }
 
-.strategy-status strong{color:var(--text)}
+.strategy-status strong{
+  color:var(--text);
+}
 
-.check-list{margin-top:19px}
+.check-list{
+  margin-top:19px;
+}
 
 .check{
-  padding:11px 0;
-  border-bottom:1px solid #202522;
+  padding:
+    11px 0;
+
+  border-bottom:
+    1px solid #202522;
+
   font-size:13px;
+
   line-height:1.7;
 }
 
-.check:last-child{border-bottom:0}
-
-.good{color:#bdf2dc}
-.warn{color:#f4d68b}
-.bad{color:#ffabb2}
-
-.level-grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:8px;
-  margin-top:18px;
+.check:last-child{
+  border-bottom:0;
 }
 
-.level-box{
-  background:#070a08;
-  border-radius:13px;
-  padding:12px;
+.good{
+  color:#bdf2dc;
 }
 
-.level-box span{
-  color:#888e8a;
-  font-size:10px;
+.warn{
+  color:#f4d68b;
 }
 
-.level-box strong{
-  display:block;
-  margin-top:6px;
-  font-size:14px;
+.bad{
+  color:#ffabb2;
 }
-
-.level-box.stop{
-  border:1px solid rgba(255,105,118,.25);
-}
-
-.level-box.stop strong{color:var(--red)}
-.level-box.tp strong{color:var(--green)}
-.level-box.tp3 strong{color:var(--yellow)}
-.level-box.extend strong{color:#c899ff}
 
 .explain-box{
   margin-top:18px;
+
   background:#070a08;
+
   border-radius:15px;
+
   padding:15px;
+
   color:#c9cecb;
+
   font-size:13px;
+
   line-height:1.9;
 }
 
 .r-box{
   margin-top:13px;
+
   background:#090b0a;
-  border:1px solid rgba(174,99,255,.25);
+
+  border:
+    1px solid
+    rgba(174,99,255,.25);
+
   border-radius:15px;
+
   padding:14px;
+
   color:#aaa0b3;
+
   font-size:11px;
+
   line-height:1.9;
 }
 
-/* 綜合判讀 */
+/* =========================
+   綜合判讀
+========================= */
 
 .brain-card{
-  border:1px solid rgba(112,183,255,.28);
+  border:
+    1px solid
+    rgba(112,183,255,.28);
+
   background:#0b0e0c;
+
   border-radius:24px;
+
   padding:22px;
 }
 
 .brain-summary{
   color:#e1e4e2;
+
   font-size:14px;
+
   line-height:2;
 }
 
 .brain-item{
   margin-top:10px;
+
   border-radius:13px;
+
   padding:12px;
+
   background:#070a08;
+
   font-size:12px;
+
   line-height:1.75;
 }
 
 .loading{
   text-align:center;
-  padding:50px 10px;
+
+  padding:
+    50px 10px;
+
   color:var(--muted);
 }
 
 .error{
   padding:16px;
+
   color:var(--red);
-  border:1px solid rgba(255,105,118,.25);
+
+  border:
+    1px solid
+    rgba(255,105,118,.25);
+
   border-radius:15px;
 }
 
 .data-note{
   color:#737975;
+
   font-size:10px;
+
   line-height:1.7;
+
   margin-top:18px;
 }
 
 .footer{
   text-align:center;
+
   color:#515653;
+
   font-size:10px;
+
   margin-top:30px;
 }
 
 @media(min-width:700px){
-  .grid,.watch-grid{grid-template-columns:repeat(2,1fr)}
-  .indicator-strip{grid-template-columns:repeat(4,1fr)}
-  .level-grid{grid-template-columns:repeat(4,1fr)}
+
+  .grid,
+  .watch-grid{
+    grid-template-columns:
+      repeat(2,1fr);
+  }
+
+  .indicator-strip{
+    grid-template-columns:
+      repeat(4,1fr);
+  }
 }
+
 </style>
 </head>
 
@@ -757,66 +1143,142 @@ button{cursor:pointer}
 
 <main class="app">
 
-<!-- 首頁 -->
+<!-- =========================
+     首頁
+========================= -->
+
 <div id="homePage">
 
 <header class="header">
+
   <div class="header-row">
+
     <div>
-      <div class="brand">妖子平台</div>
-      <div class="subtitle">🇹🇼 台股即時異動 · 🇺🇸 美股技術分析</div>
+
+      <div class="brand">
+        妖子平台
+      </div>
+
+      <div class="subtitle">
+        🇹🇼 台股即時異動 · 🇺🇸 美股技術分析
+      </div>
+
     </div>
-    <div class="version">2.6 LIVE</div>
+
+    <div class="version">
+      2.7 LIVE
+    </div>
+
   </div>
+
 </header>
+
+<!-- 搜尋 -->
 
 <section class="card">
 
-  <div class="search-title">搜尋台股 / 美股</div>
+  <div class="search-title">
+    搜尋股票名稱 / 台股代號 / 美股代號
+  </div>
 
-  <form id="stockSearchForm" class="search-form">
+  <form
+    id="stockSearchForm"
+    class="search-form"
+  >
 
     <input
       id="symbolInput"
       class="search-input"
       type="text"
-      placeholder="2303 / NVDA"
+      placeholder="台積電 / 2330 / NVDA"
       autocomplete="off"
       autocorrect="off"
-      autocapitalize="characters"
       spellcheck="false"
     >
 
-    <button class="search-btn" type="submit">
+    <button
+      class="search-btn"
+      type="submit"
+    >
       分析
     </button>
 
   </form>
 
+  <div class="search-help">
+    可直接輸入中文，例如：台積電、聯電、鴻海、長榮，也可輸入 2330、2303、NVDA、AAPL。
+  </div>
+
   <div class="examples">
-    <button class="example" type="button" data-symbol="2330">2330 台積電</button>
-    <button class="example" type="button" data-symbol="2303">2303 聯電</button>
-    <button class="example" type="button" data-symbol="NVDA">NVDA</button>
-    <button class="example" type="button" data-symbol="AAPL">AAPL</button>
-    <button class="example" type="button" data-symbol="TSLA">TSLA</button>
+
+    <button
+      class="example"
+      type="button"
+      data-symbol="台積電"
+    >
+      台積電
+    </button>
+
+    <button
+      class="example"
+      type="button"
+      data-symbol="聯電"
+    >
+      聯電
+    </button>
+
+    <button
+      class="example"
+      type="button"
+      data-symbol="鴻海"
+    >
+      鴻海
+    </button>
+
+    <button
+      class="example"
+      type="button"
+      data-symbol="NVDA"
+    >
+      NVDA
+    </button>
+
+    <button
+      class="example"
+      type="button"
+      data-symbol="AAPL"
+    >
+      AAPL
+    </button>
+
   </div>
 
 </section>
 
-<!-- 自選股 -->
+<!-- 自選 -->
 
 <section class="watch-section">
 
   <div class="section-head">
+
     <div>
-      <div class="section-title">⭐ 我的自選股</div>
-      <div class="section-sub">
-        每台手機獨立保存 · 點擊直接分析
+
+      <div class="section-title">
+        ⭐ 我的自選股
       </div>
+
+      <div class="section-sub">
+        每台裝置獨立保存 · 點擊直接分析
+      </div>
+
     </div>
+
   </div>
 
-  <div id="watchGrid" class="watch-grid"></div>
+  <div
+    id="watchGrid"
+    class="watch-grid"
+  ></div>
 
 </section>
 
@@ -827,13 +1289,25 @@ button{cursor:pointer}
   <div class="section-head">
 
     <div>
-      <div class="section-title">⚡ 台股即時市場掃描</div>
-      <div id="updateText" class="section-sub">
+
+      <div class="section-title">
+        ⚡ 台股即時市場掃描
+      </div>
+
+      <div
+        id="updateText"
+        class="section-sub"
+      >
         正在連線 FinMind…
       </div>
+
     </div>
 
-    <button id="refreshButton" class="refresh" type="button">
+    <button
+      id="refreshButton"
+      class="refresh"
+      type="button"
+    >
       ↻ 立即掃描
     </button>
 
@@ -842,23 +1316,39 @@ button{cursor:pointer}
   <div class="stats">
 
     <div class="stat">
-      <strong id="scanCount">--</strong>
-      <span>掃描股票</span>
+      <strong id="scanCount">
+        --
+      </strong>
+      <span>
+        掃描股票
+      </span>
     </div>
 
     <div class="stat">
-      <strong id="radarCount">--</strong>
-      <span>異動</span>
+      <strong id="radarCount">
+        --
+      </strong>
+      <span>
+        異動
+      </span>
     </div>
 
     <div class="stat">
-      <strong id="longCount">--</strong>
-      <span>做多觀察</span>
+      <strong id="longCount">
+        --
+      </strong>
+      <span>
+        做多觀察
+      </span>
     </div>
 
     <div class="stat">
-      <strong id="countdown">05:00</strong>
-      <span>下次更新</span>
+      <strong id="countdown">
+        05:00
+      </strong>
+      <span>
+        下次更新
+      </span>
     </div>
 
   </div>
@@ -870,71 +1360,124 @@ button{cursor:pointer}
 <section class="section">
 
   <div class="section-head">
+
     <div>
-      <div class="section-title">🚀 今日做多觀察</div>
+
+      <div class="section-title">
+        🚀 今日做多觀察
+      </div>
+
       <div class="section-sub">
         即時量價與盤中強度條件篩選
       </div>
+
     </div>
+
   </div>
 
-  <div id="longGrid" class="grid">
-    <div class="loading">正在掃描…</div>
+  <div
+    id="longGrid"
+    class="grid"
+  >
+
+    <div class="loading">
+      正在掃描…
+    </div>
+
   </div>
 
 </section>
 
-<!-- 異動雷達 -->
+<!-- 雷達 -->
 
 <section class="section">
 
   <div class="section-head">
+
     <div>
-      <div class="section-title">🔥 台股即時異動雷達</div>
+
+      <div class="section-title">
+        🔥 台股即時異動雷達
+      </div>
+
       <div class="section-sub">
         分數代表技術條件符合程度
       </div>
+
     </div>
+
   </div>
 
-  <div id="radarGrid" class="grid">
-    <div class="loading">正在載入…</div>
+  <div
+    id="radarGrid"
+    class="grid"
+  >
+
+    <div class="loading">
+      正在載入…
+    </div>
+
   </div>
 
 </section>
 
 <div class="footer">
-  妖子平台 2.6 · FinMind Market Data
+  妖子平台 2.7 · FinMind Market Data
 </div>
 
 </div>
 
-<!-- 分析頁 -->
+<!-- =========================
+     分析頁
+========================= -->
 
-<div id="analysisPage" class="hidden">
+<div
+  id="analysisPage"
+  class="hidden"
+>
 
-  <button id="backTop" class="back-btn" type="button">
-    ← 返回市場首頁
-  </button>
+<button
+  id="backTop"
+  class="back-btn"
+  type="button"
+>
+  ← 返回市場首頁
+</button>
 
-  <div class="analysis-heading">
-    <h1>📊 個股技術分析</h1>
-    <p>波段結構 · 支撐回踩 · 高 R 突破回測</p>
+<div class="analysis-heading">
+
+  <h1>
+    📊 個股技術分析
+  </h1>
+
+  <p>
+    波段回踩 · 高 R 突破回測
+  </p>
+
+</div>
+
+<div id="analysisResult">
+
+  <div class="loading">
+    正在分析…
   </div>
 
-  <div id="analysisResult">
-    <div class="loading">正在分析…</div>
-  </div>
+</div>
 
-  <button id="backBottom" class="back-btn full" type="button">
-    ← 看完了，返回市場首頁
-  </button>
+<button
+  id="backBottom"
+  class="back-btn full"
+  type="button"
+>
+  ← 看完了，返回市場首頁
+</button>
 
 </div>
 
 </main>
 
 <script>
+
 "use strict";
 
 var radarData=null;
@@ -942,71 +1485,114 @@ var countdownSeconds=300;
 var homeScroll=0;
 var currentStock=null;
 
-var WATCH_KEY="yaozi_watchlist_v26";
+var WATCH_KEY=
+  "yaozi_watchlist";
+
+/* =========================
+   基本工具
+========================= */
 
 function el(id){
   return document.getElementById(id);
 }
 
-function safe(v){
-  var d=document.createElement("div");
-  d.textContent=v==null?"":String(v);
-  return d.innerHTML;
+function safe(value){
+
+  var div=
+    document.createElement("div");
+
+  div.textContent=
+    value==null
+      ?""
+      :String(value);
+
+  return div.innerHTML;
 }
 
-function fmt(v,d){
-  if(d===undefined)d=2;
+function fmt(value,digits){
 
-  var x=Number(v);
+  if(digits===undefined){
+    digits=2;
+  }
 
-  if(!Number.isFinite(x))return "--";
+  var number=
+    Number(value);
 
-  return x.toLocaleString("zh-TW",{
-    maximumFractionDigits:d
-  });
+  if(!Number.isFinite(number)){
+    return "--";
+  }
+
+  return number.toLocaleString(
+    "zh-TW",
+    {
+      maximumFractionDigits:
+        digits
+    }
+  );
 }
 
-function pct(v){
-  var x=Number(v);
+function pct(value){
 
-  if(!Number.isFinite(x))return "--";
+  var number=
+    Number(value);
 
-  return (x>0?"+":"")+x.toFixed(2)+"%";
+  if(!Number.isFinite(number)){
+    return "--";
+  }
+
+  return (
+    number>0
+      ?"+"
+      :""
+  )+
+  number.toFixed(2)+
+  "%";
 }
 
-function pclass(v){
-  var x=Number(v);
+function pclass(value){
 
-  if(x>0)return "up";
-  if(x<0)return "down";
+  var number=
+    Number(value);
+
+  if(number>0)return "up";
+  if(number<0)return "down";
 
   return "flat";
 }
 
-function normalize(v){
-  return String(v||"")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9.\-]/g,"");
+/*
+  2.7：
+  不再把中文字刪掉。
+  中文名稱直接送到 API。
+*/
+
+function normalizeSearch(value){
+
+  return String(
+    value||""
+  ).trim();
 }
 
 /* =========================
-   自選股
+   自選
 ========================= */
 
 function getWatchlist(){
 
   try{
 
-    var data=JSON.parse(
-      localStorage.getItem(WATCH_KEY)||"[]"
-    );
+    var data=
+      JSON.parse(
+        localStorage.getItem(
+          WATCH_KEY
+        )||"[]"
+      );
 
     return Array.isArray(data)
       ?data
       :[];
 
-  }catch(e){
+  }catch(error){
 
     return [];
   }
@@ -1024,82 +1610,119 @@ function saveWatchlist(list){
 
 function isFavorite(symbol){
 
-  return getWatchlist().some(function(stock){
+  return getWatchlist()
+    .some(function(stock){
 
-    return String(stock.symbol)===
-      String(symbol);
-  });
+      return String(stock.symbol)===
+        String(symbol);
+    });
 }
 
 function toggleFavorite(stock){
 
-  if(!stock||!stock.symbol)return;
+  if(
+    !stock ||
+    !stock.symbol
+  ){
+    return;
+  }
 
-  var list=getWatchlist();
+  var list=
+    getWatchlist();
 
-  var index=list.findIndex(function(item){
+  var index=
+    list.findIndex(
+      function(item){
 
-    return String(item.symbol)===
-      String(stock.symbol);
-  });
+        return String(item.symbol)===
+          String(stock.symbol);
+      }
+    );
 
   if(index>=0){
 
-    list.splice(index,1);
+    list.splice(
+      index,
+      1
+    );
 
   }else{
 
     list.unshift({
-      symbol:String(stock.symbol),
-      name:String(stock.name||""),
-      market:String(stock.market||"")
+      symbol:
+        String(stock.symbol),
+
+      name:
+        String(stock.name||""),
+
+      market:
+        String(stock.market||"")
     });
   }
 
   saveWatchlist(list);
+
   updateFavoriteButton();
 }
 
 function removeFavorite(symbol){
 
-  var list=getWatchlist().filter(function(stock){
+  var list=
+    getWatchlist()
+    .filter(function(stock){
 
-    return String(stock.symbol)!==
-      String(symbol);
-  });
+      return String(stock.symbol)!==
+        String(symbol);
+    });
 
   saveWatchlist(list);
 }
 
 function updateFavoriteButton(){
 
-  var button=el("favoriteButton");
+  var button=
+    el("favoriteButton");
 
-  if(!button||!currentStock)return;
+  if(
+    !button ||
+    !currentStock
+  ){
+    return;
+  }
 
-  if(isFavorite(currentStock.symbol)){
+  if(
+    isFavorite(
+      currentStock.symbol
+    )
+  ){
 
     button.textContent=
       "★ 已加入自選 · 點擊移除";
 
-    button.classList.add("active");
+    button.classList.add(
+      "active"
+    );
 
   }else{
 
     button.textContent=
       "☆ 加入自選";
 
-    button.classList.remove("active");
+    button.classList.remove(
+      "active"
+    );
   }
 }
 
 function renderWatchlist(){
 
-  var root=el("watchGrid");
+  var root=
+    el("watchGrid");
 
   if(!root)return;
 
-  var list=getWatchlist();
+  var list=
+    getWatchlist();
 
   if(!list.length){
 
@@ -1112,43 +1735,49 @@ function renderWatchlist(){
     return;
   }
 
-  root.innerHTML=list.map(function(stock){
+  root.innerHTML=
+    list.map(
+      function(stock){
 
-    return (
+        return (
 
-      '<div class="watch-card">'+
+          '<div class="watch-card">'+
 
-        '<div class="watch-main" data-watch-open="'+
-        safe(stock.symbol)+
-        '">'+
-
-          '<div class="watch-symbol">'+
-            '⭐ '+
+            '<div class="watch-main" data-watch-open="'+
             safe(stock.symbol)+
-          '</div>'+
+            '">'+
 
-          '<div class="watch-name">'+
-            safe(stock.name||"")+
-          '</div>'+
+              '<div class="watch-symbol">'+
+                '⭐ '+
+                safe(stock.symbol)+
+              '</div>'+
 
-          '<div class="watch-open">'+
-            '查看完整雙策略分析 →'+
-          '</div>'+
+              '<div class="watch-name">'+
+                safe(stock.name||"")+
+              '</div>'+
 
-        '</div>'+
+              '<div class="watch-open">'+
+                '查看完整分析 →'+
+              '</div>'+
 
-        '<button class="watch-remove" type="button" data-watch-remove="'+
-        safe(stock.symbol)+
-        '">'+
-          '×'+
-        '</button>'+
+            '</div>'+
 
-      '</div>'
-    );
+            '<button class="watch-remove" type="button" data-watch-remove="'+
+            safe(stock.symbol)+
+            '">'+
+              '×'+
+            '</button>'+
 
-  }).join("");
+          '</div>'
+        );
+      }
+    )
+    .join("");
 
-  root.querySelectorAll("[data-watch-open]")
+  root
+  .querySelectorAll(
+    "[data-watch-open]"
+  )
   .forEach(function(item){
 
     item.onclick=function(){
@@ -1159,33 +1788,50 @@ function renderWatchlist(){
     };
   });
 
-  root.querySelectorAll("[data-watch-remove]")
+  root
+  .querySelectorAll(
+    "[data-watch-remove]"
+  )
   .forEach(function(button){
 
-    button.onclick=function(e){
+    button.onclick=
+      function(event){
 
-      e.stopPropagation();
+        event.stopPropagation();
 
-      removeFavorite(
-        this.dataset.watchRemove
-      );
-    };
+        removeFavorite(
+          this.dataset.watchRemove
+        );
+      };
   });
 }
 
 /* =========================
-   指標
+   技術指標
 ========================= */
 
 function SMA(values,period){
 
-  if(values.length<period)return NaN;
+  if(
+    values.length<
+    period
+  ){
+    return NaN;
+  }
 
-  var a=values.slice(-period);
+  var values2=
+    values.slice(-period);
+
   var total=0;
 
-  for(var i=0;i<a.length;i++){
-    total+=Number(a[i]);
+  for(
+    var i=0;
+    i<values2.length;
+    i++
+  ){
+
+    total+=
+      Number(values2[i]);
   }
 
   return total/period;
@@ -1193,21 +1839,40 @@ function SMA(values,period){
 
 function EMA(values,period){
 
-  if(values.length<period)return NaN;
+  if(
+    values.length<
+    period
+  ){
+    return NaN;
+  }
 
   var total=0;
 
-  for(var i=0;i<period;i++){
-    total+=Number(values[i]);
+  for(
+    var i=0;
+    i<period;
+    i++
+  ){
+
+    total+=
+      Number(values[i]);
   }
 
-  var ema=total/period;
-  var k=2/(period+1);
+  var ema=
+    total/period;
 
-  for(var j=period;j<values.length;j++){
+  var k=
+    2/(period+1);
+
+  for(
+    var j=period;
+    j<values.length;
+    j++
+  ){
 
     ema=
-      Number(values[j])*k+
+      Number(values[j])*
+      k+
       ema*(1-k);
   }
 
@@ -1216,66 +1881,120 @@ function EMA(values,period){
 
 function RSI(values,period){
 
-  period=period||14;
+  period=
+    period||14;
 
-  if(values.length<=period)return NaN;
+  if(
+    values.length<=period
+  ){
+    return NaN;
+  }
 
-  var a=values.slice(-(period+1));
+  var recent=
+    values.slice(
+      -(period+1)
+    );
 
   var gains=0;
   var losses=0;
 
-  for(var i=1;i<a.length;i++){
+  for(
+    var i=1;
+    i<recent.length;
+    i++
+  ){
 
     var diff=
-      Number(a[i])-
-      Number(a[i-1]);
+      Number(recent[i])-
+      Number(recent[i-1]);
 
     if(diff>0){
+
       gains+=diff;
+
     }else{
-      losses+=Math.abs(diff);
+
+      losses+=
+        Math.abs(diff);
     }
   }
 
-  var ag=gains/period;
-  var al=losses/period;
+  var averageGain=
+    gains/period;
 
-  if(al===0)return 100;
+  var averageLoss=
+    losses/period;
 
-  var rs=ag/al;
+  if(
+    averageLoss===0
+  ){
+    return 100;
+  }
 
-  return 100-(100/(1+rs));
+  var rs=
+    averageGain/
+    averageLoss;
+
+  return 100-
+    (
+      100/
+      (1+rs)
+    );
 }
 
 function ATR(rows,period){
 
-  period=period||14;
+  period=
+    period||14;
 
-  if(rows.length<=period)return NaN;
+  if(
+    rows.length<=period
+  ){
+    return NaN;
+  }
 
-  var tr=[];
+  var trueRanges=[];
 
-  for(var i=1;i<rows.length;i++){
+  for(
+    var i=1;
+    i<rows.length;
+    i++
+  ){
 
-    var high=Number(rows[i].high);
-    var low=Number(rows[i].low);
-    var prev=Number(rows[i-1].close);
+    var high=
+      Number(rows[i].high);
 
-    tr.push(
+    var low=
+      Number(rows[i].low);
+
+    var previousClose=
+      Number(
+        rows[i-1].close
+      );
+
+    trueRanges.push(
       Math.max(
         high-low,
-        Math.abs(high-prev),
-        Math.abs(low-prev)
+        Math.abs(
+          high-
+          previousClose
+        ),
+        Math.abs(
+          low-
+          previousClose
+        )
       )
     );
   }
 
-  return SMA(tr,period);
+  return SMA(
+    trueRanges,
+    period
+  );
 }
 
 /* =========================
-   頁面
+   頁面切換
 ========================= */
 
 function openAnalysis(){
@@ -1284,36 +2003,52 @@ function openAnalysis(){
     window.scrollY||0;
 
   el("homePage")
-    .classList.add("hidden");
+    .classList.add(
+      "hidden"
+    );
 
   el("analysisPage")
-    .classList.remove("hidden");
+    .classList.remove(
+      "hidden"
+    );
 
-  window.scrollTo(0,0);
+  window.scrollTo(
+    0,
+    0
+  );
 }
 
 function backHome(){
 
   el("analysisPage")
-    .classList.add("hidden");
+    .classList.add(
+      "hidden"
+    );
 
   el("homePage")
-    .classList.remove("hidden");
+    .classList.remove(
+      "hidden"
+    );
 
   renderWatchlist();
 
-  setTimeout(function(){
+  setTimeout(
+    function(){
 
-    window.scrollTo(
-      0,
-      homeScroll
-    );
-
-  },10);
+      window.scrollTo(
+        0,
+        homeScroll
+      );
+    },
+    10
+  );
 }
 
-el("backTop").onclick=backHome;
-el("backBottom").onclick=backHome;
+el("backTop").onclick=
+  backHome;
+
+el("backBottom").onclick=
+  backHome;
 
 /* =========================
    搜尋
@@ -1322,49 +2057,63 @@ el("backBottom").onclick=backHome;
 el("stockSearchForm")
 .addEventListener(
   "submit",
-  function(e){
+  function(event){
 
-    e.preventDefault();
+    event.preventDefault();
 
     analyze(
-      el("symbolInput").value
+      el("symbolInput")
+      .value
     );
   }
 );
 
 document
-.querySelectorAll(".example")
-.forEach(function(button){
+.querySelectorAll(
+  ".example"
+)
+.forEach(
+  function(button){
 
-  button.onclick=function(){
+    button.onclick=
+      function(){
 
-    var symbol=
-      this.dataset.symbol;
+        var value=
+          this.dataset.symbol;
 
-    el("symbolInput").value=
-      symbol;
+        el("symbolInput")
+          .value=
+          value;
 
-    analyze(symbol);
-  };
-});
+        analyze(value);
+      };
+  }
+);
 
-async function analyze(symbolValue){
+async function analyze(
+  searchValue
+){
 
-  var symbol=
-    normalize(symbolValue);
+  var query=
+    normalizeSearch(
+      searchValue
+    );
 
-  if(!symbol)return;
+  if(!query)return;
 
-  el("symbolInput").value=
-    symbol;
+  el("symbolInput")
+    .value=
+    query;
 
   openAnalysis();
 
-  el("analysisResult").innerHTML=
+  el("analysisResult")
+    .innerHTML=
+
     '<div class="loading">'+
-    '正在分析 '+
-    safe(symbol)+
-    '…'+
+      '正在搜尋與分析 '+
+      safe(query)+
+      '…'+
     '</div>';
 
   try{
@@ -1372,17 +2121,19 @@ async function analyze(symbolValue){
     var response=
       await fetch(
         "/api/stock?symbol="+
-        encodeURIComponent(symbol)+
+        encodeURIComponent(query)+
         "&t="+
         Date.now(),
-        {cache:"no-store"}
+        {
+          cache:"no-store"
+        }
       );
 
     var data=
       await response.json();
 
     if(
-      !response.ok||
+      !response.ok ||
       !data.ok
     ){
 
@@ -1392,26 +2143,54 @@ async function analyze(symbolValue){
       );
     }
 
+    /*
+      中文搜尋成功後，
+      搜尋框改顯示：
+      2330 台積電
+    */
+
+    if(
+      data.market==="TW" &&
+      data.name
+    ){
+
+      el("symbolInput")
+        .value=
+        data.symbol+
+        " "+
+        data.name;
+
+    }else{
+
+      el("symbolInput")
+        .value=
+        data.symbol;
+    }
+
     buildAnalysis(data);
 
   }catch(error){
 
-    el("analysisResult").innerHTML=
+    el("analysisResult")
+      .innerHTML=
+
       '<div class="error">'+
-      '分析失敗：'+
-      safe(error.message)+
+        '分析失敗：'+
+        safe(error.message)+
       '</div>';
   }
 }
 
 /* =========================
-   分析主程式
+   分析
 ========================= */
 
 function buildAnalysis(data){
 
   var rows=
-    Array.isArray(data.rows)
+    Array.isArray(
+      data.rows
+    )
       ?data.rows
       :[];
 
@@ -1423,20 +2202,31 @@ function buildAnalysis(data){
   }
 
   var closes=
-    rows.map(function(row){
+    rows.map(
+      function(row){
 
-      return Number(row.close);
-    });
+        return Number(
+          row.close
+        );
+      }
+    );
 
   var symbol=
-    String(data.symbol||"");
+    String(
+      data.symbol||""
+    );
 
   var price=
-    Number(data.livePrice);
+    Number(
+      data.livePrice
+    );
 
   var live=null;
 
-  /* 雷達即時價格 */
+  /*
+    台股若剛好存在即時雷達，
+    使用雷達的即時價格。
+  */
 
   if(
     data.market==="TW" &&
@@ -1451,24 +2241,28 @@ function buildAnalysis(data){
     ];
 
     for(
-      var g=0;
-      g<groups.length;
-      g++
+      var groupIndex=0;
+      groupIndex<
+      groups.length;
+      groupIndex++
     ){
 
       for(
-        var z=0;
-        z<groups[g].length;
-        z++
+        var itemIndex=0;
+        itemIndex<
+        groups[groupIndex].length;
+        itemIndex++
       ){
 
         if(
-          String(groups[g][z].symbol)===
-          symbol
+          String(
+            groups[groupIndex][itemIndex]
+            .symbol
+          )===symbol
         ){
 
           live=
-            groups[g][z];
+            groups[groupIndex][itemIndex];
 
           break;
         }
@@ -1489,7 +2283,9 @@ function buildAnalysis(data){
       Number(live.price);
   }
 
-  if(!Number.isFinite(price)){
+  if(
+    !Number.isFinite(price)
+  ){
 
     price=
       closes[
@@ -1500,74 +2296,117 @@ function buildAnalysis(data){
   /* 指標 */
 
   var ma20=
-    SMA(closes,20);
+    SMA(
+      closes,
+      20
+    );
 
   var ma60=
-    SMA(closes,60);
+    SMA(
+      closes,
+      60
+    );
 
   var rsi=
-    RSI(closes,14);
+    RSI(
+      closes,
+      14
+    );
 
   var recent=
     closes.slice(-80);
 
   var macd=
-    EMA(recent,12)-
-    EMA(recent,26);
+    EMA(
+      recent,
+      12
+    )-
+    EMA(
+      recent,
+      26
+    );
 
   var atr=
-    ATR(rows,14);
+    ATR(
+      rows,
+      14
+    );
 
   var prior20=
-    rows.slice(-21,-1);
+    rows.slice(
+      -21,
+      -1
+    );
 
   var resistance=
     Math.max.apply(
       null,
-      prior20.map(function(row){
+      prior20.map(
+        function(row){
 
-        return Number(row.high);
-      })
+          return Number(
+            row.high
+          );
+        }
+      )
     );
 
   var low10=
     Math.min.apply(
       null,
       rows.slice(-10)
-      .map(function(row){
+      .map(
+        function(row){
 
-        return Number(row.low);
-      })
+          return Number(
+            row.low
+          );
+        }
+      )
     );
 
   var low20=
     Math.min.apply(
       null,
       rows.slice(-20)
-      .map(function(row){
+      .map(
+        function(row){
 
-        return Number(row.low);
-      })
+          return Number(
+            row.low
+          );
+        }
+      )
     );
 
   var low60=
     Math.min.apply(
       null,
       rows.slice(-60)
-      .map(function(row){
+      .map(
+        function(row){
 
-        return Number(row.low);
-      })
+          return Number(
+            row.low
+          );
+        }
+      )
     );
 
   var support=
     Math.max(
       low10,
-      Math.min(ma20,price)-
+      Math.min(
+        ma20,
+        price
+      )-
       atr*.5
     );
 
-  var trend="整理";
+  /* 趨勢 */
+
+  var trend=
+    "整理";
 
   if(
     price>ma20 &&
@@ -1587,19 +2426,24 @@ function buildAnalysis(data){
   }
 
   /* =========================
-     回踩策略
+     波段回踩
   ========================= */
 
   var entryLow=
     Math.max(
       support,
-      ma20-atr*.5
+      ma20-
+      atr*.5
     );
 
   var entryHigh=
-    ma20+atr*.35;
+    ma20+
+    atr*.35;
 
-  if(entryLow>entryHigh){
+  if(
+    entryLow>
+    entryHigh
+  ){
 
     var temp=
       entryLow;
@@ -1612,15 +2456,26 @@ function buildAnalysis(data){
   }
 
   var center=
-    (entryLow+entryHigh)/2;
+    (
+      entryLow+
+      entryHigh
+    )/2;
 
   var distanceEntry=
-    ((price-center)/price)*100;
+    (
+      (
+        price-center
+      )/
+      price
+    )*100;
 
   var stop=
     Math.min(
-      support-atr*.5,
-      entryLow-atr
+      support-
+      atr*.5,
+
+      entryLow-
+      atr
     );
 
   var setupRisk=
@@ -1642,7 +2497,7 @@ function buildAnalysis(data){
     setupRisk*4;
 
   /* =========================
-     高 R 突破回測
+     高 R
   ========================= */
 
   var breakLow=
@@ -1653,7 +2508,10 @@ function buildAnalysis(data){
     resistance+
     atr*.35;
 
-  if(breakLow>breakHigh){
+  if(
+    breakLow>
+    breakHigh
+  ){
 
     var breakTemp=
       breakLow;
@@ -1665,40 +2523,28 @@ function buildAnalysis(data){
       breakTemp;
   }
 
-  /*
-    高 R 的策略入場基準
-    = 回測區中心
-  */
-
   var breakCenter=
-    (breakLow+breakHigh)/2;
-
-  /*
-    SL 位於突破結構下方
-  */
+    (
+      breakLow+
+      breakHigh
+    )/2;
 
   var breakStop=
     Math.min(
-      resistance-atr*.8,
-      breakCenter-atr*.5
-    );
+      resistance-
+      atr*.8,
 
-  /*
-    1R = 策略中心 - SL
-  */
-
-  var breakRisk=
-    Math.max(
-      breakCenter-breakStop,
+      breakCenter-
       atr*.5
     );
 
-  /*
-    TP1 = 2R
-    TP2 = 3R
-    TP3 = 5R
-    延伸 = 7R
-  */
+  var breakRisk=
+    Math.max(
+      breakCenter-
+      breakStop,
+
+      atr*.5
+    );
 
   var highTp1=
     breakCenter+
@@ -1717,12 +2563,17 @@ function buildAnalysis(data){
     breakRisk*7;
 
   var breakout=
-    price>resistance &&
-    price>ma20;
+    price>
+    resistance &&
+    price>
+    ma20;
 
   var breakDistanceATR=
     atr>0
-      ?(price-resistance)/atr
+      ?(
+        price-
+        resistance
+      )/atr
       :0;
 
   /* =========================
@@ -1741,7 +2592,9 @@ function buildAnalysis(data){
       "已進入回踩觀察區";
   }
 
-  if(price<stop){
+  if(
+    price<stop
+  ){
 
     swingStatus=
       "原結構失效";
@@ -1768,30 +2621,39 @@ function buildAnalysis(data){
 
   if(
     breakout &&
-    breakDistanceATR>1.5
+    breakDistanceATR>
+    1.5
   ){
 
     breakStatus=
       "突破後距離偏遠";
   }
 
-  if(price<breakStop){
+  if(
+    price<
+    breakStop
+  ){
 
     breakStatus=
       "高 R 結構失效";
   }
 
   /* =========================
-     波段總覽文字
+     回踩文字
   ========================= */
 
   var overviewText="";
 
-  if(price>entryHigh){
+  if(
+    price>
+    entryHigh
+  ){
 
     overviewText=
       "目前價格位於回踩觀察區上方，距策略中心價約 "+
-      Math.abs(distanceEntry).toFixed(1)+
+      Math.abs(
+        distanceEntry
+      ).toFixed(1)+
       "%。回踩型波段策略主要等待價格接近支撐結構，而不是把現價直接視為相同風險位置。";
 
   }else if(
@@ -1815,7 +2677,9 @@ function buildAnalysis(data){
   var reasons=[];
 
   if(
-    Math.abs(ma20-center)<=atr
+    Math.abs(
+      ma20-center
+    )<=atr
   ){
 
     reasons.push(
@@ -1824,8 +2688,9 @@ function buildAnalysis(data){
   }
 
   if(
-    Math.abs(ma60-center)<=
-    atr*1.5
+    Math.abs(
+      ma60-center
+    )<=atr*1.5
   ){
 
     reasons.push(
@@ -1834,7 +2699,9 @@ function buildAnalysis(data){
   }
 
   if(
-    Math.abs(low10-center)<=atr
+    Math.abs(
+      low10-center
+    )<=atr
   ){
 
     reasons.push(
@@ -1843,8 +2710,9 @@ function buildAnalysis(data){
   }
 
   if(
-    Math.abs(low20-center)<=
-    atr*1.5
+    Math.abs(
+      low20-center
+    )<=atr*1.5
   ){
 
     reasons.push(
@@ -1853,8 +2721,9 @@ function buildAnalysis(data){
   }
 
   if(
-    Math.abs(low60-center)<=
-    atr*2
+    Math.abs(
+      low60-center
+    )<=atr*2
   ){
 
     reasons.push(
@@ -1862,7 +2731,9 @@ function buildAnalysis(data){
     );
   }
 
-  if(!reasons.length){
+  if(
+    !reasons.length
+  ){
 
     reasons.push(
       "ATR 支撐帶"
@@ -1875,11 +2746,13 @@ function buildAnalysis(data){
 
   var swingChecks=[];
 
-  if(price>ma20){
+  if(
+    price>ma20
+  ){
 
     swingChecks.push([
       "good",
-      "✓ 現價仍位於 MA20 上方，短期趨勢尚未破壞。"
+      "✓ 現價位於 MA20 上方，短期趨勢尚未破壞。"
     ]);
 
   }else{
@@ -1890,7 +2763,9 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(ma20>ma60){
+  if(
+    ma20>ma60
+  ){
 
     swingChecks.push([
       "good",
@@ -1905,16 +2780,20 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(rsi>78){
+  if(
+    rsi>78
+  ){
 
     swingChecks.push([
       "warn",
       "⚠ RSI "+
       fmt(rsi,1)+
-      "，短線動能偏熱，回踩策略主要等待價格回到較合理的位置。"
+      "，短線動能偏熱，回踩策略主要等待價格重新靠近支撐。"
     ]);
 
-  }else if(rsi>=50){
+  }else if(
+    rsi>=50
+  ){
 
     swingChecks.push([
       "good",
@@ -1933,21 +2812,6 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(price>entryHigh){
-
-    swingChecks.push([
-      "warn",
-      "⚠ 現價高於回踩觀察區，主要等待價格重新靠近支撐結構。"
-    ]);
-
-  }else if(price>=entryLow){
-
-    swingChecks.push([
-      "good",
-      "✓ 現價已接近策略回踩觀察範圍。"
-    ]);
-  }
-
   /* =========================
      高 R 判讀
   ========================= */
@@ -1961,7 +2825,7 @@ function buildAnalysis(data){
 
     breakChecks.push([
       "good",
-      "✓ 股價、MA20、MA60 維持較完整的多頭排列。"
+      "✓ 股價、MA20、MA60 維持較完整的偏多排列。"
     ]);
 
   }else{
@@ -1972,7 +2836,9 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(macd>0){
+  if(
+    macd>0
+  ){
 
     breakChecks.push([
       "good",
@@ -1985,7 +2851,7 @@ function buildAnalysis(data){
 
     breakChecks.push([
       "warn",
-      "△ MACD 位於負值區，突破動能需要進一步確認。"
+      "△ MACD 位於負值區，突破動能仍需確認。"
     ]);
   }
 
@@ -1999,11 +2865,13 @@ function buildAnalysis(data){
       "✓ RSI 位於 50～78 的偏強區間。"
     ]);
 
-  }else if(rsi>78){
+  }else if(
+    rsi>78
+  ){
 
     breakChecks.push([
       "warn",
-      "⚠ RSI 已超過 78，需要注意突破後與回測區的距離。"
+      "⚠ RSI 已超過 78，需要注意價格與突破區距離。"
     ]);
 
   }else{
@@ -2018,20 +2886,24 @@ function buildAnalysis(data){
 
     breakChecks.push([
       "good",
-      "✓ 現價已突破原 20 日壓力 "+
+      "✓ 現價已突破 20 日壓力 "+
       fmt(resistance)+
       "。"
     ]);
 
     if(
-      breakDistanceATR>1.5
+      breakDistanceATR>
+      1.5
     ){
 
       breakChecks.push([
         "warn",
-        "⚠ 現價已離突破位置約 "+
-        fmt(breakDistanceATR,1)+
-        " ATR，與原本的高 R 回測位置距離偏遠。"
+        "⚠ 現價距突破位置約 "+
+        fmt(
+          breakDistanceATR,
+          1
+        )+
+        " ATR，與原本的回測位置距離偏遠。"
       ]);
 
     }else{
@@ -2053,7 +2925,7 @@ function buildAnalysis(data){
   }
 
   /* =========================
-     綜合判讀
+     綜合
   ========================= */
 
   var brain=[];
@@ -2076,14 +2948,18 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(rsi>78){
+  if(
+    rsi>78
+  ){
 
     brain.push([
       "warn",
       "⚠ 動能：RSI 偏熱，短線雖然強勢，但需要注意價格位置。"
     ]);
 
-  }else if(rsi>=50){
+  }else if(
+    rsi>=50
+  ){
 
     brain.push([
       "good",
@@ -2091,7 +2967,9 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(macd>0){
+  if(
+    macd>0
+  ){
 
     brain.push([
       "good",
@@ -2099,15 +2977,19 @@ function buildAnalysis(data){
     ]);
   }
 
-  if(price>entryHigh){
+  if(
+    price>entryHigh
+  ){
 
     brain.push([
       "warn",
-      "△ 回踩策略：目前尚未回到理想觀察區。"
+      "△ 回踩策略：目前價格仍位於回踩觀察區上方。"
     ]);
   }
 
-  if(!breakout){
+  if(
+    !breakout
+  ){
 
     brain.push([
       "warn",
@@ -2124,7 +3006,7 @@ function buildAnalysis(data){
   ){
 
     brainSummary=
-      "目前屬於偏多趨勢，但短線動能已有偏熱現象。回踩策略主要等待價格靠近支撐；高 R 策略則先等待突破主要壓力，再觀察價格回測突破區後的結構。";
+      "目前屬於偏多趨勢，但短線動能已有偏熱現象。回踩策略主要等待價格靠近支撐；高 R 策略則等待突破主要壓力後，再觀察回測結構。";
 
   }else if(
     price>ma20 &&
@@ -2137,13 +3019,21 @@ function buildAnalysis(data){
   }else{
 
     brainSummary=
-      "目前趨勢尚未形成完整強勢排列，因此兩套策略都需要更多價格確認，尤其要注意 MA20、主要支撐與 20 日壓力。";
+      "目前趨勢尚未形成完整強勢排列，因此兩套策略都需要更多價格確認，尤其需要觀察 MA20、主要支撐與 20 日壓力。";
   }
+
+  /* =========================
+     基本資料
+  ========================= */
 
   var change=
     live
-      ?Number(live.changePercent)
-      :Number(data.changePercent);
+      ?Number(
+        live.changePercent
+      )
+      :Number(
+        data.changePercent
+      );
 
   var money=
     data.currency==="USD"
@@ -2157,41 +3047,50 @@ function buildAnalysis(data){
 
   currentStock={
     symbol:symbol,
-    name:data.name||"",
-    market:data.market||""
+    name:
+      data.name||"",
+    market:
+      data.market||""
   };
 
   /* =========================
-     畫面
+     HTML
   ========================= */
 
   var html=
 
-  /* 股票 */
+  /* HERO */
 
   '<div class="hero-card">'+
 
     '<div class="hero-top">'+
 
       '<div>'+
+
         '<div class="hero-symbol">'+
           safe(symbol)+
         '</div>'+
 
         '<div class="hero-name">'+
-          safe(data.name||"")+
+          safe(
+            data.name||""
+          )+
         '</div>'+
 
         '<div class="market-pill">'+
           market+
           ' · '+
-          safe(data.currency||"")+
+          safe(
+            data.currency||""
+          )+
           ' · '+
           safe(trend)+
         '</div>'+
+
       '</div>'+
 
       '<div>'+
+
         '<div class="hero-price">'+
           money+
           fmt(price)+
@@ -2202,6 +3101,7 @@ function buildAnalysis(data){
         '">'+
           pct(change)+
         '</div>'+
+
       '</div>'+
 
     '</div>'+
@@ -2211,18 +3111,43 @@ function buildAnalysis(data){
     '</button>'+
 
     '<div class="indicator-strip">'+
-      indicator("MA20",fmt(ma20))+
-      indicator("MA60",fmt(ma60))+
-      indicator("RSI 14",fmt(rsi,1))+
-      indicator("MACD",fmt(macd,2))+
-      indicator("ATR",fmt(atr))+
-      indicator("20日壓力",fmt(resistance))+
+
+      indicator(
+        "MA20",
+        fmt(ma20)
+      )+
+
+      indicator(
+        "MA60",
+        fmt(ma60)
+      )+
+
+      indicator(
+        "RSI 14",
+        fmt(rsi,1)
+      )+
+
+      indicator(
+        "MACD",
+        fmt(macd,2)
+      )+
+
+      indicator(
+        "ATR",
+        fmt(atr)
+      )+
+
+      indicator(
+        "20日壓力",
+        fmt(resistance)
+      )+
+
     '</div>'+
 
   '</div>'+
 
   /* =========================
-     波段策略大總覽
+     波段總覽
   ========================= */
 
   '<div class="big-section-title">'+
@@ -2245,50 +3170,60 @@ function buildAnalysis(data){
       ""
     )+
 
-    overviewRow(
-      "🎯 回踩觀察區",
-      fmt(entryLow)+
-      " ～ "+
-      fmt(entryHigh),
-      "green"
-    )+
+    '<div class="divider"></div>'+
 
-    overviewRow(
-      "💰 回踩 TP1",
-      fmt(tp1),
-      "green"
-    )+
+    '<div class="target-stack">'+
 
-    overviewRow(
-      "💰 回踩 TP2",
-      fmt(tp2),
-      "green"
-    )+
+      targetBox(
+        "🎯 回踩觀察區",
+        fmt(entryLow)+
+        " ～ "+
+        fmt(entryHigh),
+        "entry"
+      )+
 
-    overviewRow(
-      "🔥 回踩 TP3",
-      fmt(tp3),
-      "yellow"
-    )+
+      targetBox(
+        "💰 回踩 TP1 · 1.5R",
+        fmt(tp1),
+        "tp"
+      )+
 
-    overviewRow(
-      "🛑 回踩 SL",
-      fmt(stop),
-      "red"
-    )+
+      targetBox(
+        "💰 回踩 TP2 · 2.5R",
+        fmt(tp2),
+        "tp"
+      )+
+
+      targetBox(
+        "🔥 回踩 TP3 · 4R",
+        fmt(tp3),
+        "tp3"
+      )+
+
+      targetBox(
+        "🛑 回踩 SL",
+        fmt(stop),
+        "stop"
+      )+
+
+    '</div>'+
 
     '<div class="divider"></div>'+
 
     '<div class="overview-text">'+
-      safe(overviewText)+
+      safe(
+        overviewText
+      )+
     '</div>'+
 
   '</div>'+
 
-  /* 回踩入場區 */
+  /* =========================
+     波段入場
+  ========================= */
 
   '<div class="big-section-title">'+
-    '🎯 入場觀察區'+
+    '🎯 波段入場觀察區'+
   '</div>'+
 
   '<div class="entry-card">'+
@@ -2307,7 +3242,9 @@ function buildAnalysis(data){
       '策略計算中心價 '+
       fmt(center)+
       ' · 距現價 '+
-      Math.abs(distanceEntry).toFixed(1)+
+      Math.abs(
+        distanceEntry
+      ).toFixed(1)+
       '%'+
     '</div>'+
 
@@ -2318,7 +3255,9 @@ function buildAnalysis(data){
     '</div>'+
 
     '<div class="reason-tags">'+
-      renderTags(reasons)+
+      renderTags(
+        reasons
+      )+
     '</div>'+
 
     '<div class="detail-text">'+
@@ -2327,10 +3266,12 @@ function buildAnalysis(data){
 
   '</div>'+
 
-  /* 回踩詳細 */
+  /* =========================
+     波段詳細
+  ========================= */
 
   '<div class="big-section-title">'+
-    '🟢 支撐回踩波段'+
+    '🟢 支撐回踩判讀'+
   '</div>'+
 
   '<div class="strategy-card green">'+
@@ -2341,48 +3282,16 @@ function buildAnalysis(data){
 
     '<div class="strategy-status">'+
       '目前狀態：<strong>'+
-      safe(swingStatus)+
+      safe(
+        swingStatus
+      )+
       '</strong>'+
     '</div>'+
 
     '<div class="check-list">'+
-      renderChecks(swingChecks)+
-    '</div>'+
-
-    '<div class="level-grid">'+
-
-      level(
-        "📍 入場觀察區",
-        fmt(entryLow)+
-        " ～ "+
-        fmt(entryHigh),
-        ""
+      renderChecks(
+        swingChecks
       )+
-
-      level(
-        "🛑 SL",
-        fmt(stop),
-        "stop"
-      )+
-
-      level(
-        "💰 TP1 · 1.5R",
-        fmt(tp1),
-        "tp"
-      )+
-
-      level(
-        "💰 TP2 · 2.5R",
-        fmt(tp2),
-        "tp"
-      )+
-
-      level(
-        "🔥 TP3 · 4R",
-        fmt(tp3),
-        "tp3"
-      )+
-
     '</div>'+
 
     '<div class="explain-box">'+
@@ -2392,7 +3301,7 @@ function buildAnalysis(data){
   '</div>'+
 
   /* =========================
-     高 R 大字總覽
+     高 R 總覽
   ========================= */
 
   '<div class="big-section-title">'+
@@ -2416,54 +3325,54 @@ function buildAnalysis(data){
     )+
 
     overviewRow(
-      "🎯 突破壓力",
+      "20 日突破壓力",
       fmt(resistance),
       ""
     )+
 
-    overviewRow(
-      "📍 高 R 回測區",
-      fmt(breakLow)+
-      " ～ "+
-      fmt(breakHigh),
-      "purple"
-    )+
+    '<div class="divider"></div>'+
 
-    overviewRow(
-      "策略中心價",
-      fmt(breakCenter),
-      ""
-    )+
+    '<div class="target-stack">'+
 
-    overviewRow(
-      "💰 高 R TP1 · 2R",
-      fmt(highTp1),
-      "green"
-    )+
+      targetBox(
+        "📍 高 R 回測入場區",
+        fmt(breakLow)+
+        " ～ "+
+        fmt(breakHigh),
+        "purple"
+      )+
 
-    overviewRow(
-      "💰 高 R TP2 · 3R",
-      fmt(highTp2),
-      "green"
-    )+
+      targetBox(
+        "💰 高 R TP1 · 2R",
+        fmt(highTp1),
+        "tp"
+      )+
 
-    overviewRow(
-      "🔥 高 R TP3 · 5R",
-      fmt(highTp3),
-      "yellow"
-    )+
+      targetBox(
+        "💰 高 R TP2 · 3R",
+        fmt(highTp2),
+        "tp"
+      )+
 
-    overviewRow(
-      "🚀 延伸目標 · 7R",
-      fmt(highExtend),
-      "purple"
-    )+
+      targetBox(
+        "🔥 高 R TP3 · 5R",
+        fmt(highTp3),
+        "tp3"
+      )+
 
-    overviewRow(
-      "🛑 高 R SL",
-      fmt(breakStop),
-      "red"
-    )+
+      targetBox(
+        "🚀 延伸目標 · 7R",
+        fmt(highExtend),
+        "extend"
+      )+
+
+      targetBox(
+        "🛑 高 R SL",
+        fmt(breakStop),
+        "stop"
+      )+
+
+    '</div>'+
 
     '<div class="divider"></div>'+
 
@@ -2475,21 +3384,21 @@ function buildAnalysis(data){
       fmt(breakLow)+
       ' ～ '+
       fmt(breakHigh)+
-      ' 的突破回測區。'+
-
-      '策略中心價為 '+
+      ' 的突破回測區。策略中心價為 '+
       fmt(breakCenter)+
       '，SL 為 '+
       fmt(breakStop)+
       '，因此 1R 約為 '+
       fmt(breakRisk)+
-      '。TP1 / TP2 / TP3 分別以 2R、3R、5R 計算，另保留 7R 延伸目標。'+
+      '。'+
 
     '</div>'+
 
   '</div>'+
 
-  /* 高 R 入場區 */
+  /* =========================
+     高 R 入場
+  ========================= */
 
   '<div class="big-section-title">'+
     '🎯 高 R 入場觀察區'+
@@ -2517,26 +3426,41 @@ function buildAnalysis(data){
     '<div class="divider"></div>'+
 
     '<div class="reason-title">'+
-      '高 R 策略怎麼判斷？'+
+      '高 R 策略條件'+
     '</div>'+
 
     '<div class="reason-tags">'+
-      '<div class="reason-tag">20 日壓力</div>'+
-      '<div class="reason-tag">突破確認</div>'+
-      '<div class="reason-tag">突破後回測</div>'+
-      '<div class="reason-tag">ATR 風控</div>'+
+
+      '<div class="reason-tag">'+
+        '20 日壓力'+
+      '</div>'+
+
+      '<div class="reason-tag">'+
+        '突破確認'+
+      '</div>'+
+
+      '<div class="reason-tag">'+
+        '突破後回測'+
+      '</div>'+
+
+      '<div class="reason-tag">'+
+        'ATR 風控'+
+      '</div>'+
+
     '</div>'+
 
     '<div class="detail-text">'+
-      '系統先找出近 20 日主要壓力，再利用 ATR 建立突破後的回測區。價格突破壓力後，才開始觀察原壓力是否轉成支撐；如果突破後直接離開突破區太遠，系統會提醒距離偏遠。'+
+      '系統先找出近 20 日主要壓力，再利用 ATR 建立突破後的回測區。價格突破壓力後，才開始觀察原壓力是否轉成支撐；若突破後直接離開突破區太遠，系統會提醒距離偏遠。'+
     '</div>'+
 
   '</div>'+
 
-  /* 高 R 詳細 */
+  /* =========================
+     高 R 詳細
+  ========================= */
 
   '<div class="big-section-title">'+
-    '🟣 高 R 突破回測'+
+    '🟣 高 R 突破回測判讀'+
   '</div>'+
 
   '<div class="strategy-card purple">'+
@@ -2547,60 +3471,16 @@ function buildAnalysis(data){
 
     '<div class="strategy-status">'+
       '目前狀態：<strong>'+
-      safe(breakStatus)+
+      safe(
+        breakStatus
+      )+
       '</strong>'+
     '</div>'+
 
     '<div class="check-list">'+
-      renderChecks(breakChecks)+
-    '</div>'+
-
-    '<div class="level-grid">'+
-
-      level(
-        "🎯 突破壓力",
-        fmt(resistance),
-        ""
+      renderChecks(
+        breakChecks
       )+
-
-      level(
-        "📍 回測入場區",
-        fmt(breakLow)+
-        " ～ "+
-        fmt(breakHigh),
-        ""
-      )+
-
-      level(
-        "🛑 SL",
-        fmt(breakStop),
-        "stop"
-      )+
-
-      level(
-        "💰 TP1 · 2R",
-        fmt(highTp1),
-        "tp"
-      )+
-
-      level(
-        "💰 TP2 · 3R",
-        fmt(highTp2),
-        "tp"
-      )+
-
-      level(
-        "🔥 TP3 · 5R",
-        fmt(highTp3),
-        "tp3"
-      )+
-
-      level(
-        "🚀 延伸 · 7R",
-        fmt(highExtend),
-        "extend"
-      )+
-
     '</div>'+
 
     '<div class="r-box">'+
@@ -2651,12 +3531,14 @@ function buildAnalysis(data){
     '</div>'+
 
     '<div class="explain-box">'+
-      '策略邏輯：不是看到突破就直接追價，而是先確認突破，再等待價格回測原壓力區。TP 與 SL 以回測區中心價作為風險報酬計算基準。跌破 SL 代表原突破回測結構需要重新評估；若突破後距離壓力區超過約 1.5 ATR，系統會提醒距離偏遠。'+
+      '高 R 策略不是看到突破就直接追價，而是先確認突破，再等待價格回測原壓力區。TP 與 SL 以回測區中心價作為風險報酬計算基準；若跌破 SL，原突破回測結構需要重新評估。'+
     '</div>'+
 
   '</div>'+
 
-  /* 綜合 */
+  /* =========================
+     綜合
+  ========================= */
 
   '<div class="big-section-title">'+
     '🧠 系統綜合判讀'+
@@ -2665,27 +3547,38 @@ function buildAnalysis(data){
   '<div class="brain-card">'+
 
     '<div class="brain-summary">'+
-      safe(brainSummary)+
+      safe(
+        brainSummary
+      )+
     '</div>'+
 
-    renderBrain(brain)+
+    renderBrain(
+      brain
+    )+
 
   '</div>'+
 
   '<div class="data-note">'+
+
     '資料來源：'+
     safe(
       data.liveSource||
       "FinMind"
     )+
+
     (
       data.latestDate
         ?' · 最新交易日 '+
-         safe(data.latestDate)
+         safe(
+           data.latestDate
+         )
         :''
     )+
+
     '<br>'+
+
     '價格區間、TP、SL 與 R 倍數皆為規則式技術分析結果，用於觀察市場結構，不代表未來價格一定到達目標。'+
+
   '</div>';
 
   el("analysisResult")
@@ -2693,7 +3586,8 @@ function buildAnalysis(data){
     html;
 
   el("favoriteButton")
-    .onclick=function(){
+    .onclick=
+    function(){
 
       toggleFavorite(
         currentStock
@@ -2704,19 +3598,26 @@ function buildAnalysis(data){
 }
 
 /* =========================
-   畫面元件
+   HTML 元件
 ========================= */
 
-function indicator(name,value){
+function indicator(
+  name,
+  value
+){
 
   return (
+
     '<div class="indicator">'+
+
       '<span>'+
         safe(name)+
       '</span>'+
+
       '<strong>'+
         safe(value)+
       '</strong>'+
+
     '</div>'
   );
 }
@@ -2728,80 +3629,112 @@ function overviewRow(
 ){
 
   return (
+
     '<div class="overview-row">'+
+
       '<div class="overview-label">'+
         safe(label)+
       '</div>'+
+
       '<div class="overview-value '+
         safe(color||"")+
       '">'+
         safe(value)+
       '</div>'+
+
     '</div>'
   );
 }
 
-function level(
-  name,
+/*
+  新版：
+  TP / SL / 入場區
+  一個一個上下排
+*/
+
+function targetBox(
+  label,
   value,
   type
 ){
 
   return (
-    '<div class="level-box '+
+
+    '<div class="target-box '+
       safe(type||"")+
     '">'+
-      '<span>'+
-        safe(name)+
-      '</span>'+
-      '<strong>'+
+
+      '<div class="target-label">'+
+        safe(label)+
+      '</div>'+
+
+      '<div class="target-value">'+
         safe(value)+
-      '</strong>'+
+      '</div>'+
+
     '</div>'
   );
 }
 
-function renderTags(tags){
+function renderTags(
+  tags
+){
 
-  return tags.map(function(tag){
+  return tags
+    .map(
+      function(tag){
 
-    return (
-      '<div class="reason-tag">'+
-        safe(tag)+
-      '</div>'
-    );
+        return (
 
-  }).join("");
+          '<div class="reason-tag">'+
+            safe(tag)+
+          '</div>'
+        );
+      }
+    )
+    .join("");
 }
 
-function renderChecks(checks){
+function renderChecks(
+  checks
+){
 
-  return checks.map(function(item){
+  return checks
+    .map(
+      function(item){
 
-    return (
-      '<div class="check '+
-        safe(item[0])+
-      '">'+
-        safe(item[1])+
-      '</div>'
-    );
+        return (
 
-  }).join("");
+          '<div class="check '+
+            safe(item[0])+
+          '">'+
+            safe(item[1])+
+          '</div>'
+        );
+      }
+    )
+    .join("");
 }
 
-function renderBrain(items){
+function renderBrain(
+  items
+){
 
-  return items.map(function(item){
+  return items
+    .map(
+      function(item){
 
-    return (
-      '<div class="brain-item '+
-        safe(item[0])+
-      '">'+
-        safe(item[1])+
-      '</div>'
-    );
+        return (
 
-  }).join("");
+          '<div class="brain-item '+
+            safe(item[0])+
+          '">'+
+            safe(item[1])+
+          '</div>'
+        );
+      }
+    )
+    .join("");
 }
 
 /* =========================
@@ -2809,7 +3742,7 @@ function renderBrain(items){
 ========================= */
 
 el("refreshButton")
-  .onclick=
+.onclick=
   loadRadar;
 
 async function loadRadar(){
@@ -2820,14 +3753,16 @@ async function loadRadar(){
       await fetch(
         "/api/radar?t="+
         Date.now(),
-        {cache:"no-store"}
+        {
+          cache:"no-store"
+        }
       );
 
     var data=
       await response.json();
 
     if(
-      !response.ok||
+      !response.ok ||
       !data.ok
     ){
 
@@ -2836,15 +3771,22 @@ async function loadRadar(){
       );
     }
 
-    radarData=data;
+    radarData=
+      data;
 
     el("scanCount")
       .textContent=
-      fmt(data.scanned,0);
+      fmt(
+        data.scanned,
+        0
+      );
 
     el("radarCount")
       .textContent=
-      fmt(data.found,0);
+      fmt(
+        data.found,
+        0
+      );
 
     el("longCount")
       .textContent=
@@ -2855,6 +3797,7 @@ async function loadRadar(){
 
     el("updateText")
       .textContent=
+
       "FinMind Sponsor 即時資料 · 更新 "+
       new Date()
       .toLocaleTimeString(
@@ -2873,7 +3816,8 @@ async function loadRadar(){
       false
     );
 
-    countdownSeconds=300;
+    countdownSeconds=
+      300;
 
   }catch(error){
 
@@ -2896,7 +3840,7 @@ function renderStocks(
 
     root.innerHTML=
       '<div class="card">'+
-      '目前沒有符合條件的股票'+
+        '目前沒有符合條件的股票'+
       '</div>';
 
     return;
@@ -2904,9 +3848,10 @@ function renderStocks(
 
   var html="";
 
-  list.forEach(function(stock){
+  list.forEach(
+    function(stock){
 
-    html+=
+      html+=
 
       '<article class="stock-card '+
       (
@@ -2917,7 +3862,9 @@ function renderStocks(
           :""
       )+
       '" data-stock="'+
-      safe(stock.symbol)+
+      safe(
+        stock.symbol
+      )+
       '">'+
 
         '<div class="stock-top">'+
@@ -2925,7 +3872,9 @@ function renderStocks(
           '<div>'+
 
             '<div class="symbol">'+
-              safe(stock.symbol)+
+              safe(
+                stock.symbol
+              )+
             '</div>'+
 
             '<div class="name">'+
@@ -2946,7 +3895,9 @@ function renderStocks(
           '<div class="score">'+
 
             '<strong>'+
-              safe(stock.score)+
+              safe(
+                stock.score
+              )+
             '</strong>'+
 
             '<span>'+
@@ -2960,7 +3911,9 @@ function renderStocks(
         '<div class="price-row">'+
 
           '<div class="price">'+
-            fmt(stock.price)+
+            fmt(
+              stock.price
+            )+
           '</div>'+
 
           '<div class="'+
@@ -2988,7 +3941,9 @@ function renderStocks(
 
           '<div class="chip">'+
             '高點 '+
-            fmt(stock.high)+
+            fmt(
+              stock.high
+            )+
           '</div>'+
 
           '<div class="chip">'+
@@ -3003,7 +3958,8 @@ function renderStocks(
         '</div>'+
 
       '</article>';
-  });
+    }
+  );
 
   root.innerHTML=
     html;
@@ -3012,60 +3968,81 @@ function renderStocks(
   .querySelectorAll(
     "[data-stock]"
   )
-  .forEach(function(card){
+  .forEach(
+    function(card){
 
-    card.onclick=function(){
+      card.onclick=
+        function(){
 
-      var symbol=
-        this.dataset.stock;
+          var symbol=
+            this.dataset.stock;
 
-      el("symbolInput")
-        .value=
-        symbol;
+          el("symbolInput")
+            .value=
+            symbol;
 
-      analyze(symbol);
-    };
-  });
+          analyze(
+            symbol
+          );
+        };
+    }
+  );
 }
 
 /* =========================
-   五分鐘自動更新
+   5 分鐘更新
 ========================= */
 
-setInterval(function(){
+setInterval(
+  function(){
 
-  countdownSeconds--;
+    countdownSeconds--;
 
-  if(
-    countdownSeconds<=0
-  ){
+    if(
+      countdownSeconds<=0
+    ){
 
-    countdownSeconds=300;
+      countdownSeconds=
+        300;
 
-    loadRadar();
-  }
+      loadRadar();
+    }
 
-  var minutes=
-    Math.floor(
-      countdownSeconds/60
-    );
+    var minutes=
+      Math.floor(
+        countdownSeconds/
+        60
+      );
 
-  var seconds=
-    countdownSeconds%60;
+    var seconds=
+      countdownSeconds%
+      60;
 
-  el("countdown")
-    .textContent=
-    String(minutes)
-      .padStart(2,"0")+
-    ":"+
-    String(seconds)
-      .padStart(2,"0");
+    el("countdown")
+      .textContent=
 
-},1000);
+      String(minutes)
+      .padStart(
+        2,
+        "0"
+      )+
+      ":"+
+      String(seconds)
+      .padStart(
+        2,
+        "0"
+      );
 
-/* 啟動 */
+  },
+  1000
+);
+
+/* =========================
+   啟動
+========================= */
 
 renderWatchlist();
+
 loadRadar();
 
 </script>
