@@ -1,7 +1,5 @@
 export default async function handler(req, res) {
-
   try {
-
     const raw = String(req.query.symbol || "")
       .trim()
       .toUpperCase();
@@ -17,364 +15,240 @@ export default async function handler(req, res) {
       ? `${raw}.TW`
       : raw;
 
+    /*
+      只向 Yahoo 發送一次請求
+      6mo / 1d：
+      - rows 給 MA、RSI、MACD、ATR、支撐壓力
+      - meta.regularMarketPrice 給最新行情
+    */
 
-    const headers = {
-      "User-Agent":
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-      "Accept": "application/json"
-    };
+    const url =
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
+      `?range=6mo&interval=1d&includePrePost=false&events=div%2Csplits`;
 
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
+        "Accept": "application/json,text/plain,*/*",
+        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8"
+      }
+    });
 
-    /* =====================================
-       1. 六個月日 K
-       給 MA / RSI / MACD / ATR / 支撐壓力
-    ===================================== */
+    if (!response.ok) {
+      console.error(
+        "Yahoo HTTP error:",
+        response.status,
+        response.statusText
+      );
 
-    const dailyUrl =
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d&includePrePost=false`;
-
-
-    /* =====================================
-       2. 今日 1 分鐘資料
-       給最新價格
-    ===================================== */
-
-    const liveUrl =
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=1m&includePrePost=false`;
-
-
-    const [dailyResponse, liveResponse] =
-      await Promise.all([
-        fetch(dailyUrl,{headers}),
-        fetch(liveUrl,{headers})
-      ]);
-
-
-    if (!dailyResponse.ok) {
-      throw new Error("歷史行情資料暫時無法取得");
+      throw new Error(
+        `Yahoo 行情暫時無法取得 (${response.status})`
+      );
     }
 
+    const data = await response.json();
 
-    const dailyData =
-      await dailyResponse.json();
+    const result =
+      data?.chart?.result?.[0];
 
-
-    const dailyResult =
-      dailyData?.chart?.result?.[0];
-
-
-    if (!dailyResult) {
+    if (!result) {
+      const yahooError =
+        data?.chart?.error?.description;
 
       return res.status(404).json({
-        error:"找不到這個股票代號"
+        error:
+          yahooError ||
+          "找不到這個股票代號"
       });
-
     }
 
-
-    /* =====================================
-       日 K
-    ===================================== */
+    const meta =
+      result.meta || {};
 
     const quote =
-      dailyResult.indicators?.quote?.[0] || {};
+      result.indicators?.quote?.[0] || {};
 
     const timestamps =
-      dailyResult.timestamp || [];
+      result.timestamp || [];
 
+    /*
+      歷史日 K
+    */
 
-    const rows =
-      timestamps.map((time,i)=>({
+    const rows = timestamps
+      .map((time, i) => ({
+        time: Number(time),
 
-        time,
+        open:
+          Number(quote.open?.[i]),
 
-        open:Number(quote.open?.[i]),
+        high:
+          Number(quote.high?.[i]),
 
-        high:Number(quote.high?.[i]),
+        low:
+          Number(quote.low?.[i]),
 
-        low:Number(quote.low?.[i]),
+        close:
+          Number(quote.close?.[i]),
 
-        close:Number(quote.close?.[i]),
-
-        volume:Number(quote.volume?.[i])
-
+        volume:
+          Number(quote.volume?.[i])
       }))
-      .filter(x=>
+      .filter(x =>
+        Number.isFinite(x.time) &&
         Number.isFinite(x.close) &&
         Number.isFinite(x.high) &&
         Number.isFinite(x.low)
       );
 
-
     if (rows.length < 30) {
-      throw new Error("歷史行情資料不足");
+      throw new Error(
+        "歷史行情資料不足"
+      );
     }
 
+    /*
+      最新行情
 
-    /* =====================================
-       最新行情
-    ===================================== */
+      優先使用 regularMarketPrice。
+      如果 Yahoo 沒有提供，
+      才退回最新一根日 K close。
+    */
 
-    let livePrice = null;
-    let liveTime = null;
-
-    let previousClose = null;
-
-    let dayHigh = null;
-    let dayLow = null;
+    let livePrice =
+      Number(meta.regularMarketPrice);
 
     let liveSource =
       "Yahoo 最新行情";
 
-
-    if (liveResponse.ok) {
-
-      const liveData =
-        await liveResponse.json();
-
-      const liveResult =
-        liveData?.chart?.result?.[0];
-
-      const meta =
-        liveResult?.meta || {};
-
-
-      /*
-        第一優先：
-        Yahoo meta.regularMarketPrice
-      */
-
-      if (
-        Number.isFinite(
-          Number(meta.regularMarketPrice)
-        )
-      ) {
-
-        livePrice =
-          Number(meta.regularMarketPrice);
-
-      }
-
-
-      if (
-        Number.isFinite(
-          Number(meta.regularMarketTime)
-        )
-      ) {
-
-        liveTime =
-          Number(meta.regularMarketTime);
-
-      }
-
-
-      if (
-        Number.isFinite(
-          Number(meta.previousClose)
-        )
-      ) {
-
-        previousClose =
-          Number(meta.previousClose);
-
-      }
-
-      else if (
-        Number.isFinite(
-          Number(meta.chartPreviousClose)
-        )
-      ) {
-
-        previousClose =
-          Number(meta.chartPreviousClose);
-
-      }
-
-
-      if (
-        Number.isFinite(
-          Number(meta.regularMarketDayHigh)
-        )
-      ) {
-
-        dayHigh =
-          Number(meta.regularMarketDayHigh);
-
-      }
-
-
-      if (
-        Number.isFinite(
-          Number(meta.regularMarketDayLow)
-        )
-      ) {
-
-        dayLow =
-          Number(meta.regularMarketDayLow);
-
-      }
-
-
-      /*
-        第二層：
-        如果 meta 沒有價格，
-        使用最後一根有效 1 分鐘 close
-      */
-
-      if (!Number.isFinite(livePrice)) {
-
-        const minuteQuote =
-          liveResult?.indicators?.quote?.[0];
-
-        const minuteClose =
-          minuteQuote?.close || [];
-
-        const minuteTimes =
-          liveResult?.timestamp || [];
-
-
-        for (
-          let i=minuteClose.length-1;
-          i>=0;
-          i--
-        ) {
-
-          if (
-            Number.isFinite(
-              Number(minuteClose[i])
-            )
-          ) {
-
-            livePrice =
-              Number(minuteClose[i]);
-
-            liveTime =
-              Number(minuteTimes[i]) ||
-              liveTime;
-
-            liveSource =
-              "Yahoo 1分鐘行情";
-
-            break;
-
-          }
-
-        }
-
-      }
-
-    }
-
-
-    /* =====================================
-       如果分鐘行情失敗
-       最後才使用日 K meta
-    ===================================== */
-
-    const dailyMeta =
-      dailyResult.meta || {};
-
-
     if (!Number.isFinite(livePrice)) {
+      livePrice =
+        rows.at(-1).close;
 
-      if (
-        Number.isFinite(
-          Number(dailyMeta.regularMarketPrice)
-        )
-      ) {
-
-        livePrice =
-          Number(
-            dailyMeta.regularMarketPrice
-          );
-
-        liveTime =
-          Number(
-            dailyMeta.regularMarketTime
-          ) || null;
-
-        liveSource =
-          "Yahoo 市場行情";
-
-      }
-
-      else {
-
-        livePrice =
-          rows.at(-1).close;
-
-        liveTime =
-          rows.at(-1).time;
-
-        liveSource =
-          "最新日K收盤價";
-
-      }
-
+      liveSource =
+        "最新日K收盤價";
     }
 
+    /*
+      行情時間
+    */
+
+    let liveTime =
+      Number(meta.regularMarketTime);
+
+    if (!Number.isFinite(liveTime)) {
+      liveTime =
+        rows.at(-1).time;
+    }
+
+    /*
+      昨收
+    */
+
+    let previousClose =
+      Number(meta.previousClose);
 
     if (!Number.isFinite(previousClose)) {
-
       previousClose =
-        Number(
-          dailyMeta.previousClose ??
-          dailyMeta.chartPreviousClose
-        );
-
+        Number(meta.chartPreviousClose);
     }
 
+    /*
+      再沒有昨收時，
+      使用倒數第二根日 K
+    */
 
-    /* =====================================
-       漲跌
-    ===================================== */
+    if (
+      !Number.isFinite(previousClose) &&
+      rows.length >= 2
+    ) {
+      previousClose =
+        rows.at(-2).close;
+    }
+
+    /*
+      今日高低
+
+      Yahoo 的 chart meta 不一定都會提供
+      regularMarketDayHigh / DayLow，
+      所以先嘗試 meta。
+    */
+
+    let dayHigh =
+      Number(meta.regularMarketDayHigh);
+
+    let dayLow =
+      Number(meta.regularMarketDayLow);
+
+    /*
+      如果 meta 沒有，
+      使用最後一根日 K 高低作備援。
+    */
+
+    if (!Number.isFinite(dayHigh)) {
+      dayHigh =
+        rows.at(-1).high;
+    }
+
+    if (!Number.isFinite(dayLow)) {
+      dayLow =
+        rows.at(-1).low;
+    }
+
+    /*
+      漲跌
+    */
 
     let change = null;
     let changePercent = null;
-
 
     if (
       Number.isFinite(livePrice) &&
       Number.isFinite(previousClose) &&
       previousClose !== 0
     ) {
-
       change =
         livePrice - previousClose;
 
       changePercent =
-        change / previousClose * 100;
-
+        (change / previousClose) * 100;
     }
 
-
-    /* =====================================
-       回傳
-    ===================================== */
+    /*
+      不要讓 Vercel 快取太久
+    */
 
     res.setHeader(
       "Cache-Control",
-      "s-maxage=5, stale-while-revalidate=10"
+      "public, s-maxage=5, stale-while-revalidate=10"
     );
 
-
     return res.status(200).json({
-
       symbol:
-        dailyMeta.symbol || symbol,
+        meta.symbol || symbol,
 
       name:
-        dailyMeta.shortName ||
-        dailyMeta.longName ||
-        dailyMeta.symbol ||
+        meta.shortName ||
+        meta.longName ||
+        meta.symbol ||
         symbol,
 
       currency:
-        dailyMeta.currency || "",
+        meta.currency || "",
 
+      exchange:
+        meta.exchangeName || "",
 
-      // 最新行情
-      price:livePrice,
+      marketState:
+        meta.marketState || "",
+
+      /*
+        最新行情
+      */
+
+      price:
+        livePrice,
 
       livePrice,
 
@@ -392,27 +266,23 @@ export default async function handler(req, res) {
 
       dayLow,
 
+      /*
+        技術分析歷史資料
+      */
 
-      // 技術分析用日 K
       rows
-
     });
 
-
-  }
-
-  catch(error) {
-
-    console.error(error);
+  } catch (error) {
+    console.error(
+      "stock API error:",
+      error
+    );
 
     return res.status(500).json({
-
       error:
         error?.message ||
         "股票資料取得失敗"
-
     });
-
   }
-
 }
