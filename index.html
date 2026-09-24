@@ -194,6 +194,23 @@ button{cursor:pointer}
 .condition-row:last-child{border-bottom:0}
 .strategy-status{margin-top:14px;padding:12px 13px;border-radius:13px;background:#0b0f0c;font-weight:950}
 
+.zone-card{margin-top:14px;border:1px solid #292e2b;border-radius:17px;background:#070908;padding:15px}
+.zone-card.support-zone{border-color:rgba(69,224,173,.28)}
+.zone-card.resistance-zone{border-color:rgba(255,105,118,.28)}
+.zone-card.breakout-zone{border-color:rgba(112,183,255,.28)}
+.zone-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.zone-title{font-size:15px;font-weight:950}
+.zone-value{font-size:18px;font-weight:950;text-align:right}
+.zone-score{font-size:11px;color:#8d938f;margin-top:7px}
+.zone-reasons{margin-top:11px}
+.zone-reason{padding:6px 0;border-bottom:1px solid #1e231f;font-size:12px;line-height:1.7}
+.zone-reason:last-child{border-bottom:0}
+.breakout-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.breakout-item{background:#050706;border:1px solid #202522;border-radius:12px;padding:11px}
+.breakout-item span{display:block;color:#858b87;font-size:9px}
+.breakout-item strong{display:block;margin-top:5px;font-size:14px}
+.source-note{margin-top:10px;color:#747a76;font-size:10px;line-height:1.7}
+
 .kbar-card{background:#080b09;border:1px solid #292e2b;border-radius:24px;padding:16px;overflow:hidden}
 .kbar-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:13px}
 .kbar-title{font-size:20px;font-weight:950}
@@ -440,6 +457,557 @@ target.scrollIntoView({behavior:"smooth",block:"start"});
 target.classList.remove("strategy-flash");
 setTimeout(function(){target.classList.add("strategy-flash")},450);
 }
+
+/* ===== 4.5 新增：Swing / 支撐 / 壓力分析 ===== */
+
+function findSwingPoints(rows){
+var data=rows.slice(-240);
+var highs=[],lows=[];
+
+for(var i=3;i<data.length-3;i++){
+var h=+data[i].high;
+var l=+data[i].low;
+
+if(
+h>+data[i-1].high&&h>+data[i-2].high&&h>+data[i-3].high&&
+h>=+data[i+1].high&&h>=+data[i+2].high&&h>=+data[i+3].high
+){
+highs.push({price:h,index:i,date:data[i].date||""});
+}
+
+if(
+l<+data[i-1].low&&l<+data[i-2].low&&l<+data[i-3].low&&
+l<=+data[i+1].low&&l<=+data[i+2].low&&l<=+data[i+3].low
+){
+lows.push({price:l,index:i,date:data[i].date||""});
+}
+}
+
+return{highs:highs,lows:lows,data:data};
+}
+
+function countZoneTouches(rows,low,high,type){
+var data=rows.slice(-120);
+var count=0,last=-10;
+
+for(var i=0;i<data.length;i++){
+var touched=type==="support"
+?+data[i].low<=high&&+data[i].high>=low
+:+data[i].high>=low&&+data[i].low<=high;
+
+if(touched&&i-last>=3){
+count++;
+last=i;
+}
+}
+
+return count;
+}
+
+function recentClosesHold(rows,level,n){
+var d=rows.slice(-(n||3));
+if(!d.length)return false;
+return d.every(x=>+x.close>=level);
+}
+
+function findOverheadSwingHighs(rows,reference,atr){
+var s=findSwingPoints(rows);
+var highs=s.highs
+.filter(x=>x.price>reference+atr*.12)
+.sort((a,b)=>a.price-b.price);
+
+var out=[];
+
+highs.forEach(x=>{
+if(!out.some(z=>Math.abs(z.price-x.price)<=atr*.35)){
+out.push(x);
+}
+});
+
+return out;
+}
+
+/* 支撐回踩：Swing Low + MA20 + 多次回踩 */
+function analyzePullbackSupport(rows,price,ma20,atr){
+var s=findSwingPoints(rows);
+var candidates=s.lows
+.filter(x=>x.price<price&&price-x.price<=atr*5)
+.sort((a,b)=>b.index-a.index);
+
+var swing=candidates[0]||null;
+var base=swing?swing.price:Math.min(...rows.slice(-10).map(x=>+x.low));
+
+var low=base-atr*.18;
+var high=base+atr*.42;
+
+if(Number.isFinite(ma20)&&Math.abs(ma20-base)<=atr*.8){
+low=Math.min(low,ma20-atr*.22);
+high=Math.max(high,ma20+atr*.22);
+}
+
+var touches=countZoneTouches(rows,low,high,"support");
+var score=0,reasons=[];
+
+if(swing){
+score+=25;
+reasons.push("✓ 近期已確認 Swing Low 位於 "+fmt(swing.price));
+}else{
+reasons.push("△ 近期沒有明確確認 Swing Low");
+}
+
+if(touches>=3){
+score+=20;
+reasons.push("✓ 此區近期至少 "+touches+" 次出現價格反應");
+}else if(touches>=2){
+score+=14;
+reasons.push("✓ 此區近期有 "+touches+" 次回踩／反應");
+}else{
+reasons.push("△ 此區回踩確認次數較少");
+}
+
+if(Number.isFinite(ma20)&&ma20>=low-atr*.15&&ma20<=high+atr*.15){
+score+=20;
+reasons.push("✓ MA20 "+fmt(ma20)+" 與支撐區重疊");
+}else{
+reasons.push("△ MA20 尚未與此支撐形成明顯重疊");
+}
+
+if(recentClosesHold(rows,low,3)){
+score+=15;
+reasons.push("✓ 最近日 K 收盤仍守在支撐區下緣之上");
+}else{
+reasons.push("△ 最近收盤對支撐的防守較弱");
+}
+
+if(price>=high&&price-high<=atr*3){
+score+=10;
+reasons.push("✓ 目前價格距離支撐仍在合理 ATR 範圍");
+}
+
+if(price>low)score+=10;
+
+score=clamp(score,0,100);
+
+return{
+valid:score>=60&&price>low,
+low:low,
+high:high,
+center:(low+high)/2,
+score:score,
+reasons:reasons,
+label:"回踩有效支撐"
+};
+}
+
+/* 高 R：只認突破壓力後「壓轉撐」 */
+function analyzeHighRSupport(rows,price,resistance,atr,ma20){
+var low=resistance-atr*.25;
+var high=resistance+atr*.20;
+var data=rows.slice(-35);
+
+var breakoutIndex=-1;
+
+for(var i=0;i<data.length;i++){
+if(+data[i].close>resistance+atr*.05){
+breakoutIndex=i;
+break;
+}
+}
+
+var retest=false;
+var hold=false;
+
+if(breakoutIndex>=0){
+for(var j=breakoutIndex+1;j<data.length;j++){
+if(+data[j].low<=high&&+data[j].close>=low){
+retest=true;
+break;
+}
+}
+}
+
+hold=recentClosesHold(rows,low,2);
+
+var touches=countZoneTouches(rows,low,high,"support");
+var score=0,reasons=[];
+
+if(breakoutIndex>=0){
+score+=30;
+reasons.push("✓ 日 K 曾有效收上原 20 日壓力 "+fmt(resistance));
+}else{
+reasons.push("△ 尚未確認突破原 20 日壓力");
+}
+
+if(retest){
+score+=30;
+reasons.push("✓ 突破後曾回測原壓力區並收回，具壓轉撐特徵");
+}else{
+reasons.push("△ 尚未出現明確突破後回測確認");
+}
+
+if(hold){
+score+=15;
+reasons.push("✓ 最近收盤仍守住壓轉撐區");
+}else{
+reasons.push("△ 最近收盤尚未穩定守住壓轉撐區");
+}
+
+if(touches>=2){
+score+=10;
+reasons.push("✓ 此區已有 "+touches+" 次價格接觸反應");
+}
+
+if(Number.isFinite(ma20)&&ma20<=high+atr&&price>ma20){
+score+=5;
+reasons.push("✓ 價格仍位於 MA20 上方");
+}
+
+if(price>=low)score+=10;
+
+score=clamp(score,0,100);
+
+return{
+valid:breakoutIndex>=0&&retest&&hold&&score>=60&&price>=low,
+low:low,
+high:high,
+center:resistance,
+score:score,
+reasons:reasons,
+label:"突破壓轉撐"
+};
+}
+
+/* 強勢續攻：近期 Higher Low / 續攻平台 */
+function analyzeSurgeSupport(rows,price,ma20,atr){
+var s=findSwingPoints(rows);
+var lows=s.lows
+.filter(x=>x.price<price&&price-x.price<=atr*4)
+.sort((a,b)=>b.index-a.index);
+
+var latest=lows[0]||null;
+var previous=lows[1]||null;
+
+var base=latest?latest.price:Math.min(...rows.slice(-5).map(x=>+x.low));
+var low=base-atr*.16;
+var high=base+atr*.32;
+
+var score=0,reasons=[];
+
+if(latest){
+score+=25;
+reasons.push("✓ 最近續攻結構低點位於 "+fmt(latest.price));
+}else{
+reasons.push("△ 尚未形成清楚的近期續攻低點");
+}
+
+if(latest&&previous&&latest.price>previous.price){
+score+=20;
+reasons.push("✓ 最近 Swing Low 高於前一個低點，形成 Higher Low");
+}else{
+reasons.push("△ Higher Low 結構尚未完全確認");
+}
+
+var touches=countZoneTouches(rows,low,high,"support");
+
+if(touches>=2){
+score+=15;
+reasons.push("✓ 近期此區已有 "+touches+" 次價格反應");
+}else{
+reasons.push("△ 續攻支撐測試次數較少");
+}
+
+if(Number.isFinite(ma20)&&price>ma20){
+score+=15;
+reasons.push("✓ 目前價格維持在 MA20 上方");
+}
+
+if(recentClosesHold(rows,low,3)){
+score+=15;
+reasons.push("✓ 最近日 K 收盤未有效跌破續攻支撐");
+}else{
+reasons.push("△ 最近收盤對續攻支撐的防守較弱");
+}
+
+if(price-base<=atr*3.5){
+score+=10;
+reasons.push("✓ 目前價格沒有過度遠離續攻支撐");
+}
+
+score=clamp(score,0,100);
+
+return{
+valid:score>=60&&price>low,
+low:low,
+high:high,
+center:(low+high)/2,
+score:score,
+reasons:reasons,
+label:"續攻內部支撐"
+};
+}
+
+function analyzeResistance(rows,reference,atr,type,resistance20){
+var highs=findOverheadSwingHighs(rows,reference,atr);
+var h=highs[0]||null;
+
+if(!h){
+return{
+valid:false,
+low:NaN,
+high:NaN,
+center:NaN,
+score:0,
+reasons:[
+"△ 目前價格上方沒有明確可用的歷史 Swing High",
+"✓ 系統將改用 ATR、風險 R 倍數與趨勢延伸推算技術目標"
+],
+next:highs
+};
+}
+
+var low=h.price-atr*.22;
+var high=h.price+atr*.22;
+var touches=countZoneTouches(rows,low,high,"resistance");
+var score=0,reasons=[];
+
+score+=30;
+reasons.push("✓ 歷史 Swing High 位於 "+fmt(h.price));
+
+if(touches>=3){
+score+=25;
+reasons.push("✓ 此區歷史至少 "+touches+" 次出現價格反應／受壓");
+}else if(touches>=2){
+score+=18;
+reasons.push("✓ 此區歷史有 "+touches+" 次價格反應");
+}else{
+score+=8;
+reasons.push("△ 此區歷史反應次數較少");
+}
+
+if(h.price>reference){
+score+=15;
+reasons.push("✓ 此壓力仍位於目前策略參考價上方");
+}
+
+if(Number.isFinite(resistance20)&&Math.abs(h.price-resistance20)<=atr*.6){
+score+=15;
+reasons.push("✓ 與近期 20 日壓力位置接近，形成壓力重疊");
+}
+
+var dist=(h.price-reference)/atr;
+
+if(dist>0&&dist<=6){
+score+=15;
+reasons.push("✓ 距離目前策略價格約 "+fmt((h.price/reference-1)*100,2)+"%");
+}
+
+score=clamp(score,0,100);
+
+return{
+valid:true,
+low:low,
+high:high,
+center:h.price,
+score:score,
+reasons:reasons,
+next:highs,
+type:type
+};
+}
+
+function buildTargets(entry,finalStop,atr,multipliers,resistanceInfo,extraHighs){
+var risk=entry-finalStop;
+if(!(risk>0))risk=atr;
+
+var rr=[
+entry+risk*multipliers[0],
+entry+risk*multipliers[1],
+entry+risk*multipliers[2]
+];
+
+var candidates=[];
+
+if(resistanceInfo&&resistanceInfo.valid){
+candidates.push(resistanceInfo.center);
+}
+
+(extraHighs||[]).forEach(x=>{
+var p=Number(x.price);
+if(p>entry+atr*.12&&!candidates.some(v=>Math.abs(v-p)<=atr*.3)){
+candidates.push(p);
+}
+});
+
+candidates.sort((a,b)=>a-b);
+
+var tp1,label1;
+var tp2,label2;
+var tp3,label3;
+
+if(candidates.length){
+tp1=candidates[0];
+label1="💰 TP1｜前高止盈";
+
+if(candidates.length>1&&candidates[1]>tp1+atr*.25){
+tp2=candidates[1];
+label2="💰 TP2｜下一歷史壓力";
+}else{
+tp2=Math.max(rr[1],tp1+atr*.8);
+label2="💰 TP2｜系統推算";
+}
+
+tp3=Math.max(rr[2],tp2+atr);
+label3="🔥 TP3｜延伸目標";
+}else{
+tp1=rr[0];
+tp2=Math.max(rr[1],tp1+atr*.5);
+tp3=Math.max(rr[2],tp2+atr*.8);
+
+label1="💰 TP1｜系統推算";
+label2="💰 TP2｜系統推算";
+label3="🔥 TP3｜延伸目標";
+}
+
+if(tp1<=entry)tp1=rr[0];
+if(tp2<=tp1)tp2=tp1+Math.max(atr,risk*.5);
+if(tp3<=tp2)tp3=tp2+Math.max(atr,risk*.75);
+
+return{
+tp1:tp1,tp2:tp2,tp3:tp3,
+label1:label1,label2:label2,label3:label3,
+risk:risk,
+hasHistorical:!!candidates.length
+};
+}
+
+function supportZoneHTML(title,s){
+var status=s.valid?"有效支撐":"支撐尚未確認";
+
+return'<div class="zone-card support-zone">'+
+'<div class="zone-head">'+
+'<div><div class="zone-title">🟢 '+safe(title)+'</div>'+
+'<div class="zone-score">支撐強度：'+s.score+' / 100 · '+status+'</div></div>'+
+'<div class="zone-value good">'+fmt(s.low)+' ～ '+fmt(s.high)+'</div>'+
+'</div>'+
+'<div class="zone-reasons">'+
+s.reasons.map(x=>'<div class="zone-reason">'+safe(x)+'</div>').join("")+
+'</div>'+
+'<div class="source-note">強度分數代表技術結構符合程度，不代表上漲機率。</div>'+
+'</div>';
+}
+
+function resistanceZoneHTML(title,r,reference){
+if(!r.valid){
+return'<div class="zone-card resistance-zone">'+
+'<div class="zone-title">🔴 '+safe(title)+'</div>'+
+'<div class="zone-score">目前無明確上方歷史前高</div>'+
+'<div class="zone-reasons">'+
+r.reasons.map(x=>'<div class="zone-reason">'+safe(x)+'</div>').join("")+
+'</div></div>';
+}
+
+var distance=(r.center/reference-1)*100;
+
+return'<div class="zone-card resistance-zone">'+
+'<div class="zone-head">'+
+'<div><div class="zone-title">🔴 '+safe(title)+'</div>'+
+'<div class="zone-score">壓力強度：'+r.score+' / 100 · 距離約 '+fmt(distance,2)+'%</div></div>'+
+'<div class="zone-value down">'+fmt(r.low)+' ～ '+fmt(r.high)+'</div>'+
+'</div>'+
+'<div class="zone-reasons">'+
+r.reasons.map(x=>'<div class="zone-reason">'+safe(x)+'</div>').join("")+
+'</div>'+
+'</div>';
+}
+
+function breakoutAnalysisHTML(r,targets,reference,atr){
+var confirmLow,confirmHigh,dist,nextText;
+
+if(r.valid){
+confirmLow=r.high;
+confirmHigh=r.high+atr*.35;
+dist=(r.center-reference)/reference*100;
+nextText=fmt(targets.tp2);
+}else{
+confirmLow=reference+atr*.25;
+confirmHigh=reference+atr*.55;
+dist=NaN;
+nextText="無明確歷史前高";
+}
+
+return'<div class="zone-card breakout-zone">'+
+'<div class="zone-title">📈 前高壓力與突破目標</div>'+
+'<div class="breakout-grid">'+
+
+'<div class="breakout-item"><span>前高壓力</span><strong>'+
+(r.valid?fmt(r.center):"無明確前高")+
+'</strong></div>'+
+
+'<div class="breakout-item"><span>距離突破</span><strong>'+
+(Number.isFinite(dist)?pct(dist):"創高／無前高")+
+'</strong></div>'+
+
+'<div class="breakout-item"><span>突破確認區</span><strong>'+
+fmt(confirmLow)+' ～ '+fmt(confirmHigh)+
+'</strong></div>'+
+
+'<div class="breakout-item"><span>突破後下一目標</span><strong>'+
+nextText+
+'</strong></div>'+
+
+'<div class="breakout-item"><span>🚀 突破後上看</span><strong class="good">'+
+fmt(targets.tp1)+' ～ '+fmt(targets.tp2)+
+'</strong></div>'+
+
+'<div class="breakout-item"><span>🔥 強勢延伸目標</span><strong class="warn">'+
+fmt(targets.tp3)+
+'</strong></div>'+
+
+'</div>'+
+'<div class="source-note">'+
+(r.valid
+?"歷史前高優先作為壓力與止盈參考；突破後再觀察是否站穩確認區。"
+:"上方沒有明確歷史前高，因此目標改由 ATR、策略風險 R 倍數與價格延伸推算。")+
+' 技術目標不代表價格一定會到達。'+
+'</div></div>';
+}
+
+function stopBoxesHTML(supportInfo,entry,sl2,atr,label){
+var html="";
+var sl1=supportInfo.low-atr*.22;
+
+if(
+supportInfo.valid&&
+Number.isFinite(sl1)&&
+sl1>sl2&&
+sl1<entry
+){
+html+=targetBox("🟡 SL1｜"+label,fmt(sl1),"stop");
+
+html+='<div class="source-note" style="margin:7px 4px 2px">'+
+'SL1 依有效支撐區下緣 '+fmt(supportInfo.low)+
+' 再加入 ATR 安全緩衝；屬於較近的內部結構防守。'+
+'</div>';
+
+html+=targetBox("🔴 SL2｜波段結構最終失效",fmt(sl2),"stop");
+}else{
+html+=targetBox("🔴 SL｜日 K 波段結構失效",fmt(sl2),"stop");
+}
+
+return html;
+}
+
+function targetSourceHTML(targets){
+return'<div class="explain-box">'+
+'<div class="explain-title">🎯 止盈目標來源</div>'+
+(targets.hasHistorical
+?"✓ 系統有找到策略價格上方的歷史 Swing High，因此 TP 優先使用前高／歷史壓力。"
+:"△ 上方沒有明確歷史 Swing High，因此使用原策略 R 倍數、ATR 與價格延伸推算技術目標。")+
+'<br>TP2／TP3 若缺乏更高歷史壓力，會自動改用策略原本的 R 倍數延伸。'+
+'</div>';
+}
+
+/* ===== 原本高時間框架結構 ===== */
 
 function findHTFSwingStructure(rows){
 var data=rows.slice(-120),p=[];
@@ -863,6 +1431,8 @@ return'<div class="matcher '+box+'">'+
 '</div></div>';
 }
 
+/* ===== 原本回測 ===== */
+
 function backtestIndicators(rows,index){
 var p=rows.slice(0,index+1);
 if(p.length<90)return null;
@@ -1107,6 +1677,8 @@ var icon=ok?"✓":warnOnly?"△":"✕";
 return'<div class="condition-row '+cls+'">'+icon+" "+safe(ok?yes:no)+'</div>';
 }
 
+/* ===== 4.5 主分析：保留原公式 + 增加三策略獨立點位 ===== */
+
 function buildAnalysis(data){
 stopKBarTimer();
 
@@ -1175,6 +1747,72 @@ if(!(bR>0))bR=atr*2;
 var sCenter=price;
 var sR=sCenter-bstop;
 if(!(sR>0))sR=atr*2;
+
+/* ===== 三套策略獨立分析 ===== */
+
+/* 1. 支撐回踩 */
+var pullSupport=analyzePullbackSupport(rows,price,ma20,atr);
+var pullResistance=analyzeResistance(rows,center,atr,"PULLBACK",resistance);
+var pullTargets=buildTargets(
+center,
+stop,
+atr,
+[1.5,2.5,4],
+pullResistance,
+pullResistance.next
+);
+
+/* 2. 高 R 突破回測 */
+var highREntryLow=resistance-atr*.25;
+var highREntryHigh=resistance+atr*.35;
+var highREntryCenter=(highREntryLow+highREntryHigh)/2;
+
+var highRSupport=analyzeHighRSupport(
+rows,price,resistance,atr,ma20
+);
+
+var highRResistance=analyzeResistance(
+rows,
+Math.max(resistance+atr*.15,highREntryCenter),
+atr,
+"HIGH_R",
+resistance
+);
+
+var highRTargets=buildTargets(
+bcenter,
+bstop,
+atr,
+[2,3,5],
+highRResistance,
+highRResistance.next
+);
+
+/* 3. 強勢續攻 */
+var surgeEntryLow=price-atr*.2;
+var surgeEntryHigh=price+atr*.15;
+var surgeEntryCenter=(surgeEntryLow+surgeEntryHigh)/2;
+
+var surgeSupport=analyzeSurgeSupport(
+rows,price,ma20,atr
+);
+
+var surgeResistance=analyzeResistance(
+rows,
+surgeEntryCenter,
+atr,
+"SURGE",
+resistance
+);
+
+var surgeTargets=buildTargets(
+sCenter,
+bstop,
+atr,
+[1.5,2.5,4],
+surgeResistance,
+surgeResistance.next
+);
 
 currentMarketState={
 symbol,market:data.market||"",name:data.name||"",
@@ -1252,18 +1890,69 @@ backtestHTML("🔥 強勢續攻嚴格策略",sb)+
 '<div class="big-section-title">📈 即時 K 線</div>'+
 kbarHTML(data.market)+
 
+/* ===== 支撐回踩 ===== */
+
 '<div id="pullbackStrategy" class="big-section-title">🟢 支撐回踩波段</div>'+
 '<div class="overview-card">'+
+
 overviewRow("目前價格",fmt(price),"")+
-targetBox("📍 建議入場區間",fmt(entryLow)+" ～ "+fmt(entryHigh),"entry")+
-targetBox("TP1 · 1.5R",fmt(center+R*1.5),"tp")+
-targetBox("TP2 · 2.5R",fmt(center+R*2.5),"tp")+
-targetBox("TP3 · 4R",fmt(center+R*4),"tp3")+
-targetBox("🛑 結構失效",fmt(stop),"stop")+
+
+targetBox(
+"📍 建議入場區間",
+fmt(entryLow)+" ～ "+fmt(entryHigh),
+"entry"
+)+
+
+targetBox(
+pullTargets.label1,
+fmt(pullTargets.tp1),
+"tp"
+)+
+
+targetBox(
+pullTargets.label2,
+fmt(pullTargets.tp2),
+"tp"
+)+
+
+targetBox(
+pullTargets.label3,
+fmt(pullTargets.tp3),
+"tp3"
+)+
+
+stopBoxesHTML(
+pullSupport,
+center,
+stop,
+atr,
+"有效支撐失守"
+)+
+
+supportZoneHTML(
+"支撐回踩有效支撐區",
+pullSupport
+)+
+
+resistanceZoneHTML(
+"支撐回踩前高壓力區",
+pullResistance,
+center
+)+
+
+breakoutAnalysisHTML(
+pullResistance,
+pullTargets,
+center,
+atr
+)+
+
+targetSourceHTML(pullTargets)+
 
 '<div class="explain-box">'+
 '<div class="explain-title">📖 策略解說</div>'+
 '等待股價回到 MA20、近期支撐或原本突破區附近，觀察支撐是否守住並重新轉強。這套策略的核心不是追高，而是在趨勢結構仍有效時等待較好的價格位置。'+
+'<br><br>本版保留原本 MA20＋近期支撐＋ATR 入場邏輯；止盈新增歷史前高優先。只有系統確認存在有效內部支撐時，才會顯示較近的 SL1；原本結構失效位保留作為最終防守。'+
 '</div>'+
 
 '<div class="explain-box">'+
@@ -1274,23 +1963,84 @@ conditionLine(pullbackMomentum,"MACD 維持多方","MACD 動能不足",true)+
 conditionLine(pullbackRSI,"RSI 位於回踩策略適合區間","RSI 不在理想回踩區間",true)+
 conditionLine(pullbackPriceNear,"股價已進入回踩觀察區",price>entryHigh?"股價仍高於回踩觀察區":"股價低於回踩觀察區",true)+
 conditionLine(pullbackStructure,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+conditionLine(pullSupport.valid,"已確認可用的內部有效支撐","內部有效支撐尚未確認",true)+
 '<div class="strategy-status '+(recommendation.pullback>=70&&pullbackStructure?"good":"warn")+'">'+
 (recommendation.pullback>=70&&pullbackStructure?"🟢 支撐回踩條件符合度較高 · ":"🟡 支撐回踩目前分數 ")+recommendation.pullback+'/100</div>'+
 '</div></div>'+
 
+/* ===== 高 R ===== */
+
 '<div id="highRStrategy" class="big-section-title">🟣 高 R 突破回測</div>'+
 '<div class="overview-card purple-card">'+
-overviewRow("嚴格模式",strictHighR?"條件符合":"等待確認",strictHighR?"green":"")+
-overviewRow("日 K 結構低點",fmt(structureLow),"")+
-targetBox("📍 建議入場區間",fmt(resistance-atr*.25)+" ～ "+fmt(resistance+atr*.35),"purple")+
-targetBox("💰 TP1 · 2R",fmt(bcenter+bR*2),"tp")+
-targetBox("💰 TP2 · 3R",fmt(bcenter+bR*3),"tp")+
-targetBox("🔥 TP3 · 5R",fmt(bcenter+bR*5),"tp3")+
-targetBox("🛑 日 K 波段結構失效位",fmt(bstop),"stop")+
+
+overviewRow(
+"嚴格模式",
+strictHighR?"條件符合":"等待確認",
+strictHighR?"green":""
+)+
+
+overviewRow(
+"日 K 結構低點",
+fmt(structureLow),
+""
+)+
+
+targetBox(
+"📍 建議入場區間",
+fmt(highREntryLow)+" ～ "+fmt(highREntryHigh),
+"purple"
+)+
+
+targetBox(
+highRTargets.label1,
+fmt(highRTargets.tp1),
+"tp"
+)+
+
+targetBox(
+highRTargets.label2,
+fmt(highRTargets.tp2),
+"tp"
+)+
+
+targetBox(
+highRTargets.label3,
+fmt(highRTargets.tp3),
+"tp3"
+)+
+
+stopBoxesHTML(
+highRSupport,
+bcenter,
+bstop,
+atr,
+"突破壓轉撐失守"
+)+
+
+supportZoneHTML(
+"高 R 突破壓轉撐區",
+highRSupport
+)+
+
+resistanceZoneHTML(
+"突破後下一歷史前高",
+highRResistance,
+bcenter
+)+
+
+breakoutAnalysisHTML(
+highRResistance,
+highRTargets,
+bcenter,
+atr
+)+
+
+targetSourceHTML(highRTargets)+
 
 '<div class="explain-box">'+
 '<div class="explain-title">📖 策略解說</div>'+
 '高 R 策略主要觀察股價突破 20 日壓力後的強度與價格位置。日 K 波段結構低點作為主要失效參考，短週期 K 線主要用來輔助確認進場節奏，不直接取代日 K 結構。主要歷史勝負以 TP1 2R 為基準。'+
+'<br><br>本版保留原本突破區與 2R／3R／5R 基礎；但實際顯示的 TP 會先尋找突破位上方的歷史 Swing High。SL1 只有在原壓力突破後確實回測並形成壓轉撐時才會出現。'+
 '</div>'+
 
 '<div class="explain-box">'+
@@ -1304,24 +2054,85 @@ conditionLine(breakout,"已突破 20 日壓力 "+fmt(resistance),"尚未突破 2
 conditionLine(bd>=0&&bd<=.8,"突破距離沒有過度延伸",bd>.8?"突破後距離偏遠":"目前仍在壓力下方",true)+
 conditionLine(above<=2.5,"與 MA20 距離仍在合理範圍","股價離 MA20 偏遠",true)+
 conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+conditionLine(highRSupport.valid,"原突破壓力已確認形成壓轉撐","突破位尚未確認形成有效支撐",true)+
 '<div class="strategy-status '+(strictHighR?"good":"warn")+'">'+
 (strictHighR?"🟢 高 R 嚴格條件目前符合":"🟡 高 R 尚有條件等待確認")+
 ' · 建議入場分數 '+recommendation.highR+'/100</div>'+
 '</div></div>'+
 
+/* ===== 強勢續攻 ===== */
+
 '<div id="surgeStrategy" class="big-section-title">🔥 強勢續攻波段</div>'+
 '<div class="overview-card surge-card">'+
-overviewRow("嚴格模式",strictSurge?"條件符合":"等待確認",strictSurge?"green":"")+
-overviewRow("日 K 結構低點",fmt(structureLow),"")+
-targetBox("📍 建議入場區間",fmt(price-atr*.2)+" ～ "+fmt(price+atr*.15),"orange")+
-targetBox("💰 TP1 · 1.5R",fmt(sCenter+sR*1.5),"tp")+
-targetBox("💰 TP2 · 2.5R",fmt(sCenter+sR*2.5),"tp")+
-targetBox("🔥 TP3 · 4R",fmt(sCenter+sR*4),"tp3")+
-targetBox("🛑 日 K 波段結構失效位",fmt(bstop),"stop")+
+
+overviewRow(
+"嚴格模式",
+strictSurge?"條件符合":"等待確認",
+strictSurge?"green":""
+)+
+
+overviewRow(
+"日 K 結構低點",
+fmt(structureLow),
+""
+)+
+
+targetBox(
+"📍 建議入場區間",
+fmt(surgeEntryLow)+" ～ "+fmt(surgeEntryHigh),
+"orange"
+)+
+
+targetBox(
+surgeTargets.label1,
+fmt(surgeTargets.tp1),
+"tp"
+)+
+
+targetBox(
+surgeTargets.label2,
+fmt(surgeTargets.tp2),
+"tp"
+)+
+
+targetBox(
+surgeTargets.label3,
+fmt(surgeTargets.tp3),
+"tp3"
+)+
+
+stopBoxesHTML(
+surgeSupport,
+sCenter,
+bstop,
+atr,
+"續攻內部支撐失守"
+)+
+
+supportZoneHTML(
+"強勢續攻內部支撐區",
+surgeSupport
+)+
+
+resistanceZoneHTML(
+"強勢續攻上方前高壓力",
+surgeResistance,
+sCenter
+)+
+
+breakoutAnalysisHTML(
+surgeResistance,
+surgeTargets,
+sCenter,
+atr
+)+
+
+targetSourceHTML(surgeTargets)+
 
 '<div class="explain-box">'+
 '<div class="explain-title">📖 策略解說</div>'+
 '強勢續攻策略觀察已突破壓力、均線維持上升、動能偏強，而且價格沒有過度遠離 MA20 的股票。重點是順著已形成的日 K 趨勢觀察後續延續，而不是在價格明顯過熱時追高。主要歷史勝負以 TP1 1.5R 為基準。'+
+'<br><br>本版保留原本目前價格＋ATR 的續攻入場區，以及 1.5R／2.5R／4R 基礎；同時獨立尋找近期 Higher Low／續攻平台作為內部支撐。上方若存在歷史前高，TP 優先使用前高。'+
 '</div>'+
 
 '<div class="explain-box">'+
@@ -1336,6 +2147,7 @@ conditionLine(breakout,"股價已突破 20 日壓力","尚未突破 20 日壓力
 conditionLine(bd>=.1&&bd<=.9,"突破幅度符合續攻範圍",bd>.9?"突破幅度偏大":"突破強度尚不足",true)+
 conditionLine(above<=2.6,"價格沒有過度遠離 MA20","股價離 MA20 過遠",true)+
 conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+conditionLine(surgeSupport.valid,"近期續攻內部支撐有效","續攻內部支撐尚未確認",true)+
 '<div class="strategy-status '+(strictSurge?"good":"warn")+'">'+
 (strictSurge?"🟢 強勢續攻嚴格條件目前符合":"🟡 強勢續攻尚有條件等待確認")+
 ' · 建議入場分數 '+recommendation.surge+'/100</div>'+
@@ -1343,7 +2155,10 @@ conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波
 
 '<div class="data-note">'+
 '策略分數代表目前技術條件符合程度，不代表未來上漲機率。'+
+'支撐／壓力強度分數代表技術結構符合程度，不代表價格反彈或突破機率。'+
 '4.4 高 R 以先到 2R 為主要歷史勝利；強勢續攻以先到 1.5R 為主要歷史勝利。'+
+'目前畫面 TP 會優先參考可辨識的歷史前高；沒有明確前高時才使用原策略 R 倍數與 ATR 推算技術目標。'+
+'雙止損只有在該策略找到有效內部支撐時顯示；沒有有效支撐時只顯示日 K 波段結構失效位。'+
 '同一根日 K 同時碰 TP 與 SL 時保守採 SL 優先。'+
 '至少 '+STRICT_MIN_SAMPLE+' 筆樣本且實際勝率 ≥'+STRICT_TARGET_WINRATE+'% 才標示歷史門檻達成。'+
 '</div>';
