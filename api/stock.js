@@ -1,5 +1,29 @@
 const API_URL = "https://api.finmindtrade.com/api/v4/data";
 
+const SNAPSHOT_URL =
+  "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
+
+/* =========================
+   CACHE
+========================= */
+
+let twInfoCache = {
+  data: null,
+  expiresAt: 0
+};
+
+let usInfoCache = {
+  data: null,
+  expiresAt: 0
+};
+
+const INFO_CACHE_MS =
+  6 * 60 * 60 * 1000;
+
+/* =========================
+   BASIC
+========================= */
+
 function normalizeInput(value) {
   return String(value || "").trim();
 }
@@ -13,19 +37,23 @@ function isUSSymbol(value) {
 }
 
 async function finmindRequest(params, token) {
-  const query = new URLSearchParams(params);
+  const query =
+    new URLSearchParams(params);
 
-  const response = await fetch(
-    `${API_URL}?${query.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json"
+  const response =
+    await fetch(
+      `${API_URL}?${query.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json"
+        },
+        cache: "no-store"
       }
-    }
-  );
+    );
 
-  const json = await response.json();
+  const json =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -43,16 +71,34 @@ async function finmindRequest(params, token) {
 ========================= */
 
 async function getTaiwanStockInfo(token) {
-  const result = await finmindRequest(
-    {
-      dataset: "TaiwanStockInfo"
-    },
-    token
-  );
 
-  return Array.isArray(result.data)
-    ? result.data
-    : [];
+  if (
+    twInfoCache.data &&
+    Date.now() < twInfoCache.expiresAt
+  ) {
+    return twInfoCache.data;
+  }
+
+  const result =
+    await finmindRequest(
+      {
+        dataset: "TaiwanStockInfo"
+      },
+      token
+    );
+
+  const list =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
+
+  twInfoCache = {
+    data: list,
+    expiresAt:
+      Date.now() + INFO_CACHE_MS
+  };
+
+  return list;
 }
 
 /* =========================
@@ -60,54 +106,109 @@ async function getTaiwanStockInfo(token) {
 ========================= */
 
 function findTaiwanStock(input, list) {
-  const keyword = String(input || "").trim();
+
+  const keyword =
+    String(input || "").trim();
 
   if (!keyword) return null;
 
-  /* 先找完全相同代號 */
-  let found = list.find(item =>
-    String(item.stock_id || "") === keyword
-  );
+  /* 代號完全符合 */
+
+  let found =
+    list.find(item =>
+      String(
+        item.stock_id || ""
+      ) === keyword
+    );
 
   if (found) return found;
 
-  /* 再找完全相同中文名稱 */
-  found = list.find(item =>
-    String(item.stock_name || "").trim() === keyword
-  );
+  /* 中文名稱完全符合 */
+
+  found =
+    list.find(item =>
+      String(
+        item.stock_name || ""
+      ).trim() === keyword
+    );
 
   if (found) return found;
 
-  /* 最後允許部分名稱 */
-  found = list.find(item =>
-    String(item.stock_name || "")
-      .trim()
-      .includes(keyword)
-  );
+  /* 中文名稱部分符合 */
 
-  return found || null;
+  const matches =
+    list.filter(item =>
+      String(
+        item.stock_name || ""
+      )
+        .trim()
+        .includes(keyword)
+    );
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  /*
+    如果有多個部分符合，
+    仍取第一個。
+    之後可以再做搜尋候選清單。
+  */
+
+  return matches[0] || null;
 }
 
 /* =========================
-   美股資訊
+   美股清單
 ========================= */
 
-async function getUSStockInfo(symbol, token) {
-  const result = await finmindRequest(
-    {
-      dataset: "USStockInfo"
-    },
-    token
+async function getUSStockList(token) {
+
+  if (
+    usInfoCache.data &&
+    Date.now() < usInfoCache.expiresAt
+  ) {
+    return usInfoCache.data;
+  }
+
+  const result =
+    await finmindRequest(
+      {
+        dataset: "USStockInfo"
+      },
+      token
+    );
+
+  const list =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
+
+  usInfoCache = {
+    data: list,
+    expiresAt:
+      Date.now() + INFO_CACHE_MS
+  };
+
+  return list;
+}
+
+async function getUSStockInfo(
+  symbol,
+  token
+) {
+
+  const list =
+    await getUSStockList(token);
+
+  return (
+    list.find(item =>
+      String(
+        item.stock_id || ""
+      ).toUpperCase() ===
+      symbol.toUpperCase()
+    ) || null
   );
-
-  const list = Array.isArray(result.data)
-    ? result.data
-    : [];
-
-  return list.find(item =>
-    String(item.stock_id || "")
-      .toUpperCase() === symbol.toUpperCase()
-  ) || null;
 }
 
 /* =========================
@@ -115,68 +216,109 @@ async function getUSStockInfo(symbol, token) {
 ========================= */
 
 function dateString(date) {
-  return date.toISOString().slice(0, 10);
+  return date
+    .toISOString()
+    .slice(0, 10);
 }
 
 function getStartDate() {
-  const d = new Date();
 
-  d.setMonth(
-    d.getMonth() - 14
+  const date =
+    new Date();
+
+  date.setMonth(
+    date.getMonth() - 14
   );
 
-  return dateString(d);
+  return dateString(date);
 }
 
 /* =========================
-   台股行情
+   台股日 K
 ========================= */
 
-async function getTaiwanPrice(symbol, token) {
-  const result = await finmindRequest(
-    {
-      dataset: "TaiwanStockPrice",
-      data_id: symbol,
-      start_date: getStartDate()
-    },
-    token
-  );
+async function getTaiwanPrice(
+  symbol,
+  token
+) {
 
-  const rows = Array.isArray(result.data)
-    ? result.data
-    : [];
+  const result =
+    await finmindRequest(
+      {
+        dataset:
+          "TaiwanStockPrice",
+
+        data_id:
+          symbol,
+
+        start_date:
+          getStartDate()
+      },
+      token
+    );
+
+  const rows =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
 
   return rows
     .map(item => ({
-      date: item.date,
-      open: Number(item.open),
-      high: Number(item.max),
-      low: Number(item.min),
-      close: Number(item.close),
-      volume: Number(item.Trading_Volume)
+      date:
+        item.date,
+
+      open:
+        Number(item.open),
+
+      high:
+        Number(item.max),
+
+      low:
+        Number(item.min),
+
+      close:
+        Number(item.close),
+
+      volume:
+        Number(
+          item.Trading_Volume
+        )
     }))
     .filter(row =>
-      Number.isFinite(row.close)
+      Number.isFinite(
+        row.close
+      )
     );
 }
 
 /* =========================
-   美股行情
+   美股日 K
 ========================= */
 
-async function getUSPrice(symbol, token) {
-  const result = await finmindRequest(
-    {
-      dataset: "USStockPrice",
-      data_id: symbol,
-      start_date: getStartDate()
-    },
-    token
-  );
+async function getUSPrice(
+  symbol,
+  token
+) {
 
-  const rows = Array.isArray(result.data)
-    ? result.data
-    : [];
+  const result =
+    await finmindRequest(
+      {
+        dataset:
+          "USStockPrice",
+
+        data_id:
+          symbol,
+
+        start_date:
+          getStartDate()
+      },
+      token
+    );
+
+  const rows =
+    Array.isArray(result.data)
+      ? result.data
+      : [];
 
   return rows
     .map(item => ({
@@ -184,50 +326,186 @@ async function getUSPrice(symbol, token) {
         item.date ||
         item.Date,
 
-      open: Number(
-        item.Open ??
-        item.open
-      ),
+      open:
+        Number(
+          item.Open ??
+          item.open
+        ),
 
-      high: Number(
-        item.High ??
-        item.high
-      ),
+      high:
+        Number(
+          item.High ??
+          item.high
+        ),
 
-      low: Number(
-        item.Low ??
-        item.low
-      ),
+      low:
+        Number(
+          item.Low ??
+          item.low
+        ),
 
-      close: Number(
-        item.Close ??
-        item.close
-      ),
+      close:
+        Number(
+          item.Close ??
+          item.close
+        ),
 
-      volume: Number(
-        item.Volume ??
-        item.volume
-      )
+      volume:
+        Number(
+          item.Volume ??
+          item.volume
+        )
     }))
     .filter(row =>
-      Number.isFinite(row.close)
+      Number.isFinite(
+        row.close
+      )
     );
+}
+
+/* =========================
+   台股即時 SNAPSHOT
+========================= */
+
+async function getTaiwanSnapshot(
+  symbol,
+  token
+) {
+
+  try {
+
+    const response =
+      await fetch(
+        SNAPSHOT_URL,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+
+            Accept:
+              "application/json"
+          },
+
+          cache:
+            "no-store"
+        }
+      );
+
+    const json =
+      await response.json();
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const list =
+      Array.isArray(json.data)
+        ? json.data
+        : [];
+
+    const item =
+      list.find(stock =>
+        String(
+          stock.stock_id ||
+          stock.symbol ||
+          stock.code ||
+          ""
+        ) === String(symbol)
+      );
+
+    if (!item) {
+      return null;
+    }
+
+    const price =
+      Number(
+        item.price ??
+        item.close ??
+        item.last_price ??
+        item.lastPrice
+      );
+
+    if (!Number.isFinite(price)) {
+      return null;
+    }
+
+    return {
+      price,
+
+      open:
+        Number(
+          item.open ??
+          item.open_price
+        ),
+
+      high:
+        Number(
+          item.high ??
+          item.high_price
+        ),
+
+      low:
+        Number(
+          item.low ??
+          item.low_price
+        ),
+
+      volume:
+        Number(
+          item.total_volume ??
+          item.volume ??
+          item.Trading_Volume
+        ),
+
+      changePercent:
+        Number(
+          item.change_rate ??
+          item.change_percent ??
+          item.changePercent
+        ),
+
+      time:
+        item.time ||
+        item.timestamp ||
+        item.date ||
+        null
+    };
+
+  } catch (error) {
+
+    /*
+      即時行情失敗時，
+      不讓整個分析 API 掛掉。
+      會自動退回最新日 K。
+    */
+
+    return null;
+  }
 }
 
 /* =========================
    API
 ========================= */
 
-export default async function handler(req, res) {
+export default async function handler(
+  req,
+  res
+) {
+
   try {
+
     const token =
       process.env.FINMIND_TOKEN;
 
     if (!token) {
-      return res.status(500).json({
-        ok: false,
-        error: "FINMIND_TOKEN 尚未設定"
-      });
+
+      return res
+        .status(500)
+        .json({
+          ok: false,
+          error:
+            "FINMIND_TOKEN 尚未設定"
+        });
     }
 
     const rawInput =
@@ -237,10 +515,14 @@ export default async function handler(req, res) {
       );
 
     if (!rawInput) {
-      return res.status(400).json({
-        ok: false,
-        error: "請輸入股票代號或名稱"
-      });
+
+      return res
+        .status(400)
+        .json({
+          ok: false,
+          error:
+            "請輸入股票代號或名稱"
+        });
     }
 
     let market = "";
@@ -251,12 +533,17 @@ export default async function handler(req, res) {
        台股代號
     ========================= */
 
-    if (isTaiwanCode(rawInput)) {
+    if (
+      isTaiwanCode(rawInput)
+    ) {
+
       market = "TW";
       symbol = rawInput;
 
       const list =
-        await getTaiwanStockInfo(token);
+        await getTaiwanStockInfo(
+          token
+        );
 
       info =
         findTaiwanStock(
@@ -265,10 +552,14 @@ export default async function handler(req, res) {
         );
 
       if (!info) {
-        return res.status(404).json({
-          ok: false,
-          error: `找不到台股 ${rawInput}`
-        });
+
+        return res
+          .status(404)
+          .json({
+            ok: false,
+            error:
+              `找不到台股 ${rawInput}`
+          });
       }
     }
 
@@ -280,7 +571,9 @@ export default async function handler(req, res) {
       isUSSymbol(rawInput) &&
       /^[A-Za-z]/.test(rawInput)
     ) {
+
       market = "US";
+
       symbol =
         rawInput.toUpperCase();
 
@@ -292,12 +585,15 @@ export default async function handler(req, res) {
 
       /*
         如果不是美股，
-        再嘗試當作台股名稱搜尋
+        再嘗試台股名稱
       */
 
       if (!info) {
+
         const list =
-          await getTaiwanStockInfo(token);
+          await getTaiwanStockInfo(
+            token
+          );
 
         const tw =
           findTaiwanStock(
@@ -306,29 +602,40 @@ export default async function handler(req, res) {
           );
 
         if (tw) {
+
           market = "TW";
+
           symbol =
-            String(tw.stock_id);
+            String(
+              tw.stock_id
+            );
 
           info = tw;
         }
       }
 
       if (!info) {
-        return res.status(404).json({
-          ok: false,
-          error: `找不到 ${rawInput}`
-        });
+
+        return res
+          .status(404)
+          .json({
+            ok: false,
+            error:
+              `找不到 ${rawInput}`
+          });
       }
     }
 
     /* =========================
-       中文名稱搜尋
+       中文名稱
     ========================= */
 
     else {
+
       const list =
-        await getTaiwanStockInfo(token);
+        await getTaiwanStockInfo(
+          token
+        );
 
       info =
         findTaiwanStock(
@@ -337,31 +644,63 @@ export default async function handler(req, res) {
         );
 
       if (!info) {
-        return res.status(404).json({
-          ok: false,
-          error:
-            `找不到「${rawInput}」，請嘗試完整股票名稱或股票代號`
-        });
+
+        return res
+          .status(404)
+          .json({
+            ok: false,
+
+            error:
+              `找不到「${rawInput}」，請嘗試完整股票名稱或股票代號`
+          });
       }
 
       market = "TW";
+
       symbol =
-        String(info.stock_id);
+        String(
+          info.stock_id
+        );
     }
 
     /* =========================
-       抓價格
+       日 K + 即時行情
     ========================= */
 
     let rows = [];
+    let snapshot = null;
 
     if (market === "TW") {
+
+      /*
+        並行抓：
+        1. 日 K
+        2. 即時 snapshot
+
+        可以減少等待時間。
+      */
+
+      const results =
+        await Promise.all([
+          getTaiwanPrice(
+            symbol,
+            token
+          ),
+
+          getTaiwanSnapshot(
+            symbol,
+            token
+          )
+        ]);
+
       rows =
-        await getTaiwanPrice(
-          symbol,
-          token
-        );
+        results[0];
+
+      snapshot =
+        results[1];
+
     } else {
+
       rows =
         await getUSPrice(
           symbol,
@@ -370,37 +709,109 @@ export default async function handler(req, res) {
     }
 
     if (!rows.length) {
-      return res.status(404).json({
-        ok: false,
-        error: "找不到歷史行情"
-      });
+
+      return res
+        .status(404)
+        .json({
+          ok: false,
+          error:
+            "找不到歷史行情"
+        });
     }
 
+    /* =========================
+       最新日 K
+    ========================= */
+
     const latest =
-      rows[rows.length - 1];
+      rows[
+        rows.length - 1
+      ];
 
     const previous =
       rows.length >= 2
-        ? rows[rows.length - 2]
+        ? rows[
+            rows.length - 2
+          ]
         : null;
 
-    const price =
-      Number(latest.close);
+    const dailyClose =
+      Number(
+        latest.close
+      );
 
     const previousClose =
       previous
-        ? Number(previous.close)
-        : price;
+        ? Number(
+            previous.close
+          )
+        : dailyClose;
+
+    /* =========================
+       現價
+    ========================= */
+
+    let livePrice =
+      dailyClose;
+
+    let isRealtime =
+      false;
+
+    let liveSource =
+      market === "TW"
+        ? "FinMind 台股最新日行情"
+        : "FinMind 美股最新日行情";
+
+    let liveTime =
+      null;
+
+    if (
+      market === "TW" &&
+      snapshot &&
+      Number.isFinite(
+        Number(
+          snapshot.price
+        )
+      )
+    ) {
+
+      livePrice =
+        Number(
+          snapshot.price
+        );
+
+      isRealtime =
+        true;
+
+      liveSource =
+        "FinMind 台股即時 Snapshot";
+
+      liveTime =
+        snapshot.time ||
+        new Date()
+          .toISOString();
+    }
+
+    /* =========================
+       漲跌
+    ========================= */
 
     const change =
-      price - previousClose;
+      livePrice -
+      previousClose;
 
     const changePercent =
       previousClose
-        ? change /
-          previousClose *
-          100
+        ? (
+            change /
+            previousClose *
+            100
+          )
         : 0;
+
+    /* =========================
+       名稱
+    ========================= */
 
     const name =
       market === "TW"
@@ -424,92 +835,148 @@ export default async function handler(req, res) {
       info.type ||
       "";
 
+    /* =========================
+       盤中 OHLC
+    ========================= */
+
+    const dayOpen =
+      snapshot &&
+      Number.isFinite(
+        snapshot.open
+      )
+        ? snapshot.open
+        : Number(
+            latest.open
+          );
+
+    const dayHigh =
+      snapshot &&
+      Number.isFinite(
+        snapshot.high
+      )
+        ? snapshot.high
+        : Number(
+            latest.high
+          );
+
+    const dayLow =
+      snapshot &&
+      Number.isFinite(
+        snapshot.low
+      )
+        ? snapshot.low
+        : Number(
+            latest.low
+          );
+
+    const volume =
+      snapshot &&
+      Number.isFinite(
+        snapshot.volume
+      )
+        ? snapshot.volume
+        : Number(
+            latest.volume
+          );
+
+    /*
+      個股分析需要盤中更新，
+      所以這個 API 不使用 CDN 長快取。
+    */
+
     res.setHeader(
       "Cache-Control",
-      "s-maxage=60, stale-while-revalidate=120"
+      "no-store, no-cache, must-revalidate"
     );
 
-    return res.status(200).json({
-      ok: true,
+    return res
+      .status(200)
+      .json({
 
-      platform:
-        "妖子平台 2.7",
+        ok: true,
 
-      query:
-        rawInput,
+        platform:
+          "妖子平台 3.0",
 
-      market,
+        query:
+          rawInput,
 
-      marketName:
-        market === "TW"
-          ? "台股"
-          : "美股",
+        market,
 
-      marketEmoji:
-        market === "TW"
-          ? "🇹🇼"
-          : "🇺🇸",
+        marketName:
+          market === "TW"
+            ? "台股"
+            : "美股",
 
-      symbol,
+        marketEmoji:
+          market === "TW"
+            ? "🇹🇼"
+            : "🇺🇸",
 
-      name,
+        symbol,
 
-      industry,
+        name,
 
-      exchange,
+        industry,
 
-      currency:
-        market === "TW"
-          ? "TWD"
-          : "USD",
+        exchange,
 
-      price,
+        currency:
+          market === "TW"
+            ? "TWD"
+            : "USD",
 
-      livePrice:
-        price,
+        /*
+          price 保留最新日 K，
+          livePrice 才是盤中價格。
+        */
 
-      previousClose,
+        price:
+          dailyClose,
 
-      change,
+        livePrice,
 
-      changePercent,
+        previousClose,
 
-      dayOpen:
-        Number(latest.open),
+        change,
 
-      dayHigh:
-        Number(latest.high),
+        changePercent,
 
-      dayLow:
-        Number(latest.low),
+        dayOpen,
 
-      volume:
-        Number(latest.volume),
+        dayHigh,
 
-      latestDate:
-        latest.date,
+        dayLow,
 
-      liveTime: null,
+        volume,
 
-      liveSource:
-        market === "TW"
-          ? "FinMind 台股最新日行情"
-          : "FinMind 美股最新日行情",
+        latestDate:
+          latest.date,
 
-      isRealtime: false,
+        liveTime,
 
-      rows,
+        liveSource,
 
-      notice:
-        "技術分析資料僅供市場觀察使用"
-    });
+        isRealtime,
+
+        rows,
+
+        notice:
+          isRealtime
+            ? "目前使用 FinMind 台股即時行情進行盤中技術分析"
+            : "目前使用最新可取得行情進行技術分析"
+      });
 
   } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      error:
-        error?.message ||
-        "伺服器錯誤"
-    });
+
+    return res
+      .status(500)
+      .json({
+        ok: false,
+
+        error:
+          error?.message ||
+          "伺服器錯誤"
+      });
   }
 }
