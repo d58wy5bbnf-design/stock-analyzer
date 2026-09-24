@@ -37,23 +37,20 @@ function isUSSymbol(value) {
 }
 
 async function finmindRequest(params, token) {
-  const query =
-    new URLSearchParams(params);
+  const query = new URLSearchParams(params);
 
-  const response =
-    await fetch(
-      `${API_URL}?${query.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json"
-        },
-        cache: "no-store"
-      }
-    );
+  const response = await fetch(
+    `${API_URL}?${query.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json"
+      },
+      cache: "no-store"
+    }
+  );
 
-  const json =
-    await response.json();
+  const json = await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -79,23 +76,20 @@ async function getTaiwanStockInfo(token) {
     return twInfoCache.data;
   }
 
-  const result =
-    await finmindRequest(
-      {
-        dataset: "TaiwanStockInfo"
-      },
-      token
-    );
+  const result = await finmindRequest(
+    {
+      dataset: "TaiwanStockInfo"
+    },
+    token
+  );
 
-  const list =
-    Array.isArray(result.data)
-      ? result.data
-      : [];
+  const list = Array.isArray(result.data)
+    ? result.data
+    : [];
 
   twInfoCache = {
     data: list,
-    expiresAt:
-      Date.now() + INFO_CACHE_MS
+    expiresAt: Date.now() + INFO_CACHE_MS
   };
 
   return list;
@@ -112,48 +106,23 @@ function findTaiwanStock(input, list) {
 
   if (!keyword) return null;
 
-  /* 代號完全符合 */
-
-  let found =
-    list.find(item =>
-      String(
-        item.stock_id || ""
-      ) === keyword
-    );
+  let found = list.find(item =>
+    String(item.stock_id || "") === keyword
+  );
 
   if (found) return found;
 
-  /* 中文名稱完全符合 */
-
-  found =
-    list.find(item =>
-      String(
-        item.stock_name || ""
-      ).trim() === keyword
-    );
+  found = list.find(item =>
+    String(item.stock_name || "").trim() === keyword
+  );
 
   if (found) return found;
 
-  /* 中文名稱部分符合 */
-
-  const matches =
-    list.filter(item =>
-      String(
-        item.stock_name || ""
-      )
-        .trim()
-        .includes(keyword)
-    );
-
-  if (matches.length === 1) {
-    return matches[0];
-  }
-
-  /*
-    如果有多個部分符合，
-    仍取第一個。
-    之後可以再做搜尋候選清單。
-  */
+  const matches = list.filter(item =>
+    String(item.stock_name || "")
+      .trim()
+      .includes(keyword)
+  );
 
   return matches[0] || null;
 }
@@ -171,48 +140,41 @@ async function getUSStockList(token) {
     return usInfoCache.data;
   }
 
-  const result =
-    await finmindRequest(
-      {
-        dataset: "USStockInfo"
-      },
-      token
-    );
+  const result = await finmindRequest(
+    {
+      dataset: "USStockInfo"
+    },
+    token
+  );
 
-  const list =
-    Array.isArray(result.data)
-      ? result.data
-      : [];
+  const list = Array.isArray(result.data)
+    ? result.data
+    : [];
 
   usInfoCache = {
     data: list,
-    expiresAt:
-      Date.now() + INFO_CACHE_MS
+    expiresAt: Date.now() + INFO_CACHE_MS
   };
 
   return list;
 }
 
-async function getUSStockInfo(
-  symbol,
-  token
-) {
+async function getUSStockInfo(symbol, token) {
 
   const list =
     await getUSStockList(token);
 
   return (
     list.find(item =>
-      String(
-        item.stock_id || ""
-      ).toUpperCase() ===
-      symbol.toUpperCase()
+      String(item.stock_id || "")
+        .toUpperCase() === symbol.toUpperCase()
     ) || null
   );
 }
 
 /* =========================
    日期
+   4.3：改抓 5 年
 ========================= */
 
 function dateString(date) {
@@ -223,11 +185,17 @@ function dateString(date) {
 
 function getStartDate() {
 
-  const date =
-    new Date();
+  const date = new Date();
 
-  date.setMonth(
-    date.getMonth() - 14
+  /*
+    原本只有 14 個月。
+
+    4.3 改成 5 年，
+    提供波段策略歷史驗證使用。
+  */
+
+  date.setFullYear(
+    date.getFullYear() - 5
   );
 
   return dateString(date);
@@ -237,57 +205,41 @@ function getStartDate() {
    台股日 K
 ========================= */
 
-async function getTaiwanPrice(
-  symbol,
-  token
-) {
+async function getTaiwanPrice(symbol, token) {
 
-  const result =
-    await finmindRequest(
-      {
-        dataset:
-          "TaiwanStockPrice",
+  const result = await finmindRequest(
+    {
+      dataset: "TaiwanStockPrice",
+      data_id: symbol,
+      start_date: getStartDate()
+    },
+    token
+  );
 
-        data_id:
-          symbol,
-
-        start_date:
-          getStartDate()
-      },
-      token
-    );
-
-  const rows =
-    Array.isArray(result.data)
-      ? result.data
-      : [];
+  const rows = Array.isArray(result.data)
+    ? result.data
+    : [];
 
   return rows
     .map(item => ({
-      date:
-        item.date,
+      date: item.date,
 
-      open:
-        Number(item.open),
+      open: Number(item.open),
 
-      high:
-        Number(item.max),
+      high: Number(item.max),
 
-      low:
-        Number(item.min),
+      low: Number(item.min),
 
-      close:
-        Number(item.close),
+      close: Number(item.close),
 
-      volume:
-        Number(
-          item.Trading_Volume
-        )
+      volume: Number(
+        item.Trading_Volume
+      )
     }))
     .filter(row =>
-      Number.isFinite(
-        row.close
-      )
+      Number.isFinite(row.close) &&
+      Number.isFinite(row.high) &&
+      Number.isFinite(row.low)
     );
 }
 
@@ -295,30 +247,20 @@ async function getTaiwanPrice(
    美股日 K
 ========================= */
 
-async function getUSPrice(
-  symbol,
-  token
-) {
+async function getUSPrice(symbol, token) {
 
-  const result =
-    await finmindRequest(
-      {
-        dataset:
-          "USStockPrice",
+  const result = await finmindRequest(
+    {
+      dataset: "USStockPrice",
+      data_id: symbol,
+      start_date: getStartDate()
+    },
+    token
+  );
 
-        data_id:
-          symbol,
-
-        start_date:
-          getStartDate()
-      },
-      token
-    );
-
-  const rows =
-    Array.isArray(result.data)
-      ? result.data
-      : [];
+  const rows = Array.isArray(result.data)
+    ? result.data
+    : [];
 
   return rows
     .map(item => ({
@@ -326,40 +268,35 @@ async function getUSPrice(
         item.date ||
         item.Date,
 
-      open:
-        Number(
-          item.Open ??
-          item.open
-        ),
+      open: Number(
+        item.Open ??
+        item.open
+      ),
 
-      high:
-        Number(
-          item.High ??
-          item.high
-        ),
+      high: Number(
+        item.High ??
+        item.high
+      ),
 
-      low:
-        Number(
-          item.Low ??
-          item.low
-        ),
+      low: Number(
+        item.Low ??
+        item.low
+      ),
 
-      close:
-        Number(
-          item.Close ??
-          item.close
-        ),
+      close: Number(
+        item.Close ??
+        item.close
+      ),
 
-      volume:
-        Number(
-          item.Volume ??
-          item.volume
-        )
+      volume: Number(
+        item.Volume ??
+        item.volume
+      )
     }))
     .filter(row =>
-      Number.isFinite(
-        row.close
-      )
+      Number.isFinite(row.close) &&
+      Number.isFinite(row.high) &&
+      Number.isFinite(row.low)
     );
 }
 
@@ -374,22 +311,21 @@ async function getTaiwanSnapshot(
 
   try {
 
-    const response =
-      await fetch(
-        SNAPSHOT_URL,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
+    const response = await fetch(
+      SNAPSHOT_URL,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
 
-            Accept:
-              "application/json"
-          },
+          Accept:
+            "application/json"
+        },
 
-          cache:
-            "no-store"
-        }
-      );
+        cache:
+          "no-store"
+      }
+    );
 
     const json =
       await response.json();
@@ -473,12 +409,6 @@ async function getTaiwanSnapshot(
 
   } catch (error) {
 
-    /*
-      即時行情失敗時，
-      不讓整個分析 API 掛掉。
-      會自動退回最新日 K。
-    */
-
     return null;
   }
 }
@@ -533,17 +463,13 @@ export default async function handler(
        台股代號
     ========================= */
 
-    if (
-      isTaiwanCode(rawInput)
-    ) {
+    if (isTaiwanCode(rawInput)) {
 
       market = "TW";
       symbol = rawInput;
 
       const list =
-        await getTaiwanStockInfo(
-          token
-        );
+        await getTaiwanStockInfo(token);
 
       info =
         findTaiwanStock(
@@ -583,17 +509,10 @@ export default async function handler(
           token
         );
 
-      /*
-        如果不是美股，
-        再嘗試台股名稱
-      */
-
       if (!info) {
 
         const list =
-          await getTaiwanStockInfo(
-            token
-          );
+          await getTaiwanStockInfo(token);
 
         const tw =
           findTaiwanStock(
@@ -606,9 +525,7 @@ export default async function handler(
           market = "TW";
 
           symbol =
-            String(
-              tw.stock_id
-            );
+            String(tw.stock_id);
 
           info = tw;
         }
@@ -633,9 +550,7 @@ export default async function handler(
     else {
 
       const list =
-        await getTaiwanStockInfo(
-          token
-        );
+        await getTaiwanStockInfo(token);
 
       info =
         findTaiwanStock(
@@ -658,9 +573,7 @@ export default async function handler(
       market = "TW";
 
       symbol =
-        String(
-          info.stock_id
-        );
+        String(info.stock_id);
     }
 
     /* =========================
@@ -671,14 +584,6 @@ export default async function handler(
     let snapshot = null;
 
     if (market === "TW") {
-
-      /*
-        並行抓：
-        1. 日 K
-        2. 即時 snapshot
-
-        可以減少等待時間。
-      */
 
       const results =
         await Promise.all([
@@ -719,32 +624,35 @@ export default async function handler(
         });
     }
 
+    /*
+      保證日期由舊到新排列，
+      回測不能亂序。
+    */
+
+    rows.sort(
+      (a, b) =>
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+    );
+
     /* =========================
        最新日 K
     ========================= */
 
     const latest =
-      rows[
-        rows.length - 1
-      ];
+      rows[rows.length - 1];
 
     const previous =
       rows.length >= 2
-        ? rows[
-            rows.length - 2
-          ]
+        ? rows[rows.length - 2]
         : null;
 
     const dailyClose =
-      Number(
-        latest.close
-      );
+      Number(latest.close);
 
     const previousClose =
       previous
-        ? Number(
-            previous.close
-          )
+        ? Number(previous.close)
         : dailyClose;
 
     /* =========================
@@ -769,16 +677,12 @@ export default async function handler(
       market === "TW" &&
       snapshot &&
       Number.isFinite(
-        Number(
-          snapshot.price
-        )
+        Number(snapshot.price)
       )
     ) {
 
       livePrice =
-        Number(
-          snapshot.price
-        );
+        Number(snapshot.price);
 
       isRealtime =
         true;
@@ -788,8 +692,7 @@ export default async function handler(
 
       liveTime =
         snapshot.time ||
-        new Date()
-          .toISOString();
+        new Date().toISOString();
     }
 
     /* =========================
@@ -802,11 +705,9 @@ export default async function handler(
 
     const changePercent =
       previousClose
-        ? (
-            change /
-            previousClose *
-            100
-          )
+        ? change /
+          previousClose *
+          100
         : 0;
 
     /* =========================
@@ -841,48 +742,45 @@ export default async function handler(
 
     const dayOpen =
       snapshot &&
-      Number.isFinite(
-        snapshot.open
-      )
+      Number.isFinite(snapshot.open)
         ? snapshot.open
-        : Number(
-            latest.open
-          );
+        : Number(latest.open);
 
     const dayHigh =
       snapshot &&
-      Number.isFinite(
-        snapshot.high
-      )
+      Number.isFinite(snapshot.high)
         ? snapshot.high
-        : Number(
-            latest.high
-          );
+        : Number(latest.high);
 
     const dayLow =
       snapshot &&
-      Number.isFinite(
-        snapshot.low
-      )
+      Number.isFinite(snapshot.low)
         ? snapshot.low
-        : Number(
-            latest.low
-          );
+        : Number(latest.low);
 
     const volume =
       snapshot &&
-      Number.isFinite(
-        snapshot.volume
-      )
+      Number.isFinite(snapshot.volume)
         ? snapshot.volume
-        : Number(
-            latest.volume
-          );
+        : Number(latest.volume);
 
-    /*
-      個股分析需要盤中更新，
-      所以這個 API 不使用 CDN 長快取。
-    */
+    /* =========================
+       回測資料資訊
+    ========================= */
+
+    const history = {
+      startDate:
+        rows[0]?.date || null,
+
+      endDate:
+        latest?.date || null,
+
+      tradingDays:
+        rows.length,
+
+      requestedYears:
+        5
+    };
 
     res.setHeader(
       "Cache-Control",
@@ -896,7 +794,7 @@ export default async function handler(
         ok: true,
 
         platform:
-          "妖子平台 3.0",
+          "妖子平台 4.3",
 
         query:
           rawInput,
@@ -926,11 +824,6 @@ export default async function handler(
             ? "TWD"
             : "USD",
 
-        /*
-          price 保留最新日 K，
-          livePrice 才是盤中價格。
-        */
-
         price:
           dailyClose,
 
@@ -959,7 +852,15 @@ export default async function handler(
 
         isRealtime,
 
+        /*
+          5 年日 K。
+          index.html 的回測引擎
+          會直接使用這份資料。
+        */
+
         rows,
+
+        history,
 
         notice:
           isRealtime
