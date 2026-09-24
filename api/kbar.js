@@ -1,22 +1,28 @@
 // ============================================================
-// 妖子平台 3.3
+// 妖子平台 3.4
 // api/kbar.js
 //
-// Fugle 台股盤中 K 棒
-//
-// 支援：
-// 1m / 3m / 5m / 10m / 15m / 30m / 60m
-// 2h / 4h / 6h / 12h
+// 功能：
+// 1. Fugle 歷史分 K + 今日即時分 K 合併
+// 2. 支援 1 / 3 / 5 / 10 / 15 / 30 / 60 分
+// 3. 支援 2H / 4H / 6H / 12H
+// 4. 小時 K 由 1 分 K 按「每個交易日 09:00」重新分桶
+// 5. 自動去除重複 K 棒
+// 6. 最新盤中資料覆蓋同時間歷史資料
 //
 // Vercel Environment Variable:
 // FUGLE_API_KEY
 // ============================================================
 
 const FUGLE_BASE =
-  "https://api.fugle.tw/marketdata/v1.0/stock/intraday/candles";
+  "https://api.fugle.tw/marketdata/v1.0/stock";
 
 
-function setCors(res){
+// ============================================================
+// BASIC
+// ============================================================
+
+function setCors(res) {
 
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -35,11 +41,7 @@ function setCors(res){
 }
 
 
-function send(
-  res,
-  status,
-  data
-){
+function send(res, status, data) {
 
   return res
     .status(status)
@@ -47,80 +49,170 @@ function send(
 }
 
 
-function number(value){
+function num(value) {
 
-  const n=
-    Number(value);
+  const n = Number(value);
 
   return Number.isFinite(n)
-    ?n
-    :null;
+    ? n
+    : null;
 }
 
 
-function normalizeSymbol(value){
+function normalizeSymbol(value) {
 
-  return String(
-    value||""
-  )
-  .trim()
-  .toUpperCase();
-}
-
-
-/* ============================================================
-   TIMEFRAME
-============================================================ */
-
-function normalizeTimeframe(value){
-
-  let tf=
-    String(
-      value||"1m"
-    )
+  return String(value || "")
     .trim()
-    .toLowerCase();
+    .toUpperCase();
+}
 
 
-  const aliases={
+// ============================================================
+// TIMEFRAME
+// ============================================================
 
-    "1":"1m",
-    "3":"3m",
-    "5":"5m",
-    "10":"10m",
-    "15":"15m",
-    "30":"30m",
-    "60":"60m",
+function normalizeTimeframe(value) {
 
-    "1m":"1m",
-    "3m":"3m",
-    "5m":"5m",
-    "10m":"10m",
-    "15m":"15m",
-    "30m":"30m",
-    "60m":"60m",
+  const tf =
+    String(value || "1m")
+      .trim()
+      .toLowerCase();
 
-    "1h":"60m",
+  const map = {
 
-    "2h":"2h",
-    "4h":"4h",
-    "6h":"6h",
-    "12h":"12h"
+    "1": "1m",
+    "3": "3m",
+    "5": "5m",
+    "10": "10m",
+    "15": "15m",
+    "30": "30m",
+    "60": "60m",
+
+    "1m": "1m",
+    "3m": "3m",
+    "5m": "5m",
+    "10m": "10m",
+    "15m": "15m",
+    "30m": "30m",
+    "60m": "60m",
+
+    "1h": "60m",
+
+    "2h": "2h",
+    "4h": "4h",
+    "6h": "6h",
+    "12h": "12h"
   };
 
-
-  return aliases[tf]||
-    "1m";
+  return map[tf] || "1m";
 }
 
 
-/* ============================================================
-   TIMESTAMP
-============================================================ */
+function nativeTimeframe(tf) {
 
-function timestampOf(candle){
+  const map = {
 
-  const raw=
+    "1m": "1",
+    "3m": "3",
+    "5m": "5",
+    "10m": "10",
+    "15m": "15",
+    "30m": "30",
+    "60m": "60"
+  };
+
+  return map[tf] || null;
+}
+
+
+// ============================================================
+// TAIPEI DATE
+// ============================================================
+
+function taipeiParts(timestamp) {
+
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone: "Asia/Taipei",
+
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+
+        hour: "2-digit",
+        minute: "2-digit",
+
+        hourCycle: "h23"
+      }
+    )
+    .formatToParts(
+      new Date(timestamp)
+    );
+
+  const result = {};
+
+  for (const p of parts) {
+
+    if (p.type !== "literal") {
+      result[p.type] = p.value;
+    }
+  }
+
+  return {
+
+    year: Number(result.year),
+
+    month: Number(result.month),
+
+    day: Number(result.day),
+
+    hour: Number(result.hour),
+
+    minute: Number(result.minute)
+  };
+}
+
+
+function taipeiDateString(date) {
+
+  return new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone: "Asia/Taipei",
+
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }
+  )
+  .format(date);
+}
+
+
+function addDaysTaipeiString(days) {
+
+  const now = new Date();
+
+  const shifted =
+    new Date(
+      now.getTime() +
+      days * 86400000
+    );
+
+  return taipeiDateString(shifted);
+}
+
+
+// ============================================================
+// TIMESTAMP
+// ============================================================
+
+function timestampOf(candle) {
+
+  const raw =
+
     candle.date ??
     candle.time ??
     candle.timestamp ??
@@ -128,47 +220,46 @@ function timestampOf(candle){
     candle.at;
 
 
-  if(raw==null){
+  if (raw == null) {
     return null;
   }
 
 
-  if(
-    typeof raw==="number"&&
-    raw>1000000000000
-  ){
+  if (
+    typeof raw === "number" &&
+    raw > 1000000000000
+  ) {
 
     return raw;
   }
 
 
-  if(
-    typeof raw==="number"&&
-    raw>1000000000
-  ){
+  if (
+    typeof raw === "number" &&
+    raw > 1000000000
+  ) {
 
-    return raw*1000;
+    return raw * 1000;
   }
 
 
-  const parsed=
-    new Date(raw)
-      .getTime();
+  const parsed =
+    new Date(raw).getTime();
 
 
   return Number.isFinite(parsed)
-    ?parsed
-    :null;
+    ? parsed
+    : null;
 }
 
 
-/* ============================================================
-   NORMALIZE CANDLE
-============================================================ */
+// ============================================================
+// NORMALIZE CANDLE
+// ============================================================
 
-function normalizeCandle(candle){
+function normalizeCandle(candle) {
 
-  const timestamp=
+  const timestamp =
     timestampOf(candle);
 
 
@@ -177,105 +268,448 @@ function normalizeCandle(candle){
     timestamp,
 
     time:
-      timestamp!=null
-        ?new Date(
-          timestamp
-        ).toISOString()
-        :null,
+      timestamp != null
+        ? new Date(timestamp).toISOString()
+        : null,
 
     open:
-      number(
-        candle.open
-      ),
+      num(candle.open),
 
     high:
-      number(
-        candle.high
-      ),
+      num(candle.high),
 
     low:
-      number(
-        candle.low
-      ),
+      num(candle.low),
 
     close:
-      number(
-        candle.close
-      ),
+      num(candle.close),
 
     volume:
-      number(
-        candle.volume ??
-        candle.totalVolume ??
-        candle.tradeVolume
-      )||0
+      num(candle.volume) || 0,
+
+    average:
+      num(candle.average)
   };
 }
 
 
-/* ============================================================
-   AGGREGATE
-============================================================ */
+function normalizeCandles(source) {
 
-function aggregateCandles(
-  candles,
-  minutes
-){
-
-  if(
-    !Array.isArray(candles)||
-    !candles.length
-  ){
-
+  if (!Array.isArray(source)) {
     return [];
   }
 
 
-  const interval=
-    minutes*
-    60*
-    1000;
+  return source
+
+    .map(normalizeCandle)
+
+    .filter(candle =>
+
+      Number.isFinite(
+        candle.timestamp
+      ) &&
+
+      candle.open != null &&
+      candle.high != null &&
+      candle.low != null &&
+      candle.close != null
+    )
+
+    .sort(
+      (a, b) =>
+        a.timestamp -
+        b.timestamp
+    );
+}
 
 
-  const buckets=
+// ============================================================
+// FUGLE REQUEST
+// ============================================================
+
+async function fugleRequest(url, apiKey) {
+
+  const response =
+    await fetch(
+      url,
+      {
+        method: "GET",
+
+        headers: {
+
+          "X-API-KEY":
+            apiKey,
+
+          "Accept":
+            "application/json"
+        },
+
+        cache:
+          "no-store"
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  let raw = null;
+
+
+  try {
+
+    raw =
+      JSON.parse(text);
+
+  } catch (error) {
+
+    raw = null;
+  }
+
+
+  if (!response.ok) {
+
+    const error =
+      new Error(
+
+        raw?.message ||
+        raw?.error ||
+        text ||
+        `Fugle HTTP ${response.status}`
+      );
+
+    error.status =
+      response.status;
+
+    throw error;
+  }
+
+
+  return raw;
+}
+
+
+// ============================================================
+// INTRADAY
+// ============================================================
+
+async function fetchIntraday(
+  symbol,
+  timeframe,
+  apiKey
+) {
+
+  const url =
+
+    `${FUGLE_BASE}` +
+    `/intraday/candles/` +
+    `${encodeURIComponent(symbol)}` +
+    `?timeframe=` +
+    `${encodeURIComponent(timeframe)}` +
+    `&sort=asc`;
+
+
+  const raw =
+    await fugleRequest(
+      url,
+      apiKey
+    );
+
+
+  return {
+
+    raw,
+
+    candles:
+      normalizeCandles(
+        raw?.data || []
+      )
+  };
+}
+
+
+// ============================================================
+// HISTORICAL
+// ============================================================
+
+async function fetchHistorical(
+  symbol,
+  timeframe,
+  apiKey,
+  days
+) {
+
+  const to =
+    addDaysTaipeiString(0);
+
+  const from =
+    addDaysTaipeiString(-days);
+
+
+  const url =
+
+    `${FUGLE_BASE}` +
+    `/historical/candles/` +
+    `${encodeURIComponent(symbol)}` +
+
+    `?timeframe=` +
+    `${encodeURIComponent(timeframe)}` +
+
+    `&from=` +
+    `${encodeURIComponent(from)}` +
+
+    `&to=` +
+    `${encodeURIComponent(to)}` +
+
+    `&fields=` +
+    `open%2Chigh%2Clow%2Cclose%2Cvolume%2Caverage` +
+
+    `&sort=asc`;
+
+
+  try {
+
+    const raw =
+      await fugleRequest(
+        url,
+        apiKey
+      );
+
+
+    return {
+
+      raw,
+
+      candles:
+        normalizeCandles(
+          raw?.data || []
+        )
+    };
+
+
+  } catch (error) {
+
+    /*
+      如果日期區間剛好完全沒有歷史資料，
+      Fugle 可能回 404。
+
+      不讓整個盤中圖表因此掛掉。
+    */
+
+    if (error.status === 404) {
+
+      return {
+
+        raw: null,
+
+        candles: []
+      };
+    }
+
+
+    throw error;
+  }
+}
+
+
+// ============================================================
+// MERGE
+// ============================================================
+
+function mergeCandles(
+  historical,
+  intraday
+) {
+
+  const map =
     new Map();
 
 
-  for(
-    const candle of candles
-  ){
+  /*
+    先放歷史
+  */
 
-    if(
-      !Number.isFinite(
+  for (const candle of historical) {
+
+    map.set(
+      candle.timestamp,
+      candle
+    );
+  }
+
+
+  /*
+    再放盤中。
+
+    如果同 timestamp，
+    盤中最新資料覆蓋歷史。
+  */
+
+  for (const candle of intraday) {
+
+    map.set(
+      candle.timestamp,
+      candle
+    );
+  }
+
+
+  return Array
+    .from(
+      map.values()
+    )
+    .sort(
+      (a, b) =>
+        a.timestamp -
+        b.timestamp
+    );
+}
+
+
+// ============================================================
+// LIMIT
+// ============================================================
+
+function limitCandles(
+  candles,
+  limit
+) {
+
+  if (
+    candles.length <= limit
+  ) {
+
+    return candles;
+  }
+
+
+  return candles.slice(
+    candles.length - limit
+  );
+}
+
+
+// ============================================================
+// TAIWAN SESSION MINUTES
+// ============================================================
+
+function sessionMinuteOfDay(
+  timestamp
+) {
+
+  const p =
+    taipeiParts(
+      timestamp
+    );
+
+
+  return (
+    p.hour * 60 +
+    p.minute
+  );
+}
+
+
+function sessionDateKey(
+  timestamp
+) {
+
+  const p =
+    taipeiParts(
+      timestamp
+    );
+
+
+  return (
+    String(p.year) +
+    "-" +
+    String(p.month).padStart(2, "0") +
+    "-" +
+    String(p.day).padStart(2, "0")
+  );
+}
+
+
+// ============================================================
+// HOURLY AGGREGATION
+// ============================================================
+
+function aggregateSessionCandles(
+  candles,
+  intervalMinutes
+) {
+
+  const buckets =
+    new Map();
+
+
+  /*
+    台股整股一般盤：
+
+    09:00 開始。
+
+    每個交易日都重新從 09:00
+    計算週期，避免跨日或用 Unix
+    epoch 導致 2H / 4H 分桶錯位。
+  */
+
+  const SESSION_START =
+    9 * 60;
+
+
+  for (const candle of candles) {
+
+    const minuteOfDay =
+      sessionMinuteOfDay(
         candle.timestamp
-      )
-    ){
+      );
+
+
+    if (
+      minuteOfDay <
+      SESSION_START
+    ) {
+
       continue;
     }
 
 
-    const bucket=
+    const sessionOffset =
+      minuteOfDay -
+      SESSION_START;
+
+
+    const bucketIndex =
       Math.floor(
-        candle.timestamp/
-        interval
-      )*
-      interval;
+        sessionOffset /
+        intervalMinutes
+      );
 
 
-    if(
-      !buckets.has(bucket)
-    ){
+    const key =
+
+      sessionDateKey(
+        candle.timestamp
+      ) +
+
+      "|" +
+
+      bucketIndex;
+
+
+    if (!buckets.has(key)) {
 
       buckets.set(
-        bucket,
+        key,
         {
+
           timestamp:
-            bucket,
+            candle.timestamp,
 
           time:
-            new Date(
-              bucket
-            ).toISOString(),
+            candle.time,
 
           open:
             candle.open,
@@ -292,7 +726,7 @@ function aggregateCandles(
           volume:
             Number(
               candle.volume
-            )||0
+            ) || 0
         }
       );
 
@@ -300,32 +734,32 @@ function aggregateCandles(
     }
 
 
-    const current=
-      buckets.get(bucket);
+    const current =
+      buckets.get(key);
 
 
-    current.high=
+    current.high =
       Math.max(
         current.high,
         candle.high
       );
 
 
-    current.low=
+    current.low =
       Math.min(
         current.low,
         candle.low
       );
 
 
-    current.close=
+    current.close =
       candle.close;
 
 
-    current.volume+=
+    current.volume +=
       Number(
         candle.volume
-      )||0;
+      ) || 0;
   }
 
 
@@ -334,175 +768,269 @@ function aggregateCandles(
       buckets.values()
     )
     .sort(
-      (
-        a,
-        b
-      )=>
-        a.timestamp-
+      (a, b) =>
+        a.timestamp -
         b.timestamp
     );
 }
 
 
-/* ============================================================
-   FETCH FUGLE
-============================================================ */
+// ============================================================
+// NATIVE MINUTE DATA
+// ============================================================
 
-async function fetchFugle(
+async function getNativeMinuteCandles(
   symbol,
   timeframe,
   apiKey
-){
+) {
 
-  const url=
+  /*
+    取最近 7 個日曆日。
 
-    `${FUGLE_BASE}/`+
-    `${encodeURIComponent(symbol)}`+
-    `?timeframe=`+
-    `${encodeURIComponent(timeframe)}`+
-    `&sort=asc`;
+    正常可涵蓋約 5 個交易日，
+    讓 30 / 60 分 K 往左仍有
+    足夠歷史。
 
+    前端一次不用塞幾千根。
+  */
 
-  const response=
-    await fetch(
-      url,
-      {
-        method:"GET",
+  const [
+    historical,
+    intraday
+  ] =
+    await Promise.all([
 
-        headers:{
-          "X-API-KEY":
-            apiKey,
+      fetchHistorical(
+        symbol,
+        timeframe,
+        apiKey,
+        7
+      ),
 
-          "Accept":
-            "application/json"
-        },
-
-        cache:
-          "no-store"
-      }
-    );
-
-
-  const text=
-    await response.text();
-
-
-  let raw=null;
-
-
-  try{
-
-    raw=
-      JSON.parse(text);
-
-  }catch(error){
-
-    raw=null;
-  }
-
-
-  if(
-    !response.ok
-  ){
-
-    throw new Error(
-
-      raw?.message||
-      raw?.error||
-      text||
-      `Fugle HTTP ${response.status}`
-    );
-  }
-
-
-  let source=[];
-
-
-  if(
-    Array.isArray(
-      raw?.data
-    )
-  ){
-
-    source=
-      raw.data;
-
-  }else if(
-    Array.isArray(
-      raw?.candles
-    )
-  ){
-
-    source=
-      raw.candles;
-
-  }else if(
-    Array.isArray(
-      raw?.data?.candles
-    )
-  ){
-
-    source=
-      raw.data.candles;
-
-  }else if(
-    Array.isArray(raw)
-  ){
-
-    source=
-      raw;
-  }
-
-
-  const candles=
-    source
-      .map(
-        normalizeCandle
+      fetchIntraday(
+        symbol,
+        timeframe,
+        apiKey
       )
-      .filter(
-        candle=>
+    ]);
 
-          Number.isFinite(
-            candle.timestamp
-          )&&
 
-          candle.open!=null&&
-          candle.high!=null&&
-          candle.low!=null&&
-          candle.close!=null
-      )
-      .sort(
-        (
-          a,
-          b
-        )=>
-          a.timestamp-
-          b.timestamp
-      );
+  const merged =
+    mergeCandles(
+      historical.candles,
+      intraday.candles
+    );
 
 
   return {
-    raw,
-    candles
+
+    candles:
+      limitCandles(
+        merged,
+        800
+      ),
+
+    historicalCount:
+      historical.candles.length,
+
+    intradayCount:
+      intraday.candles.length
   };
 }
 
 
-/* ============================================================
-   HANDLER
-============================================================ */
+// ============================================================
+// CUSTOM HOUR DATA
+// ============================================================
+
+async function getHourlyCandles(
+  symbol,
+  timeframe,
+  apiKey
+) {
+
+  const intervalMap = {
+
+    "2h": 120,
+    "4h": 240,
+    "6h": 360,
+    "12h": 720
+  };
+
+
+  const interval =
+    intervalMap[
+      timeframe
+    ];
+
+
+  /*
+    小時級圖直接抓最近 30 天 1 分 K，
+    再按每個交易日 09:00 聚合。
+
+    這樣 2H / 4H 不會只剩今天
+    兩三根。
+  */
+
+  const [
+    historical,
+    intraday
+  ] =
+    await Promise.all([
+
+      fetchHistorical(
+        symbol,
+        "1",
+        apiKey,
+        30
+      ),
+
+      fetchIntraday(
+        symbol,
+        "1",
+        apiKey
+      )
+    ]);
+
+
+  const merged =
+    mergeCandles(
+      historical.candles,
+      intraday.candles
+    );
+
+
+  const aggregated =
+    aggregateSessionCandles(
+      merged,
+      interval
+    );
+
+
+  return {
+
+    candles:
+      limitCandles(
+        aggregated,
+        500
+      ),
+
+    historicalCount:
+      historical.candles.length,
+
+    intradayCount:
+      intraday.candles.length
+  };
+}
+
+
+// ============================================================
+// RESPONSE STATS
+// ============================================================
+
+function buildStats(
+  candles
+) {
+
+  const latest =
+    candles[
+      candles.length - 1
+    ];
+
+
+  const previous =
+    candles.length >= 2
+      ? candles[
+          candles.length - 2
+        ]
+      : null;
+
+
+  let latestChangePercent =
+    null;
+
+
+  if (
+    previous &&
+    previous.close
+  ) {
+
+    latestChangePercent =
+
+      (
+        latest.close -
+        previous.close
+      ) /
+
+      previous.close *
+
+      100;
+  }
+
+
+  const high =
+    Math.max(
+      ...candles.map(
+        x => x.high
+      )
+    );
+
+
+  const low =
+    Math.min(
+      ...candles.map(
+        x => x.low
+      )
+    );
+
+
+  const totalVolume =
+    candles.reduce(
+      (sum, x) =>
+        sum +
+        (
+          Number(
+            x.volume
+          ) || 0
+        ),
+      0
+    );
+
+
+  return {
+
+    latest,
+
+    previous,
+
+    latestChangePercent,
+
+    high,
+
+    low,
+
+    totalVolume
+  };
+}
+
+
+// ============================================================
+// HANDLER
+// ============================================================
 
 export default async function handler(
   req,
   res
-){
+) {
 
   setCors(res);
 
 
-  if(
-    req.method==="OPTIONS"
-  ){
+  if (
+    req.method ===
+    "OPTIONS"
+  ) {
 
     return res
       .status(204)
@@ -510,15 +1038,18 @@ export default async function handler(
   }
 
 
-  if(
-    req.method!=="GET"
-  ){
+  if (
+    req.method !==
+    "GET"
+  ) {
 
     return send(
       res,
       405,
       {
-        ok:false,
+
+        ok: false,
+
         error:
           "Method not allowed"
       }
@@ -526,18 +1057,19 @@ export default async function handler(
   }
 
 
-  const apiKey=
+  const apiKey =
     process.env
       .FUGLE_API_KEY;
 
 
-  if(!apiKey){
+  if (!apiKey) {
 
     return send(
       res,
       500,
       {
-        ok:false,
+
+        ok: false,
 
         error:
           "Vercel 尚未設定 FUGLE_API_KEY"
@@ -546,25 +1078,26 @@ export default async function handler(
   }
 
 
-  const symbol=
+  const symbol =
     normalizeSymbol(
       req.query.symbol
     );
 
 
-  const timeframe=
+  const timeframe =
     normalizeTimeframe(
       req.query.timeframe
     );
 
 
-  if(!symbol){
+  if (!symbol) {
 
     return send(
       res,
       400,
       {
-        ok:false,
+
+        ok: false,
 
         error:
           "缺少股票代號"
@@ -573,16 +1106,17 @@ export default async function handler(
   }
 
 
-  if(
+  if (
     !/^[0-9A-Z]{4,10}$/
       .test(symbol)
-  ){
+  ) {
 
     return send(
       res,
       400,
       {
-        ok:false,
+
+        ok: false,
 
         error:
           "股票代號格式錯誤"
@@ -591,143 +1125,49 @@ export default async function handler(
   }
 
 
-  try{
+  try {
 
-    let fugleTimeframe;
-
-    let aggregateMinutes=
-      null;
+    let result;
 
 
-    switch(timeframe){
-
-      case "1m":
-        fugleTimeframe="1";
-        break;
-
-      case "3m":
-        fugleTimeframe="3";
-        break;
-
-      case "5m":
-        fugleTimeframe="5";
-        break;
-
-      case "10m":
-        fugleTimeframe="10";
-        break;
-
-      case "15m":
-        fugleTimeframe="15";
-        break;
-
-      case "30m":
-        fugleTimeframe="30";
-        break;
-
-      case "60m":
-        fugleTimeframe="60";
-        break;
-
-
-      /*
-        小時級 K 棒：
-
-        使用 60 分 K
-        再由妖子平台後端聚合。
-
-        不在前端假造 OHLCV。
-      */
-
-      case "2h":
-
-        fugleTimeframe=
-          "60";
-
-        aggregateMinutes=
-          120;
-
-        break;
-
-
-      case "4h":
-
-        fugleTimeframe=
-          "60";
-
-        aggregateMinutes=
-          240;
-
-        break;
-
-
-      case "6h":
-
-        fugleTimeframe=
-          "60";
-
-        aggregateMinutes=
-          360;
-
-        break;
-
-
-      case "12h":
-
-        fugleTimeframe=
-          "60";
-
-        aggregateMinutes=
-          720;
-
-        break;
-
-
-      default:
-
-        fugleTimeframe=
-          "1";
-    }
-
-
-    const result=
-      await fetchFugle(
-
-        symbol,
-
-        fugleTimeframe,
-
-        apiKey
+    const native =
+      nativeTimeframe(
+        timeframe
       );
 
 
-    let candles=
-      result.candles;
+    if (native) {
 
+      result =
+        await getNativeMinuteCandles(
+          symbol,
+          native,
+          apiKey
+        );
 
-    if(
-      aggregateMinutes
-    ){
+    } else {
 
-      candles=
-        aggregateCandles(
-
-          candles,
-
-          aggregateMinutes
+      result =
+        await getHourlyCandles(
+          symbol,
+          timeframe,
+          apiKey
         );
     }
 
 
-    if(
-      !candles.length
-    ){
+    const candles =
+      result.candles;
+
+
+    if (!candles.length) {
 
       return send(
         res,
         502,
         {
-          ok:false,
+
+          ok: false,
 
           source:
             "Fugle",
@@ -737,79 +1177,15 @@ export default async function handler(
           timeframe,
 
           error:
-            "Fugle 有回應，但目前沒有可用 K 棒"
+            "目前沒有可用 K 棒資料"
         }
       );
     }
 
 
-    const latest=
-      candles[
-        candles.length-1
-      ];
-
-
-    const previous=
-      candles.length>=2
-        ?candles[
-          candles.length-2
-        ]
-        :null;
-
-
-    let changePercent=
-      null;
-
-
-    if(
-      previous&&
-      previous.close
-    ){
-
-      changePercent=
-
-        (
-          latest.close-
-          previous.close
-        )/
-        previous.close*
-        100;
-    }
-
-
-    const high=
-      Math.max(
-        ...candles.map(
-          candle=>
-            candle.high
-        )
-      );
-
-
-    const low=
-      Math.min(
-        ...candles.map(
-          candle=>
-            candle.low
-        )
-      );
-
-
-    const volume=
-      candles.reduce(
-        (
-          total,
-          candle
-        )=>
-
-          total+
-          (
-            Number(
-              candle.volume
-            )||0
-          ),
-
-        0
+    const stats =
+      buildStats(
+        candles
       );
 
 
@@ -835,13 +1211,17 @@ export default async function handler(
       res,
       200,
       {
-        ok:true,
+
+        ok: true,
 
         platform:
-          "妖子平台 3.3",
+          "妖子平台 3.4",
 
         source:
           "Fugle MarketData",
+
+        sourceType:
+          "Historical + Intraday Candles",
 
         market:
           "TW",
@@ -850,41 +1230,46 @@ export default async function handler(
 
         timeframe,
 
-        sourceTimeframe:
-          fugleTimeframe,
-
-        aggregated:
-          Boolean(
-            aggregateMinutes
-          ),
-
         count:
           candles.length,
 
-        latest,
+        historicalCount:
+          result.historicalCount,
 
-        previous,
+        intradayCount:
+          result.intradayCount,
+
+        latest:
+          stats.latest,
+
+        previous:
+          stats.previous,
 
         latestChangePercent:
-          changePercent,
+          stats.latestChangePercent,
 
-        high,
+        high:
+          stats.high,
 
-        low,
+        low:
+          stats.low,
 
         totalVolume:
-          volume,
+          stats.totalVolume,
 
         candles,
 
         updatedAt:
           new Date()
-            .toISOString()
+            .toISOString(),
+
+        notice:
+          "歷史 K + 今日盤中 K 已合併"
       }
     );
 
 
-  }catch(error){
+  } catch (error) {
 
     console.error(
       "妖子平台 kbar error:",
@@ -894,9 +1279,10 @@ export default async function handler(
 
     return send(
       res,
-      500,
+      error?.status || 500,
       {
-        ok:false,
+
+        ok: false,
 
         source:
           "Fugle",
@@ -906,7 +1292,7 @@ export default async function handler(
         timeframe,
 
         error:
-          error?.message||
+          error?.message ||
           "取得 K 棒失敗"
       }
     );
