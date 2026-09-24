@@ -1,6 +1,7 @@
 // api/radar.js
 // 妖子平台 4.5
-// 台股即時雷達 + 策略掃描 + 365交易日歷史回測
+// FinMind Sponsor 即時異動 + 波段策略掃描
+// 首頁寬鬆策略掃描版
 
 const SNAPSHOT_URL =
   "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
@@ -9,25 +10,26 @@ const DATA_URL =
   "https://api.finmindtrade.com/api/v4/data";
 
 /*
-  平板效能雖然夠，
-  但這裡真正限制是 FinMind / Vercel API，
-  所以不能一次對幾百檔各打 5 年日 K。
+  首頁自動偵測：
 
-  先用即時 Snapshot 篩選，
-  再對最值得看的股票做完整策略＋回測。
+  24 支候選股進行日 K 策略掃描
+  每批 3 支
+  單支最多等待 4.5 秒
+
+  首頁只要求：
+  entryScore >= 65
+
+  不要求：
+  7/8 嚴格條件
+  70% 歷史勝率
+  20 筆回測樣本
+
+  嚴格條件留給個股分析 / 高勝率通知。
 */
 
 const STRATEGY_SCAN_LIMIT = 24;
-const STRATEGY_BATCH_SIZE = 4;
-const DAILY_TIMEOUT_MS = 6500;
-
-const BACKTEST_DAYS = 365;
-const MIN_SAMPLE = 20;
-const TARGET_WINRATE = 70;
-
-/* =========================
-   BASIC
-========================= */
+const STRATEGY_BATCH_SIZE = 3;
+const DAILY_TIMEOUT_MS = 4500;
 
 function num(v) {
   const n = Number(v);
@@ -35,99 +37,56 @@ function num(v) {
 }
 
 function round(v, d = 2) {
-  const n = Number(v);
-
-  if (!Number.isFinite(n)) {
-    return null;
-  }
-
   const p = 10 ** d;
-
-  return Math.round(
-    (n + Number.EPSILON) * p
-  ) / p;
+  return Math.round((num(v) + Number.EPSILON) * p) / p;
 }
 
 function clamp(v, min, max) {
-  return Math.min(
-    max,
-    Math.max(min, v)
-  );
+  return Math.min(max, Math.max(min, v));
 }
 
-function isNormalTaiwanStock(symbol) {
-  return /^\d{4}$/.test(
-    String(symbol || "")
-  );
+function isNormalTaiwanStock(id) {
+  return /^\d{4}$/.test(String(id || ""));
 }
 
-function dateString(date) {
-  return date
-    .toISOString()
-    .slice(0, 10);
-}
-
-function getStartDate() {
+function dateString(daysAgo = 0) {
   const d = new Date();
-
-  d.setFullYear(
-    d.getFullYear() - 5
-  );
-
-  return dateString(d);
+  d.setDate(d.getDate() - daysAgo);
+  return d.toISOString().slice(0, 10);
 }
 
 function getTaipeiTime() {
-  return new Date().toLocaleString(
-    "zh-TW",
-    {
-      timeZone: "Asia/Taipei",
-      hour12: false
-    }
-  );
+  return new Intl.DateTimeFormat("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(new Date());
 }
 
-/* =========================
-   INDICATORS
-========================= */
-
 function SMA(arr, p) {
-  if (arr.length < p) {
-    return NaN;
-  }
+  if (arr.length < p) return NaN;
 
   return (
-    arr
-      .slice(-p)
-      .reduce(
-        (a, b) => a + num(b),
-        0
-      ) / p
+    arr.slice(-p).reduce((a, b) => a + Number(b), 0) / p
   );
 }
 
 function EMA(arr, p) {
-  if (arr.length < p) {
-    return NaN;
-  }
+  if (arr.length < p) return NaN;
 
   let e =
-    arr
-      .slice(0, p)
-      .reduce(
-        (a, b) => a + num(b),
-        0
-      ) / p;
+    arr.slice(0, p).reduce((a, b) => a + Number(b), 0) / p;
 
   const k = 2 / (p + 1);
 
-  for (
-    let i = p;
-    i < arr.length;
-    i++
-  ) {
+  for (let i = p; i < arr.length; i++) {
     e =
-      num(arr[i]) * k +
+      Number(arr[i]) * k +
       e * (1 - k);
   }
 
@@ -135,64 +94,41 @@ function EMA(arr, p) {
 }
 
 function RSI(arr, p = 14) {
-  if (arr.length <= p) {
-    return NaN;
-  }
+  if (arr.length <= p) return NaN;
 
-  const data =
-    arr.slice(-(p + 1));
+  const r = arr.slice(-(p + 1));
 
   let gain = 0;
   let loss = 0;
 
-  for (
-    let i = 1;
-    i < data.length;
-    i++
-  ) {
+  for (let i = 1; i < r.length; i++) {
     const d =
-      num(data[i]) -
-      num(data[i - 1]);
+      Number(r[i]) -
+      Number(r[i - 1]);
 
-    if (d > 0) {
-      gain += d;
-    } else {
-      loss += Math.abs(d);
-    }
+    if (d > 0) gain += d;
+    else loss += Math.abs(d);
   }
 
   gain /= p;
   loss /= p;
 
-  if (loss === 0) {
-    return 100;
-  }
+  if (loss === 0) return 100;
 
-  return (
-    100 -
-    100 /
-      (1 + gain / loss)
-  );
+  return 100 - 100 / (1 + gain / loss);
 }
 
 function ATR(rows, p = 14) {
-  if (rows.length <= p) {
-    return NaN;
-  }
+  if (rows.length <= p) return NaN;
 
-  const tr = [];
+  const values = [];
 
-  for (
-    let i = 1;
-    i < rows.length;
-    i++
-  ) {
+  for (let i = 1; i < rows.length; i++) {
     const h = num(rows[i].high);
     const l = num(rows[i].low);
-    const pc =
-      num(rows[i - 1].close);
+    const pc = num(rows[i - 1].close);
 
-    tr.push(
+    values.push(
       Math.max(
         h - l,
         Math.abs(h - pc),
@@ -201,16 +137,12 @@ function ATR(rows, p = 14) {
     );
   }
 
-  return SMA(tr, p);
+  return SMA(values, p);
 }
 
-/* =========================
-   STRUCTURE
-========================= */
-
 function findHTFSwingStructure(rows) {
-  const data =
-    rows.slice(-120);
+  const data = rows.slice(-120);
+  const pivots = [];
 
   if (data.length < 30) {
     return {
@@ -219,33 +151,18 @@ function findHTFSwingStructure(rows) {
     };
   }
 
-  const pivots = [];
+  for (let i = 3; i < data.length - 3; i++) {
+    const low = num(data[i].low);
 
-  for (
-    let i = 3;
-    i < data.length - 3;
-    i++
-  ) {
-    const low =
-      num(data[i].low);
+    const pivot =
+      low < num(data[i - 1].low) &&
+      low < num(data[i - 2].low) &&
+      low < num(data[i - 3].low) &&
+      low <= num(data[i + 1].low) &&
+      low <= num(data[i + 2].low) &&
+      low <= num(data[i + 3].low);
 
-    const isPivot =
-      low <
-        num(data[i - 1].low) &&
-      low <
-        num(data[i - 2].low) &&
-      low <
-        num(data[i - 3].low) &&
-      low <=
-        num(data[i + 1].low) &&
-      low <=
-        num(data[i + 2].low) &&
-      low <=
-        num(data[i + 3].low);
-
-    if (!isPivot) {
-      continue;
-    }
+    if (!pivot) continue;
 
     const before =
       data.slice(
@@ -256,46 +173,32 @@ function findHTFSwingStructure(rows) {
     const after =
       data.slice(
         i + 1,
-        Math.min(
-          data.length,
-          i + 25
-        )
+        Math.min(data.length, i + 25)
       );
 
-    if (
-      !before.length ||
-      !after.length
-    ) {
-      continue;
-    }
+    if (!before.length || !after.length) continue;
 
     const priorHigh =
       Math.max(
-        ...before.map(
-          x => num(x.high)
-        )
+        ...before.map(x => num(x.high))
       );
 
     const afterHigh =
       Math.max(
-        ...after.map(
-          x => num(x.high)
-        )
+        ...after.map(x => num(x.high))
       );
 
     pivots.push({
       low,
-      date: data[i].date,
       confirmed:
-        afterHigh >
-        priorHigh
+        afterHigh > priorHigh,
+      date:
+        data[i].date || ""
     });
   }
 
   const confirmed =
-    pivots.filter(
-      x => x.confirmed
-    );
+    pivots.filter(x => x.confirmed);
 
   if (confirmed.length) {
     const last =
@@ -303,10 +206,37 @@ function findHTFSwingStructure(rows) {
         confirmed.length - 1
       ];
 
+    const previous =
+      confirmed.length > 1
+        ? confirmed[
+            confirmed.length - 2
+          ]
+        : null;
+
     return {
       low: last.low,
-      date: last.date,
-      type: "SWING_LOW"
+
+      type:
+        previous &&
+        last.low > previous.low
+          ? "HL"
+          : "SWING_LOW",
+
+      date:
+        last.date
+    };
+  }
+
+  if (pivots.length) {
+    const last =
+      pivots[
+        pivots.length - 1
+      ];
+
+    return {
+      low: last.low,
+      type: "SWING_LOW",
+      date: last.date
     };
   }
 
@@ -315,102 +245,79 @@ function findHTFSwingStructure(rows) {
       Math.min(
         ...data
           .slice(-20)
-          .map(
-            x => num(x.low)
-          )
+          .map(x => num(x.low))
       ),
-    type: "FALLBACK"
+
+    type:
+      "FALLBACK"
   };
 }
 
-/* =========================
-   STOCK NAME
-========================= */
-
-async function fetchTaiwanStockNames(
-  token
-) {
+async function fetchTaiwanStockNames(token) {
   try {
     const controller =
       new AbortController();
 
     const timer =
       setTimeout(
-        () =>
-          controller.abort(),
-        5000
+        () => controller.abort(),
+        4500
       );
 
-    const q =
-      new URLSearchParams({
-        dataset:
-          "TaiwanStockInfo"
-      });
+    try {
+      const response =
+        await fetch(
+          `${DATA_URL}?dataset=TaiwanStockInfo`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+              Accept:
+                "application/json"
+            },
 
-    const r =
-      await fetch(
-        `${DATA_URL}?${q}`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-            Accept:
-              "application/json"
-          },
-          signal:
-            controller.signal,
-          cache:
-            "no-store"
-        }
-      );
-
-    clearTimeout(timer);
-
-    const j =
-      await r.json();
-
-    if (!r.ok) {
-      return {};
-    }
-
-    const map = {};
-
-    for (
-      const x
-      of Array.isArray(j.data)
-        ? j.data
-        : []
-    ) {
-      const id =
-        String(
-          x.stock_id || ""
+            signal:
+              controller.signal
+          }
         );
 
-      if (id) {
-        map[id] =
-          x.stock_name ||
-          id;
-      }
-    }
+      if (!response.ok) return {};
 
-    return map;
+      const body =
+        await response.json();
+
+      if (!Array.isArray(body?.data)) {
+        return {};
+      }
+
+      const names = {};
+
+      for (const stock of body.data) {
+        if (
+          stock?.stock_id &&
+          stock?.stock_name
+        ) {
+          names[
+            String(stock.stock_id)
+          ] =
+            String(stock.stock_name);
+        }
+      }
+
+      return names;
+
+    } finally {
+      clearTimeout(timer);
+    }
 
   } catch (e) {
     return {};
   }
 }
 
-/* =========================
-   SNAPSHOT SCORE
-========================= */
-
 function scoreStock(x) {
   const price =
-    num(
-      x.close ??
-      x.price ??
-      x.last_price
-    );
+    num(x.close);
 
   const open =
     num(x.open);
@@ -421,207 +328,188 @@ function scoreStock(x) {
   const low =
     num(x.low);
 
-  const changePercent =
-    num(
-      x.change_rate ??
-      x.change_percent
-    );
+  if (price <= 0) return null;
+
+  const changeRate =
+    num(x.change_rate);
 
   const volumeRatio =
-    num(
-      x.volume_ratio
-    );
+    num(x.volume_ratio);
 
   const totalVolume =
-    num(
-      x.total_volume ??
-      x.volume
-    );
+    num(x.total_volume);
 
   const buyVolume =
-    num(
-      x.buy_volume
-    );
+    num(x.buy_volume);
 
   const sellVolume =
-    num(
-      x.sell_volume
-    );
-
-  let dayPosition = 50;
-
-  if (high > low) {
-    dayPosition =
-      (
-        (price - low) /
-        (high - low)
-      ) * 100;
-  }
-
-  dayPosition =
-    clamp(
-      dayPosition,
-      0,
-      100
-    );
+    num(x.sell_volume);
 
   let score = 0;
 
   const reasons = [];
   const warnings = [];
 
-  /*
-    漲幅
-  */
-
   if (
-    changePercent >= 1 &&
-    changePercent <= 3
+    changeRate >= 1 &&
+    changeRate <= 3
   ) {
-    score += 15;
-    reasons.push(
-      "漲幅進入強勢區"
-    );
+    score += 12;
+    reasons.push("價格開始轉強");
+
   } else if (
-    changePercent > 3 &&
-    changePercent <= 5
+    changeRate > 3 &&
+    changeRate <= 5
   ) {
-    score += 20;
-    reasons.push(
-      "價格明顯轉強"
-    );
+    score += 18;
+    reasons.push("漲幅明顯加速");
+
   } else if (
-    changePercent > 5 &&
-    changePercent <= 7
+    changeRate > 5 &&
+    changeRate <= 7
   ) {
-    score += 15;
-    reasons.push(
-      "強勢上漲"
-    );
+    score += 12;
+    reasons.push("強勢上漲");
+
   } else if (
-    changePercent > 7
+    changeRate > 7
   ) {
-    score += 5;
-    warnings.push(
-      "短線漲幅偏大"
-    );
+    score += 3;
+    warnings.push("今日漲幅偏大");
+
+  } else if (
+    changeRate < -2
+  ) {
+    score -= 15;
   }
 
-  /*
-    量比
-  */
+  if (volumeRatio >= 3) {
+    score += 30;
 
-  if (
+    reasons.push(
+      `爆量 ${round(volumeRatio, 1)}x`
+    );
+
+  } else if (
     volumeRatio >= 2
   ) {
     score += 25;
-    reasons.push(
-      "成交量異常放大"
-    );
+
   } else if (
     volumeRatio >= 1.5
   ) {
     score += 20;
-    reasons.push(
-      "成交量明顯放大"
-    );
+
   } else if (
     volumeRatio >= 1.2
-  ) {
-    score += 12;
-    reasons.push(
-      "成交量溫和增加"
-    );
-  }
-
-  /*
-    當日位置
-  */
-
-  if (dayPosition >= 80) {
-    score += 15;
-    reasons.push(
-      "價格接近日高"
-    );
-  } else if (
-    dayPosition >= 65
   ) {
     score += 10;
   }
 
-  /*
-    買賣量
-  */
+  const range =
+    high - low;
+
+  const position =
+    range > 0
+      ? clamp(
+          (price - low) / range,
+          0,
+          1
+        )
+      : 0.5;
+
+  if (position >= 0.9) {
+    score += 20;
+
+  } else if (
+    position >= 0.75
+  ) {
+    score += 14;
+  }
 
   if (
-    buyVolume > 0 &&
-    sellVolume > 0
+    open > 0 &&
+    price > open
   ) {
-    const ratio =
-      buyVolume /
-      sellVolume;
+    score += 8;
+  }
 
-    if (ratio >= 1.3) {
-      score += 10;
-      reasons.push(
-        "買方量能較強"
-      );
+  const orderTotal =
+    buyVolume +
+    sellVolume;
+
+  if (orderTotal > 0) {
+    const buyStrength =
+      buyVolume /
+      orderTotal;
+
+    if (
+      buyStrength >= 0.65
+    ) {
+      score += 12;
+
+    } else if (
+      buyStrength <= 0.35
+    ) {
+      score -= 6;
     }
   }
 
-  /*
-    成交量最低過濾
-  */
-
-  if (totalVolume >= 1000) {
-    score += 8;
-  } else if (
-    totalVolume >= 500
+  if (
+    totalVolume >= 5000
   ) {
     score += 5;
+
+  } else if (
+    totalVolume > 0 &&
+    totalVolume < 300
+  ) {
+    score -= 12;
   }
 
+  score =
+    clamp(
+      Math.round(score),
+      0,
+      100
+    );
+
   let longStatus =
-    "等待確認";
+    "暫不列入";
 
   if (
-    score >= 65 &&
-    changePercent > 0 &&
-    changePercent <= 7 &&
-    volumeRatio >= 1.2
+    score >= 70 &&
+    volumeRatio >= 1.5 &&
+    changeRate >= 1 &&
+    changeRate <= 6.5 &&
+    price >= open &&
+    position >= 0.75
   ) {
     longStatus =
       "優先觀察";
+
   } else if (
-    score < 38
+    score >= 50 &&
+    volumeRatio >= 1.2 &&
+    changeRate > 0 &&
+    position >= 0.75
   ) {
     longStatus =
-      "一般觀察";
+      "等待確認";
   }
 
-  let level =
-    "一般異動";
-
-  if (score >= 70) {
-    level =
-      "強勢異動";
-  } else if (
-    score >= 50
-  ) {
-    level =
-      "明顯異動";
+  if (changeRate > 7) {
+    longStatus =
+      "漲幅偏大不追";
   }
 
   return {
     symbol:
-      String(
-        x.stock_id ||
-        x.symbol ||
-        ""
-      ),
+      String(x.stock_id),
 
-    score:
-      Math.round(score),
+    name: "",
+
+    score,
 
     price:
       round(price),
@@ -636,39 +524,25 @@ function scoreStock(x) {
       round(low),
 
     changePercent:
-      round(
-        changePercent,
-        2
-      ),
+      round(changeRate),
 
     volumeRatio:
-      round(
-        volumeRatio,
-        2
-      ),
+      round(volumeRatio, 2),
 
-    totalVolume:
-      round(
-        totalVolume,
-        0
-      ),
+    totalVolume,
 
     dayPosition:
-      round(
-        dayPosition,
-        1
-      ),
+      round(position * 100, 1),
 
     longStatus,
-    level,
-    reasons,
-    warnings
+
+    reasons:
+      reasons.slice(0, 5),
+
+    warnings:
+      warnings.slice(0, 3)
   };
 }
-
-/* =========================
-   DAILY PRICE
-========================= */
 
 async function fetchDailyRows(
   token,
@@ -679,25 +553,20 @@ async function fetchDailyRows(
 
   const timer =
     setTimeout(
-      () =>
-        controller.abort(),
+      () => controller.abort(),
       DAILY_TIMEOUT_MS
     );
 
   try {
-    const q =
-      new URLSearchParams({
-        dataset:
-          "TaiwanStockPrice",
-        data_id:
-          symbol,
-        start_date:
-          getStartDate()
-      });
+    const url =
+      `${DATA_URL}` +
+      `?dataset=TaiwanStockPrice` +
+      `&data_id=${encodeURIComponent(symbol)}` +
+      `&start_date=${dateString(260)}`;
 
-    const r =
+    const response =
       await fetch(
-        `${DATA_URL}?${q}`,
+        url,
         {
           headers: {
             Authorization:
@@ -705,143 +574,96 @@ async function fetchDailyRows(
             Accept:
               "application/json"
           },
+
           signal:
-            controller.signal,
-          cache:
-            "no-store"
+            controller.signal
         }
       );
 
-    const j =
-      await r.json();
-
-    if (!r.ok) {
-      throw new Error(
-        j?.msg ||
-        "日 K 取得失敗"
-      );
+    if (!response.ok) {
+      return [];
     }
 
-    const rows =
-      (
-        Array.isArray(j.data)
-          ? j.data
-          : []
-      )
-        .map(
-          x => ({
-            date: x.date,
-            open:
-              num(x.open),
-            high:
-              num(
-                x.max ??
-                x.high
-              ),
-            low:
-              num(
-                x.min ??
-                x.low
-              ),
-            close:
-              num(x.close),
-            volume:
-              num(
-                x.Trading_Volume ??
-                x.volume
-              )
-          })
-        )
-        .filter(
-          x =>
-            x.close > 0 &&
-            x.high > 0 &&
-            x.low > 0
-        )
-        .sort(
-          (a, b) =>
-            new Date(
-              a.date
-            ).getTime() -
-            new Date(
-              b.date
-            ).getTime()
-        );
+    const body =
+      await response.json();
 
-    return rows;
+    if (!Array.isArray(body?.data)) {
+      return [];
+    }
+
+    return body.data
+      .map(
+        x => ({
+          date:
+            x.date,
+
+          open:
+            num(x.open),
+
+          high:
+            num(
+              x.max ??
+              x.high
+            ),
+
+          low:
+            num(
+              x.min ??
+              x.low
+            ),
+
+          close:
+            num(x.close),
+
+          volume:
+            num(
+              x.Trading_Volume ??
+              x.volume
+            )
+        })
+      )
+      .filter(
+        x =>
+          x.close > 0 &&
+          x.high > 0 &&
+          x.low > 0
+      )
+      .sort(
+        (a, b) =>
+          String(a.date)
+            .localeCompare(
+              String(b.date)
+            )
+      );
+
+  } catch (e) {
+    return [];
 
   } finally {
     clearTimeout(timer);
   }
 }
 
-/* =========================
-   HISTORICAL VOLUME
-========================= */
-
-function historicalVolumeRatio(
-  rows,
-  index
+function calculateStrategyScores(
+  stock,
+  rows
 ) {
-  if (index < 20) {
-    return 1;
-  }
-
-  const previous =
-    rows
-      .slice(
-        Math.max(
-          0,
-          index - 20
-        ),
-        index
-      )
-      .map(
-        x => num(x.volume)
-      )
-      .filter(
-        x => x > 0
-      );
-
-  if (!previous.length) {
-    return 1;
-  }
-
-  const avg =
-    previous.reduce(
-      (a, b) => a + b,
-      0
-    ) /
-    previous.length;
-
-  if (!(avg > 0)) {
-    return 1;
-  }
-
-  return (
-    num(
-      rows[index].volume
-    ) / avg
-  );
-}
-
-/* =========================
-   STRATEGY ENGINE
-========================= */
-
-function calculateStrategyState(
-  rows,
-  price,
-  currentVolumeRatio
-) {
-  if (rows.length < 70) {
+  if (
+    !Array.isArray(rows) ||
+    rows.length < 70
+  ) {
     return null;
   }
 
   const closes =
-    rows.map(
-      x => num(x.close)
-    );
+    rows.map(x => num(x.close));
+
+  const price =
+    stock.price > 0
+      ? stock.price
+      : closes[
+          closes.length - 1
+        ];
 
   const ma20 =
     SMA(closes, 20);
@@ -885,13 +707,18 @@ function calculateStrategyState(
       );
   }
 
+  const previous20 =
+    rows.slice(-21, -1);
+
+  if (!previous20.length) {
+    return null;
+  }
+
   const resistance =
     Math.max(
-      ...rows
-        .slice(-21, -1)
-        .map(
-          x => num(x.high)
-        )
+      ...previous20.map(
+        x => num(x.high)
+      )
     );
 
   const low10 =
@@ -903,19 +730,18 @@ function calculateStrategyState(
         )
     );
 
-  const recent3Low =
-    Math.min(
-      ...rows
-        .slice(-3)
-        .map(
-          x => num(x.low)
-        )
+  const support =
+    Math.max(
+      low10,
+      Math.min(
+        ma20,
+        price
+      ) -
+      atr * 0.5
     );
 
   const structure =
-    findHTFSwingStructure(
-      rows
-    );
+    findHTFSwingStructure(rows);
 
   const structureLow =
     num(structure.low);
@@ -926,460 +752,136 @@ function calculateStrategyState(
 
   const structureValid =
     structureLow > 0 &&
-    price >
-      structureStop;
+    price > structureStop;
 
-  const m20up =
+  const ma20Up =
     Number.isFinite(old20) &&
     ma20 > old20;
 
-  const m60up =
+  const ma60Up =
     Number.isFinite(old60) &&
     ma60 > old60;
 
-  const breakout =
-    price >
-    resistance;
-
   const breakoutDistance =
-    (
-      price -
-      resistance
-    ) / atr;
+    (price - resistance) /
+    atr;
 
   const aboveMA20 =
-    (
-      price -
-      ma20
-    ) / atr;
+    (price - ma20) /
+    atr;
 
-  /*
-    PULLBACK
-  */
-
-  const support =
-    Math.max(
-      low10,
-      Math.min(
-        ma20,
-        price
-      ) -
-        atr * 0.5
-    );
-
-  let entryLow =
+  const entryLow =
     Math.max(
       support,
       ma20 -
-        atr * 0.5
-    );
-
-  let entryHigh =
-    ma20 +
-    atr * 0.35;
-
-  if (
-    entryLow >
-    entryHigh
-  ) {
-    [
-      entryLow,
-      entryHigh
-    ] = [
-      entryHigh,
-      entryLow
-    ];
-  }
-
-  const pullCenter =
-    (
-      entryLow +
-      entryHigh
-    ) / 2;
-
-  const pullStop =
-    Math.min(
-      support -
-        atr * 0.5,
-      entryLow -
-        atr
-    );
-
-  const pullRisk =
-    Math.max(
-      pullCenter -
-        pullStop,
       atr * 0.5
     );
 
-  const pullQualified =
-    price > ma60 &&
-    ma20 > ma60 &&
-    m20up &&
-    macd >= 0 &&
-    rsi >= 42 &&
-    rsi <= 68 &&
-    price >=
-      entryLow -
-        atr * 0.15 &&
-    price <=
-      entryHigh +
-        atr * 0.15 &&
-    structureValid &&
-    currentVolumeRatio <= 2.2;
-
-  /*
-    HIGH R
-  */
-
-  const highEntryLow =
-    resistance -
-    atr * 0.25;
-
-  const highEntryHigh =
-    resistance +
+  const entryHigh =
+    ma20 +
     atr * 0.35;
 
-  const highCenter =
-    (
-      highEntryLow +
-      highEntryHigh
-    ) / 2;
-
-  const highStop =
-    structureLow -
-    atr * 0.15;
-
-  let highRisk =
-    highCenter -
-    highStop;
-
-  if (!(highRisk > 0)) {
-    highRisk =
-      atr * 2;
-  }
-
-  const highQualified =
-    price > ma20 &&
-    ma20 > ma60 &&
-    m20up &&
-    macd > 0 &&
-    rsi >= 54 &&
-    rsi <= 70 &&
-    breakout &&
-    breakoutDistance >= 0 &&
-    breakoutDistance <= 0.8 &&
-    aboveMA20 <= 2.5 &&
-    structureValid &&
-    currentVolumeRatio >= 1.2;
-
-  /*
-    SURGE
-  */
-
-  const surgeEntryLow =
-    price -
-    atr * 0.2;
-
-  const surgeEntryHigh =
-    price +
-    atr * 0.15;
-
-  const surgeCenter =
-    (
-      surgeEntryLow +
-      surgeEntryHigh
-    ) / 2;
-
-  const surgeStop =
-    structureLow -
-    atr * 0.15;
-
-  let surgeRisk =
-    surgeCenter -
-    surgeStop;
-
-  if (!(surgeRisk > 0)) {
-    surgeRisk =
-      atr * 2;
-  }
-
-  const surgeQualified =
-    price > ma20 &&
-    ma20 > ma60 &&
-    m20up &&
-    m60up &&
-    macd > 0 &&
-    rsi >= 58 &&
-    rsi <= 73 &&
-    breakout &&
-    breakoutDistance >= 0.1 &&
-    breakoutDistance <= 0.9 &&
-    aboveMA20 <= 2.6 &&
-    structureValid &&
-    currentVolumeRatio >= 1.5;
-
-  return {
-    ma20,
-    ma60,
-    rsi,
-    macd,
-    atr,
-    resistance,
-    support,
-    recent3Low,
-    structureLow,
-    structureValid,
-
-    PULLBACK: {
-      qualified:
-        pullQualified,
-
-      entryLow,
-      entryHigh,
-
-      entry:
-        pullCenter,
-
-      stop:
-        pullStop,
-
-      risk:
-        pullRisk,
-
-      tp1:
-        pullCenter +
-        pullRisk * 1.5,
-
-      tp2:
-        pullCenter +
-        pullRisk * 2.5,
-
-      tp3:
-        pullCenter +
-        pullRisk * 4
-    },
-
-    HIGH_R: {
-      qualified:
-        highQualified,
-
-      entryLow:
-        highEntryLow,
-
-      entryHigh:
-        highEntryHigh,
-
-      entry:
-        highCenter,
-
-      stop:
-        highStop,
-
-      risk:
-        highRisk,
-
-      tp1:
-        highCenter +
-        highRisk * 2,
-
-      tp2:
-        highCenter +
-        highRisk * 3,
-
-      tp3:
-        highCenter +
-        highRisk * 5
-    },
-
-    SURGE: {
-      qualified:
-        surgeQualified,
-
-      entryLow:
-        surgeEntryLow,
-
-      entryHigh:
-        surgeEntryHigh,
-
-      entry:
-        surgeCenter,
-
-      stop:
-        surgeStop,
-
-      risk:
-        surgeRisk,
-
-      tp1:
-        surgeCenter +
-        surgeRisk * 1.5,
-
-      tp2:
-        surgeCenter +
-        surgeRisk * 2.5,
-
-      tp3:
-        surgeCenter +
-        surgeRisk * 4
-    }
-  };
-}
-
-/* =========================
-   STRATEGY SCORE
-========================= */
-
-function strategyScores(
-  stock,
-  state
-) {
-  let pull = 0;
-  let high = 0;
-  let surge = 0;
-
-  const price =
-    num(stock.price);
-
-  const change =
-    num(
-      stock.changePercent
-    );
-
-  const vr =
-    num(
-      stock.volumeRatio
-    );
-
-  const {
-    ma20,
-    ma60,
-    rsi,
-    macd,
-    atr,
-    resistance,
-    structureValid
-  } = state;
-
-  const closesAbove =
-    price > ma20;
-
-  const bd =
-    (
-      price -
-      resistance
-    ) / atr;
-
-  const above =
-    (
-      price -
-      ma20
-    ) / atr;
-
-  /*
-    PULLBACK SCORE
-  */
+  let pullback = 0;
 
   if (price > ma60) {
-    pull += 10;
+    pullback += 10;
   }
 
   if (ma20 > ma60) {
-    pull += 20;
+    pullback += 20;
+  }
+
+  if (ma20Up) {
+    pullback += 10;
   }
 
   if (macd >= 0) {
-    pull += 10;
+    pullback += 10;
   }
 
   if (
     rsi >= 42 &&
     rsi <= 68
   ) {
-    pull += 10;
+    pullback += 10;
   }
 
   if (
     price >=
-      state.PULLBACK
-        .entryLow -
-        atr * 0.15 &&
+      entryLow -
+      atr * 0.15 &&
     price <=
-      state.PULLBACK
-        .entryHigh +
-        atr * 0.15
+      entryHigh +
+      atr * 0.15
   ) {
-    pull += 25;
+    pullback += 25;
   }
 
   if (structureValid) {
-    pull += 10;
+    pullback += 10;
   }
 
   if (
-    change >= -1 &&
-    change <= 4
+    stock.changePercent >= -1 &&
+    stock.changePercent <= 4
   ) {
-    pull += 5;
+    pullback += 5;
   }
 
-  if (vr <= 1.2) {
-    pull += 10;
-  }
-
-  /*
-    HIGH R SCORE
-  */
+  let highR = 0;
 
   if (
     price > ma20 &&
     ma20 > ma60
   ) {
-    high += 20;
+    highR += 20;
+  }
+
+  if (ma20Up) {
+    highR += 10;
   }
 
   if (macd > 0) {
-    high += 10;
+    highR += 10;
   }
 
   if (
-    rsi >= 54 &&
-    rsi <= 70
+    rsi >= 52 &&
+    rsi <= 72
   ) {
-    high += 10;
+    highR += 10;
   }
 
   if (
-    bd >= 0 &&
-    bd <= 0.8
+    breakoutDistance >= -0.15 &&
+    breakoutDistance <= 0.8
   ) {
-    high += 20;
+    highR += 20;
   }
 
   if (
-    price >=
-    resistance
+    price >= resistance
   ) {
-    high += 10;
+    highR += 10;
   }
 
   if (
-    above <= 2.5
+    aboveMA20 <= 2.5
   ) {
-    high += 5;
+    highR += 5;
   }
 
   if (structureValid) {
-    high += 10;
+    highR += 10;
   }
 
-  if (vr >= 1.2) {
-    high += 15;
+  if (
+    stock.volumeRatio >= 1.2
+  ) {
+    highR += 5;
   }
 
-  /*
-    SURGE SCORE
-  */
+  let surge = 0;
 
   if (
     price > ma20 &&
@@ -1388,28 +890,38 @@ function strategyScores(
     surge += 20;
   }
 
-  if (macd > 0) {
-    surge += 10;
-  }
-
   if (
-    rsi >= 58 &&
-    rsi <= 73
-  ) {
-    surge += 10;
-  }
-
-  if (
-    bd >= 0.1 &&
-    bd <= 0.9
+    ma20Up &&
+    ma60Up
   ) {
     surge += 15;
   }
 
-  if (vr >= 1.5) {
-    surge += 20;
+  if (macd > 0) {
+    surge += 10;
+  }
+
+  if (
+    rsi >= 56 &&
+    rsi <= 74
+  ) {
+    surge += 10;
+  }
+
+  if (
+    breakoutDistance >= 0 &&
+    breakoutDistance <= 0.9
+  ) {
+    surge += 15;
+  }
+
+  if (
+    stock.volumeRatio >= 1.5
+  ) {
+    surge += 15;
+
   } else if (
-    vr >= 1.2
+    stock.volumeRatio >= 1.2
   ) {
     surge += 8;
   }
@@ -1421,912 +933,165 @@ function strategyScores(
   }
 
   if (structureValid) {
-    surge += 10;
-  }
-
-  if (change > 7) {
-    surge -= 20;
-  }
-
-  if (closesAbove) {
     surge += 5;
   }
 
-  return {
-    PULLBACK:
-      clamp(
-        Math.round(pull),
-        0,
-        100
-      ),
-
-    HIGH_R:
-      clamp(
-        Math.round(high),
-        0,
-        100
-      ),
-
-    SURGE:
-      clamp(
-        Math.round(surge),
-        0,
-        100
-      )
-  };
-}
-
-/* =========================
-   SIMULATE
-========================= */
-
-function simulateTrade(
-  future,
-  setup,
-  maxBars = 20
-) {
-  const entry =
-    num(setup.entry);
-
-  const stop =
-    num(setup.stop);
-
-  const risk =
-    num(setup.risk);
-
   if (
-    !(entry > 0) ||
-    !(stop > 0) ||
-    !(risk > 0)
+    stock.changePercent > 7
   ) {
-    return null;
+    surge -= 20;
   }
 
-  let tp1 = false;
-  let tp2 = false;
-  let tp3 = false;
-
-  const limit =
-    Math.min(
-      future.length,
-      maxBars
+  pullback =
+    clamp(
+      Math.round(pullback),
+      0,
+      100
     );
 
-  for (
-    let i = 0;
-    i < limit;
-    i++
-  ) {
-    const bar =
-      future[i];
-
-    const low =
-      num(bar.low);
-
-    const high =
-      num(bar.high);
-
-    /*
-      同一根 K 同時碰到：
-      保守計算先停損。
-    */
-
-    if (low <= stop) {
-      return {
-        win: tp1,
-        stopped: true,
-        tp1,
-        tp2,
-        tp3,
-        r:
-          tp3
-            ? (
-                setup.tp3 -
-                entry
-              ) / risk
-            : tp2
-            ? (
-                setup.tp2 -
-                entry
-              ) / risk
-            : tp1
-            ? (
-                setup.tp1 -
-                entry
-              ) / risk
-            : -1
-      };
-    }
-
-    if (
-      high >=
-      setup.tp1
-    ) {
-      tp1 = true;
-    }
-
-    if (
-      high >=
-      setup.tp2
-    ) {
-      tp2 = true;
-    }
-
-    if (
-      high >=
-      setup.tp3
-    ) {
-      tp3 = true;
-
-      return {
-        win: true,
-        stopped: false,
-        tp1: true,
-        tp2: true,
-        tp3: true,
-        r:
-          (
-            setup.tp3 -
-            entry
-          ) / risk
-      };
-    }
-  }
-
-  const last =
-    future[
-      Math.max(
-        0,
-        limit - 1
-      )
-    ];
-
-  const endR =
-    last
-      ? (
-          num(last.close) -
-          entry
-        ) / risk
-      : 0;
-
-  return {
-    win: tp1,
-    stopped: false,
-    tp1,
-    tp2,
-    tp3,
-    r:
-      tp2
-        ? (
-            setup.tp2 -
-            entry
-          ) / risk
-        : tp1
-        ? (
-            setup.tp1 -
-            entry
-          ) / risk
-        : endR
-  };
-}
-
-/* =========================
-   BACKTEST
-========================= */
-
-function finalizeBacktest(
-  key,
-  trades
-) {
-  const samples =
-    trades.length;
-
-  if (!samples) {
-    return {
-      key,
-      samples: 0,
-      wins: 0,
-      losses: 0,
-      winRate: 0,
-      tp1Rate: 0,
-      tp2Rate: 0,
-      tp3Rate: 0,
-      stopRate: 0,
-      averageR: 0,
-      maxLosingStreak: 0,
-      enoughSamples: false,
-      targetReached: false
-    };
-  }
-
-  const wins =
-    trades.filter(
-      x => x.win
-    ).length;
-
-  const tp1 =
-    trades.filter(
-      x => x.tp1
-    ).length;
-
-  const tp2 =
-    trades.filter(
-      x => x.tp2
-    ).length;
-
-  const tp3 =
-    trades.filter(
-      x => x.tp3
-    ).length;
-
-  const stopped =
-    trades.filter(
-      x => x.stopped
-    ).length;
-
-  let streak = 0;
-  let maxStreak = 0;
-
-  for (const t of trades) {
-    if (t.win) {
-      streak = 0;
-    } else {
-      streak++;
-
-      maxStreak =
-        Math.max(
-          maxStreak,
-          streak
-        );
-    }
-  }
-
-  const winRate =
-    wins /
-    samples *
-    100;
-
-  return {
-    key,
-
-    samples,
-
-    wins,
-
-    losses:
-      samples - wins,
-
-    winRate:
-      round(
-        winRate,
-        1
-      ),
-
-    tp1Rate:
-      round(
-        tp1 /
-        samples *
-        100,
-        1
-      ),
-
-    tp2Rate:
-      round(
-        tp2 /
-        samples *
-        100,
-        1
-      ),
-
-    tp3Rate:
-      round(
-        tp3 /
-        samples *
-        100,
-        1
-      ),
-
-    stopRate:
-      round(
-        stopped /
-        samples *
-        100,
-        1
-      ),
-
-    averageR:
-      round(
-        trades.reduce(
-          (a, b) =>
-            a + num(b.r),
-          0
-        ) / samples,
-        2
-      ),
-
-    maxLosingStreak:
-      maxStreak,
-
-    enoughSamples:
-      samples >=
-      MIN_SAMPLE,
-
-    targetReached:
-      samples >=
-        MIN_SAMPLE &&
-      winRate >=
-        TARGET_WINRATE
-  };
-}
-
-function backtestStrategies(
-  rows
-) {
-  const trades = {
-    PULLBACK: [],
-    HIGH_R: [],
-    SURGE: []
-  };
-
-  const first =
-    Math.max(
-      100,
-      rows.length -
-        BACKTEST_DAYS -
-        20
+  highR =
+    clamp(
+      Math.round(highR),
+      0,
+      100
     );
 
-  const last =
-    rows.length - 20;
+  surge =
+    clamp(
+      Math.round(surge),
+      0,
+      100
+    );
 
-  for (
-    let i = first;
-    i < last;
-    i++
+  const strategies = [
+    {
+      key: "PULLBACK",
+      name: "支撐回踩",
+      emoji: "🟢",
+      score: pullback
+    },
+
+    {
+      key: "HIGH_R",
+      name: "高 R",
+      emoji: "🟣",
+      score: highR
+    },
+
+    {
+      key: "SURGE",
+      name: "強勢續攻",
+      emoji: "🔥",
+      score: surge
+    }
+  ].sort(
+    (a, b) =>
+      b.score -
+      a.score
+  );
+
+  const best =
+    strategies[0];
+
+  let grade =
+    "條件偏低";
+
+  if (best.score >= 85) {
+    grade =
+      "高符合";
+
+  } else if (
+    best.score >= 75
   ) {
-    const history =
-      rows.slice(
-        0,
-        i + 1
-      );
+    grade =
+      "條件符合";
 
-    const price =
-      num(
-        rows[i].close
-      );
-
-    const vr =
-      historicalVolumeRatio(
-        rows,
-        i
-      );
-
-    const state =
-      calculateStrategyState(
-        history,
-        price,
-        vr
-      );
-
-    if (!state) {
-      continue;
-    }
-
-    const future =
-      rows.slice(
-        i + 1,
-        i + 21
-      );
-
-    for (
-      const key
-      of [
-        "PULLBACK",
-        "HIGH_R",
-        "SURGE"
-      ]
-    ) {
-      if (
-        !state[key]
-          ?.qualified
-      ) {
-        continue;
-      }
-
-      const result =
-        simulateTrade(
-          future,
-          state[key],
-          20
-        );
-
-      if (result) {
-        trades[key].push(
-          result
-        );
-      }
-    }
+  } else if (
+    best.score >= 65
+  ) {
+    grade =
+      "接近條件";
   }
 
   return {
-    PULLBACK:
-      finalizeBacktest(
-        "PULLBACK",
-        trades.PULLBACK
-      ),
+    ...stock,
 
-    HIGH_R:
-      finalizeBacktest(
-        "HIGH_R",
-        trades.HIGH_R
-      ),
+    entryScore:
+      best.score,
 
-    SURGE:
-      finalizeBacktest(
-        "SURGE",
-        trades.SURGE
-      )
+    recommendedStrategy:
+      best.name,
+
+    strategyEmoji:
+      best.emoji,
+
+    strategyKey:
+      best.key,
+
+    strategyGrade:
+      grade,
+
+    pullbackScore:
+      pullback,
+
+    highRScore:
+      highR,
+
+    surgeScore:
+      surge,
+
+    ma20:
+      round(ma20),
+
+    ma60:
+      round(ma60),
+
+    rsi:
+      round(rsi, 1),
+
+    macd:
+      round(macd, 2),
+
+    atr:
+      round(atr),
+
+    resistance:
+      round(resistance),
+
+    support:
+      round(support),
+
+    structureLow:
+      round(structureLow),
+
+    structureStop:
+      round(structureStop),
+
+    structureValid,
+
+    entryLow:
+      round(entryLow),
+
+    entryHigh:
+      round(entryHigh)
   };
 }
-
-/* =========================
-   ONE STOCK STRATEGY SCAN
-========================= */
-
-async function scanStrategyStock(
-  token,
-  stock
-) {
-  try {
-    const rows =
-      await fetchDailyRows(
-        token,
-        stock.symbol
-      );
-
-    if (
-      rows.length < 120
-    ) {
-      return null;
-    }
-
-    const state =
-      calculateStrategyState(
-        rows,
-        stock.price,
-        stock.volumeRatio ||
-          1
-      );
-
-    if (!state) {
-      return null;
-    }
-
-    const scores =
-      strategyScores(
-        stock,
-        state
-      );
-
-    const backtest =
-      backtestStrategies(
-        rows
-      );
-
-    const strategyNames = {
-      PULLBACK:
-        "支撐回踩",
-      HIGH_R:
-        "高 R",
-      SURGE:
-        "強勢續攻"
-    };
-
-    const strategyEmoji = {
-      PULLBACK:
-        "🟢",
-      HIGH_R:
-        "🟣",
-      SURGE:
-        "🔥"
-    };
-
-    const qualified =
-      [
-        "PULLBACK",
-        "HIGH_R",
-        "SURGE"
-      ]
-        .filter(
-          key =>
-            state[key]
-              .qualified
-        )
-        .map(
-          key => ({
-            key,
-            name:
-              strategyNames[key],
-            emoji:
-              strategyEmoji[key],
-            score:
-              scores[key],
-            historical:
-              backtest[key],
-            setup:
-              state[key]
-          })
-        )
-        .sort(
-          (a, b) => {
-            const aw =
-              a.historical
-                ?.winRate ||
-              0;
-
-            const bw =
-              b.historical
-                ?.winRate ||
-              0;
-
-            if (bw !== aw) {
-              return bw - aw;
-            }
-
-            return (
-              b.score -
-              a.score
-            );
-          }
-        );
-
-    /*
-      顯示用最佳策略：
-      如果現在真的有符合，
-      優先取符合者。
-      否則取分數最高者。
-    */
-
-    let best;
-
-    if (qualified.length) {
-      best =
-        qualified[0];
-    } else {
-      const key =
-        Object.keys(scores)
-          .sort(
-            (a, b) =>
-              scores[b] -
-              scores[a]
-          )[0];
-
-      best = {
-        key,
-        name:
-          strategyNames[key],
-        emoji:
-          strategyEmoji[key],
-        score:
-          scores[key],
-        historical:
-          backtest[key],
-        setup:
-          state[key]
-      };
-    }
-
-    /*
-      嚴格通知：
-      1. 異動
-      2. 成交量異常
-      3. 現在策略符合
-      4. 樣本 >= 20
-      5. 勝率 >= 70
-      6. 多策略只留歷史勝率最高
-    */
-
-    const meaningfulMove =
-      Math.abs(
-        stock.changePercent
-      ) >= 1;
-
-    const abnormalVolume =
-      stock.volumeRatio >=
-      1.5;
-
-    const alertCandidates =
-      qualified
-        .filter(
-          x =>
-            x.historical
-              ?.samples >=
-              MIN_SAMPLE &&
-            x.historical
-              ?.winRate >=
-              TARGET_WINRATE
-        )
-        .sort(
-          (a, b) =>
-            (
-              b.historical
-                .winRate -
-              a.historical
-                .winRate
-            )
-        );
-
-    const alertBest =
-      alertCandidates[0] ||
-      null;
-
-    const alertQualified =
-      !!(
-        meaningfulMove &&
-        abnormalVolume &&
-        alertBest
-      );
-
-    return {
-      ...stock,
-
-      entryScore:
-        best.score,
-
-      recommendedStrategy:
-        best.name,
-
-      strategyEmoji:
-        best.emoji,
-
-      strategyKey:
-        best.key,
-
-      strategyGrade:
-        best.score >= 80
-          ? "A"
-          : best.score >= 70
-          ? "B"
-          : best.score >= 60
-          ? "C"
-          : "觀察",
-
-      pullbackScore:
-        scores.PULLBACK,
-
-      highRScore:
-        scores.HIGH_R,
-
-      surgeScore:
-        scores.SURGE,
-
-      strategyQualified:
-        qualified.map(
-          x => x.key
-        ),
-
-      ma20:
-        round(
-          state.ma20
-        ),
-
-      ma60:
-        round(
-          state.ma60
-        ),
-
-      rsi:
-        round(
-          state.rsi,
-          1
-        ),
-
-      macd:
-        round(
-          state.macd,
-          2
-        ),
-
-      atr:
-        round(
-          state.atr
-        ),
-
-      support:
-        round(
-          state.support
-        ),
-
-      resistance:
-        round(
-          state.resistance
-        ),
-
-      structureLow:
-        round(
-          state.structureLow
-        ),
-
-      structureValid:
-        state.structureValid,
-
-      entryLow:
-        round(
-          best.setup
-            .entryLow
-        ),
-
-      entryHigh:
-        round(
-          best.setup
-            .entryHigh
-        ),
-
-      stop:
-        round(
-          best.setup.stop
-        ),
-
-      tp1:
-        round(
-          best.setup.tp1
-        ),
-
-      tp2:
-        round(
-          best.setup.tp2
-        ),
-
-      tp3:
-        round(
-          best.setup.tp3
-        ),
-
-      historical:
-        best.historical,
-
-      backtest,
-
-      alertQualified,
-
-      alert:
-        alertQualified
-          ? {
-              strategy:
-                alertBest.name,
-
-              strategyKey:
-                alertBest.key,
-
-              winRate:
-                alertBest
-                  .historical
-                  .winRate,
-
-              samples:
-                alertBest
-                  .historical
-                  .samples,
-
-              entryLow:
-                round(
-                  alertBest
-                    .setup
-                    .entryLow
-                ),
-
-              entryHigh:
-                round(
-                  alertBest
-                    .setup
-                    .entryHigh
-                ),
-
-              tp1:
-                round(
-                  alertBest
-                    .setup
-                    .tp1
-                ),
-
-              tp2:
-                round(
-                  alertBest
-                    .setup
-                    .tp2
-                ),
-
-              tp3:
-                round(
-                  alertBest
-                    .setup
-                    .tp3
-                ),
-
-              stop:
-                round(
-                  alertBest
-                    .setup
-                    .stop
-                )
-            }
-          : null
-    };
-
-  } catch (e) {
-    return null;
-  }
-}
-
-/* =========================
-   BATCH
-========================= */
-
-async function scanInBatches(
-  token,
-  stocks
-) {
-  const result = [];
-
-  for (
-    let i = 0;
-    i < stocks.length;
-    i +=
-      STRATEGY_BATCH_SIZE
-  ) {
-    const batch =
-      stocks.slice(
-        i,
-        i +
-          STRATEGY_BATCH_SIZE
-      );
-
-    const settled =
-      await Promise.allSettled(
-        batch.map(
-          stock =>
-            scanStrategyStock(
-              token,
-              stock
-            )
-        )
-      );
-
-    for (const x of settled) {
-      if (
-        x.status ===
-          "fulfilled" &&
-        x.value
-      ) {
-        result.push(
-          x.value
-        );
-      }
-    }
-  }
-
-  return result;
-}
-
-/* =========================
-   API
-========================= */
 
 export default async function handler(
   req,
   res
 ) {
-  if (req.method !== "GET") {
-    return res
-      .status(405)
-      .json({
-        ok: false,
-        error:
-          "Method Not Allowed"
-      });
-  }
-
   try {
+    if (req.method !== "GET") {
+      return res
+        .status(405)
+        .json({
+          ok: false,
+          error:
+            "Method Not Allowed"
+        });
+    }
+
     const token =
       process.env
         .FINMIND_TOKEN;
@@ -2337,28 +1102,24 @@ export default async function handler(
         .json({
           ok: false,
           error:
-            "FINMIND_TOKEN 尚未設定"
+            "Vercel 尚未設定 FINMIND_TOKEN"
         });
     }
 
-    /*
-      SNAPSHOT
-    */
-
-    const controller =
+    const snapshotController =
       new AbortController();
 
-    const timer =
+    const snapshotTimer =
       setTimeout(
         () =>
-          controller.abort(),
-        7000
+          snapshotController.abort(),
+        6000
       );
 
-    let response;
+    let snapshotResponse;
 
     try {
-      response =
+      snapshotResponse =
         await fetch(
           SNAPSHOT_URL,
           {
@@ -2368,70 +1129,78 @@ export default async function handler(
               Accept:
                 "application/json"
             },
+
             signal:
-              controller.signal,
-            cache:
-              "no-store"
+              snapshotController.signal
           }
         );
+
     } finally {
-      clearTimeout(timer);
-    }
-
-    const json =
-      await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        json?.msg ||
-        json?.message ||
-        "Snapshot 取得失敗"
+      clearTimeout(
+        snapshotTimer
       );
     }
 
-    const raw =
-      Array.isArray(json.data)
-        ? json.data
-        : [];
+    const body =
+      await snapshotResponse
+        .json();
 
-    /*
-      名稱
-    */
+    if (
+      !snapshotResponse.ok ||
+      body?.status !== 200
+    ) {
+      return res
+        .status(
+          snapshotResponse
+            .status ||
+          502
+        )
+        .json({
+          ok: false,
 
-    const names =
+          error:
+            body?.msg ||
+            "FinMind 即時行情錯誤"
+        });
+    }
+
+    const stockNames =
       await fetchTaiwanStockNames(
         token
       );
 
-    /*
-      全市場先用即時資料算分
-    */
+    const snapshots =
+      Array.isArray(body.data)
+        ? body.data
+        : [];
 
     const stocks =
-      raw
-        .map(scoreStock)
+      snapshots
         .filter(
           x =>
             isNormalTaiwanStock(
-              x.symbol
-            ) &&
-            x.price > 0
+              x.stock_id
+            )
         )
+        .map(scoreStock)
+        .filter(Boolean)
         .map(
-          x => ({
-            ...x,
+          stock => ({
+            ...stock,
+
             name:
-              names[x.symbol] ||
-              x.symbol
+              stockNames[
+                stock.symbol
+              ] || ""
           })
+        )
+        .filter(
+          x =>
+            x.price > 0
         );
 
-    /*
-      異動雷達
-    */
-
-    let radar =
-      stocks
+    const radar =
+      [...stocks]
         .filter(
           x =>
             x.score >= 38
@@ -2441,25 +1210,21 @@ export default async function handler(
             b.score -
             a.score
         )
-        .slice(0, 40);
+        .slice(0, 20);
 
-    if (!radar.length) {
-      radar =
-        [...stocks]
-          .sort(
-            (a, b) =>
-              b.score -
-              a.score
-          )
-          .slice(0, 20);
-    }
-
-    /*
-      做多觀察
-    */
+    const finalRadar =
+      radar.length
+        ? radar
+        : [...stocks]
+            .sort(
+              (a, b) =>
+                b.score -
+                a.score
+            )
+            .slice(0, 10);
 
     const longWatch =
-      stocks
+      [...stocks]
         .filter(
           x =>
             x.longStatus ===
@@ -2472,53 +1237,48 @@ export default async function handler(
             b.score -
             a.score
         )
-        .slice(0, 30);
+        .slice(0, 12);
 
     /*
-      要做完整 5 年資料分析的候選池。
+      ★ 首頁策略候選池恢復 24 支。
 
-      優先：
-      - 有成交量
-      - 有異動
-      - 有放量
-      - 分數高
+      這裡仍保留基本流動性與
+      異動初篩，避免把大量完全
+      沒有機會的股票送去抓日 K。
     */
 
     const candidatePool =
-      stocks
+      [...stocks]
         .filter(
           x =>
-            x.totalVolume >=
-              500 &&
-            x.changePercent >
-              -3 &&
-            x.changePercent <=
-              7 &&
+            x.totalVolume >= 500 &&
+
+            x.changePercent > -3 &&
+
+            x.changePercent <= 7 &&
+
             (
               x.score >= 38 ||
-              x.volumeRatio >=
-                1.2
+              x.volumeRatio >= 1.2
             )
         )
         .sort(
           (a, b) => {
-            const as =
+            const aa =
               a.score +
               Math.min(
-                a.volumeRatio *
-                  10,
-                30
+                a.volumeRatio * 8,
+                25
               );
 
-            const bs =
+            const bb =
               b.score +
               Math.min(
-                b.volumeRatio *
-                  10,
-                30
+                b.volumeRatio * 8,
+                25
               );
 
-            return bs - as;
+            return bb - aa;
           }
         )
         .slice(
@@ -2526,79 +1286,99 @@ export default async function handler(
           STRATEGY_SCAN_LIMIT
         );
 
-    /*
-      完整策略 + 365 回測
-    */
+    const strategyStocks = [];
 
-    const strategyScanned =
-      await scanInBatches(
-        token,
-        candidatePool
-      );
+    for (
+      let i = 0;
+      i < candidatePool.length;
+      i += STRATEGY_BATCH_SIZE
+    ) {
+      const batch =
+        candidatePool.slice(
+          i,
+          i +
+          STRATEGY_BATCH_SIZE
+        );
+
+      const results =
+        await Promise.allSettled(
+          batch.map(
+            async stock => {
+              const rows =
+                await fetchDailyRows(
+                  token,
+                  stock.symbol
+                );
+
+              if (
+                rows.length < 70
+              ) {
+                return null;
+              }
+
+              return (
+                calculateStrategyScores(
+                  stock,
+                  rows
+                )
+              );
+            }
+          )
+        );
+
+      for (
+        const result
+        of results
+      ) {
+        if (
+          result.status ===
+            "fulfilled" &&
+          result.value
+        ) {
+          strategyStocks.push(
+            result.value
+          );
+        }
+      }
+    }
 
     /*
-      符合策略區
+      ★ 首頁「自動偵測符合策略股票」
+
+      恢復寬鬆模式：
+
+      只要三套策略其中最高分
+      entryScore >= 65
+      就會顯示。
+
+      不再要求 structureValid。
+
+      structureValid 本身仍然會參與
+      三套策略的加分，因此結構好的
+      股票自然會拿到比較高的分數，
+      但不會因為單一結構判斷失敗
+      就直接從首頁消失。
+
+      70% 勝率與 20 筆樣本
+      完全不參與這裡的篩選。
     */
 
     const strategyReady =
-      strategyScanned
+      strategyStocks
         .filter(
           x =>
-            x.strategyQualified
-              ?.length > 0 &&
-            x.structureValid
+            x.entryScore >= 65
         )
         .sort(
           (a, b) => {
-            const aw =
-              a.historical
-                ?.winRate ||
-              0;
-
-            const bw =
-              b.historical
-                ?.winRate ||
-              0;
-
-            if (bw !== aw) {
-              return bw - aw;
-            }
-
-            return (
-              b.entryScore -
+            if (
+              b.entryScore !==
               a.entryScore
-            );
-          }
-        )
-        .slice(0, 24);
-
-    /*
-      嚴格通知候選
-
-      這裡不是所有符合策略都通知。
-      必須：
-      - 價格有異動
-      - 量比 >= 1.5
-      - 當下符合策略
-      - 365 回測樣本 >= 20
-      - 歷史勝率 >= 70%
-    */
-
-    const alerts =
-      strategyScanned
-        .filter(
-          x =>
-            x.alertQualified &&
-            x.alert
-        )
-        .sort(
-          (a, b) => {
-            const wr =
-              b.alert.winRate -
-              a.alert.winRate;
-
-            if (wr !== 0) {
-              return wr;
+            ) {
+              return (
+                b.entryScore -
+                a.entryScore
+              );
             }
 
             return (
@@ -2606,11 +1386,8 @@ export default async function handler(
               a.score
             );
           }
-        );
-
-    /*
-      爆量排行
-    */
+        )
+        .slice(0, 24);
 
     const volumeLeaders =
       [...stocks]
@@ -2623,56 +1400,24 @@ export default async function handler(
             b.volumeRatio -
             a.volumeRatio
         )
-        .slice(0, 20);
-
-    /*
-      動能排行
-    */
+        .slice(0, 10);
 
     const momentumLeaders =
       [...stocks]
+        .filter(
+          x =>
+            x.changePercent > 0
+        )
         .sort(
           (a, b) =>
             b.changePercent -
             a.changePercent
         )
-        .slice(0, 20);
-
-    /*
-      把做過完整策略分析的資料
-      合併回 radar / longWatch，
-      前端點查看更多時可以看到更多資訊。
-    */
-
-    const strategyMap =
-      new Map(
-        strategyScanned.map(
-          x => [
-            String(x.symbol),
-            x
-          ]
-        )
-      );
-
-    radar =
-      radar.map(
-        x =>
-          strategyMap.get(
-            String(x.symbol)
-          ) || x
-      );
-
-    const enrichedLongWatch =
-      longWatch.map(
-        x =>
-          strategyMap.get(
-            String(x.symbol)
-          ) || x
-      );
+        .slice(0, 10);
 
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=45, stale-while-revalidate=90"
+      "public, s-maxage=60, stale-while-revalidate=120"
     );
 
     return res
@@ -2683,13 +1428,11 @@ export default async function handler(
         platform:
           "妖子平台 4.5",
 
-        market: "TW",
+        mode:
+          "FinMind Sponsor 即時盤中＋波段策略掃描",
 
-        marketName:
-          "台股",
-
-        marketEmoji:
-          "🇹🇼",
+        market:
+          "TW",
 
         source:
           "FinMind",
@@ -2705,71 +1448,41 @@ export default async function handler(
           stocks.length,
 
         found:
-          radar.length,
+          finalRadar.length,
 
         longWatchCount:
-          enrichedLongWatch
-            .length,
+          longWatch.length,
 
         strategyReadyCount:
           strategyReady.length,
 
-        alertCount:
-          alerts.length,
-
         strategyScannedCount:
-          strategyScanned
-            .length,
+          strategyStocks.length,
 
-        backtestDays:
-          BACKTEST_DAYS,
-
-        minimumSamples:
-          MIN_SAMPLE,
-
-        targetWinRate:
-          TARGET_WINRATE,
+        strategyCandidateCount:
+          candidatePool.length,
 
         /*
-          🎯 符合策略
+          首頁寬鬆候選
         */
-
         strategyReady,
 
-        /*
-          🚀 做多觀察
-        */
+        radar:
+          finalRadar,
 
-        longWatch:
-          enrichedLongWatch,
-
-        /*
-          🔥 異動雷達
-        */
-
-        radar,
-
-        /*
-          🔔 真正可通知
-        */
-
-        alerts,
-
-        /*
-          📊 額外排行榜
-        */
+        longWatch,
 
         volumeLeaders,
 
         momentumLeaders,
 
         notice:
-          "策略掃描使用當下量價條件；歷史勝率使用最近 365 個交易日逐日回測，訊號建立不使用未來資料。同棒同時碰停損與停利時採保守停損。"
+          "首頁策略掃描採 65 分寬鬆候選門檻；詳細策略條件與歷史勝率需進入個股分析確認。策略分數不是未來上漲機率。"
       });
 
   } catch (error) {
     console.error(
-      "Radar error:",
+      "Radar server error:",
       error
     );
 
@@ -2786,9 +1499,9 @@ export default async function handler(
         error:
           error?.name ===
           "AbortError"
-            ? "雷達資料取得逾時，請稍後重新掃描"
+            ? "FinMind 連線逾時，請重新掃描"
             : error?.message ||
-              "Radar 伺服器錯誤"
+              "Radar server error"
       });
   }
 }
