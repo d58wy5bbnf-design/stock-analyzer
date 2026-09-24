@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<title>妖子平台 4.4</title>
+<title>妖子平台 4.5</title>
 
 <meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -79,6 +79,68 @@ button{cursor:pointer}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
 .chip{border:1px solid #292e2b;background:#131614;border-radius:9px;padding:5px 8px;color:#bcc1be;font-size:10px}
 .chip.green{color:var(--green)}
+
+/* 自動策略掃描 */
+.strategy-auto-card{
+border-color:rgba(69,224,173,.30);
+background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
+}
+.strategy-auto-top{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:12px
+}
+.strategy-auto-name{
+margin-top:12px;
+border:1px solid #292e2b;
+background:#070908;
+border-radius:14px;
+padding:12px 13px
+}
+.strategy-auto-name.green{border-color:rgba(69,224,173,.25)}
+.strategy-auto-name.purple{border-color:rgba(174,99,255,.30)}
+.strategy-auto-name.orange{border-color:rgba(255,159,67,.30)}
+.strategy-auto-name strong{display:block;font-size:16px}
+.strategy-auto-name.green strong{color:var(--green)}
+.strategy-auto-name.purple strong{color:#c899ff}
+.strategy-auto-name.orange strong{color:var(--orange)}
+.strategy-auto-name span{display:block;margin-top:5px;color:#858b87;font-size:10px}
+.strategy-score-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:6px;
+margin-top:12px
+}
+.strategy-mini-score{
+text-align:center;
+background:#070908;
+border:1px solid #252a27;
+border-radius:11px;
+padding:9px 4px
+}
+.strategy-mini-score span{
+display:block;
+font-size:9px;
+color:#858b87
+}
+.strategy-mini-score strong{
+display:block;
+font-size:17px;
+margin-top:4px
+}
+.strategy-auto-meta{
+margin-top:11px;
+font-size:10px;
+color:#777d79;
+line-height:1.7
+}
+.strategy-open{
+margin-top:10px;
+font-size:10px;
+font-weight:900;
+color:var(--green)
+}
 
 .back-btn{min-height:48px;border:1px solid #303532;border-radius:15px;background:#0e110f;color:#eee;font-weight:850;padding:0 15px}
 .back-btn.full{width:100%;margin-top:22px}
@@ -161,7 +223,7 @@ button{cursor:pointer}
 .overview-label{color:#949a96;font-size:16px}
 .overview-value{text-align:right;font-size:18px;font-weight:950}
 .target-stack{display:grid;gap:11px;margin-top:18px}
-.target-box{background:#070a08;border:1px solid #252a27;border-radius:18px;padding:17px 18px}
+.target-box{background:#070a08;border:1px solid #252a27;border-radius:18px;padding:17px 18px;margin-top:11px}
 .target-label{color:#8d938f;font-size:13px;margin-bottom:8px}
 .target-value{font-size:27px;font-weight:950}
 .target-box.entry .target-value,.target-box.tp .target-value{color:var(--green)}
@@ -226,12 +288,13 @@ button{cursor:pointer}
 <div class="brand">妖子平台</div>
 <div class="subtitle">🇹🇼 台股即時異動 · 🇺🇸 美股波段技術分析</div>
 </div>
-<div class="version">4.4 STRICT</div>
+<div class="version">4.5 STRATEGY</div>
 </div>
 </header>
 
 <section class="card">
 <div class="search-title">搜尋股票名稱 / 台股代號 / 美股代號</div>
+
 <form id="stockSearchForm" class="search-form">
 <input id="symbolInput" class="search-input" type="text" placeholder="台積電 / 2330 / NVDA" autocomplete="off">
 <button class="search-btn" type="submit">分析</button>
@@ -268,17 +331,37 @@ button{cursor:pointer}
 </div>
 </section>
 
+<!-- 新增：自動偵測符合策略股票 -->
+<section class="section">
+<div class="section-head">
+<div>
+<div class="section-title">🎯 自動偵測符合策略股票</div>
+<div id="strategyReadyText" class="section-sub">
+正在掃描支撐回踩、高 R、強勢續攻策略…
+</div>
+</div>
+</div>
+
+<div id="strategyReadyGrid" class="grid">
+<div class="loading">正在分析策略條件…</div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-title">🚀 今日做多觀察</div>
-<div id="longGrid" class="grid"><div class="loading">正在掃描…</div></div>
+<div id="longGrid" class="grid">
+<div class="loading">正在掃描…</div>
+</div>
 </section>
 
 <section class="section">
 <div class="section-title">🔥 台股即時異動雷達</div>
-<div id="radarGrid" class="grid"><div class="loading">正在載入…</div></div>
+<div id="radarGrid" class="grid">
+<div class="loading">正在載入…</div>
+</div>
 </section>
 
-<div class="footer">妖子平台 4.4 · FinMind × Fugle · 70% Historical Target</div>
+<div class="footer">妖子平台 4.5 · FinMind × Fugle · 70% Historical Target</div>
 </div>
 
 <div id="analysisPage" class="hidden">
@@ -303,8 +386,8 @@ button{cursor:pointer}
 </div>
 
 <button id="backBottom" class="back-btn full">← 看完了，返回市場首頁</button>
-</div>
 
+</div>
 </main>
 
 <script>
@@ -340,9 +423,7 @@ var KBAR_DRAG_START_END=0;
 var KBAR_PINCH_START_DISTANCE=0;
 var KBAR_PINCH_START_COUNT=45;
 
-function el(x){
-return document.getElementById(x);
-}
+function el(x){return document.getElementById(x)}
 
 function safe(v){
 var d=document.createElement("div");
@@ -353,18 +434,12 @@ return d.innerHTML;
 function fmt(v,d){
 if(d===undefined)d=2;
 v=Number(v);
-
-return Number.isFinite(v)
-?v.toLocaleString("zh-TW",{maximumFractionDigits:d})
-:"--";
+return Number.isFinite(v)?v.toLocaleString("zh-TW",{maximumFractionDigits:d}):"--";
 }
 
 function pct(v){
 v=Number(v);
-
-return Number.isFinite(v)
-?(v>0?"+":"")+v.toFixed(2)+"%"
-:"--";
+return Number.isFinite(v)?(v>0?"+":"")+v.toFixed(2)+"%":"--";
 }
 
 function pclass(v){
@@ -372,9 +447,7 @@ v=Number(v);
 return v>0?"up":v<0?"down":"flat";
 }
 
-function clamp(v,a,b){
-return Math.max(a,Math.min(b,v));
-}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 
 function currentTimeText(){
 return new Date().toLocaleTimeString("zh-TW",{hour12:false});
@@ -387,98 +460,48 @@ return a.slice(-p).reduce((x,y)=>x+Number(y),0)/p;
 
 function EMA(a,p){
 if(a.length<p)return NaN;
-
 var e=a.slice(0,p).reduce((x,y)=>x+Number(y),0)/p;
 var k=2/(p+1);
-
-for(var i=p;i<a.length;i++){
-e=Number(a[i])*k+e*(1-k);
-}
-
+for(var i=p;i<a.length;i++)e=Number(a[i])*k+e*(1-k);
 return e;
 }
 
 function RSI(a,p){
 p=p||14;
-
 if(a.length<=p)return NaN;
-
-var r=a.slice(-(p+1));
-var g=0;
-var l=0;
-
+var r=a.slice(-(p+1)),g=0,l=0;
 for(var i=1;i<r.length;i++){
 var d=Number(r[i])-Number(r[i-1]);
-
-if(d>0)g+=d;
-else l+=Math.abs(d);
+if(d>0)g+=d;else l+=Math.abs(d);
 }
-
-g/=p;
-l/=p;
-
+g/=p;l/=p;
 return l===0?100:100-(100/(1+g/l));
 }
 
 function ATR(r,p){
 p=p||14;
-
 if(r.length<=p)return NaN;
-
 var a=[];
-
 for(var i=1;i<r.length;i++){
-var h=+r[i].high;
-var l=+r[i].low;
-var c=+r[i-1].close;
-
-a.push(
-Math.max(
-h-l,
-Math.abs(h-c),
-Math.abs(l-c)
-)
-);
+var h=+r[i].high,l=+r[i].low,c=+r[i-1].close;
+a.push(Math.max(h-l,Math.abs(h-c),Math.abs(l-c)));
 }
-
 return SMA(a,p);
 }
 
-/* =========================
-   策略跳轉
-========================= */
-
 function jumpToStrategy(id){
 var target=document.getElementById(id);
-
 if(!target)return;
-
-target.scrollIntoView({
-behavior:"smooth",
-block:"start"
-});
-
+target.scrollIntoView({behavior:"smooth",block:"start"});
 target.classList.remove("strategy-flash");
-
-setTimeout(function(){
-target.classList.add("strategy-flash");
-},450);
+setTimeout(function(){target.classList.add("strategy-flash")},450);
 }
-
-/* =========================
-   日 K 波段結構
-========================= */
 
 function findHTFSwingStructure(rows){
-var data=rows.slice(-120);
-var p=[];
-
-if(data.length<30){
-return{low:NaN,type:"NONE"};
-}
+var data=rows.slice(-120),p=[];
+if(data.length<30)return{low:NaN,type:"NONE"};
 
 for(var i=3;i<data.length-3;i++){
-
 var l=+data[i].low;
 
 if(
@@ -489,69 +512,36 @@ l<=+data[i+1].low&&
 l<=+data[i+2].low&&
 l<=+data[i+3].low
 ){
-
-var before=data.slice(
-Math.max(0,i-20),
-i
-);
-
-var after=data.slice(
-i+1,
-Math.min(data.length,i+25)
-);
-
-if(!before.length||!after.length){
-continue;
-}
+var before=data.slice(Math.max(0,i-20),i);
+var after=data.slice(i+1,Math.min(data.length,i+25));
+if(!before.length||!after.length)continue;
 
 var ph=Math.max(...before.map(x=>+x.high));
 var ah=Math.max(...after.map(x=>+x.high));
 
-p.push({
-low:l,
-confirmed:ah>ph,
-date:data[i].date||""
-});
-
+p.push({low:l,confirmed:ah>ph,date:data[i].date||""});
 }
 }
 
 var c=p.filter(x=>x.confirmed);
 
 if(c.length){
-
 var z=c[c.length-1];
 var pr=c.length>1?c[c.length-2]:null;
-
-return{
-low:z.low,
-type:pr&&z.low>pr.low?"HL":"SWING_LOW",
-date:z.date
-};
+return{low:z.low,type:pr&&z.low>pr.low?"HL":"SWING_LOW",date:z.date};
 }
 
 if(p.length){
-
 var last=p[p.length-1];
-
-return{
-low:last.low,
-type:"SWING_LOW",
-date:last.date
-};
+return{low:last.low,type:"SWING_LOW",date:last.date};
 }
 
-return{
-low:Math.min(...data.slice(-20).map(x=>+x.low)),
-type:"FALLBACK"
-};
+return{low:Math.min(...data.slice(-20).map(x=>+x.low)),type:"FALLBACK"};
 }
 
 function getHTFStructureState(rows,l,a){
-
 var c=+rows[rows.length-1].close;
 var b=l-a*.15;
-
 return{
 broken:Number.isFinite(l)&&c<b,
 warning:Number.isFinite(l)&&c>=b&&c<l+a*.5,
@@ -559,16 +549,11 @@ buffer:b
 };
 }
 
-/* =========================
-   自選股
-========================= */
+/* 自選股 */
 
 function getWatchlist(){
-try{
-return JSON.parse(localStorage.getItem(WATCH_KEY)||"[]")||[];
-}catch(e){
-return[];
-}
+try{return JSON.parse(localStorage.getItem(WATCH_KEY)||"[]")||[]}
+catch(e){return[]}
 }
 
 function saveWatchlist(x){
@@ -577,145 +562,79 @@ renderWatchlist();
 }
 
 function isFavorite(s){
-return getWatchlist().some(
-x=>String(x.symbol)===String(s)
-);
+return getWatchlist().some(x=>String(x.symbol)===String(s));
 }
 
 function toggleFavorite(s){
-
 var a=getWatchlist();
+var i=a.findIndex(x=>String(x.symbol)===String(s.symbol));
 
-var i=a.findIndex(
-x=>String(x.symbol)===String(s.symbol)
-);
-
-if(i>=0){
-a.splice(i,1);
-}else{
-a.unshift({
-symbol:String(s.symbol),
-name:s.name||"",
-market:s.market||""
-});
-}
+if(i>=0)a.splice(i,1);
+else a.unshift({symbol:String(s.symbol),name:s.name||"",market:s.market||""});
 
 saveWatchlist(a);
 updateFavoriteButton();
 }
 
 function removeFavorite(s){
-
-saveWatchlist(
-getWatchlist().filter(
-x=>String(x.symbol)!==String(s)
-)
-);
+saveWatchlist(getWatchlist().filter(x=>String(x.symbol)!==String(s)));
 }
 
 function updateFavoriteButton(){
-
 var b=el("favoriteButton");
-
 if(!b||!currentStock)return;
-
-b.textContent=isFavorite(currentStock.symbol)
-?"★ 已加入自選 · 點擊移除"
-:"☆ 加入自選";
-
-b.classList.toggle(
-"active",
-isFavorite(currentStock.symbol)
-);
+b.textContent=isFavorite(currentStock.symbol)?"★ 已加入自選 · 點擊移除":"☆ 加入自選";
+b.classList.toggle("active",isFavorite(currentStock.symbol));
 }
 
 function renderWatchlist(){
-
 var r=el("watchGrid");
 var a=getWatchlist();
 
 if(!a.length){
-
-r.innerHTML=
-'<div class="empty-watch">'+
-'目前還沒有自選股<br>'+
-'搜尋股票後加入自選'+
-'</div>';
-
+r.innerHTML='<div class="empty-watch">目前還沒有自選股<br>搜尋股票後加入自選</div>';
 return;
 }
 
 r.innerHTML=a.map(x=>
-
 '<div class="watch-card">'+
-
 '<div class="watch-main" data-watch-open="'+safe(x.symbol)+'">'+
 '<div class="watch-symbol">⭐ '+safe(x.symbol)+'</div>'+
 '<div class="watch-name">'+safe(x.name)+'</div>'+
 '<div class="watch-open">查看波段分析 →</div>'+
 '</div>'+
-
 '<button class="watch-remove" data-watch-remove="'+safe(x.symbol)+'">×</button>'+
-
 '</div>'
-
 ).join("");
 
 r.querySelectorAll("[data-watch-open]").forEach(x=>{
-
-x.onclick=function(){
-analyze(this.dataset.watchOpen);
-};
-
+x.onclick=function(){analyze(this.dataset.watchOpen)};
 });
 
 r.querySelectorAll("[data-watch-remove]").forEach(x=>{
-
-x.onclick=function(e){
-e.stopPropagation();
-removeFavorite(this.dataset.watchRemove);
-};
-
+x.onclick=function(e){e.stopPropagation();removeFavorite(this.dataset.watchRemove)};
 });
 }
 
-/* =========================
-   持倉
-========================= */
+/* 持倉 */
 
 function getPositions(){
-try{
-return JSON.parse(localStorage.getItem(POSITION_KEY)||"{}")||{};
-}catch(e){
-return{};
-}
+try{return JSON.parse(localStorage.getItem(POSITION_KEY)||"{}")||{}}
+catch(e){return{}}
 }
 
-function savePositions(x){
-localStorage.setItem(POSITION_KEY,JSON.stringify(x));
-}
-
-function getPosition(s){
-return getPositions()[String(s)]||null;
-}
+function savePositions(x){localStorage.setItem(POSITION_KEY,JSON.stringify(x))}
+function getPosition(s){return getPositions()[String(s)]||null}
 
 function deletePosition(s){
-
 var a=getPositions();
-
 delete a[String(s)];
-
 savePositions(a);
 }
 
-function qtyToShares(q,u,m){
-return m==="TW"&&u==="張"
-?q*1000
-:q;
-}
+function qtyToShares(q,u,m){return m==="TW"&&u==="張"?q*1000:q}
 
 function createPositionFromForm(){
-
 var m=currentMarketState;
 var e=+el("positionEntry").value;
 var q=+el("positionQty").value;
@@ -727,22 +646,12 @@ return;
 }
 
 var sh=qtyToShares(q,u,m.market);
+var st=Math.min(m.low10-m.atr*.25,m.ma20-m.atr*.75);
 
-var st=Math.min(
-m.low10-m.atr*.25,
-m.ma20-m.atr*.75
-);
-
-if(!Number.isFinite(st)||st>=e){
-st=e-m.atr;
-}
+if(!Number.isFinite(st)||st>=e)st=e-m.atr;
 
 var R=e-st;
-
-if(!(R>0)){
-R=m.atr;
-st=e-R;
-}
+if(!(R>0)){R=m.atr;st=e-R}
 
 var a=getPositions();
 
@@ -765,121 +674,55 @@ createdAt:Date.now()
 };
 
 savePositions(a);
-
 buildAnalysis(currentAnalysisData);
 }
 
 function updatePositionProtection(p,m){
-
-var h=Math.max(
-+p.highWater||p.entry,
-m.price
-);
-
+var h=Math.max(+p.highWater||p.entry,m.price);
 var protect=+p.protectPrice;
-
-if(!Number.isFinite(protect)){
-protect=p.initialStop;
-}
+if(!Number.isFinite(protect))protect=p.initialStop;
 
 var R=+p.initialR||m.atr;
 var g=(h-p.entry)/R;
 var c=protect;
 
-if(g>=1){
-c=Math.max(c,p.entry);
-}
-
-if(g>=1.5){
-c=Math.max(c,p.entry+R*.25);
-}
-
-if(g>=2){
-c=Math.max(c,p.entry+R*.75);
-}
-
-if(g>=3){
-c=Math.max(c,p.entry+R*1.5);
-}
+if(g>=1)c=Math.max(c,p.entry);
+if(g>=1.5)c=Math.max(c,p.entry+R*.25);
+if(g>=2)c=Math.max(c,p.entry+R*.75);
+if(g>=3)c=Math.max(c,p.entry+R*1.5);
 
 if(g>=1){
-
-c=Math.max(
-c,
-Math.min(
-Math.max(
-m.ma20-m.atr*.5,
-m.recent3Low-m.atr*.25
-),
-m.price-m.atr*.35
-)
-);
-
+c=Math.max(c,Math.min(Math.max(m.ma20-m.atr*.5,m.recent3Low-m.atr*.25),m.price-m.atr*.35));
 }
 
 c=Math.max(protect,c);
-
 p.highWater=h;
 p.protectPrice=c;
 
 var a=getPositions();
-
 a[p.symbol]=p;
-
 savePositions(a);
-
 return p;
 }
 
 function statBox(l,v,c){
-
-return'<div class="position-stat">'+
-'<span>'+safe(l)+'</span>'+
-'<strong class="'+safe(c||"")+'">'+safe(v)+'</strong>'+
-'</div>';
+return'<div class="position-stat"><span>'+safe(l)+'</span><strong class="'+safe(c||"")+'">'+safe(v)+'</strong></div>';
 }
 
 function positionHTML(m){
-
 var p=getPosition(m.symbol);
 
 if(!p){
-
 return'<div class="position-card">'+
-
 '<div class="section-title">💼 建立我的持倉</div>'+
-
 '<div class="position-form" style="margin-top:15px">'+
-
-'<div class="position-field">'+
-'<label>平均進場價</label>'+
-'<input id="positionEntry" class="position-input" type="number">'+
+'<div class="position-field"><label>平均進場價</label><input id="positionEntry" class="position-input" type="number"></div>'+
+'<div class="position-field"><label>持有數量</label><input id="positionQty" class="position-input" type="number"></div>'+
+'<div class="position-field"><label>單位</label><select id="positionUnit" class="position-select">'+
+(m.market==="TW"?'<option value="張">張</option><option value="股">股 / 零股</option>':'<option value="股">股</option>')+
+'</select></div>'+
 '</div>'+
-
-'<div class="position-field">'+
-'<label>持有數量</label>'+
-'<input id="positionQty" class="position-input" type="number">'+
-'</div>'+
-
-'<div class="position-field">'+
-'<label>單位</label>'+
-'<select id="positionUnit" class="position-select">'+
-
-(
-m.market==="TW"
-?'<option value="張">張</option><option value="股">股 / 零股</option>'
-:'<option value="股">股</option>'
-)+
-
-'</select>'+
-'</div>'+
-
-'</div>'+
-
-'<div class="position-actions" style="grid-template-columns:1fr">'+
-'<button id="positionSave" class="position-save">儲存持倉</button>'+
-'</div>'+
-
+'<div class="position-actions" style="grid-template-columns:1fr"><button id="positionSave" class="position-save">儲存持倉</button></div>'+
 '</div>';
 }
 
@@ -889,1276 +732,409 @@ var pnl=(m.price-p.entry)*p.shares;
 var pp=(m.price-p.entry)/p.entry*100;
 var cur=m.market==="TW"?"NT$":"US$";
 
-var s=
-m.price<=p.protectPrice
+var s=m.price<=p.protectPrice
 ?"🔴 保護位已失守"
 :m.price<=p.protectPrice+m.atr*.5
 ?"🟡 接近持倉保護位"
 :"🟢 波段結構仍有效";
 
 return'<div class="position-card">'+
-
 '<div class="section-title">💼 我的持倉</div>'+
-
-'<div class="avg-status" style="font-size:17px;margin-top:12px">'+
-s+
-'</div>'+
-
+'<div class="avg-status" style="font-size:17px;margin-top:12px">'+s+'</div>'+
 '<div class="position-stats">'+
-
-statBox(
-"平均成本",
-fmt(p.entry)
-)+
-
-statBox(
-"持有",
-fmt(p.qty,2)+" "+p.unit
-)+
-
-statBox(
-"目前價格",
-fmt(m.price)
-)+
-
-statBox(
-"未實現損益",
-(pnl>=0?"+":"")+cur+fmt(
-pnl,
-m.market==="TW"?0:2
-),
-pclass(pnl)
-)+
-
-statBox(
-"損益率",
-pct(pp),
-pclass(pp)
-)+
-
-statBox(
-"目前保護位",
-fmt(p.protectPrice),
-"down"
-)+
-
+statBox("平均成本",fmt(p.entry))+
+statBox("持有",fmt(p.qty,2)+" "+p.unit)+
+statBox("目前價格",fmt(m.price))+
+statBox("未實現損益",(pnl>=0?"+":"")+cur+fmt(pnl,m.market==="TW"?0:2),pclass(pnl))+
+statBox("損益率",pct(pp),pclass(pp))+
+statBox("目前保護位",fmt(p.protectPrice),"down")+
 '</div>'+
-
 '<div class="position-actions">'+
 '<button id="positionReset" class="position-save">重新建立持倉</button>'+
 '<button id="positionDelete" class="position-delete">刪除</button>'+
 '</div>'+
-
 '</div>';
 }
 
-/* =========================
-   攤平均價
-========================= */
+/* 攤平均價 */
 
 function intradayAverageSignal(){
-
-if(
-!["1m","3m","5m","10m","15m"].includes(KBAR_TF)
-){
-
-return{
-ready:false,
-score:0,
-reasons:[
-"△ 均價確認請切回 1～15 分 K"
-]
-};
-
+if(!["1m","3m","5m","10m","15m"].includes(KBAR_TF)){
+return{ready:false,score:0,reasons:["△ 均價確認請切回 1～15 分 K"]};
 }
 
 if(KBAR_DATA.length<5){
-
-return{
-ready:false,
-score:0,
-reasons:[
-"△ 分 K 資料不足"
-]
-};
-
+return{ready:false,score:0,reasons:["△ 分 K 資料不足"]};
 }
 
 var l=KBAR_DATA.at(-1);
 var p=KBAR_DATA.at(-2);
+var s=SMA(KBAR_DATA.slice(-5).map(x=>+x.close),5);
 
-var s=SMA(
-KBAR_DATA.slice(-5).map(x=>+x.close),
-5
-);
+var score=0,r=[];
 
-var score=0;
-var r=[];
+if(l.close>=s){score+=30;r.push("✓ 站上分 K SMA5")}
+else r.push("△ 尚未站上分 K SMA5");
 
-if(l.close>=s){
+if(l.close>=p.close){score+=20;r.push("✓ 最新收盤不弱於前一根")}
+else r.push("△ 最新收盤低於前一根");
 
-score+=30;
-r.push("✓ 站上分 K SMA5");
+var pl=Math.min(...KBAR_DATA.slice(-5,-1).map(x=>+x.low));
 
-}else{
+if(l.low>=pl){score+=25;r.push("✓ 未再破近期低點")}
+else r.push("△ 再創近期低點");
 
-r.push("△ 尚未站上分 K SMA5");
+if(l.close>=l.open){score+=15;r.push("✓ 最新 K 收紅／平")}
+else r.push("△ 最新 K 收黑");
 
-}
-
-if(l.close>=p.close){
-
-score+=20;
-r.push("✓ 最新收盤不弱於前一根");
-
-}else{
-
-r.push("△ 最新收盤低於前一根");
-
-}
-
-var pl=Math.min(
-...KBAR_DATA
-.slice(-5,-1)
-.map(x=>+x.low)
-);
-
-if(l.low>=pl){
-
-score+=25;
-r.push("✓ 未再破近期低點");
-
-}else{
-
-r.push("△ 再創近期低點");
-
-}
-
-if(l.close>=l.open){
-
-score+=15;
-r.push("✓ 最新 K 收紅／平");
-
-}else{
-
-r.push("△ 最新 K 收黑");
-
-}
-
-return{
-ready:score>=60,
-score:score,
-reasons:r
-};
+return{ready:score>=60,score:score,reasons:r};
 }
 
 function averageHTML(m){
-
 var p=getPosition(m.symbol);
 
 if(!p){
-
-return'<div class="avg-card">'+
-'<div class="avg-status">先建立持倉</div>'+
-'<div class="avg-sub">儲存實際進場均價與數量後才會計算。</div>'+
-'</div>';
+return'<div class="avg-card"><div class="avg-status">先建立持倉</div><div class="avg-sub">儲存實際進場均價與數量後才會計算。</div></div>';
 }
 
 var i=intradayAverageSignal();
+var ss=Number.isFinite(+m.swingStop)?+m.swingStop:+p.initialStop;
+var inv=Math.max(+p.initialStop,Math.min(ss,p.entry-m.atr*.1));
 
-var ss=Number.isFinite(+m.swingStop)
-?+m.swingStop
-:+p.initialStop;
+var dg=m.price>inv&&m.ma20>m.ma60&&m.macd>=0&&m.rsi>=40&&m.rsi<=80;
+var sp=m.price>=m.support-m.atr*.35;
+var ready=dg&&sp&&i.ready;
 
-var inv=Math.max(
-+p.initialStop,
-Math.min(
-ss,
-p.entry-m.atr*.1
-)
-);
-
-var dg=
-m.price>inv&&
-m.ma20>m.ma60&&
-m.macd>=0&&
-m.rsi>=40&&
-m.rsi<=80;
-
-var sp=
-m.price>=m.support-m.atr*.35;
-
-var ready=
-dg&&
-sp&&
-i.ready;
-
-var status=
-m.price<=inv
+var status=m.price<=inv
 ?"🔴 結構失效，不顯示向下攤均價訊號"
 :ready
 ?"🟢 均價條件出現"
 :"🟡 等待確認";
 
-var pp=
-(m.price-p.entry)/p.entry*100;
+var pp=(m.price-p.entry)/p.entry*100;
+var pnl=(m.price-p.entry)*p.shares;
+var cur=m.market==="TW"?"NT$":"US$";
 
-var pnl=
-(m.price-p.entry)*p.shares;
-
-var cur=
-m.market==="TW"
-?"NT$"
-:"US$";
-
-var plans=
-m.market==="TW"
-?[
-[250,"+0.25 張"],
-[500,"+0.5 張"],
-[1000,"+1 張"]
-]
-:[
-[1,"+1 股"],
-[5,"+5 股"],
-[10,"+10 股"]
-];
+var plans=m.market==="TW"
+?[[250,"+0.25 張"],[500,"+0.5 張"],[1000,"+1 張"]]
+:[[1,"+1 股"],[5,"+5 股"],[10,"+10 股"]];
 
 return'<div class="avg-card">'+
-
-'<div class="avg-status">'+
-status+
-'</div>'+
-
+'<div class="avg-status">'+status+'</div>'+
 '<div class="position-stats">'+
-
-statBox(
-"目前均價",
-fmt(p.entry)
-)+
-
-statBox(
-"目前價格",
-fmt(m.price)
-)+
-
-statBox(
-"損益率",
-pct(pp),
-pclass(pp)
-)+
-
-statBox(
-"未實現損益",
-(pnl>=0?"+":"")+cur+fmt(
-pnl,
-m.market==="TW"?0:2
-),
-pclass(pnl)
-)+
-
+statBox("目前均價",fmt(p.entry))+
+statBox("目前價格",fmt(m.price))+
+statBox("損益率",pct(pp),pclass(pp))+
+statBox("未實現損益",(pnl>=0?"+":"")+cur+fmt(pnl,m.market==="TW"?0:2),pclass(pnl))+
 '</div>'+
-
-'<div class="avg-zone">'+
-'日 K：'+(dg?"✓":"△")+
-'　支撐：'+(sp?"✓":"△")+
-'　短 K：'+i.score+'/100'+
-'<br>結構失效參考：<strong class="down">'+fmt(inv)+'</strong>'+
+'<div class="avg-zone">日 K：'+(dg?"✓":"△")+'　支撐：'+(sp?"✓":"△")+'　短 K：'+i.score+'/100<br>結構失效參考：<strong class="down">'+fmt(inv)+'</strong></div>'+
+'<div class="explain-box"><div class="explain-title">🔍 短 K 確認</div>'+
+i.reasons.map(x=>'<div class="condition-row">'+safe(x)+'</div>').join("")+
 '</div>'+
-
-'<div class="explain-box">'+
-'<div class="explain-title">🔍 短 K 確認</div>'+
-i.reasons.map(x=>
-'<div class="condition-row">'+safe(x)+'</div>'
-).join("")+
-'</div>'+
-
 '<div class="avg-plans">'+
-
 plans.map(x=>{
-
-var na=
-(
-p.entry*p.shares+
-m.price*x[0]
-)/
-(
-p.shares+x[0]
-);
-
-return'<div class="avg-plan">'+
-
-'<div class="avg-plan-title">'+
-x[1]+
-'</div>'+
-
+var na=(p.entry*p.shares+m.price*x[0])/(p.shares+x[0]);
+return'<div class="avg-plan"><div class="avg-plan-title">'+x[1]+'</div>'+
 '<div class="avg-plan-grid">'+
-
-'<div class="avg-plan-item">'+
-'增加資金'+
-'<strong>'+
-cur+
-fmt(
-m.price*x[0],
-m.market==="TW"?0:2
-)+
-'</strong>'+
-'</div>'+
-
-'<div class="avg-plan-item">'+
-'新平均成本'+
-'<strong>'+
-fmt(na)+
-'</strong>'+
-'</div>'+
-
-'</div>'+
-'</div>';
-
+'<div class="avg-plan-item">增加資金<strong>'+cur+fmt(m.price*x[0],m.market==="TW"?0:2)+'</strong></div>'+
+'<div class="avg-plan-item">新平均成本<strong>'+fmt(na)+'</strong></div>'+
+'</div></div>';
 }).join("")+
-
-'</div>'+
-'</div>';
+'</div></div>';
 }
 
-/* =========================
-   推薦策略
-========================= */
+/* 推薦策略 */
 
-function calculateStrategyRecommendation(
-m,
-resistance,
-structureState
-){
+function calculateStrategyRecommendation(m,resistance,structureState){
+var pullback=0,highR=0,surge=0;
 
-var pullback=0;
-var highR=0;
-var surge=0;
+if(m.ma20>m.ma60)pullback+=25;
+if(m.price>=m.ma20-m.atr*.5)pullback+=15;
+if(m.price<=m.ma20+m.atr*1.3)pullback+=15;
+if(m.rsi>=42&&m.rsi<=68)pullback+=15;
+if(m.macd>=0)pullback+=15;
+if(!structureState.broken)pullback+=15;
 
-/* 支撐回踩 */
+if(m.ma20>m.ma60)highR+=20;
+if(m.price>m.ma20)highR+=15;
+if(m.macd>0)highR+=15;
+if(m.rsi>=52&&m.rsi<=72)highR+=15;
+if(m.price>=resistance-m.atr*.5)highR+=20;
+if(!structureState.broken)highR+=15;
 
-if(m.ma20>m.ma60){
-pullback+=25;
+if(m.ma20>m.ma60)surge+=20;
+if(m.price>m.ma20)surge+=15;
+if(m.macd>0)surge+=15;
+if(m.rsi>=58&&m.rsi<=74)surge+=15;
+if(m.price>=resistance-m.atr*.25)surge+=20;
+if(!structureState.broken)surge+=15;
+
+pullback=clamp(pullback,0,100);
+highR=clamp(highR,0,100);
+surge=clamp(surge,0,100);
+
+var best="PULLBACK",bestScore=pullback;
+if(highR>bestScore){best="HIGH_R";bestScore=highR}
+if(surge>bestScore){best="SURGE";bestScore=surge}
+
+return{pullback,highR,surge,best,bestScore};
 }
 
-if(
-m.price>=m.ma20-m.atr*.5
-){
-pullback+=15;
-}
+function strategyRecommendationHTML(m,resistance,structureState,entryLow,entryHigh,stop,bstop){
+var s=calculateStrategyRecommendation(m,resistance,structureState);
 
-if(
-m.price<=m.ma20+m.atr*1.3
-){
-pullback+=15;
-}
-
-if(
-m.rsi>=42&&
-m.rsi<=68
-){
-pullback+=15;
-}
-
-if(m.macd>=0){
-pullback+=15;
-}
-
-if(!structureState.broken){
-pullback+=15;
-}
-
-/* 高 R */
-
-if(m.ma20>m.ma60){
-highR+=20;
-}
-
-if(m.price>m.ma20){
-highR+=15;
-}
-
-if(m.macd>0){
-highR+=15;
-}
-
-if(
-m.rsi>=52&&
-m.rsi<=72
-){
-highR+=15;
-}
-
-if(
-m.price>=resistance-m.atr*.5
-){
-highR+=20;
-}
-
-if(!structureState.broken){
-highR+=15;
-}
-
-/* 強勢續攻 */
-
-if(m.ma20>m.ma60){
-surge+=20;
-}
-
-if(m.price>m.ma20){
-surge+=15;
-}
-
-if(m.macd>0){
-surge+=15;
-}
-
-if(
-m.rsi>=58&&
-m.rsi<=74
-){
-surge+=15;
-}
-
-if(
-m.price>=resistance-m.atr*.25
-){
-surge+=20;
-}
-
-if(!structureState.broken){
-surge+=15;
-}
-
-pullback=clamp(
-pullback,
-0,
-100
-);
-
-highR=clamp(
-highR,
-0,
-100
-);
-
-surge=clamp(
-surge,
-0,
-100
-);
-
-var best="PULLBACK";
-var bestScore=pullback;
-
-if(highR>bestScore){
-best="HIGH_R";
-bestScore=highR;
-}
-
-if(surge>bestScore){
-best="SURGE";
-bestScore=surge;
-}
-
-return{
-pullback,
-highR,
-surge,
-best,
-bestScore
-};
-}
-
-function strategyRecommendationHTML(
-m,
-resistance,
-structureState,
-entryLow,
-entryHigh,
-stop,
-bstop
-){
-
-var s=
-calculateStrategyRecommendation(
-m,
-resistance,
-structureState
-);
-
-var name="";
-var cls="";
-var box="";
-var note="";
-var target="";
-var zone="";
-var invalidation="";
+var name="",cls="",box="",note="",target="",zone="",invalidation="";
 
 if(s.best==="SURGE"){
-
 name="🔥 建議策略：強勢續攻";
-cls="orange";
-box="orange";
-
-note=
-"目前三套策略中，強勢續攻的技術條件符合程度最高。點擊即可前往查看完整條件。";
-
+cls="orange";box="orange";
+note="目前三套策略中，強勢續攻的技術條件符合程度最高。點擊即可前往查看完整條件。";
 target="surgeStrategy";
-
-zone=
-fmt(m.price-m.atr*.2)+
-" ～ "+
-fmt(m.price+m.atr*.15);
-
-invalidation=
-fmt(bstop);
-
-}
-else if(s.best==="HIGH_R"){
-
+zone=fmt(m.price-m.atr*.2)+" ～ "+fmt(m.price+m.atr*.15);
+invalidation=fmt(bstop);
+}else if(s.best==="HIGH_R"){
 name="🟣 建議策略：高 R";
-cls="purple";
-box="purple";
-
-note=
-"目前三套策略中，高 R 的技術條件符合程度最高。點擊即可前往查看突破與結構條件。";
-
+cls="purple";box="purple";
+note="目前三套策略中，高 R 的技術條件符合程度最高。點擊即可前往查看突破與結構條件。";
 target="highRStrategy";
-
-zone=
-fmt(resistance-m.atr*.25)+
-" ～ "+
-fmt(resistance+m.atr*.35);
-
-invalidation=
-fmt(bstop);
-
-}
-else{
-
+zone=fmt(resistance-m.atr*.25)+" ～ "+fmt(resistance+m.atr*.35);
+invalidation=fmt(bstop);
+}else{
 name="🟢 建議策略：支撐回踩";
-cls="green";
-box="positive";
-
-note=
-"目前三套策略中，支撐回踩的技術條件符合程度最高。點擊即可前往查看回踩條件。";
-
+cls="green";box="positive";
+note="目前三套策略中，支撐回踩的技術條件符合程度最高。點擊即可前往查看回踩條件。";
 target="pullbackStrategy";
-
-zone=
-fmt(entryLow)+
-" ～ "+
-fmt(entryHigh);
-
-invalidation=
-fmt(stop);
+zone=fmt(entryLow)+" ～ "+fmt(entryHigh);
+invalidation=fmt(stop);
 }
 
 return'<div class="matcher '+box+'">'+
-
-'<div class="matcher-kicker">'+
-'依日 K 趨勢、結構、動能與價格位置自動評分'+
-'</div>'+
-
-'<div class="matcher-strategy '+cls+' matcher-main-jump" onclick="jumpToStrategy(\''+target+'\')">'+
-name+
-'</div>'+
-
-'<div class="matcher-note">'+
-
-'建議入場分數：'+
-'<strong class="good">'+
-s.bestScore+
-' / 100'+
-'</strong>'+
-'<br>'+
-
-note+
-
-'<br>'+
-'<span style="color:#737975;font-size:10px">'+
-'分數代表目前技術條件符合程度，不代表未來上漲機率。'+
-'</span>'+
-
-'</div>'+
-
+'<div class="matcher-kicker">依日 K 趨勢、結構、動能與價格位置自動評分</div>'+
+'<div class="matcher-strategy '+cls+' matcher-main-jump" onclick="jumpToStrategy(\''+target+'\')">'+name+'</div>'+
+'<div class="matcher-note">建議入場分數：<strong class="good">'+s.bestScore+' / 100</strong><br>'+note+
+'<br><span style="color:#737975;font-size:10px">分數代表目前技術條件符合程度，不代表未來上漲機率。</span></div>'+
 '<div class="matcher-grid">'+
-
-'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'pullbackStrategy\')">'+
-'<span>🟢 支撐回踩</span>'+
-'<strong>'+s.pullback+'</strong>'+
-'<small>點擊前往 ↓</small>'+
+'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'pullbackStrategy\')"><span>🟢 支撐回踩</span><strong>'+s.pullback+'</strong><small>點擊前往 ↓</small></div>'+
+'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'highRStrategy\')"><span>🟣 高 R</span><strong>'+s.highR+'</strong><small>點擊前往 ↓</small></div>'+
+'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'surgeStrategy\')"><span>🔥 強勢續攻</span><strong>'+s.surge+'</strong><small>點擊前往 ↓</small></div>'+
 '</div>'+
-
-'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'highRStrategy\')">'+
-'<span>🟣 高 R</span>'+
-'<strong>'+s.highR+'</strong>'+
-'<small>點擊前往 ↓</small>'+
-'</div>'+
-
-'<div class="matcher-score strategy-jump" onclick="jumpToStrategy(\'surgeStrategy\')">'+
-'<span>🔥 強勢續攻</span>'+
-'<strong>'+s.surge+'</strong>'+
-'<small>點擊前往 ↓</small>'+
-'</div>'+
-
-'</div>'+
-
 '<div class="matcher-levels">'+
-
-'<div class="matcher-level-row">'+
-'<span>目前價格</span>'+
-'<strong>'+fmt(m.price)+'</strong>'+
-'</div>'+
-
-'<div class="matcher-level-row">'+
-'<span>MA20</span>'+
-'<strong>'+fmt(m.ma20)+'</strong>'+
-'</div>'+
-
-'<div class="matcher-level-row">'+
-'<span>20 日壓力</span>'+
-'<strong>'+fmt(resistance)+'</strong>'+
-'</div>'+
-
-'<div class="matcher-level-row">'+
-'<span>策略觀察區</span>'+
-'<strong>'+zone+'</strong>'+
-'</div>'+
-
-'<div class="matcher-level-row">'+
-'<span>日 K 結構失效位</span>'+
-'<strong class="down">'+invalidation+'</strong>'+
-'</div>'+
-
-'</div>'+
-'</div>';
+'<div class="matcher-level-row"><span>目前價格</span><strong>'+fmt(m.price)+'</strong></div>'+
+'<div class="matcher-level-row"><span>MA20</span><strong>'+fmt(m.ma20)+'</strong></div>'+
+'<div class="matcher-level-row"><span>20 日壓力</span><strong>'+fmt(resistance)+'</strong></div>'+
+'<div class="matcher-level-row"><span>策略觀察區</span><strong>'+zone+'</strong></div>'+
+'<div class="matcher-level-row"><span>日 K 結構失效位</span><strong class="down">'+invalidation+'</strong></div>'+
+'</div></div>';
 }
 
-/* =========================
-   回測
-========================= */
+/* 回測 */
 
 function backtestIndicators(rows,index){
-
 var p=rows.slice(0,index+1);
-
-if(p.length<90){
-return null;
-}
+if(p.length<90)return null;
 
 var c=p.map(x=>+x.close);
-
-var ma20=SMA(c,20);
-var ma60=SMA(c,60);
-
-var old20=
-SMA(
-c.slice(0,-5),
-20
-);
-
-var old60=
-SMA(
-c.slice(0,-10),
-60
-);
-
+var ma20=SMA(c,20),ma60=SMA(c,60);
+var old20=SMA(c.slice(0,-5),20);
+var old60=SMA(c.slice(0,-10),60);
 var rsi=RSI(c,14);
-
-var macd=
-EMA(c.slice(-100),12)-
-EMA(c.slice(-100),26);
-
+var macd=EMA(c.slice(-100),12)-EMA(c.slice(-100),26);
 var atr=ATR(p,14);
+if(!(atr>0))return null;
 
-if(!(atr>0)){
-return null;
-}
+var prior=p.slice(-21,-1);
+if(prior.length<20)return null;
 
-var prior=
-p.slice(-21,-1);
-
-if(prior.length<20){
-return null;
-}
-
-var res=
-Math.max(
-...prior.map(x=>+x.high)
-);
-
-var st=
-findHTFSwingStructure(p);
-
+var res=Math.max(...prior.map(x=>+x.high));
+var st=findHTFSwingStructure(p);
 var sl=+st.low;
-
 var b=rows[index];
-
-var o=+b.open;
-var h=+b.high;
-var l=+b.low;
-var cl=+b.close;
-
-var range=
-Math.max(
-h-l,
-.000001
-);
+var o=+b.open,h=+b.high,l=+b.low,cl=+b.close;
+var range=Math.max(h-l,.000001);
 
 return{
-close:cl,
-open:o,
-ma20,
-ma60,
-ma20Rising:
-Number.isFinite(old20)&&
-ma20>old20,
-
-ma60Rising:
-Number.isFinite(old60)&&
-ma60>old60,
-
-rsi,
-macd,
-atr,
-
-resistance:res,
-structureLow:sl,
-
-bodyRatio:
-Math.abs(cl-o)/range,
-
-closeLocation:
-(cl-l)/range,
-
-breakoutATR:
-(cl-res)/atr,
-
-aboveMA20:
-(cl-ma20)/atr,
-
-structureGood:
-Number.isFinite(sl)&&
-cl>sl-atr*.15
+close:cl,open:o,ma20,ma60,
+ma20Rising:Number.isFinite(old20)&&ma20>old20,
+ma60Rising:Number.isFinite(old60)&&ma60>old60,
+rsi,macd,atr,resistance:res,structureLow:sl,
+bodyRatio:Math.abs(cl-o)/range,
+closeLocation:(cl-l)/range,
+breakoutATR:(cl-res)/atr,
+aboveMA20:(cl-ma20)/atr,
+structureGood:Number.isFinite(sl)&&cl>sl-atr*.15
 };
 }
 
 function strictHighRSignal(rows,i){
-
-var x=
-backtestIndicators(
-rows,
-i
-);
-
-if(!x){
-return null;
-}
+var x=backtestIndicators(rows,i);
+if(!x)return null;
 
 var ok=
-x.close>x.ma20&&
-x.ma20>x.ma60&&
-x.ma20Rising&&
-x.macd>0&&
-x.rsi>=54&&
-x.rsi<=70&&
-x.close>x.resistance&&
-x.breakoutATR>=0&&
-x.breakoutATR<=.8&&
-x.aboveMA20<=2.5&&
-x.close>=x.open&&
-x.closeLocation>=.65&&
-x.bodyRatio>=.3&&
-x.structureGood;
+x.close>x.ma20&&x.ma20>x.ma60&&x.ma20Rising&&x.macd>0&&
+x.rsi>=54&&x.rsi<=70&&x.close>x.resistance&&x.breakoutATR>=0&&
+x.breakoutATR<=.8&&x.aboveMA20<=2.5&&x.close>=x.open&&
+x.closeLocation>=.65&&x.bodyRatio>=.3&&x.structureGood;
 
-return ok
-?{
-strategy:"HIGH_R",
-signalDate:rows[i].date,
-atr:x.atr,
-structureLow:x.structureLow
-}
-:null;
+return ok?{strategy:"HIGH_R",signalDate:rows[i].date,atr:x.atr,structureLow:x.structureLow}:null;
 }
 
 function strictSurgeSignal(rows,i){
-
-var x=
-backtestIndicators(
-rows,
-i
-);
-
-if(!x){
-return null;
-}
+var x=backtestIndicators(rows,i);
+if(!x)return null;
 
 var ok=
-x.close>x.ma20&&
-x.ma20>x.ma60&&
-x.ma20Rising&&
-x.ma60Rising&&
-x.macd>0&&
-x.rsi>=58&&
-x.rsi<=73&&
-x.close>x.resistance&&
-x.breakoutATR>=.1&&
-x.breakoutATR<=.9&&
-x.aboveMA20<=2.6&&
-x.close>x.open&&
-x.closeLocation>=.7&&
-x.bodyRatio>=.35&&
-x.structureGood;
+x.close>x.ma20&&x.ma20>x.ma60&&x.ma20Rising&&x.ma60Rising&&
+x.macd>0&&x.rsi>=58&&x.rsi<=73&&x.close>x.resistance&&
+x.breakoutATR>=.1&&x.breakoutATR<=.9&&x.aboveMA20<=2.6&&
+x.close>x.open&&x.closeLocation>=.7&&x.bodyRatio>=.35&&x.structureGood;
 
-return ok
-?{
-strategy:"SURGE",
-signalDate:rows[i].date,
-atr:x.atr,
-structureLow:x.structureLow
-}
-:null;
+return ok?{strategy:"SURGE",signalDate:rows[i].date,atr:x.atr,structureLow:x.structureLow}:null;
 }
 
 function buildBacktestTrade(rows,i,s){
-
 var ei=i+1;
-
-if(ei>=rows.length){
-return null;
-}
+if(ei>=rows.length)return null;
 
 var e=+rows[ei].open;
-
-var stop=
-s.structureLow-
-s.atr*.15;
-
-if(!(e>stop)){
-return null;
-}
+var stop=s.structureLow-s.atr*.15;
+if(!(e>stop))return null;
 
 var R=e-stop;
 var ra=R/s.atr;
 var rp=R/e;
 
-if(
-ra<.8||
-ra>(
-s.strategy==="HIGH_R"
-?6
-:5.5
-)||
-rp>(
-s.strategy==="HIGH_R"
-?.16
-:.14
-)
-){
-return null;
-}
+if(ra<.8||ra>(s.strategy==="HIGH_R"?6:5.5)||rp>(s.strategy==="HIGH_R"?.16:.14))return null;
 
-var a=
-s.strategy==="HIGH_R"
-?2
-:1.5;
-
-var b=
-s.strategy==="HIGH_R"
-?3
-:2.5;
-
-var c=
-s.strategy==="HIGH_R"
-?5
-:4;
+var a=s.strategy==="HIGH_R"?2:1.5;
+var b=s.strategy==="HIGH_R"?3:2.5;
+var c=s.strategy==="HIGH_R"?5:4;
 
 return{
-strategy:s.strategy,
-entryIndex:ei,
-entry:e,
-stop,
-risk:R,
-
-tp1:e+R*a,
-tp2:e+R*b,
-tp3:e+R*c,
-
-m1:a,
-m2:b,
-m3:c,
-
-signalDate:s.signalDate
+strategy:s.strategy,entryIndex:ei,entry:e,stop,risk:R,
+tp1:e+R*a,tp2:e+R*b,tp3:e+R*c,
+m1:a,m2:b,m3:c,signalDate:s.signalDate
 };
 }
 
 function simulateTrade(rows,t){
+var end=Math.min(rows.length-1,t.entryIndex+80);
+var p1=false,p2=false,p3=false;
 
-var end=
-Math.min(
-rows.length-1,
-t.entryIndex+80
-);
+for(var i=t.entryIndex;i<=end;i++){
+var l=+rows[i].low,h=+rows[i].high;
 
-var p1=false;
-var p2=false;
-var p3=false;
-
-for(
-var i=t.entryIndex;
-i<=end;
-i++
-){
-
-var l=+rows[i].low;
-var h=+rows[i].high;
-
-/* 同一根碰 SL 與 TP，保守先判 SL */
-
-if(l<=t.stop){
-
-return{
-result:"LOSS",
-r:-1,
-tp1:p1,
-tp2:p2,
-tp3:p3,
-exitIndex:i
-};
-
-}
+if(l<=t.stop)return{result:"LOSS",r:-1,tp1:p1,tp2:p2,tp3:p3,exitIndex:i};
 
 if(h>=t.tp1){
-
 p1=true;
+p2=h>=t.tp2;
+p3=h>=t.tp3;
 
-p2=
-h>=t.tp2;
-
-p3=
-h>=t.tp3;
-
-for(
-var j=i;
-j<=end;
-j++
-){
-
-if(
-+rows[j].low<=t.stop
-){
-break;
+for(var j=i;j<=end;j++){
+if(+rows[j].low<=t.stop)break;
+if(+rows[j].high>=t.tp2)p2=true;
+if(+rows[j].high>=t.tp3){p3=true;break}
 }
 
-if(
-+rows[j].high>=t.tp2
-){
-p2=true;
-}
-
-if(
-+rows[j].high>=t.tp3
-){
-p3=true;
-break;
-}
-
-}
-
-return{
-result:"WIN",
-r:t.m1,
-tp1:true,
-tp2:p2,
-tp3:p3,
-exitIndex:i
-};
-
+return{result:"WIN",r:t.m1,tp1:true,tp2:p2,tp3:p3,exitIndex:i};
 }
 }
 
 return{
 result:"LOSS",
-r:
-(+rows[end].close-t.entry)/
-t.risk,
-tp1:false,
-tp2:false,
-tp3:false,
-exitIndex:end
+r:(+rows[end].close-t.entry)/t.risk,
+tp1:false,tp2:false,tp3:false,exitIndex:end
 };
 }
 
 function runStrategyBacktest(rows,type){
+var tr=[],next=90;
 
-var tr=[];
-var next=90;
+for(var i=90;i<rows.length-2;i++){
+if(i<next)continue;
 
-for(
-var i=90;
-i<rows.length-2;
-i++
-){
+var s=type==="HIGH_R"?strictHighRSignal(rows,i):strictSurgeSignal(rows,i);
+if(!s)continue;
 
-if(i<next){
-continue;
-}
+var t=buildBacktestTrade(rows,i,s);
+if(!t)continue;
 
-var s=
-type==="HIGH_R"
-?strictHighRSignal(rows,i)
-:strictSurgeSignal(rows,i);
+var r=simulateTrade(rows,t);
 
-if(!s){
-continue;
-}
-
-var t=
-buildBacktestTrade(
-rows,
-i,
-s
-);
-
-if(!t){
-continue;
-}
-
-var r=
-simulateTrade(
-rows,
-t
-);
-
-tr.push({
-result:r.result,
-r:r.r,
-tp1:r.tp1,
-tp2:r.tp2,
-tp3:r.tp3
-});
-
-next=
-r.exitIndex+1;
+tr.push({result:r.result,r:r.r,tp1:r.tp1,tp2:r.tp2,tp3:r.tp3});
+next=r.exitIndex+1;
 }
 
 var n=tr.length;
+if(!n)return{total:0};
 
-if(!n){
-return{total:0};
-}
+var w=tr.filter(x=>x.result==="WIN").length;
+var wr=w/n*100;
+var rate=k=>tr.filter(x=>x[k]).length/n*100;
+var avg=tr.reduce((a,x)=>a+x.r,0)/n;
 
-var w=
-tr.filter(
-x=>x.result==="WIN"
-).length;
-
-var wr=
-w/n*100;
-
-var rate=
-k=>
-tr.filter(x=>x[k]).length/n*100;
-
-var avg=
-tr.reduce(
-(a,x)=>a+x.r,
-0
-)/n;
-
-var st=0;
-var mx=0;
-
+var st=0,mx=0;
 tr.forEach(x=>{
-
-if(x.result==="LOSS"){
-
-st++;
-mx=Math.max(mx,st);
-
-}else{
-
-st=0;
-
-}
-
+if(x.result==="LOSS"){st++;mx=Math.max(mx,st)}
+else st=0;
 });
 
 return{
-total:n,
-wins:w,
-losses:n-w,
-winRate:wr,
-
-tp1Rate:rate("tp1"),
-tp2Rate:rate("tp2"),
-tp3Rate:rate("tp3"),
-
-slRate:(n-w)/n*100,
-averageR:avg,
-maxLosingStreak:mx,
-
-sampleEnough:
-n>=STRICT_MIN_SAMPLE,
-
-targetReached:
-n>=STRICT_MIN_SAMPLE&&
-wr>=STRICT_TARGET_WINRATE
+total:n,wins:w,losses:n-w,winRate:wr,
+tp1Rate:rate("tp1"),tp2Rate:rate("tp2"),tp3Rate:rate("tp3"),
+slRate:(n-w)/n*100,averageR:avg,maxLosingStreak:mx,
+sampleEnough:n>=STRICT_MIN_SAMPLE,
+targetReached:n>=STRICT_MIN_SAMPLE&&wr>=STRICT_TARGET_WINRATE
 };
 }
 
 function backtestStat(l,v,c){
-
-return'<div class="backtest-stat">'+
-'<span>'+l+'</span>'+
-'<strong class="'+(c||"")+'">'+v+'</strong>'+
-'</div>';
+return'<div class="backtest-stat"><span>'+l+'</span><strong class="'+(c||"")+'">'+v+'</strong></div>';
 }
 
 function backtestHTML(title,r){
-
 if(!r.total){
-
-return'<div class="backtest-card">'+
-'<div class="backtest-title">'+title+'</div>'+
-'<div class="backtest-result warn">'+
-'目前沒有符合 4.4 嚴格條件的完整樣本。'+
-'</div>'+
-'</div>';
+return'<div class="backtest-card"><div class="backtest-title">'+title+'</div><div class="backtest-result warn">目前沒有符合 4.4 嚴格條件的完整樣本。</div></div>';
 }
 
-var msg=
-!r.sampleEnough
+var msg=!r.sampleEnough
 ?"樣本不足 "+STRICT_MIN_SAMPLE+" 筆，暫不判定 "+STRICT_TARGET_WINRATE+"% 門檻。"
 :r.targetReached
 ?"✓ 此歷史樣本達到 ≥"+STRICT_TARGET_WINRATE+"% 門檻。"
 :"目前歷史勝率尚未達到 "+STRICT_TARGET_WINRATE+"% 門檻。";
 
 return'<div class="backtest-card">'+
-
-'<div class="backtest-head">'+
-
-'<div>'+
-'<div class="backtest-title">'+title+'</div>'+
-'<div class="section-sub">'+
-'下一交易日進場 · TP1 定義主要勝負'+
-'</div>'+
-'</div>'+
-
-'<div class="backtest-target">'+
-(
-r.targetReached
-?"✓ ≥"+STRICT_TARGET_WINRATE+"% 達標"
-:"目標 ≥"+STRICT_TARGET_WINRATE+"%"
-)+
-'</div>'+
-
-'</div>'+
-
+'<div class="backtest-head"><div><div class="backtest-title">'+title+'</div><div class="section-sub">下一交易日進場 · TP1 定義主要勝負</div></div>'+
+'<div class="backtest-target">'+(r.targetReached?"✓ ≥"+STRICT_TARGET_WINRATE+"% 達標":"目標 ≥"+STRICT_TARGET_WINRATE+"%")+'</div></div>'+
 '<div class="backtest-grid">'+
-
-backtestStat(
-"交易樣本",
-r.total
-)+
-
-backtestStat(
-"歷史勝率",
-fmt(r.winRate,1)+"%",
-r.targetReached?"good":"warn"
-)+
-
-backtestStat(
-"勝 / 敗",
-r.wins+" / "+r.losses
-)+
-
-backtestStat(
-"SL 比率",
-fmt(r.slRate,1)+"%"
-)+
-
-backtestStat(
-"TP1",
-fmt(r.tp1Rate,1)+"%"
-)+
-
-backtestStat(
-"TP2",
-fmt(r.tp2Rate,1)+"%"
-)+
-
-backtestStat(
-"TP3",
-fmt(r.tp3Rate,1)+"%"
-)+
-
-backtestStat(
-"平均 R",
-fmt(r.averageR,2)+"R",
-r.averageR>0?"good":"bad"
-)+
-
-backtestStat(
-"最大連敗",
-r.maxLosingStreak+" 次"
-)+
-
+backtestStat("交易樣本",r.total)+
+backtestStat("歷史勝率",fmt(r.winRate,1)+"%",r.targetReached?"good":"warn")+
+backtestStat("勝 / 敗",r.wins+" / "+r.losses)+
+backtestStat("SL 比率",fmt(r.slRate,1)+"%")+
+backtestStat("TP1",fmt(r.tp1Rate,1)+"%")+
+backtestStat("TP2",fmt(r.tp2Rate,1)+"%")+
+backtestStat("TP3",fmt(r.tp3Rate,1)+"%")+
+backtestStat("平均 R",fmt(r.averageR,2)+"R",r.averageR>0?"good":"bad")+
+backtestStat("最大連敗",r.maxLosingStreak+" 次")+
 '</div>'+
-
-'<div class="backtest-result '+(r.targetReached?"good":"warn")+'">'+
-msg+
-' 歷史結果不代表未來勝率。'+
-'</div>'+
-
+'<div class="backtest-result '+(r.targetReached?"good":"warn")+'">'+msg+' 歷史結果不代表未來勝率。</div>'+
 '</div>';
 }
 
-/* =========================
-   API
-========================= */
+/* API */
 
 async function fetchStockData(q){
-
-var r=
-await fetch(
-"/api/stock?symbol="+
-encodeURIComponent(q)+
-"&t="+
-Date.now(),
-{
-cache:"no-store"
-}
-);
-
-var d=
-await r.json();
-
-if(!r.ok||!d.ok){
-
-throw Error(
-d.error||
-"資料取得失敗"
-);
-
-}
-
+var r=await fetch("/api/stock?symbol="+encodeURIComponent(q)+"&t="+Date.now(),{cache:"no-store"});
+var d=await r.json();
+if(!r.ok||!d.ok)throw Error(d.error||"資料取得失敗");
 return d;
 }
 
-/* =========================
-   分析
-========================= */
+/* 分析 */
 
 async function analyze(q){
-
 q=String(q||"").trim();
-
-if(!q){
-return;
-}
+if(!q)return;
 
 stopAnalysisTracker();
 stopKBarTimer();
@@ -2167,1032 +1143,282 @@ homeScroll=scrollY;
 
 el("homePage").classList.add("hidden");
 el("analysisPage").classList.remove("hidden");
-
 scrollTo(0,0);
 
-el("analysisResult").innerHTML=
-'<div class="loading">'+
-'正在分析…'+
-'</div>';
+el("analysisResult").innerHTML='<div class="loading">正在分析…</div>';
 
 try{
-
-var d=
-await fetchStockData(q);
-
-currentAnalysisSymbol=
-String(d.symbol);
-
+var d=await fetchStockData(q);
+currentAnalysisSymbol=String(d.symbol);
 currentAnalysisData=d;
-
 buildAnalysis(d);
-
 updateTrackerSuccess(d);
-
 startAnalysisTracker();
-
 }catch(e){
-
-el("analysisResult").innerHTML=
-'<div class="error">'+
-safe(e.message)+
-'</div>';
-
+el("analysisResult").innerHTML='<div class="error">'+safe(e.message)+'</div>';
 }
 }
 
 function indicator(n,v){
-
-return'<div class="indicator">'+
-'<span>'+n+'</span>'+
-'<strong>'+v+'</strong>'+
-'</div>';
+return'<div class="indicator"><span>'+n+'</span><strong>'+v+'</strong></div>';
 }
 
 function overviewRow(l,v,c){
-
-return'<div class="overview-row">'+
-'<div class="overview-label">'+l+'</div>'+
-'<div class="overview-value '+(c||"")+'">'+v+'</div>'+
-'</div>';
+return'<div class="overview-row"><div class="overview-label">'+l+'</div><div class="overview-value '+(c||"")+'">'+v+'</div></div>';
 }
 
 function targetBox(l,v,t){
-
-return'<div class="target-box '+(t||"")+'">'+
-'<div class="target-label">'+l+'</div>'+
-'<div class="target-value">'+v+'</div>'+
-'</div>';
+return'<div class="target-box '+(t||"")+'"><div class="target-label">'+l+'</div><div class="target-value">'+v+'</div></div>';
 }
 
 function conditionLine(ok,yes,no,warnOnly){
-
-var cls=
-ok
-?"good"
-:warnOnly
-?"warn"
-:"bad";
-
-var icon=
-ok
-?"✓"
-:warnOnly
-?"△"
-:"✕";
-
-return'<div class="condition-row '+cls+'">'+
-icon+" "+
-safe(ok?yes:no)+
-'</div>';
+var cls=ok?"good":warnOnly?"warn":"bad";
+var icon=ok?"✓":warnOnly?"△":"✕";
+return'<div class="condition-row '+cls+'">'+icon+" "+safe(ok?yes:no)+'</div>';
 }
 
 function buildAnalysis(data){
-
 stopKBarTimer();
 
 var rows=data.rows||[];
+if(rows.length<60)throw Error("歷史資料不足");
 
-if(rows.length<60){
-throw Error("歷史資料不足");
-}
+var closes=rows.map(x=>+x.close).filter(Number.isFinite);
+var symbol=String(data.symbol||"");
 
-var closes=
-rows
-.map(x=>+x.close)
-.filter(Number.isFinite);
+var price=+data.livePrice;
+if(!Number.isFinite(price))price=closes.at(-1);
 
-var symbol=
-String(data.symbol||"");
+var ma20=SMA(closes,20);
+var ma60=SMA(closes,60);
+var rsi=RSI(closes,14);
+var macd=EMA(closes.slice(-80),12)-EMA(closes.slice(-80),26);
+var atr=ATR(rows,14);
+if(!(atr>0))atr=Math.max(price*.02,.01);
 
-var price=
-+data.livePrice;
+var resistance=Math.max(...rows.slice(-21,-1).map(x=>+x.high));
+var low10=Math.min(...rows.slice(-10).map(x=>+x.low));
+var recent3Low=Math.min(...rows.slice(-3).map(x=>+x.low));
 
-if(!Number.isFinite(price)){
-price=closes.at(-1);
-}
+var support=Math.max(low10,Math.min(ma20,price)-atr*.5);
 
-var ma20=
-SMA(closes,20);
+var structure=findHTFSwingStructure(rows);
+var structureLow=+structure.low;
+var structureState=getHTFStructureState(rows,structureLow,atr);
 
-var ma60=
-SMA(closes,60);
-
-var rsi=
-RSI(closes,14);
-
-var macd=
-EMA(closes.slice(-80),12)-
-EMA(closes.slice(-80),26);
-
-var atr=
-ATR(rows,14);
-
-if(!(atr>0)){
-atr=Math.max(
-price*.02,
-.01
-);
-}
-
-var resistance=
-Math.max(
-...rows
-.slice(-21,-1)
-.map(x=>+x.high)
-);
-
-var low10=
-Math.min(
-...rows
-.slice(-10)
-.map(x=>+x.low)
-);
-
-var recent3Low=
-Math.min(
-...rows
-.slice(-3)
-.map(x=>+x.low)
-);
-
-var support=
-Math.max(
-low10,
-Math.min(
-ma20,
-price
-)-atr*.5
-);
-
-var structure=
-findHTFSwingStructure(rows);
-
-var structureLow=
-+structure.low;
-
-var structureState=
-getHTFStructureState(
-rows,
-structureLow,
-atr
-);
-
-var entryLow=
-Math.max(
-support,
-ma20-atr*.5
-);
-
-var entryHigh=
-ma20+atr*.35;
+var entryLow=Math.max(support,ma20-atr*.5);
+var entryHigh=ma20+atr*.35;
 
 if(entryLow>entryHigh){
-
-var temp=entryLow;
-entryLow=entryHigh;
-entryHigh=temp;
-
+var temp=entryLow;entryLow=entryHigh;entryHigh=temp;
 }
 
-var center=
-(entryLow+entryHigh)/2;
+var center=(entryLow+entryHigh)/2;
+var stop=Math.min(support-atr*.5,entryLow-atr);
+var R=Math.max(center-stop,atr*.5);
 
-var stop=
-Math.min(
-support-atr*.5,
-entryLow-atr
-);
+var breakout=price>resistance;
+var bd=(price-resistance)/atr;
+var above=(price-ma20)/atr;
 
-var R=
-Math.max(
-center-stop,
-atr*.5
-);
+var old20=SMA(closes.slice(0,-5),20);
+var old60=SMA(closes.slice(0,-10),60);
 
-var breakout=
-price>resistance;
-
-var bd=
-(price-resistance)/atr;
-
-var above=
-(price-ma20)/atr;
-
-var old20=
-SMA(
-closes.slice(0,-5),
-20
-);
-
-var old60=
-SMA(
-closes.slice(0,-10),
-60
-);
-
-var m20up=
-Number.isFinite(old20)&&
-ma20>old20;
-
-var m60up=
-Number.isFinite(old60)&&
-ma60>old60;
+var m20up=Number.isFinite(old20)&&ma20>old20;
+var m60up=Number.isFinite(old60)&&ma60>old60;
 
 var strictHighR=
-price>ma20&&
-ma20>ma60&&
-m20up&&
-macd>0&&
-rsi>=54&&
-rsi<=70&&
-breakout&&
-bd>=0&&
-bd<=.8&&
-above<=2.5&&
-!structureState.broken;
+price>ma20&&ma20>ma60&&m20up&&macd>0&&
+rsi>=54&&rsi<=70&&breakout&&bd>=0&&bd<=.8&&
+above<=2.5&&!structureState.broken;
 
 var strictSurge=
-price>ma20&&
-ma20>ma60&&
-m20up&&
-m60up&&
-macd>0&&
-rsi>=58&&
-rsi<=73&&
-breakout&&
-bd>=.1&&
-bd<=.9&&
-above<=2.6&&
-!structureState.broken;
+price>ma20&&ma20>ma60&&m20up&&m60up&&macd>0&&
+rsi>=58&&rsi<=73&&breakout&&bd>=.1&&bd<=.9&&
+above<=2.6&&!structureState.broken;
 
-var bstop=
-structureLow-
-atr*.15;
-
-var bcenter=
-resistance+
-atr*.05;
-
-var bR=
-bcenter-
-bstop;
-
-if(!(bR>0)){
-bR=atr*2;
-}
+var bstop=structureLow-atr*.15;
+var bcenter=resistance+atr*.05;
+var bR=bcenter-bstop;
+if(!(bR>0))bR=atr*2;
 
 var sCenter=price;
-
-var sR=
-sCenter-
-bstop;
-
-if(!(sR>0)){
-sR=atr*2;
-}
+var sR=sCenter-bstop;
+if(!(sR>0))sR=atr*2;
 
 currentMarketState={
-symbol,
-market:data.market||"",
-name:data.name||"",
-price,
-ma20,
-ma60,
-rsi,
-macd,
-atr,
-low10,
-support,
-recent3Low,
-swingStop:stop,
-rows
+symbol,market:data.market||"",name:data.name||"",
+price,ma20,ma60,rsi,macd,atr,low10,support,recent3Low,
+swingStop:stop,rows
 };
 
-currentStock={
-symbol,
-name:data.name||"",
-market:data.market||""
-};
+currentStock={symbol,name:data.name||"",market:data.market||""};
 
-var hb=
-runStrategyBacktest(
-rows,
-"HIGH_R"
-);
+var hb=runStrategyBacktest(rows,"HIGH_R");
+var sb=runStrategyBacktest(rows,"SURGE");
 
-var sb=
-runStrategyBacktest(
-rows,
-"SURGE"
-);
+var money=data.currency==="USD"?"US$":"NT$";
+var market=data.market==="US"?"🇺🇸 美股":"🇹🇼 台股";
 
-var money=
-data.currency==="USD"
-?"US$"
-:"NT$";
-
-var market=
-data.market==="US"
-?"🇺🇸 美股"
-:"🇹🇼 台股";
-
-var historyText=
-data.history&&
-data.history.tradingDays
+var historyText=data.history&&data.history.tradingDays
 ?fmt(data.history.tradingDays,0)+" 個交易日"
 :"API 回傳歷史資料";
 
 var historyRange="";
 
-if(
-data.history&&
-(data.history.startDate||data.history.endDate)
-){
-
-historyRange=
-'<div class="section-sub" style="margin:4px 4px 12px">'+
-safe(data.history.startDate||"")+
-' ～ '+
-safe(data.history.endDate||"")+
-'</div>';
-
+if(data.history&&(data.history.startDate||data.history.endDate)){
+historyRange='<div class="section-sub" style="margin:4px 4px 12px">'+safe(data.history.startDate||"")+' ～ '+safe(data.history.endDate||"")+'</div>';
 }
 
-/* 支撐回踩條件 */
+var pullbackPriceNear=price>=entryLow&&price<=entryHigh;
+var pullbackTrend=ma20>ma60;
+var pullbackMomentum=macd>=0;
+var pullbackRSI=rsi>=42&&rsi<=68;
+var pullbackStructure=!structureState.broken;
 
-var pullbackPriceNear=
-price>=entryLow&&
-price<=entryHigh;
-
-var pullbackTrend=
-ma20>ma60;
-
-var pullbackMomentum=
-macd>=0;
-
-var pullbackRSI=
-rsi>=42&&
-rsi<=68;
-
-var pullbackStructure=
-!structureState.broken;
-
-/* 推薦分數 */
-
-var recommendation=
-calculateStrategyRecommendation(
-currentMarketState,
-resistance,
-structureState
-);
+var recommendation=calculateStrategyRecommendation(currentMarketState,resistance,structureState);
 
 el("analysisResult").innerHTML=
 
-/* HERO */
-
 '<div class="hero-card">'+
-
 '<div class="hero-top">'+
-
-'<div>'+
-
-'<div class="hero-stock-title">'+
-'<div class="hero-symbol">'+safe(symbol)+'</div>'+
-'<div class="hero-name">'+safe(data.name||"")+'</div>'+
+'<div><div class="hero-stock-title"><div class="hero-symbol">'+safe(symbol)+'</div><div class="hero-name">'+safe(data.name||"")+'</div></div><div class="market-pill">'+market+'</div></div>'+
+'<div><div class="hero-price">'+money+fmt(price)+'</div></div>'+
 '</div>'+
-
-'<div class="market-pill">'+market+'</div>'+
-
-'</div>'+
-
-'<div>'+
-'<div class="hero-price">'+
-money+
-fmt(price)+
-'</div>'+
-'</div>'+
-
-'</div>'+
-
-'<button id="favoriteButton" class="favorite-btn">'+
-'☆ 加入自選'+
-'</button>'+
-
+'<button id="favoriteButton" class="favorite-btn">☆ 加入自選</button>'+
 '<div class="indicator-strip">'+
+indicator("MA20",fmt(ma20))+
+indicator("MA60",fmt(ma60))+
+indicator("RSI",fmt(rsi,1))+
+indicator("MACD",fmt(macd,2))+
+indicator("ATR",fmt(atr))+
+indicator("20日壓力",fmt(resistance))+
+'</div></div>'+
 
-indicator(
-"MA20",
-fmt(ma20)
-)+
+'<div class="big-section-title">🎯 推薦使用哪個策略</div>'+
+strategyRecommendationHTML(currentMarketState,resistance,structureState,entryLow,entryHigh,stop,bstop)+
 
-indicator(
-"MA60",
-fmt(ma60)
-)+
+'<div class="big-section-title">💼 我的持倉管理</div>'+
+'<div id="positionPanel">'+positionHTML(currentMarketState)+'</div>'+
 
-indicator(
-"RSI",
-fmt(rsi,1)
-)+
+'<div class="big-section-title">🧮 攤平均價分析</div>'+
+'<div id="averagePanel">'+averageHTML(currentMarketState)+'</div>'+
 
-indicator(
-"MACD",
-fmt(macd,2)
-)+
-
-indicator(
-"ATR",
-fmt(atr)
-)+
-
-indicator(
-"20日壓力",
-fmt(resistance)
-)+
-
+'<div class="big-section-title">🧠 4.4 嚴格模式</div>'+
+'<div class="matcher '+(strictSurge?"orange":strictHighR?"purple":"wait")+'">'+
+'<div class="matcher-kicker">目前嚴格條件</div>'+
+'<div class="matcher-strategy '+(strictSurge?"orange":strictHighR?"purple":"yellow")+'">'+
+(strictSurge?"🔥 強勢續攻條件符合":strictHighR?"🟣 高 R 條件符合":"⏳ 尚未符合嚴格進場條件")+
 '</div>'+
+'<div class="matcher-note">70% 是歷史回測目標，不是預設或保證勝率。</div>'+
 '</div>'+
 
-/* 推薦策略 */
-
-'<div class="big-section-title">'+
-'🎯 推薦使用哪個策略'+
-'</div>'+
-
-strategyRecommendationHTML(
-currentMarketState,
-resistance,
-structureState,
-entryLow,
-entryHigh,
-stop,
-bstop
-)+
-
-/* 持倉 */
-
-'<div class="big-section-title">'+
-'💼 我的持倉管理'+
-'</div>'+
-
-'<div id="positionPanel">'+
-positionHTML(currentMarketState)+
-'</div>'+
-
-/* 攤均價 */
-
-'<div class="big-section-title">'+
-'🧮 攤平均價分析'+
-'</div>'+
-
-'<div id="averagePanel">'+
-averageHTML(currentMarketState)+
-'</div>'+
-
-/* 4.4 */
-
-'<div class="big-section-title">'+
-'🧠 4.4 嚴格模式'+
-'</div>'+
-
-'<div class="matcher '+(
-strictSurge
-?"orange"
-:strictHighR
-?"purple"
-:"wait"
-)+'">'+
-
-'<div class="matcher-kicker">'+
-'目前嚴格條件'+
-'</div>'+
-
-'<div class="matcher-strategy '+(
-strictSurge
-?"orange"
-:strictHighR
-?"purple"
-:"yellow"
-)+'">'+
-
-(
-strictSurge
-?"🔥 強勢續攻條件符合"
-:strictHighR
-?"🟣 高 R 條件符合"
-:"⏳ 尚未符合嚴格進場條件"
-)+
-
-'</div>'+
-
-'<div class="matcher-note">'+
-'70% 是歷史回測目標，不是預設或保證勝率。'+
-'</div>'+
-
-'</div>'+
-
-/* 歷史驗證 */
-
-'<div class="big-section-title">'+
-'📊 歷史驗證'+
-'</div>'+
-
-'<div class="section-sub" style="margin:0 4px 4px">'+
-'目前後端回傳：'+
-historyText+
-'</div>'+
-
+'<div class="big-section-title">📊 歷史驗證</div>'+
+'<div class="section-sub" style="margin:0 4px 4px">目前後端回傳：'+historyText+'</div>'+
 historyRange+
+backtestHTML("🟣 高 R 嚴格策略",hb)+
+backtestHTML("🔥 強勢續攻嚴格策略",sb)+
 
-backtestHTML(
-"🟣 高 R 嚴格策略",
-hb
-)+
-
-backtestHTML(
-"🔥 強勢續攻嚴格策略",
-sb
-)+
-
-/* K線 */
-
-'<div class="big-section-title">'+
-'📈 即時 K 線'+
-'</div>'+
-
+'<div class="big-section-title">📈 即時 K 線</div>'+
 kbarHTML(data.market)+
 
-/* ======================
-   支撐回踩
-====================== */
-
-'<div id="pullbackStrategy" class="big-section-title">'+
-'🟢 支撐回踩波段'+
-'</div>'+
-
+'<div id="pullbackStrategy" class="big-section-title">🟢 支撐回踩波段</div>'+
 '<div class="overview-card">'+
-
-overviewRow(
-"目前價格",
-fmt(price),
-""
-)+
-
-targetBox(
-"🎯 回踩觀察區",
-fmt(entryLow)+" ～ "+fmt(entryHigh),
-"entry"
-)+
-
-targetBox(
-"TP1 · 1.5R",
-fmt(center+R*1.5),
-"tp"
-)+
-
-targetBox(
-"TP2 · 2.5R",
-fmt(center+R*2.5),
-"tp"
-)+
-
-targetBox(
-"TP3 · 4R",
-fmt(center+R*4),
-"tp3"
-)+
-
-targetBox(
-"🛑 結構失效",
-fmt(stop),
-"stop"
-)+
+overviewRow("目前價格",fmt(price),"")+
+targetBox("🎯 回踩觀察區",fmt(entryLow)+" ～ "+fmt(entryHigh),"entry")+
+targetBox("TP1 · 1.5R",fmt(center+R*1.5),"tp")+
+targetBox("TP2 · 2.5R",fmt(center+R*2.5),"tp")+
+targetBox("TP3 · 4R",fmt(center+R*4),"tp3")+
+targetBox("🛑 結構失效",fmt(stop),"stop")+
 
 '<div class="explain-box">'+
-
-'<div class="explain-title">'+
-'📖 策略解說'+
-'</div>'+
-
-'等待股價回到 MA20、近期支撐或原本突破區附近，觀察支撐是否守住並重新轉強。'+
-'這套策略的核心不是追高，而是在趨勢結構仍有效時等待較好的價格位置。'+
-
+'<div class="explain-title">📖 策略解說</div>'+
+'等待股價回到 MA20、近期支撐或原本突破區附近，觀察支撐是否守住並重新轉強。這套策略的核心不是追高，而是在趨勢結構仍有效時等待較好的價格位置。'+
 '</div>'+
 
 '<div class="explain-box">'+
+'<div class="explain-title">🔍 符合條件確認</div>'+
+conditionLine(m20up,"MA20 維持上升","MA20 尚未明顯上升",true)+
+conditionLine(pullbackTrend,"MA20 位於 MA60 上方","MA20 尚未站上 MA60",false)+
+conditionLine(pullbackMomentum,"MACD 維持多方","MACD 動能不足",true)+
+conditionLine(pullbackRSI,"RSI 位於回踩策略適合區間","RSI 不在理想回踩區間",true)+
+conditionLine(pullbackPriceNear,"股價已進入回踩觀察區",price>entryHigh?"股價仍高於回踩觀察區":"股價低於回踩觀察區",true)+
+conditionLine(pullbackStructure,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+'<div class="strategy-status '+(recommendation.pullback>=70&&pullbackStructure?"good":"warn")+'">'+
+(recommendation.pullback>=70&&pullbackStructure?"🟢 支撐回踩條件符合度較高 · ":"🟡 支撐回踩目前分數 ")+recommendation.pullback+'/100</div>'+
+'</div></div>'+
 
-'<div class="explain-title">'+
-'🔍 符合條件確認'+
-'</div>'+
-
-conditionLine(
-m20up,
-"MA20 維持上升",
-"MA20 尚未明顯上升",
-true
-)+
-
-conditionLine(
-pullbackTrend,
-"MA20 位於 MA60 上方",
-"MA20 尚未站上 MA60",
-false
-)+
-
-conditionLine(
-pullbackMomentum,
-"MACD 維持多方",
-"MACD 動能不足",
-true
-)+
-
-conditionLine(
-pullbackRSI,
-"RSI 位於回踩策略適合區間",
-"RSI 不在理想回踩區間",
-true
-)+
-
-conditionLine(
-pullbackPriceNear,
-"股價已進入回踩觀察區",
-price>entryHigh
-?"股價仍高於回踩觀察區"
-:"股價低於回踩觀察區",
-true
-)+
-
-conditionLine(
-pullbackStructure,
-"日 K 波段結構尚未失效",
-"日 K 波段結構已失效",
-false
-)+
-
-'<div class="strategy-status '+(
-recommendation.pullback>=70&&
-pullbackStructure
-?"good"
-:"warn"
-)+'">'+
-
-(
-recommendation.pullback>=70&&
-pullbackStructure
-?"🟢 支撐回踩條件符合度較高 · "+recommendation.pullback+"/100"
-:"🟡 支撐回踩目前分數 "+recommendation.pullback+"/100"
-)+
-
-'</div>'+
-
-'</div>'+
-'</div>'+
-
-/* ======================
-   高 R
-====================== */
-
-'<div id="highRStrategy" class="big-section-title">'+
-'🟣 高 R 突破回測'+
-'</div>'+
-
+'<div id="highRStrategy" class="big-section-title">🟣 高 R 突破回測</div>'+
 '<div class="overview-card purple-card">'+
-
-overviewRow(
-"嚴格模式",
-strictHighR
-?"條件符合"
-:"等待確認",
-strictHighR
-?"green"
-:""
-)+
-
-overviewRow(
-"日 K 結構低點",
-fmt(structureLow),
-""
-)+
-
-targetBox(
-"📍 突破觀察",
-fmt(resistance-atr*.25)+
-" ～ "+
-fmt(resistance+atr*.35),
-"purple"
-)+
-
-targetBox(
-"💰 TP1 · 2R",
-fmt(bcenter+bR*2),
-"tp"
-)+
-
-targetBox(
-"💰 TP2 · 3R",
-fmt(bcenter+bR*3),
-"tp"
-)+
-
-targetBox(
-"🔥 TP3 · 5R",
-fmt(bcenter+bR*5),
-"tp3"
-)+
-
-targetBox(
-"🛑 日 K 波段結構失效位",
-fmt(bstop),
-"stop"
-)+
+overviewRow("嚴格模式",strictHighR?"條件符合":"等待確認",strictHighR?"green":"")+
+overviewRow("日 K 結構低點",fmt(structureLow),"")+
+targetBox("📍 突破觀察",fmt(resistance-atr*.25)+" ～ "+fmt(resistance+atr*.35),"purple")+
+targetBox("💰 TP1 · 2R",fmt(bcenter+bR*2),"tp")+
+targetBox("💰 TP2 · 3R",fmt(bcenter+bR*3),"tp")+
+targetBox("🔥 TP3 · 5R",fmt(bcenter+bR*5),"tp3")+
+targetBox("🛑 日 K 波段結構失效位",fmt(bstop),"stop")+
 
 '<div class="explain-box">'+
-
-'<div class="explain-title">'+
-'📖 策略解說'+
-'</div>'+
-
-'高 R 策略主要觀察股價突破 20 日壓力後的強度與價格位置。'+
-'日 K 波段結構低點作為主要失效參考，短週期 K 線主要用來輔助確認進場節奏，不直接取代日 K 結構。'+
-'主要歷史勝負以 TP1 2R 為基準。'+
-
+'<div class="explain-title">📖 策略解說</div>'+
+'高 R 策略主要觀察股價突破 20 日壓力後的強度與價格位置。日 K 波段結構低點作為主要失效參考，短週期 K 線主要用來輔助確認進場節奏，不直接取代日 K 結構。主要歷史勝負以 TP1 2R 為基準。'+
 '</div>'+
 
 '<div class="explain-box">'+
+'<div class="explain-title">🔍 符合條件確認</div>'+
+conditionLine(price>ma20,"股價站上 MA20","股價尚未站上 MA20",false)+
+conditionLine(ma20>ma60,"MA20 位於 MA60 上方","MA20 尚未站上 MA60",false)+
+conditionLine(m20up,"MA20 維持上升","MA20 尚未明顯上升",true)+
+conditionLine(macd>0,"MACD 為正","MACD 尚未轉正",false)+
+conditionLine(rsi>=54&&rsi<=70,"RSI 位於 54～70 強勢區","RSI 不在 54～70 理想區間",true)+
+conditionLine(breakout,"已突破 20 日壓力 "+fmt(resistance),"尚未突破 20 日壓力 "+fmt(resistance),true)+
+conditionLine(bd>=0&&bd<=.8,"突破距離沒有過度延伸",bd>.8?"突破後距離偏遠":"目前仍在壓力下方",true)+
+conditionLine(above<=2.5,"與 MA20 距離仍在合理範圍","股價離 MA20 偏遠",true)+
+conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+'<div class="strategy-status '+(strictHighR?"good":"warn")+'">'+
+(strictHighR?"🟢 高 R 嚴格條件目前符合":"🟡 高 R 尚有條件等待確認")+
+' · 建議入場分數 '+recommendation.highR+'/100</div>'+
+'</div></div>'+
 
-'<div class="explain-title">'+
-'🔍 符合條件確認'+
-'</div>'+
-
-conditionLine(
-price>ma20,
-"股價站上 MA20",
-"股價尚未站上 MA20",
-false
-)+
-
-conditionLine(
-ma20>ma60,
-"MA20 位於 MA60 上方",
-"MA20 尚未站上 MA60",
-false
-)+
-
-conditionLine(
-m20up,
-"MA20 維持上升",
-"MA20 尚未明顯上升",
-true
-)+
-
-conditionLine(
-macd>0,
-"MACD 為正",
-"MACD 尚未轉正",
-false
-)+
-
-conditionLine(
-rsi>=54&&rsi<=70,
-"RSI 位於 54～70 強勢區",
-"RSI 不在 54～70 理想區間",
-true
-)+
-
-conditionLine(
-breakout,
-"已突破 20 日壓力 "+fmt(resistance),
-"尚未突破 20 日壓力 "+fmt(resistance),
-true
-)+
-
-conditionLine(
-bd>=0&&bd<=.8,
-"突破距離沒有過度延伸",
-bd>.8
-?"突破後距離偏遠"
-:"目前仍在壓力下方",
-true
-)+
-
-conditionLine(
-above<=2.5,
-"與 MA20 距離仍在合理範圍",
-"股價離 MA20 偏遠",
-true
-)+
-
-conditionLine(
-!structureState.broken,
-"日 K 波段結構尚未失效",
-"日 K 波段結構已失效",
-false
-)+
-
-'<div class="strategy-status '+(
-strictHighR
-?"good"
-:"warn"
-)+'">'+
-
-(
-strictHighR
-?"🟢 高 R 嚴格條件目前符合"
-:"🟡 高 R 尚有條件等待確認"
-)+
-
-' · 建議入場分數 '+
-recommendation.highR+
-'/100'+
-
-'</div>'+
-
-'</div>'+
-'</div>'+
-
-/* ======================
-   強勢續攻
-====================== */
-
-'<div id="surgeStrategy" class="big-section-title">'+
-'🔥 強勢續攻波段'+
-'</div>'+
-
+'<div id="surgeStrategy" class="big-section-title">🔥 強勢續攻波段</div>'+
 '<div class="overview-card surge-card">'+
-
-overviewRow(
-"嚴格模式",
-strictSurge
-?"條件符合"
-:"等待確認",
-strictSurge
-?"green"
-:""
-)+
-
-overviewRow(
-"日 K 結構低點",
-fmt(structureLow),
-""
-)+
-
-targetBox(
-"📍 續攻觀察區",
-fmt(price-atr*.2)+
-" ～ "+
-fmt(price+atr*.15),
-"orange"
-)+
-
-targetBox(
-"💰 TP1 · 1.5R",
-fmt(sCenter+sR*1.5),
-"tp"
-)+
-
-targetBox(
-"💰 TP2 · 2.5R",
-fmt(sCenter+sR*2.5),
-"tp"
-)+
-
-targetBox(
-"🔥 TP3 · 4R",
-fmt(sCenter+sR*4),
-"tp3"
-)+
-
-targetBox(
-"🛑 日 K 波段結構失效位",
-fmt(bstop),
-"stop"
-)+
+overviewRow("嚴格模式",strictSurge?"條件符合":"等待確認",strictSurge?"green":"")+
+overviewRow("日 K 結構低點",fmt(structureLow),"")+
+targetBox("📍 續攻觀察區",fmt(price-atr*.2)+" ～ "+fmt(price+atr*.15),"orange")+
+targetBox("💰 TP1 · 1.5R",fmt(sCenter+sR*1.5),"tp")+
+targetBox("💰 TP2 · 2.5R",fmt(sCenter+sR*2.5),"tp")+
+targetBox("🔥 TP3 · 4R",fmt(sCenter+sR*4),"tp3")+
+targetBox("🛑 日 K 波段結構失效位",fmt(bstop),"stop")+
 
 '<div class="explain-box">'+
-
-'<div class="explain-title">'+
-'📖 策略解說'+
-'</div>'+
-
-'強勢續攻策略觀察已突破壓力、均線維持上升、動能偏強，而且價格沒有過度遠離 MA20 的股票。'+
-'重點是順著已形成的日 K 趨勢觀察後續延續，而不是在價格明顯過熱時追高。'+
-'主要歷史勝負以 TP1 1.5R 為基準。'+
-
+'<div class="explain-title">📖 策略解說</div>'+
+'強勢續攻策略觀察已突破壓力、均線維持上升、動能偏強，而且價格沒有過度遠離 MA20 的股票。重點是順著已形成的日 K 趨勢觀察後續延續，而不是在價格明顯過熱時追高。主要歷史勝負以 TP1 1.5R 為基準。'+
 '</div>'+
 
 '<div class="explain-box">'+
-
-'<div class="explain-title">'+
-'🔍 符合條件確認'+
-'</div>'+
-
-conditionLine(
-price>ma20,
-"股價站上 MA20",
-"股價尚未站上 MA20",
-false
-)+
-
-conditionLine(
-ma20>ma60,
-"MA20 位於 MA60 上方",
-"MA20 尚未站上 MA60",
-false
-)+
-
-conditionLine(
-m20up,
-"MA20 持續上升",
-"MA20 尚未持續上升",
-true
-)+
-
-conditionLine(
-m60up,
-"MA60 持續上升",
-"MA60 尚未持續上升",
-true
-)+
-
-conditionLine(
-macd>0,
-"MACD 維持正值",
-"MACD 動能不足",
-false
-)+
-
-conditionLine(
-rsi>=58&&rsi<=73,
-"RSI 位於 58～73 強勢區",
-rsi>73
-?"RSI 偏高，注意過熱"
-:"RSI 尚未進入強勢區",
-true
-)+
-
-conditionLine(
-breakout,
-"股價已突破 20 日壓力",
-"尚未突破 20 日壓力",
-false
-)+
-
-conditionLine(
-bd>=.1&&bd<=.9,
-"突破幅度符合續攻範圍",
-bd>.9
-?"突破幅度偏大"
-:"突破強度尚不足",
-true
-)+
-
-conditionLine(
-above<=2.6,
-"價格沒有過度遠離 MA20",
-"股價離 MA20 過遠",
-true
-)+
-
-conditionLine(
-!structureState.broken,
-"日 K 波段結構尚未失效",
-"日 K 波段結構已失效",
-false
-)+
-
-'<div class="strategy-status '+(
-strictSurge
-?"good"
-:"warn"
-)+'">'+
-
-(
-strictSurge
-?"🟢 強勢續攻嚴格條件目前符合"
-:"🟡 強勢續攻尚有條件等待確認"
-)+
-
-' · 建議入場分數 '+
-recommendation.surge+
-'/100'+
-
-'</div>'+
-
-'</div>'+
-'</div>'+
+'<div class="explain-title">🔍 符合條件確認</div>'+
+conditionLine(price>ma20,"股價站上 MA20","股價尚未站上 MA20",false)+
+conditionLine(ma20>ma60,"MA20 位於 MA60 上方","MA20 尚未站上 MA60",false)+
+conditionLine(m20up,"MA20 持續上升","MA20 尚未持續上升",true)+
+conditionLine(m60up,"MA60 持續上升","MA60 尚未持續上升",true)+
+conditionLine(macd>0,"MACD 維持正值","MACD 動能不足",false)+
+conditionLine(rsi>=58&&rsi<=73,"RSI 位於 58～73 強勢區",rsi>73?"RSI 偏高，注意過熱":"RSI 尚未進入強勢區",true)+
+conditionLine(breakout,"股價已突破 20 日壓力","尚未突破 20 日壓力",false)+
+conditionLine(bd>=.1&&bd<=.9,"突破幅度符合續攻範圍",bd>.9?"突破幅度偏大":"突破強度尚不足",true)+
+conditionLine(above<=2.6,"價格沒有過度遠離 MA20","股價離 MA20 過遠",true)+
+conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波段結構已失效",false)+
+'<div class="strategy-status '+(strictSurge?"good":"warn")+'">'+
+(strictSurge?"🟢 強勢續攻嚴格條件目前符合":"🟡 強勢續攻尚有條件等待確認")+
+' · 建議入場分數 '+recommendation.surge+'/100</div>'+
+'</div></div>'+
 
 '<div class="data-note">'+
-
 '策略分數代表目前技術條件符合程度，不代表未來上漲機率。'+
 '4.4 高 R 以先到 2R 為主要歷史勝利；強勢續攻以先到 1.5R 為主要歷史勝利。'+
 '同一根日 K 同時碰 TP 與 SL 時保守採 SL 優先。'+
 '至少 '+STRICT_MIN_SAMPLE+' 筆樣本且實際勝率 ≥'+STRICT_TARGET_WINRATE+'% 才標示歷史門檻達成。'+
-
 '</div>';
 
-el("favoriteButton").onclick=
-()=>toggleFavorite(currentStock);
+el("favoriteButton").onclick=()=>toggleFavorite(currentStock);
 
 updateFavoriteButton();
 bindPositionControls();
@@ -3200,388 +1426,144 @@ setupKBarControls();
 loadKBar();
 }
 
-/* =========================
-   持倉按鈕
-========================= */
+/* 持倉按鈕 */
 
 function bindPositionControls(){
-
-if(el("positionSave")){
-
-el("positionSave").onclick=
-createPositionFromForm;
-
-}
+if(el("positionSave"))el("positionSave").onclick=createPositionFromForm;
 
 if(el("positionReset")){
-
 el("positionReset").onclick=()=>{
-
-deletePosition(
-currentMarketState.symbol
-);
-
-buildAnalysis(
-currentAnalysisData
-);
-
+deletePosition(currentMarketState.symbol);
+buildAnalysis(currentAnalysisData);
 };
-
 }
 
 if(el("positionDelete")){
-
 el("positionDelete").onclick=()=>{
-
-deletePosition(
-currentMarketState.symbol
-);
-
-buildAnalysis(
-currentAnalysisData
-);
-
+deletePosition(currentMarketState.symbol);
+buildAnalysis(currentAnalysisData);
 };
-
 }
 }
 
 function refreshAveragePanel(){
-
-if(
-el("averagePanel")&&
-currentMarketState
-){
-
-el("averagePanel").innerHTML=
-averageHTML(
-currentMarketState
-);
-
+if(el("averagePanel")&&currentMarketState){
+el("averagePanel").innerHTML=averageHTML(currentMarketState);
 }
 }
 
-/* =========================
-   K BAR
-========================= */
+/* K BAR */
 
 function isHistoricalTF(t){
-
-return[
-"1d",
-"1w",
-"1mo",
-"1y"
-].includes(t);
+return["1d","1w","1mo","1y"].includes(t);
 }
 
 function kbarHTML(m){
-
-var p=
-m==="US"
-
-?[
-["1d","日"],
-["1w","週"],
-["1mo","月"],
-["1y","年"]
-]
-
+var p=m==="US"
+?[["1d","日"],["1w","週"],["1mo","月"],["1y","年"]]
 :[
-["1m","1分"],
-["3m","3分"],
-["5m","5分"],
-["10m","10分"],
-["15m","15分"],
-["30m","30分"],
-["60m","1H"],
-["2h","2H"],
-["4h","4H"],
-["6h","6H"],
-["12h","12H"],
-["1d","日"],
-["1w","週"],
-["1mo","月"],
-["1y","年"]
+["1m","1分"],["3m","3分"],["5m","5分"],["10m","10分"],
+["15m","15分"],["30m","30分"],["60m","1H"],["2h","2H"],
+["4h","4H"],["6h","6H"],["12h","12H"],["1d","日"],
+["1w","週"],["1mo","月"],["1y","年"]
 ];
 
-if(
-m==="US"&&
-!isHistoricalTF(KBAR_TF)
-){
-
-KBAR_TF="1d";
-
-}
+if(m==="US"&&!isHistoricalTF(KBAR_TF))KBAR_TF="1d";
 
 return'<div class="kbar-card">'+
-
 '<div class="kbar-head">'+
-
-'<div>'+
-
-'<div class="kbar-title">'+
-'K 線走勢'+
+'<div><div class="kbar-title">K 線走勢</div><div class="kbar-sub">左右滑動 · 雙指縮放 · 點 K 棒查看 OHLCV</div></div>'+
+'<div id="kbarLive" class="kbar-live">資料連線中</div>'+
 '</div>'+
-
-'<div class="kbar-sub">'+
-'左右滑動 · 雙指縮放 · 點 K 棒查看 OHLCV'+
-'</div>'+
-
-'</div>'+
-
-'<div id="kbarLive" class="kbar-live">'+
-'資料連線中'+
-'</div>'+
-
-'</div>'+
-
 '<div id="kbarPeriods" class="kbar-periods">'+
-
-p.map(x=>
-
-'<button class="kbar-period '+(
-KBAR_TF===x[0]
-?"active"
-:""
-)+'" data-kbar-tf="'+x[0]+'">'+
-x[1]+
-'</button>'
-
-).join("")+
-
+p.map(x=>'<button class="kbar-period '+(KBAR_TF===x[0]?"active":"")+'" data-kbar-tf="'+x[0]+'">'+x[1]+'</button>').join("")+
 '</div>'+
-
-'<div id="kbarInfo" class="kbar-info">'+
-'選擇 K 棒查看資料'+
-'</div>'+
-
-'<div class="kbar-wrap">'+
-
-'<canvas id="kbarCanvas"></canvas>'+
-
-'<div id="kbarLoading" class="kbar-loading">'+
-'正在載入 K 線…'+
-'</div>'+
-
-'</div>'+
-
-'<div class="kbar-bottom">'+
-
-'<div class="kbar-help">'+
-'← 左右拖曳歷史 · 雙指縮放'+
-'</div>'+
-
-'<button id="kbarLatest" class="latest-btn">'+
-'回到最新'+
-'</button>'+
-
-'</div>'+
-
+'<div id="kbarInfo" class="kbar-info">選擇 K 棒查看資料</div>'+
+'<div class="kbar-wrap"><canvas id="kbarCanvas"></canvas><div id="kbarLoading" class="kbar-loading">正在載入 K 線…</div></div>'+
+'<div class="kbar-bottom"><div class="kbar-help">← 左右拖曳歷史 · 雙指縮放</div><button id="kbarLatest" class="latest-btn">回到最新</button></div>'+
 '</div>';
 }
 
 function normalizeDailyRows(r){
-
 return r.map(x=>{
-
-var raw=
-x.date??
-x.time??
-x.datetime??
-x.timestamp;
-
-var ts=
-typeof raw==="number"
-?raw
-:new Date(raw).getTime();
-
-if(ts<1e12){
-ts*=1000;
-}
-
+var raw=x.date??x.time??x.datetime??x.timestamp;
+var ts=typeof raw==="number"?raw:new Date(raw).getTime();
+if(ts<1e12)ts*=1000;
 return{
 timestamp:ts,
 open:+x.open,
 high:+x.high,
 low:+x.low,
 close:+x.close,
-volume:+(
-x.volume??
-x.Trading_Volume??
-0
-)
+volume:+(x.volume??x.Trading_Volume??0)
 };
-
-})
-.filter(
-x=>
-Number.isFinite(x.timestamp)&&
-Number.isFinite(x.close)
-)
-.sort(
-(a,b)=>
-a.timestamp-b.timestamp
-);
+}).filter(x=>Number.isFinite(x.timestamp)&&Number.isFinite(x.close))
+.sort((a,b)=>a.timestamp-b.timestamp);
 }
 
 function aggregateCandles(d,t){
-
-if(t==="1d"){
-return d;
-}
+if(t==="1d")return d;
 
 var m=new Map;
 
 d.forEach(c=>{
+var x=new Date(c.timestamp);
 
-var x=
-new Date(c.timestamp);
-
-var k=
-t==="1mo"
+var k=t==="1mo"
 ?x.getFullYear()+"-"+(x.getMonth()+1)
-
 :t==="1y"
 ?String(x.getFullYear())
-
 :(()=>{
-
-var q=
-new Date(x);
-
-q.setDate(
-q.getDate()-
-((q.getDay()+6)%7)
-);
-
+var q=new Date(x);
+q.setDate(q.getDate()-((q.getDay()+6)%7));
 return q.toDateString();
-
 })();
 
-if(!m.has(k)){
-
-m.set(
-k,
-{...c}
-);
-
-}else{
-
-var z=
-m.get(k);
-
-z.high=
-Math.max(
-z.high,
-c.high
-);
-
-z.low=
-Math.min(
-z.low,
-c.low
-);
-
-z.close=
-c.close;
-
-z.volume+=
-c.volume;
-
+if(!m.has(k))m.set(k,{...c});
+else{
+var z=m.get(k);
+z.high=Math.max(z.high,c.high);
+z.low=Math.min(z.low,c.low);
+z.close=c.close;
+z.volume+=c.volume;
 }
-
 });
 
-return Array.from(
-m.values()
-);
+return Array.from(m.values());
 }
 
 async function loadKBar(){
-
-if(KBAR_LOADING){
-return;
-}
-
+if(KBAR_LOADING)return;
 KBAR_LOADING=true;
 
-var load=
-el("kbarLoading");
+var load=el("kbarLoading");
 
 try{
-
 var c;
 
 if(isHistoricalTF(KBAR_TF)){
-
-c=
-aggregateCandles(
-normalizeDailyRows(
-currentAnalysisData.rows||[]
-),
-KBAR_TF
-);
-
-if(el("kbarLive")){
-el("kbarLive").textContent=
-"歷史 K 線";
-}
-
+c=aggregateCandles(normalizeDailyRows(currentAnalysisData.rows||[]),KBAR_TF);
+if(el("kbarLive"))el("kbarLive").textContent="歷史 K 線";
 }else{
-
-var r=
-await fetch(
-"/api/kbar?symbol="+
-encodeURIComponent(
-currentAnalysisSymbol
-)+
-"&timeframe="+
-KBAR_TF+
-"&t="+
-Date.now(),
-{
-cache:"no-store"
-}
+var r=await fetch(
+"/api/kbar?symbol="+encodeURIComponent(currentAnalysisSymbol)+"&timeframe="+KBAR_TF+"&t="+Date.now(),
+{cache:"no-store"}
 );
 
-var d=
-await r.json();
+var d=await r.json();
 
-if(!r.ok||!d.ok){
+if(!r.ok||!d.ok)throw Error(d.error||"K 線取得失敗");
 
-throw Error(
-d.error||
-"K 線取得失敗"
-);
-
-}
-
-c=
-(d.candles||[])
-.map(x=>({
-
-timestamp:
-(
-+x.timestamp<1e12
-?+x.timestamp*1000
-:+x.timestamp
-)||
-new Date(x.time).getTime(),
-
+c=(d.candles||[]).map(x=>({
+timestamp:(+x.timestamp<1e12?+x.timestamp*1000:+x.timestamp)||new Date(x.time).getTime(),
 open:+x.open,
 high:+x.high,
 low:+x.low,
 close:+x.close,
 volume:+x.volume||0
-
 }));
 
-if(el("kbarLive")){
-el("kbarLive").textContent=
-"🟢 Fugle 分 K";
-}
-
+if(el("kbarLive"))el("kbarLive").textContent="🟢 Fugle 分 K";
 }
 
 KBAR_DATA=c;
@@ -3592,273 +1574,113 @@ drawKBar();
 updateKBarInfo();
 refreshAveragePanel();
 
-if(!isHistoricalTF(KBAR_TF)){
-startKBarTimer();
-}
-
-if(load){
-load.classList.add("hidden");
-}
+if(!isHistoricalTF(KBAR_TF))startKBarTimer();
+if(load)load.classList.add("hidden");
 
 }catch(e){
-
-if(load){
-load.textContent=e.message;
-}
-
+if(load)load.textContent=e.message;
 }finally{
-
 KBAR_LOADING=false;
-
 }
 }
 
 function setupKBarControls(){
-
-var p=
-el("kbarPeriods");
+var p=el("kbarPeriods");
 
 if(p){
-
-p.querySelectorAll(
-"[data-kbar-tf]"
-)
-.forEach(b=>{
-
+p.querySelectorAll("[data-kbar-tf]").forEach(b=>{
 b.onclick=function(){
+KBAR_TF=this.dataset.kbarTf;
 
-KBAR_TF=
-this.dataset.kbarTf;
-
-p.querySelectorAll(
-".kbar-period"
-)
-.forEach(x=>{
-
-x.classList.remove(
-"active"
-);
-
-});
-
-this.classList.add(
-"active"
-);
+p.querySelectorAll(".kbar-period").forEach(x=>x.classList.remove("active"));
+this.classList.add("active");
 
 stopKBarTimer();
-
 KBAR_DATA=[];
-
 refreshAveragePanel();
-
 loadKBar();
-
 };
-
 });
-
 }
 
 if(el("kbarLatest")){
-
 el("kbarLatest").onclick=()=>{
-
-KBAR_END_INDEX=
-KBAR_DATA.length;
-
+KBAR_END_INDEX=KBAR_DATA.length;
 drawKBar();
 updateKBarInfo();
-
 };
-
 }
 
-var c=
-el("kbarCanvas");
-
-if(!c){
-return;
-}
+var c=el("kbarCanvas");
+if(!c)return;
 
 c.ontouchstart=e=>{
-
 if(e.touches.length===1){
-
 KBAR_DRAGGING=true;
-
-KBAR_DRAG_START_X=
-e.touches[0].clientX;
-
-KBAR_DRAG_START_END=
-KBAR_END_INDEX;
-
-}else if(
-e.touches.length===2
-){
-
-KBAR_PINCH_START_DISTANCE=
-touchDistance(e.touches);
-
-KBAR_PINCH_START_COUNT=
-KBAR_VIEW_COUNT;
-
+KBAR_DRAG_START_X=e.touches[0].clientX;
+KBAR_DRAG_START_END=KBAR_END_INDEX;
+}else if(e.touches.length===2){
+KBAR_PINCH_START_DISTANCE=touchDistance(e.touches);
+KBAR_PINCH_START_COUNT=KBAR_VIEW_COUNT;
 }
-
 };
 
 c.ontouchmove=e=>{
-
 if(e.touches.length===2){
-
 e.preventDefault();
-
-var d=
-touchDistance(e.touches);
-
-KBAR_VIEW_COUNT=
-clamp(
-Math.round(
-KBAR_PINCH_START_COUNT*
-KBAR_PINCH_START_DISTANCE/d
-),
-15,
-120
-);
-
+var d=touchDistance(e.touches);
+KBAR_VIEW_COUNT=clamp(Math.round(KBAR_PINCH_START_COUNT*KBAR_PINCH_START_DISTANCE/d),15,120);
 drawKBar();
-
 }else if(KBAR_DRAGGING){
+var px=c.clientWidth/KBAR_VIEW_COUNT;
+var dif=Math.round((KBAR_DRAG_START_X-e.touches[0].clientX)/px);
 
-var px=
-c.clientWidth/
-KBAR_VIEW_COUNT;
-
-var dif=
-Math.round(
-(
-KBAR_DRAG_START_X-
-e.touches[0].clientX
-)/px
-);
-
-KBAR_END_INDEX=
-clamp(
+KBAR_END_INDEX=clamp(
 KBAR_DRAG_START_END+dif,
-Math.min(
-KBAR_VIEW_COUNT,
-KBAR_DATA.length
-),
+Math.min(KBAR_VIEW_COUNT,KBAR_DATA.length),
 KBAR_DATA.length
 );
 
 drawKBar();
-
 }
-
 };
 
-c.ontouchend=()=>{
-KBAR_DRAGGING=false;
-};
-
-c.onclick=e=>{
-selectCandleAt(
-e.clientX
-);
-};
+c.ontouchend=()=>{KBAR_DRAGGING=false};
+c.onclick=e=>{selectCandleAt(e.clientX)};
 }
 
 function touchDistance(t){
-
-return Math.hypot(
-t[0].clientX-t[1].clientX,
-t[0].clientY-t[1].clientY
-);
+return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
 }
 
 function selectCandleAt(x){
+var c=el("kbarCanvas");
+var r=c.getBoundingClientRect();
+var s=Math.max(0,KBAR_END_INDEX-KBAR_VIEW_COUNT);
+var v=KBAR_DATA.slice(s,KBAR_END_INDEX);
 
-var c=
-el("kbarCanvas");
+if(!v.length)return;
 
-var r=
-c.getBoundingClientRect();
+var slot=(r.width-62)/v.length;
+var i=Math.floor((x-r.left-8)/slot);
 
-var s=
-Math.max(
-0,
-KBAR_END_INDEX-
-KBAR_VIEW_COUNT
-);
-
-var v=
-KBAR_DATA.slice(
-s,
-KBAR_END_INDEX
-);
-
-if(!v.length){
-return;
-}
-
-var slot=
-(r.width-62)/
-v.length;
-
-var i=
-Math.floor(
-(
-x-r.left-8
-)/slot
-);
-
-KBAR_SELECTED_INDEX=
-s+
-clamp(
-i,
-0,
-v.length-1
-);
+KBAR_SELECTED_INDEX=s+clamp(i,0,v.length-1);
 
 drawKBar();
 updateKBarInfo();
 }
 
 function updateKBarInfo(){
+if(!KBAR_DATA.length)return;
 
-if(!KBAR_DATA.length){
-return;
-}
-
-var c=
-KBAR_DATA[
-KBAR_SELECTED_INDEX??
-KBAR_DATA.length-1
-];
-
-if(!c){
-return;
-}
+var c=KBAR_DATA[KBAR_SELECTED_INDEX??KBAR_DATA.length-1];
+if(!c)return;
 
 var info=el("kbarInfo");
-
-if(!info){
-return;
-}
+if(!info)return;
 
 info.innerHTML=
-
-'<strong>'+
-new Date(
-c.timestamp
-).toLocaleString(
-"zh-TW",
-{
-hour12:false
-}
-)+
-'</strong>'+
-
+'<strong>'+new Date(c.timestamp).toLocaleString("zh-TW",{hour12:false})+'</strong>'+
 '　O '+fmt(c.open)+
 '　H '+fmt(c.high)+
 '　L '+fmt(c.low)+
@@ -3867,420 +1689,180 @@ hour12:false
 }
 
 function drawKBar(){
+var cv=el("kbarCanvas");
+if(!cv||!KBAR_DATA.length)return;
 
-var cv=
-el("kbarCanvas");
+var w=cv.clientWidth,h=370,dpr=devicePixelRatio||1;
 
-if(
-!cv||
-!KBAR_DATA.length
-){
-return;
-}
+cv.width=w*dpr;
+cv.height=h*dpr;
 
-var w=
-cv.clientWidth;
+var x=cv.getContext("2d");
+x.setTransform(dpr,0,0,dpr,0,0);
+x.clearRect(0,0,w,h);
 
-var h=370;
+var s=Math.max(0,KBAR_END_INDEX-KBAR_VIEW_COUNT);
+var d=KBAR_DATA.slice(s,KBAR_END_INDEX);
+if(!d.length)return;
 
-var dpr=
-devicePixelRatio||1;
+var L=8,R=55,T=14,B=285;
+var cw=w-L-R,ch=B-T;
 
-cv.width=
-w*dpr;
-
-cv.height=
-h*dpr;
-
-var x=
-cv.getContext("2d");
-
-x.setTransform(
-dpr,
-0,
-0,
-dpr,
-0,
-0
-);
-
-x.clearRect(
-0,
-0,
-w,
-h
-);
-
-var s=
-Math.max(
-0,
-KBAR_END_INDEX-
-KBAR_VIEW_COUNT
-);
-
-var d=
-KBAR_DATA.slice(
-s,
-KBAR_END_INDEX
-);
-
-if(!d.length){
-return;
-}
-
-var L=8;
-var R=55;
-var T=14;
-var B=285;
-
-var cw=
-w-L-R;
-
-var ch=
-B-T;
-
-var max=
-Math.max(
-...d.map(z=>z.high)
-);
-
-var min=
-Math.min(
-...d.map(z=>z.low)
-);
-
-var rg=
-max-min||1;
+var max=Math.max(...d.map(z=>z.high));
+var min=Math.min(...d.map(z=>z.low));
+var rg=max-min||1;
 
 max+=rg*.08;
 min-=rg*.08;
-
 rg=max-min;
 
-var y=
-v=>
-T+
-(max-v)/rg*ch;
-
-var slot=
-cw/d.length;
-
-var body=
-Math.max(
-1,
-Math.min(
-12,
-slot*.62
-)
-);
+var y=v=>T+(max-v)/rg*ch;
+var slot=cw/d.length;
+var body=Math.max(1,Math.min(12,slot*.62));
 
 d.forEach((c,i)=>{
+var xx=L+slot*i+slot/2;
+var up=c.close>=c.open;
 
-var xx=
-L+
-slot*i+
-slot/2;
-
-var up=
-c.close>=c.open;
-
-x.strokeStyle=
-x.fillStyle=
-up
-?"#45e0ad"
-:"#ff6976";
+x.strokeStyle=x.fillStyle=up?"#45e0ad":"#ff6976";
 
 x.beginPath();
-
-x.moveTo(
-xx,
-y(c.high)
-);
-
-x.lineTo(
-xx,
-y(c.low)
-);
-
+x.moveTo(xx,y(c.high));
+x.lineTo(xx,y(c.low));
 x.stroke();
 
 x.fillRect(
 xx-body/2,
-Math.min(
-y(c.open),
-y(c.close)
-),
+Math.min(y(c.open),y(c.close)),
 body,
-Math.max(
-1.5,
-Math.abs(
-y(c.close)-
-y(c.open)
-)
-)
+Math.max(1.5,Math.abs(y(c.close)-y(c.open)))
 );
-
 });
 
-/* 選中 K 棒 */
-
-if(
-KBAR_SELECTED_INDEX!==null&&
-KBAR_SELECTED_INDEX>=s&&
-KBAR_SELECTED_INDEX<KBAR_END_INDEX
-){
-
-var local=
-KBAR_SELECTED_INDEX-s;
-
-var sx=
-L+
-slot*local+
-slot/2;
-
-x.strokeStyle=
-"rgba(255,255,255,.35)";
-
+if(KBAR_SELECTED_INDEX!==null&&KBAR_SELECTED_INDEX>=s&&KBAR_SELECTED_INDEX<KBAR_END_INDEX){
+var local=KBAR_SELECTED_INDEX-s;
+var sx=L+slot*local+slot/2;
+x.strokeStyle="rgba(255,255,255,.35)";
 x.beginPath();
 x.moveTo(sx,T);
 x.lineTo(sx,B);
 x.stroke();
-
 }
 
-/* 價格刻度 */
-
-x.fillStyle=
-"#747b76";
-
-x.font=
-"10px -apple-system";
+x.fillStyle="#747b76";
+x.font="10px -apple-system";
 
 for(var g=0;g<=4;g++){
-
-var py=
-T+
-ch*g/4;
-
-var pv=
-max-
-rg*g/4;
-
-x.fillText(
-fmt(pv,2),
-w-R+5,
-py+3
-);
-
+var py=T+ch*g/4;
+var pv=max-rg*g/4;
+x.fillText(fmt(pv,2),w-R+5,py+3);
 }
 }
 
 function startKBarTimer(){
-
 stopKBarTimer();
-
-KBAR_TIMER=
-setInterval(()=>{
-
-if(!document.hidden){
-loadKBar();
-}
-
+KBAR_TIMER=setInterval(()=>{
+if(!document.hidden)loadKBar();
 },30000);
 }
 
 function stopKBarTimer(){
-
-if(KBAR_TIMER){
-clearInterval(KBAR_TIMER);
-}
-
+if(KBAR_TIMER)clearInterval(KBAR_TIMER);
 KBAR_TIMER=null;
 }
 
-/* =========================
-   個股 30 秒更新
-========================= */
+/* 個股 30 秒更新 */
 
 function startAnalysisTracker(){
-
 stopAnalysisTracker();
-
 analysisCountdown=30;
 
-analysisCountdownTimer=
-setInterval(()=>{
-
+analysisCountdownTimer=setInterval(()=>{
 analysisCountdown--;
 
 if(analysisCountdown<=0){
-
 analysisCountdown=30;
-
 refreshCurrentAnalysis();
-
 }
 
 if(el("analysisLiveCountdown")){
-
-el("analysisLiveCountdown").textContent=
-analysisRefreshing
-?"更新中"
-:analysisCountdown+"s";
-
+el("analysisLiveCountdown").textContent=analysisRefreshing?"更新中":analysisCountdown+"s";
 }
-
 },1000);
 }
 
 function stopAnalysisTracker(){
-
-if(analysisCountdownTimer){
-
-clearInterval(
-analysisCountdownTimer
-);
-
-}
-
+if(analysisCountdownTimer)clearInterval(analysisCountdownTimer);
 analysisCountdownTimer=null;
 }
 
 async function refreshCurrentAnalysis(){
-
-if(
-!currentAnalysisSymbol||
-analysisRefreshing||
-document.hidden
-){
-return;
-}
+if(!currentAnalysisSymbol||analysisRefreshing||document.hidden)return;
 
 analysisRefreshing=true;
 
 try{
-
 var y=scrollY;
-
-var d=
-await fetchStockData(
-currentAnalysisSymbol
-);
-
+var d=await fetchStockData(currentAnalysisSymbol);
 currentAnalysisData=d;
-
 buildAnalysis(d);
-
 scrollTo(0,y);
-
 updateTrackerSuccess(d);
-
 }catch(e){
-
 }finally{
-
 analysisRefreshing=false;
-
 }
 }
 
 function updateTrackerSuccess(d){
-
 el("analysisLiveStatus").textContent=
-d.market==="TW"&&
-d.isRealtime
-
+d.market==="TW"&&d.isRealtime
 ?"🟢 台股盤中即時追蹤"
-
 :"🟢 行情自動追蹤";
 
 el("analysisLiveTime").textContent=
-"最後更新 "+
-currentTimeText()+
-" · 每 30 秒重新分析";
+"最後更新 "+currentTimeText()+" · 每 30 秒重新分析";
 }
 
 /* =========================
-   雷達
+   新增：自動策略股票
 ========================= */
 
-async function loadRadar(){
+function renderStrategyStocks(a){
+var r=el("strategyReadyGrid");
+if(!r)return;
 
-try{
-
-var r=
-await fetch(
-"/api/radar?t="+Date.now(),
-{
-cache:"no-store"
-}
-);
-
-var d=
-await r.json();
-
-if(!r.ok||!d.ok){
-throw Error();
-}
-
-el("scanCount").textContent=
-fmt(d.scanned,0);
-
-el("radarCount").textContent=
-fmt(d.found,0);
-
-el("longCount").textContent=
-fmt(d.longWatchCount,0);
-
-el("updateText").textContent=
-"FinMind Sponsor 即時資料 · 更新 "+
-currentTimeText();
-
-renderStocks(
-"longGrid",
-d.longWatch||[],
-true
-);
-
-renderStocks(
-"radarGrid",
-d.radar||[],
-false
-);
-
-countdownSeconds=300;
-
-}catch(e){
-
-el("updateText").textContent=
-"即時雷達連線失敗";
-
-}
-}
-
-function renderStocks(id,a,l){
-
-var r=el(id);
-
-if(!a.length){
-
+if(!a||!a.length){
 r.innerHTML=
 '<div class="card">'+
-'目前沒有符合條件的股票'+
+'<strong>目前沒有股票達到策略條件</strong>'+
+'<div class="section-sub" style="margin-top:7px">'+
+'系統會持續自動掃描支撐回踩、高 R、強勢續攻。'+
+'</div>'+
 '</div>';
-
 return;
 }
 
-r.innerHTML=a.map(s=>
+r.innerHTML=a.map(s=>{
 
-'<article class="stock-card '+(
-l&&s.longStatus==="優先觀察"
-?"priority"
-:""
-)+'" data-stock="'+safe(s.symbol)+'">'+
+var strategyClass=
+s.strategyKey==="SURGE"
+?"orange"
+:s.strategyKey==="HIGH_R"
+?"purple"
+:"green";
 
-'<div class="stock-top">'+
+var gradeClass=
+Number(s.entryScore)>=85
+?"good"
+:Number(s.entryScore)>=75
+?"warn"
+:"flat";
+
+return(
+'<article class="stock-card strategy-auto-card" data-strategy-stock="'+safe(s.symbol)+'">'+
+
+'<div class="strategy-auto-top">'+
 
 '<div>'+
 '<div class="symbol">'+safe(s.symbol)+'</div>'+
@@ -4288,188 +1870,213 @@ l&&s.longStatus==="優先觀察"
 '</div>'+
 
 '<div class="score">'+
-'<strong>'+safe(s.score)+'</strong>'+
-'<span>異動分數</span>'+
+'<strong class="'+gradeClass+'">'+safe(s.entryScore)+'</strong>'+
+'<span>建議入場分數</span>'+
 '</div>'+
 
+'</div>'+
+
+'<div class="strategy-auto-name '+strategyClass+'">'+
+'<strong>'+
+safe((s.strategyEmoji||"")+" "+(s.recommendedStrategy||""))+
+'</strong>'+
+'<span>'+safe(s.strategyGrade||"")+'</span>'+
 '</div>'+
 
 '<div class="price-row">'+
-
-'<div class="price">'+
-fmt(s.price)+
-'</div>'+
-
-'<div class="'+pclass(s.changePercent)+'">'+
-pct(s.changePercent)+
-'</div>'+
-
+'<div class="price">'+fmt(s.price)+'</div>'+
+'<div class="'+pclass(s.changePercent)+'">'+pct(s.changePercent)+'</div>'+
 '</div>'+
 
 '<div class="chips">'+
-
-'<div class="chip green">'+
-'量比 '+
-fmt(s.volumeRatio,1)+
-'x'+
+'<div class="chip green">策略 '+safe(s.entryScore)+'/100</div>'+
+'<div class="chip">異動 '+safe(s.score)+'/100</div>'+
+'<div class="chip">量比 '+fmt(s.volumeRatio,1)+'x</div>'+
 '</div>'+
 
-(
-s.longStatus
-?'<div class="chip">'+
-safe(
-(s.longEmoji||"")+
-" "+
-s.longStatus
-)+
-'</div>'
-:""
-)+
+'<div class="strategy-score-grid">'+
 
+'<div class="strategy-mini-score">'+
+'<span>🟢 支撐回踩</span>'+
+'<strong>'+safe(s.pullbackScore)+'</strong>'+
+'</div>'+
+
+'<div class="strategy-mini-score">'+
+'<span>🟣 高 R</span>'+
+'<strong>'+safe(s.highRScore)+'</strong>'+
+'</div>'+
+
+'<div class="strategy-mini-score">'+
+'<span>🔥 強勢續攻</span>'+
+'<strong>'+safe(s.surgeScore)+'</strong>'+
+'</div>'+
+
+'</div>'+
+
+'<div class="strategy-auto-meta">'+
+'MA20 '+fmt(s.ma20)+
+' · RSI '+fmt(s.rsi,1)+
+' · 壓力 '+fmt(s.resistance)+
+'<br>'+
+'支撐 '+fmt(s.support)+
+' · 結構低點 '+fmt(s.structureLow)+
+'</div>'+
+
+'<div class="strategy-open">查看完整策略分析 →</div>'+
+
+'</article>'
+);
+
+}).join("");
+
+r.querySelectorAll("[data-strategy-stock]").forEach(x=>{
+x.onclick=function(){
+analyze(this.dataset.strategyStock);
+};
+});
+}
+
+/* 雷達 */
+
+async function loadRadar(){
+try{
+var r=await fetch("/api/radar?t="+Date.now(),{cache:"no-store"});
+var d=await r.json();
+
+if(!r.ok||!d.ok)throw Error(d.error||"雷達資料取得失敗");
+
+el("scanCount").textContent=fmt(d.scanned,0);
+el("radarCount").textContent=fmt(d.found,0);
+el("longCount").textContent=fmt(d.longWatchCount,0);
+
+el("updateText").textContent=
+"FinMind Sponsor 即時資料 · 更新 "+currentTimeText();
+
+/* 新增策略掃描 */
+if(el("strategyReadyText")){
+el("strategyReadyText").textContent=
+"已分析 "+fmt(d.strategyScannedCount||0,0)+
+" 檔候選股 · "+
+fmt(d.strategyReadyCount||0,0)+
+" 檔符合策略條件 · 65 分以上顯示";
+}
+
+renderStrategyStocks(d.strategyReady||[]);
+
+/* 原本做多觀察 */
+renderStocks("longGrid",d.longWatch||[],true);
+
+/* 原本異動雷達 */
+renderStocks("radarGrid",d.radar||[],false);
+
+countdownSeconds=300;
+
+}catch(e){
+el("updateText").textContent="即時雷達連線失敗";
+
+if(el("strategyReadyGrid")){
+el("strategyReadyGrid").innerHTML=
+'<div class="error">'+safe(e.message||"策略掃描失敗")+'</div>';
+}
+}
+}
+
+function renderStocks(id,a,l){
+var r=el(id);
+
+if(!a.length){
+r.innerHTML='<div class="card">目前沒有符合條件的股票</div>';
+return;
+}
+
+r.innerHTML=a.map(s=>
+'<article class="stock-card '+(l&&s.longStatus==="優先觀察"?"priority":"")+'" data-stock="'+safe(s.symbol)+'">'+
+
+'<div class="stock-top">'+
+'<div>'+
+'<div class="symbol">'+safe(s.symbol)+'</div>'+
+'<div class="name">'+safe(s.name||"台股")+'</div>'+
+'</div>'+
+'<div class="score"><strong>'+safe(s.score)+'</strong><span>異動分數</span></div>'+
+'</div>'+
+
+'<div class="price-row">'+
+'<div class="price">'+fmt(s.price)+'</div>'+
+'<div class="'+pclass(s.changePercent)+'">'+pct(s.changePercent)+'</div>'+
+'</div>'+
+
+'<div class="chips">'+
+'<div class="chip green">量比 '+fmt(s.volumeRatio,1)+'x</div>'+
+(s.longStatus?'<div class="chip">'+safe((s.longEmoji||"")+" "+s.longStatus)+'</div>':"")+
 '</div>'+
 
 '</article>'
-
 ).join("");
 
-r.querySelectorAll(
-"[data-stock]"
-)
-.forEach(x=>{
-
-x.onclick=function(){
-
-analyze(
-this.dataset.stock
-);
-
-};
-
+r.querySelectorAll("[data-stock]").forEach(x=>{
+x.onclick=function(){analyze(this.dataset.stock)};
 });
 }
 
-/* =========================
-   返回
-========================= */
+/* 返回 */
 
 function backHome(){
-
 stopAnalysisTracker();
 stopKBarTimer();
 
-el("analysisPage").classList.add(
-"hidden"
-);
+el("analysisPage").classList.add("hidden");
+el("homePage").classList.remove("hidden");
 
-el("homePage").classList.remove(
-"hidden"
-);
-
-setTimeout(()=>{
-
-scrollTo(
-0,
-homeScroll
-);
-
-},10);
+setTimeout(()=>{scrollTo(0,homeScroll)},10);
 }
 
-/* =========================
-   EVENTS
-========================= */
+/* EVENTS */
 
-el("backTop").onclick=
-backHome;
-
-el("backBottom").onclick=
-backHome;
+el("backTop").onclick=backHome;
+el("backBottom").onclick=backHome;
 
 el("stockSearchForm").onsubmit=e=>{
-
 e.preventDefault();
-
-analyze(
-el("symbolInput").value
-);
-
+analyze(el("symbolInput").value);
 };
 
-document.querySelectorAll(
-".example"
-)
-.forEach(b=>{
-
-b.onclick=()=>analyze(
-b.dataset.symbol
-);
-
+document.querySelectorAll(".example").forEach(b=>{
+b.onclick=()=>analyze(b.dataset.symbol);
 });
 
-el("refreshButton").onclick=
-loadRadar;
+el("refreshButton").onclick=loadRadar;
 
 /* 首頁雷達倒數 */
 
 setInterval(()=>{
-
 countdownSeconds--;
 
 if(countdownSeconds<=0){
-
 countdownSeconds=300;
-
 loadRadar();
-
 }
 
-var m=
-Math.floor(
-countdownSeconds/60
-);
-
-var s=
-countdownSeconds%60;
+var m=Math.floor(countdownSeconds/60);
+var s=countdownSeconds%60;
 
 el("countdown").textContent=
-
-String(m).padStart(2,"0")+
-":"+
-String(s).padStart(2,"0");
+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
 
 },1000);
 
-/* resize */
+window.addEventListener("resize",()=>{
+if(KBAR_DATA.length)drawKBar();
+});
 
-window.addEventListener(
-"resize",
-()=>{
-
-if(KBAR_DATA.length){
-drawKBar();
-}
-
-}
-);
-
-/* 回到 APP 時立即更新 */
-
-document.addEventListener(
-"visibilitychange",
-()=>{
-
+document.addEventListener("visibilitychange",()=>{
 if(
 !document.hidden&&
 currentAnalysisSymbol&&
 !el("analysisPage").classList.contains("hidden")
 ){
-
 refreshCurrentAnalysis();
-
 }
-
-}
-);
+});
 
 /* START */
 
