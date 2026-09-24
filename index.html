@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<title>妖子平台 3.2</title>
+<title>妖子平台 3.3</title>
 
 <meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,1285 +12,894 @@
 <meta name="apple-mobile-web-app-title" content="妖子平台">
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 :root{
-  --bg:#030504;
-  --card:#0b0e0c;
-  --border:#292e2b;
-  --text:#f6f7f6;
-  --muted:#8c918e;
-  --green:#45e0ad;
-  --red:#ff6976;
-  --yellow:#ffc85a;
-  --purple:#ae63ff;
-  --orange:#ff9f43;
-  --blue:#70b7ff;
+--bg:#030504;
+--card:#0b0e0c;
+--border:#292e2b;
+--text:#f6f7f6;
+--muted:#8c918e;
+--green:#45e0ad;
+--red:#ff6976;
+--yellow:#ffc85a;
+--purple:#ae63ff;
+--orange:#ff9f43;
+--blue:#70b7ff;
 }
 
 html{
-  background:var(--bg);
-  scroll-behavior:smooth;
+background:var(--bg);
+scroll-behavior:smooth;
 }
 
 body{
-  margin:0;
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(43,111,84,.09),
-      transparent 28%
-    ),
-    var(--bg);
-
-  color:var(--text);
-
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "PingFang TC",
-    "Noto Sans TC",
-    sans-serif;
+margin:0;
+background:
+radial-gradient(circle at top,rgba(43,111,84,.09),transparent 28%),
+var(--bg);
+color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
 }
 
-button,
-input{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
-
-.hidden{
-  display:none !important;
-}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
 
 .app{
-  width:min(100%,900px);
-  margin:auto;
-
-  padding:
-    calc(22px + env(safe-area-inset-top))
-    16px
-    calc(60px + env(safe-area-inset-bottom));
+width:min(100%,900px);
+margin:auto;
+padding:calc(22px + env(safe-area-inset-top)) 16px calc(60px + env(safe-area-inset-bottom));
 }
 
-
-/* =========================
-   HEADER
-========================= */
-
-.header{
-  margin-bottom:24px;
-}
+.header{margin-bottom:24px}
 
 .header-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:12px;
+display:flex;
+justify-content:space-between;
+align-items:flex-end;
+gap:12px;
 }
 
 .brand{
-  font-size:31px;
-  font-weight:950;
-  letter-spacing:-1.5px;
+font-size:31px;
+font-weight:950;
+letter-spacing:-1.5px;
 }
 
 .subtitle{
-  margin-top:9px;
-  color:var(--muted);
-  font-size:13px;
+margin-top:9px;
+color:var(--muted);
+font-size:13px;
 }
 
 .version{
-  padding:7px 11px;
-  border-radius:999px;
-
-  color:var(--green);
-
-  border:
-    1px solid
-    rgba(69,224,173,.25);
-
-  background:
-    rgba(69,224,173,.07);
-
-  font-size:12px;
-  font-weight:900;
+padding:7px 11px;
+border-radius:999px;
+color:var(--green);
+border:1px solid rgba(69,224,173,.25);
+background:rgba(69,224,173,.07);
+font-size:12px;
+font-weight:900;
 }
 
-
-/* =========================
-   COMMON
-========================= */
-
-.card,
-.hero-card,
-.overview-card,
-.brain-card{
-  background:
-    rgba(11,14,12,.97);
-
-  border:
-    1px solid
-    var(--border);
-
-  border-radius:21px;
-
-  padding:16px;
-  margin-bottom:15px;
+.card,.hero-card,.overview-card,.brain-card{
+background:rgba(11,14,12,.97);
+border:1px solid var(--border);
+border-radius:21px;
+padding:16px;
+margin-bottom:15px;
 }
 
-.section{
-  margin-top:27px;
-}
-
-.section-title{
-  font-size:20px;
-  font-weight:950;
-}
+.section{margin-top:27px}
+.section-title{font-size:20px;font-weight:950}
 
 .section-sub{
-  color:var(--muted);
-  font-size:11px;
-  margin-top:5px;
-  line-height:1.6;
+color:var(--muted);
+font-size:11px;
+margin-top:5px;
+line-height:1.6;
 }
 
 .section-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-
-  margin:
-    0 3px 13px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin:0 3px 13px;
 }
 
 .big-section-title{
-  margin:
-    31px 5px 15px;
-
-  font-size:24px;
-  font-weight:950;
+margin:31px 5px 15px;
+font-size:24px;
+font-weight:950;
 }
 
-
-/* =========================
-   SEARCH
-========================= */
-
 .search-title{
-  color:var(--muted);
-  font-size:12px;
-
-  margin:
-    0 0 10px 4px;
+color:var(--muted);
+font-size:12px;
+margin:0 0 10px 4px;
 }
 
 .search-form{
-  display:grid;
-
-  grid-template-columns:
-    1fr 100px;
-
-  gap:9px;
+display:grid;
+grid-template-columns:1fr 100px;
+gap:9px;
 }
 
 .search-input{
-  width:100%;
-  height:53px;
-
-  border:
-    1px solid #303532;
-
-  border-radius:15px;
-
-  padding:
-    0 15px;
-
-  background:#070908;
-  color:white;
-
-  outline:none;
-  font-size:16px;
+width:100%;
+height:53px;
+border:1px solid #303532;
+border-radius:15px;
+padding:0 15px;
+background:#070908;
+color:white;
+outline:none;
+font-size:16px;
 }
 
 .search-btn{
-  border:0;
-  border-radius:15px;
-
-  background:var(--green);
-  color:#06130e;
-
-  font-weight:950;
+border:0;
+border-radius:15px;
+background:var(--green);
+color:#06130e;
+font-weight:950;
 }
 
 .search-help{
-  margin-top:10px;
-
-  color:#777d79;
-  font-size:10px;
-  line-height:1.6;
+margin-top:10px;
+color:#777d79;
+font-size:10px;
+line-height:1.6;
 }
 
-.examples,
-.chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-
-  margin-top:11px;
+.examples,.chips{
+display:flex;
+flex-wrap:wrap;
+gap:7px;
+margin-top:11px;
 }
 
-.example,
-.chip{
-  border:
-    1px solid #292e2b;
-
-  background:#111412;
-  color:#a6aca8;
-
-  border-radius:999px;
-
-  padding:
-    6px 10px;
-
-  font-size:10px;
+.example,.chip{
+border:1px solid #292e2b;
+background:#111412;
+color:#a6aca8;
+border-radius:999px;
+padding:6px 10px;
+font-size:10px;
 }
 
-.chip.green{
-  color:var(--green);
-}
+.chip.green{color:var(--green)}
 
-
-/* =========================
-   WATCHLIST
-========================= */
-
-.watch-section{
-  margin-top:25px;
-}
-
-.watch-grid,
-.grid{
-  display:grid;
-  gap:9px;
-}
+.watch-section{margin-top:25px}
+.watch-grid,.grid{display:grid;gap:9px}
 
 .watch-card{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-
-  background:#0b0e0c;
-
-  border:
-    1px solid
-    rgba(255,200,90,.20);
-
-  border-radius:17px;
-
-  padding:14px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+background:#0b0e0c;
+border:1px solid rgba(255,200,90,.20);
+border-radius:17px;
+padding:14px;
 }
 
-.watch-main{
-  flex:1;
-  cursor:pointer;
-}
-
-.watch-symbol{
-  font-size:18px;
-  font-weight:950;
-}
+.watch-main{flex:1;cursor:pointer}
+.watch-symbol{font-size:18px;font-weight:950}
 
 .watch-name{
-  color:var(--muted);
-  font-size:11px;
-  margin-top:4px;
+color:var(--muted);
+font-size:11px;
+margin-top:4px;
 }
 
 .watch-open{
-  color:var(--yellow);
-  font-size:11px;
-  margin-top:8px;
+color:var(--yellow);
+font-size:11px;
+margin-top:8px;
 }
 
 .watch-remove{
-  width:38px;
-  height:38px;
-
-  border:
-    1px solid #303532;
-
-  background:#101311;
-  color:#888e8a;
-
-  border-radius:12px;
-  font-size:17px;
+width:38px;
+height:38px;
+border:1px solid #303532;
+background:#101311;
+color:#888e8a;
+border-radius:12px;
+font-size:17px;
 }
 
 .empty-watch{
-  color:#777d79;
-
-  border:
-    1px dashed #292e2b;
-
-  border-radius:16px;
-
-  padding:18px;
-
-  text-align:center;
-  font-size:12px;
-  line-height:1.7;
+color:#777d79;
+border:1px dashed #292e2b;
+border-radius:16px;
+padding:18px;
+text-align:center;
+font-size:12px;
+line-height:1.7;
 }
 
 .favorite-btn{
-  width:100%;
-  min-height:48px;
-
-  margin-top:15px;
-
-  border-radius:15px;
-
-  border:
-    1px solid
-    rgba(255,200,90,.28);
-
-  background:
-    rgba(255,200,90,.06);
-
-  color:var(--yellow);
-
-  font-weight:900;
+width:100%;
+min-height:48px;
+margin-top:15px;
+border-radius:15px;
+border:1px solid rgba(255,200,90,.28);
+background:rgba(255,200,90,.06);
+color:var(--yellow);
+font-weight:900;
 }
 
 .favorite-btn.active{
-  background:
-    rgba(255,200,90,.12);
+background:rgba(255,200,90,.12);
 }
 
-
-/* =========================
-   MARKET
-========================= */
-
-.refresh,
-.back-btn{
-  border:
-    1px solid #303532;
-
-  background:#111412;
-  color:#d7dbd8;
-
-  border-radius:12px;
-
-  padding:
-    9px 11px;
-
-  font-size:12px;
+.refresh,.back-btn{
+border:1px solid #303532;
+background:#111412;
+color:#d7dbd8;
+border-radius:12px;
+padding:9px 11px;
+font-size:12px;
 }
 
 .stats{
-  display:grid;
-
-  grid-template-columns:
-    repeat(4,1fr);
-
-  gap:8px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
 }
 
 .stat{
-  text-align:center;
-
-  background:#0a0d0b;
-
-  border:
-    1px solid #252a27;
-
-  border-radius:14px;
-
-  padding:
-    12px 4px;
+text-align:center;
+background:#0a0d0b;
+border:1px solid #252a27;
+border-radius:14px;
+padding:12px 4px;
 }
 
 .stat strong{
-  display:block;
-  font-size:17px;
+display:block;
+font-size:17px;
 }
 
 .stat span{
-  display:block;
-
-  margin-top:5px;
-
-  color:var(--muted);
-  font-size:9px;
+display:block;
+margin-top:5px;
+color:var(--muted);
+font-size:9px;
 }
 
 .stock-card{
-  padding:15px;
-
-  border-radius:18px;
-
-  border:
-    1px solid #292e2b;
-
-  background:#0b0e0c;
-
-  cursor:pointer;
+padding:15px;
+border-radius:18px;
+border:1px solid #292e2b;
+background:#0b0e0c;
+cursor:pointer;
 }
 
-.stock-card.priority{
-  border-color:
-    rgba(69,224,173,.28);
+.stock-top,.hero-top{
+display:flex;
+justify-content:space-between;
+gap:10px;
 }
 
-.stock-top,
-.hero-top{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.symbol{
-  font-size:19px;
-  font-weight:950;
-}
+.symbol{font-size:19px;font-weight:950}
 
 .name{
-  color:#9da39f;
-  font-size:12px;
-  margin-top:4px;
+color:#9da39f;
+font-size:12px;
+margin-top:4px;
 }
 
-.score{
-  text-align:right;
-}
+.score{text-align:right}
 
 .score strong{
-  display:block;
-  font-size:23px;
+display:block;
+font-size:23px;
 }
 
 .score span{
-  color:var(--muted);
-  font-size:9px;
+color:var(--muted);
+font-size:9px;
 }
 
 .price-row{
-  display:flex;
-  gap:9px;
-  align-items:baseline;
-
-  margin-top:13px;
+display:flex;
+gap:9px;
+align-items:baseline;
+margin-top:13px;
 }
 
 .price{
-  font-size:22px;
-  font-weight:950;
+font-size:22px;
+font-weight:950;
 }
 
-.up{
-  color:var(--green);
-}
-
-.down{
-  color:var(--red);
-}
-
-.flat{
-  color:#ddd;
-}
-
-
-/* =========================
-   ANALYSIS
-========================= */
+.up{color:var(--green)}
+.down{color:var(--red)}
+.flat{color:#ddd}
 
 .analysis-heading{
-  margin:
-    24px 3px 15px;
+margin:24px 3px 15px;
 }
 
 .analysis-heading h1{
-  margin:0;
-  font-size:27px;
+margin:0;
+font-size:27px;
 }
 
 .analysis-heading p{
-  color:var(--muted);
-  font-size:12px;
+color:var(--muted);
+font-size:12px;
 }
 
 .back-btn.full{
-  width:100%;
-  margin-top:22px;
-  min-height:48px;
+width:100%;
+margin-top:22px;
+min-height:48px;
 }
 
 .live-tracker{
-  margin:
-    0 0 15px;
-
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-
-  border:
-    1px solid
-    rgba(69,224,173,.28);
-
-  background:
-    rgba(69,224,173,.06);
-
-  border-radius:17px;
-
-  padding:
-    13px 15px;
+margin:0 0 15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+border:1px solid rgba(69,224,173,.28);
+background:rgba(69,224,173,.06);
+border-radius:17px;
+padding:13px 15px;
 }
 
 .live-tracker-main{
-  color:var(--green);
-  font-size:12px;
-  font-weight:950;
+color:var(--green);
+font-size:12px;
+font-weight:950;
 }
 
 .live-tracker-sub{
-  color:var(--muted);
-  font-size:10px;
-  margin-top:5px;
+color:var(--muted);
+font-size:10px;
+margin-top:5px;
 }
 
 .live-tracker-count{
-  font-size:21px;
-  font-weight:950;
+font-size:21px;
+font-weight:950;
 }
 
-
-/* =========================
-   HERO
-========================= */
-
 .hero-card{
-  border-radius:24px;
-  padding:21px;
+border-radius:24px;
+padding:21px;
 }
 
 .hero-symbol{
-  font-size:31px;
-  font-weight:950;
+font-size:31px;
+font-weight:950;
 }
 
 .hero-name{
-  color:var(--muted);
-  font-size:14px;
-  margin-top:5px;
+color:var(--muted);
+font-size:14px;
+margin-top:5px;
 }
 
 .hero-price{
-  text-align:right;
-  font-size:30px;
-  font-weight:950;
+text-align:right;
+font-size:30px;
+font-weight:950;
 }
 
 .hero-change{
-  text-align:right;
-  margin-top:5px;
-  font-size:13px;
+text-align:right;
+margin-top:5px;
+font-size:13px;
 }
 
 .market-pill{
-  display:inline-block;
-
-  margin-top:12px;
-
-  border:
-    1px solid #303532;
-
-  border-radius:999px;
-
-  padding:
-    6px 10px;
-
-  color:var(--green);
-  font-size:11px;
+display:inline-block;
+margin-top:12px;
+border:1px solid #303532;
+border-radius:999px;
+padding:6px 10px;
+color:var(--green);
+font-size:11px;
 }
 
 .indicator-strip{
-  display:grid;
-
-  grid-template-columns:
-    repeat(2,1fr);
-
-  gap:8px;
-
-  margin-top:20px;
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:20px;
 }
 
 .indicator{
-  background:#070a08;
-
-  border:
-    1px solid #242925;
-
-  border-radius:14px;
-
-  padding:12px;
+background:#070a08;
+border:1px solid #242925;
+border-radius:14px;
+padding:12px;
 }
 
 .indicator span{
-  color:var(--muted);
-  font-size:10px;
+color:var(--muted);
+font-size:10px;
 }
 
 .indicator strong{
-  display:block;
-  margin-top:5px;
-  font-size:15px;
+display:block;
+margin-top:5px;
+font-size:15px;
 }
 
-
-/* =========================
-   POSITION
-========================= */
+/* POSITION */
 
 .position-card{
-  border:
-    1px solid
-    rgba(112,183,255,.38);
-
-  border-radius:24px;
-
-  padding:20px;
-
-  background:#0a0d0c;
+border:1px solid rgba(112,183,255,.38);
+border-radius:24px;
+padding:20px;
+background:#0a0d0c;
 }
 
 .position-title{
-  font-size:22px;
-  font-weight:950;
+font-size:22px;
+font-weight:950;
 }
 
 .position-sub{
-  margin-top:6px;
-
-  color:var(--muted);
-  font-size:11px;
-  line-height:1.7;
+margin-top:6px;
+color:var(--muted);
+font-size:11px;
+line-height:1.7;
 }
 
-.position-form,
-.position-grid{
-  display:grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:9px;
-
-  margin-top:17px;
+.position-form,.position-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:17px;
 }
 
 .position-field label{
-  display:block;
-
-  color:var(--muted);
-  font-size:10px;
-
-  margin:
-    0 0 7px 3px;
+display:block;
+color:var(--muted);
+font-size:10px;
+margin:0 0 7px 3px;
 }
 
 .position-input{
-  width:100%;
-  height:49px;
-
-  border:
-    1px solid #303532;
-
-  border-radius:14px;
-
-  padding:
-    0 13px;
-
-  background:#070908;
-  color:white;
+width:100%;
+height:49px;
+border:1px solid #303532;
+border-radius:14px;
+padding:0 13px;
+background:#070908;
+color:white;
 }
 
 .position-save{
-  width:100%;
-  min-height:49px;
-
-  margin-top:10px;
-
-  border:0;
-  border-radius:14px;
-
-  background:var(--blue);
-
-  font-weight:950;
+width:100%;
+min-height:49px;
+margin-top:10px;
+border:0;
+border-radius:14px;
+background:var(--blue);
+font-weight:950;
 }
 
 .position-delete{
-  width:100%;
-  min-height:43px;
-
-  margin-top:8px;
-
-  border:
-    1px solid
-    rgba(255,105,118,.28);
-
-  border-radius:14px;
-
-  background:
-    rgba(255,105,118,.05);
-
-  color:#ff8d97;
-
-  font-weight:850;
+width:100%;
+min-height:43px;
+margin-top:8px;
+border:1px solid rgba(255,105,118,.28);
+border-radius:14px;
+background:rgba(255,105,118,.05);
+color:#ff8d97;
+font-weight:850;
 }
 
 .position-stat{
-  background:#070908;
-
-  border:
-    1px solid #252a27;
-
-  border-radius:15px;
-
-  padding:13px;
+background:#070908;
+border:1px solid #252a27;
+border-radius:15px;
+padding:13px;
 }
 
 .position-stat span{
-  display:block;
-  color:#858b87;
-  font-size:10px;
+display:block;
+color:#858b87;
+font-size:10px;
 }
 
 .position-stat strong{
-  display:block;
-  margin-top:6px;
-  font-size:17px;
+display:block;
+margin-top:6px;
+font-size:17px;
 }
 
 .position-state{
-  margin-top:14px;
-
-  border-radius:18px;
-
-  padding:17px;
-
-  border:
-    1px solid #303532;
-
-  background:#070908;
+margin-top:14px;
+border-radius:18px;
+padding:17px;
+border:1px solid #303532;
+background:#070908;
 }
 
-.position-state.green{
-  border-color:
-    rgba(69,224,173,.4);
-}
-
-.position-state.yellow{
-  border-color:
-    rgba(255,200,90,.4);
-}
-
-.position-state.orange{
-  border-color:
-    rgba(255,159,67,.45);
-}
-
-.position-state.red{
-  border-color:
-    rgba(255,105,118,.45);
-}
+.position-state.green{border-color:rgba(69,224,173,.4)}
+.position-state.yellow{border-color:rgba(255,200,90,.4)}
+.position-state.red{border-color:rgba(255,105,118,.45)}
 
 .position-state-title{
-  font-size:21px;
-  font-weight:950;
+font-size:21px;
+font-weight:950;
 }
 
-.position-state.green .position-state-title{
-  color:var(--green);
-}
-
-.position-state.yellow .position-state-title{
-  color:var(--yellow);
-}
-
-.position-state.orange .position-state-title{
-  color:var(--orange);
-}
-
-.position-state.red .position-state-title{
-  color:var(--red);
-}
+.position-state.green .position-state-title{color:var(--green)}
+.position-state.yellow .position-state-title{color:var(--yellow)}
+.position-state.red .position-state-title{color:var(--red)}
 
 .position-state-text{
-  margin-top:9px;
-  color:#c7ccc9;
-  font-size:12px;
-  line-height:1.9;
+margin-top:9px;
+color:#c7ccc9;
+font-size:12px;
+line-height:1.9;
 }
 
 .position-levels{
-  display:grid;
-  gap:9px;
-
-  margin-top:15px;
+display:grid;
+gap:9px;
+margin-top:15px;
 }
 
 .position-level{
-  display:flex;
-  justify-content:space-between;
-  gap:15px;
-
-  background:#070908;
-
-  border:
-    1px solid #252a27;
-
-  border-radius:14px;
-
-  padding:
-    13px 14px;
+display:flex;
+justify-content:space-between;
+gap:15px;
+background:#070908;
+border:1px solid #252a27;
+border-radius:14px;
+padding:13px 14px;
 }
 
 .position-level span{
-  color:#8d938f;
-  font-size:11px;
+color:#8d938f;
+font-size:11px;
 }
 
-.position-level.protect strong{
-  color:var(--blue);
+.position-level.protect strong{color:var(--blue)}
+.position-level.tp strong{color:var(--green)}
+.position-level.tp3 strong{color:var(--yellow)}
+
+.position-note,.data-note{
+margin-top:15px;
+color:#747a76;
+font-size:10px;
+line-height:1.8;
 }
 
-.position-level.tp strong{
-  color:var(--green);
-}
-
-.position-level.tp3 strong{
-  color:var(--yellow);
-}
-
-.position-note,
-.data-note{
-  margin-top:15px;
-
-  color:#747a76;
-
-  font-size:10px;
-  line-height:1.8;
-}
-
-
-/* =========================
-   K BAR
-========================= */
+/* =========================================================
+   K BAR 3.3
+========================================================= */
 
 .kbar-card{
-  border:
-    1px solid #292e2b;
-
-  border-radius:22px;
-
-  padding:18px;
-
-  background:#0b0e0c;
+border:1px solid #292e2b;
+border-radius:22px;
+padding:15px;
+background:#0b0e0c;
+overflow:hidden;
 }
 
-.kbar-tabs{
-  display:flex;
-  gap:6px;
-  overflow-x:auto;
+.kbar-toolbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+margin-top:13px;
+}
 
-  margin-top:15px;
+.kbar-periods{
+display:flex;
+gap:6px;
+overflow-x:auto;
+-webkit-overflow-scrolling:touch;
+padding:2px 1px 8px;
+scrollbar-width:none;
+}
+
+.kbar-periods::-webkit-scrollbar{
+display:none;
 }
 
 .kbar-tab{
-  min-width:55px;
-
-  border:
-    1px solid #303532;
-
-  background:#0d100e;
-  color:#969c98;
-
-  border-radius:10px;
-
-  padding:
-    9px 10px;
-
-  font-size:11px;
+flex:0 0 auto;
+min-width:50px;
+height:39px;
+border:1px solid #303532;
+background:#0d100e;
+color:#969c98;
+border-radius:10px;
+font-size:11px;
+font-weight:850;
 }
 
 .kbar-tab.active{
-  color:var(--green);
-
-  border-color:
-    rgba(69,224,173,.45);
-
-  background:
-    rgba(69,224,173,.06);
+color:var(--green);
+border-color:rgba(69,224,173,.5);
+background:rgba(69,224,173,.08);
 }
 
-.kbar-chart-wrap{
-  margin-top:14px;
-
-  border:
-    1px solid #252a27;
-
-  border-radius:17px;
-
-  overflow:hidden;
-
-  background:#050706;
+.kbar-latest{
+flex:0 0 auto;
+height:39px;
+padding:0 11px;
+border:1px solid rgba(112,183,255,.35);
+background:rgba(112,183,255,.07);
+color:var(--blue);
+border-radius:10px;
+font-size:10px;
+font-weight:900;
 }
 
 .kbar-info{
-  display:grid;
-
-  grid-template-columns:
-    repeat(3,1fr);
-
-  gap:6px;
-
-  padding:10px;
-
-  border-bottom:
-    1px solid #202522;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:6px;
+margin-top:8px;
 }
 
 .kbar-info-item{
-  font-size:10px;
-  color:#858b87;
+background:#070908;
+border:1px solid #202522;
+border-radius:9px;
+padding:7px;
+font-size:9px;
+color:#777e79;
 }
 
 .kbar-info-item strong{
-  display:block;
+display:block;
+margin-top:3px;
+color:#e7e9e8;
+font-size:11px;
+}
 
-  margin-top:3px;
-
-  color:#e5e8e6;
-  font-size:12px;
+.kbar-viewport{
+position:relative;
+margin-top:10px;
+height:370px;
+border:1px solid #252a27;
+border-radius:15px;
+overflow:hidden;
+background:#050706;
+touch-action:pan-y;
+user-select:none;
+-webkit-user-select:none;
 }
 
 #kbarCanvas{
-  display:block;
-  width:100%;
-  height:330px;
+display:block;
+width:100%;
+height:100%;
+touch-action:pan-y;
+}
+
+.kbar-crosshair{
+position:absolute;
+top:0;
+left:0;
+right:0;
+pointer-events:none;
+display:none;
+}
+
+.kbar-selected{
+position:absolute;
+left:9px;
+top:8px;
+right:9px;
+z-index:3;
+display:none;
+padding:8px 10px;
+border:1px solid rgba(255,255,255,.09);
+border-radius:10px;
+background:rgba(5,7,6,.90);
+font-size:10px;
+line-height:1.6;
+color:#d8dcda;
+pointer-events:none;
+}
+
+.kbar-help{
+margin-top:10px;
+color:#6e7470;
+font-size:10px;
+line-height:1.7;
 }
 
 .kbar-status{
-  padding:
-    11px 12px;
-
-  color:#858b87;
-
-  font-size:10px;
-
-  border-top:
-    1px solid #202522;
+margin-top:9px;
+padding:10px 11px;
+border:1px solid #202522;
+border-radius:11px;
+color:#858b87;
+font-size:10px;
 }
 
 .kbar-status.live{
-  color:var(--green);
+color:var(--green);
 }
 
 .kbar-status.error{
-  color:var(--red);
+color:var(--red);
 }
 
-
-/* =========================
-   AVERAGE ANALYSIS
-========================= */
+/* AVERAGE */
 
 .average-card{
-  margin-top:15px;
-
-  border:
-    1px solid
-    rgba(255,200,90,.32);
-
-  border-radius:19px;
-
-  padding:16px;
-
-  background:#0a0d0c;
+margin-top:15px;
+border:1px solid rgba(255,200,90,.32);
+border-radius:19px;
+padding:16px;
+background:#0a0d0c;
 }
 
-.average-card.good{
-  border-color:
-    rgba(69,224,173,.38);
-}
-
-.average-card.bad{
-  border-color:
-    rgba(255,105,118,.4);
-}
+.average-card.good{border-color:rgba(69,224,173,.38)}
+.average-card.bad{border-color:rgba(255,105,118,.4)}
 
 .average-title{
-  font-size:19px;
-  font-weight:950;
+font-size:19px;
+font-weight:950;
 }
 
-.average-card.good .average-title{
-  color:var(--green);
-}
-
-.average-card.bad .average-title{
-  color:var(--red);
-}
-
-.average-card.wait .average-title{
-  color:var(--yellow);
-}
+.average-card.good .average-title{color:var(--green)}
+.average-card.bad .average-title{color:var(--red)}
+.average-card.wait .average-title{color:var(--yellow)}
 
 .average-text{
-  margin-top:8px;
-
-  color:#c7ccc9;
-
-  font-size:11px;
-  line-height:1.8;
+margin-top:8px;
+color:#c7ccc9;
+font-size:11px;
+line-height:1.8;
 }
 
 .average-zone{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-
-  margin-top:10px;
-
-  padding:12px;
-
-  border:
-    1px solid #292e2b;
-
-  border-radius:13px;
-
-  background:#070908;
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-top:10px;
+padding:12px;
+border:1px solid #292e2b;
+border-radius:13px;
+background:#070908;
 }
 
 .average-zone span{
-  color:#888e8a;
-  font-size:11px;
+color:#888e8a;
+font-size:11px;
 }
 
 .average-reason{
-  padding:
-    7px 0;
-
-  border-bottom:
-    1px solid #202522;
-
-  font-size:11px;
+padding:7px 0;
+border-bottom:1px solid #202522;
+font-size:11px;
 }
 
 .average-scenarios{
-  display:grid;
-  gap:8px;
-
-  margin-top:14px;
+display:grid;
+gap:8px;
+margin-top:14px;
 }
 
 .average-scenario{
-  border:
-    1px solid #292e2b;
-
-  background:#070908;
-
-  border-radius:14px;
-
-  padding:13px;
-
-  color:#aeb4b0;
-
-  font-size:11px;
-  line-height:1.9;
+border:1px solid #292e2b;
+background:#070908;
+border-radius:14px;
+padding:13px;
+color:#aeb4b0;
+font-size:11px;
+line-height:1.9;
 }
 
 .average-scenario-title{
-  color:var(--yellow);
-
-  font-size:15px;
-  font-weight:950;
+color:var(--yellow);
+font-size:15px;
+font-weight:950;
 }
 
-
-/* =========================
-   STRATEGY
-========================= */
+/* STRATEGIES */
 
 .overview-card{
-  border-radius:24px;
-  padding:21px;
+border-radius:24px;
+padding:21px;
 }
 
-.overview-card.purple-card{
-  border-color:
-    rgba(174,99,255,.42);
-}
-
-.overview-card.surge-card{
-  border-color:
-    rgba(255,159,67,.45);
-}
+.overview-card.purple-card{border-color:rgba(174,99,255,.42)}
+.overview-card.surge-card{border-color:rgba(255,159,67,.45)}
 
 .overview-row{
-  display:flex;
-  justify-content:space-between;
-  gap:15px;
-
-  padding:
-    8px 0;
-
-  font-size:12px;
+display:flex;
+justify-content:space-between;
+gap:15px;
+padding:8px 0;
+font-size:12px;
 }
 
-.overview-label{
-  color:#8d938f;
-}
-
-.overview-value{
-  font-weight:950;
-}
-
-.overview-value.green{
-  color:var(--green);
-}
-
-.overview-value.purple{
-  color:#c899ff;
-}
-
-.overview-value.orange{
-  color:var(--orange);
-}
+.overview-label{color:#8d938f}
+.overview-value{font-weight:950}
+.overview-value.green{color:var(--green)}
+.overview-value.purple{color:#c899ff}
+.overview-value.orange{color:var(--orange)}
 
 .target-stack{
-  display:grid;
-  gap:11px;
-
-  margin-top:18px;
+display:grid;
+gap:11px;
+margin-top:18px;
 }
 
 .target-box{
-  background:#070a08;
-
-  border:
-    1px solid #252a27;
-
-  border-radius:18px;
-
-  padding:
-    17px 18px;
+background:#070a08;
+border:1px solid #252a27;
+border-radius:18px;
+padding:17px 18px;
 }
 
 .target-label{
-  color:#8d938f;
-  font-size:13px;
+color:#8d938f;
+font-size:13px;
 }
 
 .target-value{
-  font-size:25px;
-  font-weight:950;
+font-size:25px;
+font-weight:950;
 }
 
-.target-box.tp .target-value{
-  color:var(--green);
-}
-
-.target-box.tp3 .target-value{
-  color:var(--yellow);
-}
-
-.target-box.stop .target-value{
-  color:var(--red);
-}
+.target-box.tp .target-value{color:var(--green)}
+.target-box.tp3 .target-value{color:var(--yellow)}
+.target-box.stop .target-value{color:var(--red)}
 
 .brain-summary{
-  color:#e1e4e2;
-  font-size:14px;
-  line-height:2;
+color:#e1e4e2;
+font-size:14px;
+line-height:2;
 }
 
 .brain-item{
-  margin-top:10px;
-
-  border-radius:13px;
-
-  padding:12px;
-
-  background:#070a08;
-
-  font-size:12px;
+margin-top:10px;
+border-radius:13px;
+padding:12px;
+background:#070a08;
+font-size:12px;
 }
 
-.good{
-  color:#bdf2dc;
-}
-
-.warn{
-  color:#f4d68b;
-}
+.good{color:#bdf2dc}
+.warn{color:#f4d68b}
 
 .loading{
-  text-align:center;
-  padding:50px 10px;
-  color:var(--muted);
+text-align:center;
+padding:50px 10px;
+color:var(--muted);
 }
 
 .error{
-  padding:16px;
-
-  color:var(--red);
-
-  border:
-    1px solid
-    rgba(255,105,118,.25);
-
-  border-radius:15px;
+padding:16px;
+color:var(--red);
+border:1px solid rgba(255,105,118,.25);
+border-radius:15px;
 }
 
 .footer{
-  text-align:center;
-
-  color:#515653;
-
-  font-size:10px;
-
-  margin-top:30px;
+text-align:center;
+color:#515653;
+font-size:10px;
+margin-top:30px;
 }
 
 @media(min-width:700px){
-
-  .grid,
-  .watch-grid{
-    grid-template-columns:
-      repeat(2,1fr);
-  }
-
-  .indicator-strip,
-  .position-grid{
-    grid-template-columns:
-      repeat(4,1fr);
-  }
-
-  .average-scenarios{
-    grid-template-columns:
-      repeat(3,1fr);
-  }
+.grid,.watch-grid{grid-template-columns:repeat(2,1fr)}
+.indicator-strip,.position-grid{grid-template-columns:repeat(4,1fr)}
+.average-scenarios{grid-template-columns:repeat(3,1fr)}
+.kbar-info{grid-template-columns:repeat(6,1fr)}
 }
 </style>
 </head>
@@ -1302,29 +911,17 @@ button{
 <div id="homePage">
 
 <header class="header">
-
 <div class="header-row">
 
 <div>
-
-<div class="brand">
-妖子平台
+<div class="brand">妖子平台</div>
+<div class="subtitle">🇹🇼 台股即時異動 · 🇺🇸 美股技術分析</div>
 </div>
 
-<div class="subtitle">
-🇹🇼 台股即時異動 · 🇺🇸 美股技術分析
-</div>
+<div class="version">3.3 LIVE</div>
 
 </div>
-
-<div class="version">
-3.2 LIVE
-</div>
-
-</div>
-
 </header>
-
 
 <section class="card">
 
@@ -1332,23 +929,17 @@ button{
 搜尋股票名稱 / 台股代號 / 美股代號
 </div>
 
-<form
-  id="stockSearchForm"
-  class="search-form"
->
+<form id="stockSearchForm" class="search-form">
 
 <input
-  id="symbolInput"
-  class="search-input"
-  type="text"
-  placeholder="台積電 / 2330 / NVDA"
-  autocomplete="off"
+id="symbolInput"
+class="search-input"
+type="text"
+placeholder="台積電 / 2330 / NVDA"
+autocomplete="off"
 >
 
-<button
-  class="search-btn"
-  type="submit"
->
+<button class="search-btn" type="submit">
 分析
 </button>
 
@@ -1359,300 +950,139 @@ button{
 </div>
 
 <div class="examples">
-
-<button
-  class="example"
-  data-symbol="台積電"
->
-台積電
-</button>
-
-<button
-  class="example"
-  data-symbol="聯電"
->
-聯電
-</button>
-
-<button
-  class="example"
-  data-symbol="鴻海"
->
-鴻海
-</button>
-
-<button
-  class="example"
-  data-symbol="NVDA"
->
-NVDA
-</button>
-
-<button
-  class="example"
-  data-symbol="AAPL"
->
-AAPL
-</button>
-
+<button class="example" data-symbol="台積電">台積電</button>
+<button class="example" data-symbol="聯電">聯電</button>
+<button class="example" data-symbol="鴻海">鴻海</button>
+<button class="example" data-symbol="NVDA">NVDA</button>
+<button class="example" data-symbol="AAPL">AAPL</button>
 </div>
 
 </section>
-
 
 <section class="watch-section">
 
 <div class="section-head">
-
 <div>
-
-<div class="section-title">
-⭐ 我的自選股
+<div class="section-title">⭐ 我的自選股</div>
+<div class="section-sub">每台裝置獨立保存 · 點擊直接分析</div>
+</div>
 </div>
 
-<div class="section-sub">
-每台裝置獨立保存 · 點擊直接分析
-</div>
-
-</div>
-
-</div>
-
-<div
-  id="watchGrid"
-  class="watch-grid"
-></div>
+<div id="watchGrid" class="watch-grid"></div>
 
 </section>
-
 
 <section class="section">
 
 <div class="section-head">
 
 <div>
-
-<div class="section-title">
-⚡ 台股即時市場掃描
+<div class="section-title">⚡ 台股即時市場掃描</div>
+<div id="updateText" class="section-sub">正在連線 FinMind…</div>
 </div>
 
-<div
-  id="updateText"
-  class="section-sub"
->
-正在連線 FinMind…
-</div>
-
-</div>
-
-<button
-  id="refreshButton"
-  class="refresh"
->
+<button id="refreshButton" class="refresh">
 ↻ 立即掃描
 </button>
 
 </div>
 
-
 <div class="stats">
 
 <div class="stat">
-
-<strong id="scanCount">
---
-</strong>
-
-<span>
-掃描股票
-</span>
-
+<strong id="scanCount">--</strong>
+<span>掃描股票</span>
 </div>
 
-
 <div class="stat">
-
-<strong id="radarCount">
---
-</strong>
-
-<span>
-異動
-</span>
-
+<strong id="radarCount">--</strong>
+<span>異動</span>
 </div>
 
-
 <div class="stat">
-
-<strong id="longCount">
---
-</strong>
-
-<span>
-做多觀察
-</span>
-
+<strong id="longCount">--</strong>
+<span>做多觀察</span>
 </div>
 
-
 <div class="stat">
-
-<strong id="countdown">
-05:00
-</strong>
-
-<span>
-下次更新
-</span>
-
+<strong id="countdown">05:00</strong>
+<span>下次更新</span>
 </div>
 
 </div>
 
 </section>
-
 
 <section class="section">
 
 <div class="section-head">
-
 <div>
-
-<div class="section-title">
-🚀 今日做多觀察
+<div class="section-title">🚀 今日做多觀察</div>
+<div class="section-sub">即時量價與盤中強度條件篩選</div>
+</div>
 </div>
 
-<div class="section-sub">
-即時量價與盤中強度條件篩選
-</div>
-
-</div>
-
-</div>
-
-<div
-  id="longGrid"
-  class="grid"
->
-
-<div class="loading">
-正在掃描…
-</div>
-
+<div id="longGrid" class="grid">
+<div class="loading">正在掃描…</div>
 </div>
 
 </section>
-
 
 <section class="section">
 
 <div class="section-head">
-
 <div>
-
-<div class="section-title">
-🔥 台股即時異動雷達
+<div class="section-title">🔥 台股即時異動雷達</div>
+<div class="section-sub">分數代表技術條件符合程度</div>
+</div>
 </div>
 
-<div class="section-sub">
-分數代表技術條件符合程度
-</div>
-
-</div>
-
-</div>
-
-<div
-  id="radarGrid"
-  class="grid"
->
-
-<div class="loading">
-正在載入…
-</div>
-
+<div id="radarGrid" class="grid">
+<div class="loading">正在載入…</div>
 </div>
 
 </section>
-
 
 <div class="footer">
-妖子平台 3.2 · FinMind + Fugle Market Data
+妖子平台 3.3 · FinMind + Fugle Market Data
 </div>
 
 </div>
 
+<div id="analysisPage" class="hidden">
 
-<div
-  id="analysisPage"
-  class="hidden"
->
-
-<button
-  id="backTop"
-  class="back-btn"
->
+<button id="backTop" class="back-btn">
 ← 返回市場首頁
 </button>
 
-
 <div class="analysis-heading">
-
-<h1>
-📊 個股技術分析
-</h1>
-
-<p>
-策略匹配 · 持倉管理 · 即時 K 線 · 均價調整分析
-</p>
-
+<h1>📊 個股技術分析</h1>
+<p>策略匹配 · 持倉管理 · 多週期 K 線 · 均價調整分析</p>
 </div>
-
 
 <div class="live-tracker">
 
 <div>
-
-<div
-  id="analysisLiveStatus"
-  class="live-tracker-main"
->
+<div id="analysisLiveStatus" class="live-tracker-main">
 🟢 盤中自動追蹤
 </div>
 
-<div
-  id="analysisLiveTime"
-  class="live-tracker-sub"
->
+<div id="analysisLiveTime" class="live-tracker-sub">
 每 30 秒更新目前個股
 </div>
-
 </div>
 
-<div
-  id="analysisLiveCountdown"
-  class="live-tracker-count"
->
+<div id="analysisLiveCountdown" class="live-tracker-count">
 30s
 </div>
 
 </div>
 
-
 <div id="analysisResult">
-
-<div class="loading">
-正在分析…
+<div class="loading">正在分析…</div>
 </div>
 
-</div>
-
-
-<button
-  id="backBottom"
-  class="back-btn full"
->
+<button id="backBottom" class="back-btn full">
 ← 看完了，返回市場首頁
 </button>
 
@@ -1660,47 +1090,45 @@ AAPL
 
 </main>
 
-
 <script>
-
 "use strict";
-
 
 /* =========================================================
    GLOBAL
 ========================================================= */
 
 var countdownSeconds=300;
-
 var homeScroll=0;
 
 var currentStock=null;
-
 var currentAnalysisSymbol="";
-
 var currentAnalysisData=null;
 
 var analysisCountdownTimer=null;
-
 var analysisCountdown=30;
-
 var analysisRefreshing=false;
 
+var WATCH_KEY="yaozi_watchlist";
+var POSITION_KEY="yaozi_positions_v31";
 
-var WATCH_KEY=
-  "yaozi_watchlist";
+/* K BAR */
 
-var POSITION_KEY=
-  "yaozi_positions_v31";
-
-
-var KBAR_TF="1";
-
+var KBAR_TF="1m";
 var KBAR_DATA=[];
-
 var KBAR_TIMER=null;
-
 var KBAR_LOADING=false;
+
+var KBAR_VIEW_COUNT=45;
+var KBAR_END_INDEX=0;
+
+var KBAR_DRAGGING=false;
+var KBAR_DRAG_START_X=0;
+var KBAR_DRAG_START_END=0;
+
+var KBAR_PINCH_START_DISTANCE=0;
+var KBAR_PINCH_START_COUNT=45;
+
+var KBAR_SELECTED_INDEX=null;
 
 
 /* =========================================================
@@ -1708,83 +1136,42 @@ var KBAR_LOADING=false;
 ========================================================= */
 
 function el(id){
-
-  return document.getElementById(id);
+return document.getElementById(id);
 }
-
 
 function safe(v){
-
-  var d=
-    document.createElement("div");
-
-  d.textContent=
-    v==null
-      ?""
-      :String(v);
-
-  return d.innerHTML;
+var d=document.createElement("div");
+d.textContent=v==null?"":String(v);
+return d.innerHTML;
 }
-
 
 function fmt(v,d){
+if(d===undefined)d=2;
+var n=Number(v);
 
-  if(d===undefined){
-    d=2;
-  }
-
-  var n=
-    Number(v);
-
-  return Number.isFinite(n)
-    ?n.toLocaleString(
-      "zh-TW",
-      {
-        maximumFractionDigits:d
-      }
-    )
-    :"--";
+return Number.isFinite(n)
+?n.toLocaleString("zh-TW",{maximumFractionDigits:d})
+:"--";
 }
-
 
 function pct(v){
+var n=Number(v);
 
-  var n=
-    Number(v);
+if(!Number.isFinite(n))return "--";
 
-  if(!Number.isFinite(n)){
-    return "--";
-  }
-
-  return (
-    n>0
-      ?"+"
-      :""
-  )+
-  n.toFixed(2)+
-  "%";
+return (n>0?"+":"")+n.toFixed(2)+"%";
 }
-
 
 function pclass(v){
-
-  return Number(v)>0
-    ?"up"
-    :Number(v)<0
-      ?"down"
-      :"flat";
+return Number(v)>0
+?"up"
+:Number(v)<0
+?"down"
+:"flat";
 }
 
-
 function currentTimeText(){
-
-  return new Date()
-    .toLocaleTimeString(
-      "zh-TW",
-      {
-        hour12:false
-      }
-    );
+return new Date().toLocaleTimeString("zh-TW",{hour12:false});
 }
 
 
@@ -1794,140 +1181,84 @@ function currentTimeText(){
 
 function SMA(a,p){
 
-  if(a.length<p){
-    return NaN;
-  }
+if(a.length<p)return NaN;
 
-  return a
-    .slice(-p)
-    .reduce(
-      function(s,v){
-        return s+Number(v);
-      },
-      0
-    )/p;
+return a
+.slice(-p)
+.reduce(function(s,v){
+return s+Number(v);
+},0)/p;
 }
-
 
 function EMA(a,p){
 
-  if(a.length<p){
-    return NaN;
-  }
+if(a.length<p)return NaN;
 
-  var e=
-    a
-      .slice(0,p)
-      .reduce(
-        function(s,v){
-          return s+Number(v);
-        },
-        0
-      )/p;
+var e=a
+.slice(0,p)
+.reduce(function(s,v){
+return s+Number(v);
+},0)/p;
 
-  var k=
-    2/(p+1);
+var k=2/(p+1);
 
-  for(
-    var i=p;
-    i<a.length;
-    i++
-  ){
-
-    e=
-      Number(a[i])*k+
-      e*(1-k);
-  }
-
-  return e;
+for(var i=p;i<a.length;i++){
+e=Number(a[i])*k+e*(1-k);
 }
 
+return e;
+}
 
 function RSI(a,p){
 
-  p=p||14;
+p=p||14;
 
-  if(a.length<=p){
-    return NaN;
-  }
+if(a.length<=p)return NaN;
 
-  var r=
-    a.slice(
-      -(p+1)
-    );
+var r=a.slice(-(p+1));
+var g=0;
+var l=0;
 
-  var g=0;
-  var l=0;
+for(var i=1;i<r.length;i++){
 
-  for(
-    var i=1;
-    i<r.length;
-    i++
-  ){
+var x=
+Number(r[i])-
+Number(r[i-1]);
 
-    var x=
-      Number(r[i])-
-      Number(r[i-1]);
-
-    if(x>0){
-      g+=x;
-    }else{
-      l+=Math.abs(x);
-    }
-  }
-
-  if(l===0){
-    return 100;
-  }
-
-  return 100-
-    (
-      100/
-      (
-        1+
-        (g/p)/(l/p)
-      )
-    );
+if(x>0)g+=x;
+else l+=Math.abs(x);
 }
 
+if(l===0)return 100;
+
+return 100-
+100/(1+(g/p)/(l/p));
+}
 
 function ATR(rows,p){
 
-  p=p||14;
+p=p||14;
 
-  if(rows.length<=p){
-    return NaN;
-  }
+if(rows.length<=p)return NaN;
 
-  var t=[];
+var t=[];
 
-  for(
-    var i=1;
-    i<rows.length;
-    i++
-  ){
+for(var i=1;i<rows.length;i++){
 
-    var h=
-      Number(rows[i].high);
+var h=+rows[i].high;
+var l=+rows[i].low;
+var pc=+rows[i-1].close;
 
-    var l=
-      Number(rows[i].low);
+t.push(
+Math.max(
+h-l,
+Math.abs(h-pc),
+Math.abs(l-pc)
+)
+);
+}
 
-    var pc=
-      Number(
-        rows[i-1].close
-      );
-
-    t.push(
-      Math.max(
-        h-l,
-        Math.abs(h-pc),
-        Math.abs(l-pc)
-      )
-    );
-  }
-
-  return SMA(t,p);
+return SMA(t,p);
 }
 
 
@@ -1937,223 +1268,144 @@ function ATR(rows,p){
 
 function getWatchlist(){
 
-  try{
+try{
 
-    var raw=
-      localStorage.getItem(
-        WATCH_KEY
-      )||
-      localStorage.getItem(
-        "yaozi_watchlist_v26"
-      )||
-      "[]";
+var raw=
+localStorage.getItem(WATCH_KEY)||
+localStorage.getItem("yaozi_watchlist_v26")||
+"[]";
 
-    return JSON.parse(raw);
+return JSON.parse(raw);
 
-  }catch(error){
-
-    return [];
-  }
+}catch(e){
+return [];
 }
-
+}
 
 function saveWatchlist(list){
 
-  localStorage.setItem(
-    WATCH_KEY,
-    JSON.stringify(list)
-  );
+localStorage.setItem(
+WATCH_KEY,
+JSON.stringify(list)
+);
 
-  renderWatchlist();
+renderWatchlist();
 }
-
 
 function isFavorite(symbol){
 
-  return getWatchlist()
-    .some(
-      function(x){
-
-        return String(x.symbol)===
-          String(symbol);
-      }
-    );
+return getWatchlist().some(function(x){
+return String(x.symbol)===String(symbol);
+});
 }
-
 
 function toggleFavorite(stock){
 
-  var list=
-    getWatchlist();
+var list=getWatchlist();
 
-  var index=
-    list.findIndex(
-      function(x){
+var index=list.findIndex(function(x){
+return String(x.symbol)===String(stock.symbol);
+});
 
-        return String(x.symbol)===
-          String(stock.symbol);
-      }
-    );
-
-  if(index>=0){
-
-    list.splice(
-      index,
-      1
-    );
-
-  }else{
-
-    list.unshift(stock);
-  }
-
-  saveWatchlist(list);
-
-  updateFavoriteButton();
+if(index>=0){
+list.splice(index,1);
+}else{
+list.unshift(stock);
 }
 
+saveWatchlist(list);
+updateFavoriteButton();
+}
 
 function removeFavorite(symbol){
 
-  saveWatchlist(
-    getWatchlist()
-      .filter(
-        function(x){
-
-          return String(x.symbol)!==
-            String(symbol);
-        }
-      )
-  );
+saveWatchlist(
+getWatchlist().filter(function(x){
+return String(x.symbol)!==String(symbol);
+})
+);
 }
-
 
 function renderWatchlist(){
 
-  var root=
-    el("watchGrid");
+var root=el("watchGrid");
+var list=getWatchlist();
 
-  var list=
-    getWatchlist();
+if(!list.length){
 
-  if(!list.length){
+root.innerHTML=
+'<div class="empty-watch">'+
+'目前還沒有自選股<br>'+
+'搜尋股票後加入自選'+
+'</div>';
 
-    root.innerHTML=
-      '<div class="empty-watch">'+
-        '目前還沒有自選股<br>'+
-        '搜尋股票後加入自選'+
-      '</div>';
-
-    return;
-  }
-
-  root.innerHTML=
-    list
-      .map(
-        function(x){
-
-          return (
-            '<div class="watch-card">'+
-
-              '<div '+
-                'class="watch-main" '+
-                'data-open="'+
-                safe(x.symbol)+
-                '">'+
-
-                '<div class="watch-symbol">'+
-                  '⭐ '+
-                  safe(x.symbol)+
-                '</div>'+
-
-                '<div class="watch-name">'+
-                  safe(x.name||"")+
-                '</div>'+
-
-                '<div class="watch-open">'+
-                  '查看分析 →'+
-                '</div>'+
-
-              '</div>'+
-
-              '<button '+
-                'class="watch-remove" '+
-                'data-remove="'+
-                safe(x.symbol)+
-                '">'+
-                '×'+
-              '</button>'+
-
-            '</div>'
-          );
-        }
-      )
-      .join("");
-
-  root
-    .querySelectorAll(
-      "[data-open]"
-    )
-    .forEach(
-      function(node){
-
-        node.onclick=
-          function(){
-
-            analyze(
-              node.dataset.open
-            );
-          };
-      }
-    );
-
-  root
-    .querySelectorAll(
-      "[data-remove]"
-    )
-    .forEach(
-      function(node){
-
-        node.onclick=
-          function(event){
-
-            event.stopPropagation();
-
-            removeFavorite(
-              node.dataset.remove
-            );
-          };
-      }
-    );
+return;
 }
 
+root.innerHTML=list.map(function(x){
+
+return (
+'<div class="watch-card">'+
+
+'<div class="watch-main" data-open="'+safe(x.symbol)+'">'+
+
+'<div class="watch-symbol">'+
+'⭐ '+safe(x.symbol)+
+'</div>'+
+
+'<div class="watch-name">'+
+safe(x.name||"")+
+'</div>'+
+
+'<div class="watch-open">'+
+'查看分析 →'+
+'</div>'+
+
+'</div>'+
+
+'<button class="watch-remove" data-remove="'+safe(x.symbol)+'">'+
+'×'+
+'</button>'+
+
+'</div>'
+);
+
+}).join("");
+
+root.querySelectorAll("[data-open]").forEach(function(node){
+
+node.onclick=function(){
+analyze(node.dataset.open);
+};
+
+});
+
+root.querySelectorAll("[data-remove]").forEach(function(node){
+
+node.onclick=function(event){
+
+event.stopPropagation();
+
+removeFavorite(node.dataset.remove);
+};
+
+});
+}
 
 function updateFavoriteButton(){
 
-  var button=
-    el("favoriteButton");
+var button=el("favoriteButton");
 
-  if(
-    !button||
-    !currentStock
-  ){
-    return;
-  }
+if(!button||!currentStock)return;
 
-  var active=
-    isFavorite(
-      currentStock.symbol
-    );
+var active=isFavorite(currentStock.symbol);
 
-  button.textContent=
-    active
-      ?"★ 已加入自選 · 點擊移除"
-      :"☆ 加入自選";
+button.textContent=
+active
+?"★ 已加入自選 · 點擊移除"
+:"☆ 加入自選";
 
-  button.classList.toggle(
-    "active",
-    active
-  );
+button.classList.toggle("active",active);
 }
 
 
@@ -2163,317 +1415,154 @@ function updateFavoriteButton(){
 
 function getPositions(){
 
-  try{
-
-    return JSON.parse(
-      localStorage.getItem(
-        POSITION_KEY
-      )||
-      "{}"
-    );
-
-  }catch(error){
-
-    return {};
-  }
+try{
+return JSON.parse(localStorage.getItem(POSITION_KEY)||"{}");
+}catch(e){
+return {};
 }
-
+}
 
 function getPosition(symbol){
-
-  return getPositions()[
-    String(symbol)
-  ]||null;
+return getPositions()[String(symbol)]||null;
 }
 
+function setPosition(symbol,data){
 
-function setPosition(
-  symbol,
-  data
-){
+var positions=getPositions();
 
-  var positions=
-    getPositions();
+positions[String(symbol)]=data;
 
-  positions[
-    String(symbol)
-  ]=data;
-
-  localStorage.setItem(
-    POSITION_KEY,
-    JSON.stringify(
-      positions
-    )
-  );
+localStorage.setItem(
+POSITION_KEY,
+JSON.stringify(positions)
+);
 }
-
 
 function deletePosition(symbol){
 
-  var positions=
-    getPositions();
+var positions=getPositions();
 
-  delete positions[
-    String(symbol)
-  ];
+delete positions[String(symbol)];
 
-  localStorage.setItem(
-    POSITION_KEY,
-    JSON.stringify(
-      positions
-    )
-  );
+localStorage.setItem(
+POSITION_KEY,
+JSON.stringify(positions)
+);
 }
 
+function createPosition(data,entry,quantity,market){
 
-/* =========================================================
-   CREATE POSITION
-========================================================= */
+entry=Number(entry);
+quantity=Number(quantity);
 
-function createPosition(
-  data,
-  entry,
-  quantity,
-  market
-){
-
-  entry=
-    Number(entry);
-
-  quantity=
-    Number(quantity);
-
-  if(
-    !(entry>0)||
-    !(quantity>0)
-  ){
-
-    throw new Error(
-      "請輸入正確的進場價與數量"
-    );
-  }
-
-  var stop=
-    Math.max(
-      market.ma20-
-      market.atr*.5,
-
-      market.low10-
-      market.atr*.25
-    );
-
-  if(
-    !Number.isFinite(stop)||
-    stop>=entry
-  ){
-
-    stop=
-      entry-
-      market.atr;
-  }
-
-  var minimumRisk=
-    market.atr*.75;
-
-  if(
-    entry-stop<
-    minimumRisk
-  ){
-
-    stop=
-      entry-
-      minimumRisk;
-  }
-
-  var risk=
-    entry-stop;
-
-  return {
-
-    symbol:
-      String(data.symbol),
-
-    name:
-      data.name||"",
-
-    market:
-      data.market||"",
-
-    entryPrice:
-      entry,
-
-    quantity:
-      quantity,
-
-    initialStop:
-      stop,
-
-    initialRisk:
-      risk,
-
-    protectPrice:
-      stop,
-
-    highWater:
-      Math.max(
-        entry,
-        market.price
-      ),
-
-    tp1:
-      entry+
-      risk*1.5,
-
-    tp2:
-      entry+
-      risk*2.5,
-
-    tp3:
-      entry+
-      risk*4,
-
-    createdAt:
-      new Date()
-        .toISOString()
-  };
+if(!(entry>0)||!(quantity>0)){
+throw new Error("請輸入正確的進場價與數量");
 }
 
+var stop=Math.max(
+market.ma20-market.atr*.5,
+market.low10-market.atr*.25
+);
 
-/* =========================================================
-   UPDATE POSITION
-========================================================= */
+if(!Number.isFinite(stop)||stop>=entry){
+stop=entry-market.atr;
+}
 
-function updatePosition(
-  position,
-  market
-){
+var minimumRisk=market.atr*.75;
 
-  var entry=
-    Number(
-      position.entryPrice
-    );
+if(entry-stop<minimumRisk){
+stop=entry-minimumRisk;
+}
 
-  var risk=
-    Number(
-      position.initialRisk
-    );
+var risk=entry-stop;
 
-  var oldProtect=
-    Number.isFinite(
-      Number(
-        position.protectPrice
-      )
-    )
-      ?Number(
-        position.protectPrice
-      )
-      :Number(
-        position.initialStop
-      );
+return {
 
-  var highWater=
-    Math.max(
-      Number(
-        position.highWater
-      )||entry,
+symbol:String(data.symbol),
+name:data.name||"",
+market:data.market||"",
 
-      market.price
-    );
+entryPrice:entry,
+quantity:quantity,
 
-  var bestR=
-    risk>0
-      ?(
-        highWater-entry
-      )/risk
-      :0;
+initialStop:stop,
+initialRisk:risk,
 
-  var protect=
-    oldProtect;
+protectPrice:stop,
 
-  if(bestR>=1){
+highWater:Math.max(
+entry,
+market.price
+),
 
-    protect=
-      Math.max(
-        protect,
-        entry
-      );
-  }
+tp1:entry+risk*1.5,
+tp2:entry+risk*2.5,
+tp3:entry+risk*4,
 
-  if(bestR>=1.5){
+createdAt:new Date().toISOString()
 
-    protect=
-      Math.max(
-        protect,
-        entry+
-        risk*.25
-      );
-  }
+};
+}
 
-  if(bestR>=2){
+function updatePosition(position,market){
 
-    protect=
-      Math.max(
-        protect,
-        entry+
-        risk*.75
-      );
-  }
+var entry=Number(position.entryPrice);
+var risk=Number(position.initialRisk);
 
-  if(bestR>=3){
+var oldProtect=
+Number.isFinite(Number(position.protectPrice))
+?Number(position.protectPrice)
+:Number(position.initialStop);
 
-    protect=
-      Math.max(
-        protect,
-        entry+
-        risk*1.5
-      );
-  }
+var highWater=Math.max(
+Number(position.highWater)||entry,
+market.price
+);
 
-  if(bestR>=1){
+var bestR=
+risk>0
+?(highWater-entry)/risk
+:0;
 
-    var structureTrail=
-      Math.max(
+var protect=oldProtect;
 
-        market.ma20-
-        market.atr*.5,
+if(bestR>=1){
+protect=Math.max(protect,entry);
+}
 
-        market.recent3Low-
-        market.atr*.25
-      );
+if(bestR>=1.5){
+protect=Math.max(protect,entry+risk*.25);
+}
 
-    structureTrail=
-      Math.min(
+if(bestR>=2){
+protect=Math.max(protect,entry+risk*.75);
+}
 
-        structureTrail,
+if(bestR>=3){
+protect=Math.max(protect,entry+risk*1.5);
+}
 
-        market.price-
-        market.atr*.35
-      );
+if(bestR>=1){
 
-    if(
-      Number.isFinite(
-        structureTrail
-      )
-    ){
+var structureTrail=Math.max(
+market.ma20-market.atr*.5,
+market.recent3Low-market.atr*.25
+);
 
-      protect=
-        Math.max(
-          protect,
-          structureTrail
-        );
-    }
-  }
+structureTrail=Math.min(
+structureTrail,
+market.price-market.atr*.35
+);
 
-  position.highWater=
-    highWater;
+if(Number.isFinite(structureTrail)){
+protect=Math.max(protect,structureTrail);
+}
+}
 
-  position.protectPrice=
-    Math.max(
-      oldProtect,
-      protect
-    );
+position.highWater=highWater;
+position.protectPrice=Math.max(oldProtect,protect);
 
-  return position;
+return position;
 }
 
 
@@ -2483,97 +1572,56 @@ function updatePosition(
 
 function openAnalysis(){
 
-  homeScroll=
-    scrollY;
+homeScroll=scrollY;
 
-  el("homePage")
-    .classList
-    .add("hidden");
+el("homePage").classList.add("hidden");
+el("analysisPage").classList.remove("hidden");
 
-  el("analysisPage")
-    .classList
-    .remove("hidden");
-
-  scrollTo(
-    0,
-    0
-  );
+scrollTo(0,0);
 }
-
 
 function backHome(){
 
-  stopAnalysisTracker();
+stopAnalysisTracker();
+stopKBarTimer();
 
-  stopKBarTimer();
+el("analysisPage").classList.add("hidden");
+el("homePage").classList.remove("hidden");
 
-  el("analysisPage")
-    .classList
-    .add("hidden");
+currentAnalysisSymbol="";
+KBAR_DATA=[];
 
-  el("homePage")
-    .classList
-    .remove("hidden");
+renderWatchlist();
 
-  currentAnalysisSymbol="";
-
-  KBAR_DATA=[];
-
-  renderWatchlist();
-
-  setTimeout(
-    function(){
-
-      scrollTo(
-        0,
-        homeScroll
-      );
-    },
-    10
-  );
+setTimeout(function(){
+scrollTo(0,homeScroll);
+},10);
 }
 
-
-el("backTop").onclick=
-  backHome;
-
-el("backBottom").onclick=
-  backHome;
+el("backTop").onclick=backHome;
+el("backBottom").onclick=backHome;
 
 
 /* =========================================================
    SEARCH
 ========================================================= */
 
-el("stockSearchForm")
-  .onsubmit=
-  function(event){
+el("stockSearchForm").onsubmit=function(event){
 
-    event.preventDefault();
+event.preventDefault();
 
-    analyze(
-      el("symbolInput")
-        .value
-    );
-  };
+analyze(
+el("symbolInput").value
+);
+};
 
+document.querySelectorAll(".example").forEach(function(button){
 
-document
-  .querySelectorAll(
-    ".example"
-  )
-  .forEach(
-    function(button){
+button.onclick=function(){
+analyze(button.dataset.symbol);
+};
 
-      button.onclick=
-        function(){
-
-          analyze(
-            button.dataset.symbol
-          );
-        };
-    }
-  );
+});
 
 
 /* =========================================================
@@ -2582,36 +1630,22 @@ document
 
 async function fetchStockData(query){
 
-  var response=
-    await fetch(
+var response=await fetch(
+"/api/stock?symbol="+
+encodeURIComponent(query)+
+"&t="+Date.now(),
+{
+cache:"no-store"
+}
+);
 
-      "/api/stock?symbol="+
-      encodeURIComponent(
-        query
-      )+
-      "&t="+
-      Date.now(),
+var data=await response.json();
 
-      {
-        cache:"no-store"
-      }
-    );
+if(!response.ok||!data.ok){
+throw new Error(data.error||"資料取得失敗");
+}
 
-  var data=
-    await response.json();
-
-  if(
-    !response.ok||
-    !data.ok
-  ){
-
-    throw new Error(
-      data.error||
-      "資料取得失敗"
-    );
-  }
-
-  return data;
+return data;
 }
 
 
@@ -2621,371 +1655,590 @@ async function fetchStockData(query){
 
 async function analyze(query){
 
-  query=
-    String(
-      query||""
-    )
-    .trim();
+query=String(query||"").trim();
 
-  if(!query){
-    return;
-  }
+if(!query)return;
 
-  stopAnalysisTracker();
+stopAnalysisTracker();
+stopKBarTimer();
 
-  openAnalysis();
+KBAR_DATA=[];
+KBAR_END_INDEX=0;
+KBAR_SELECTED_INDEX=null;
 
-  el("analysisResult")
-    .innerHTML=
-    '<div class="loading">'+
-      '正在分析 '+
-      safe(query)+
-      '…'+
-    '</div>';
+openAnalysis();
 
-  try{
+el("analysisResult").innerHTML=
+'<div class="loading">'+
+'正在分析 '+safe(query)+'…'+
+'</div>';
 
-    var data=
-      await fetchStockData(
-        query
-      );
+try{
 
-    currentAnalysisSymbol=
-      String(
-        data.symbol
-      );
+var data=await fetchStockData(query);
 
-    currentAnalysisData=
-      data;
+currentAnalysisSymbol=String(data.symbol);
+currentAnalysisData=data;
 
-    buildAnalysis(
-      data
-    );
+buildAnalysis(data);
 
-    updateTrackerSuccess(
-      data
-    );
+updateTrackerSuccess(data);
 
-    startAnalysisTracker();
+startAnalysisTracker();
 
-  }catch(error){
+}catch(error){
 
-    el("analysisResult")
-      .innerHTML=
-      '<div class="error">'+
-        '分析失敗：'+
-        safe(
-          error.message
-        )+
-      '</div>';
-  }
+el("analysisResult").innerHTML=
+'<div class="error">'+
+'分析失敗：'+safe(error.message)+
+'</div>';
+
+}
 }
 
 
 /* =========================================================
-   30 SECOND ANALYSIS REFRESH
+   ANALYSIS REFRESH
 ========================================================= */
 
 function startAnalysisTracker(){
 
-  stopAnalysisTracker();
+stopAnalysisTracker();
 
-  analysisCountdown=30;
+analysisCountdown=30;
 
-  analysisCountdownTimer=
-    setInterval(
-      function(){
+analysisCountdownTimer=setInterval(function(){
 
-        analysisCountdown--;
+analysisCountdown--;
 
-        if(
-          analysisCountdown<=0
-        ){
+if(analysisCountdown<=0){
 
-          analysisCountdown=30;
+analysisCountdown=30;
 
-          refreshCurrentAnalysis();
-        }
-
-        el(
-          "analysisLiveCountdown"
-        ).textContent=
-          analysisRefreshing
-            ?"更新中"
-            :analysisCountdown+
-              "s";
-      },
-      1000
-    );
+refreshCurrentAnalysis();
 }
 
+el("analysisLiveCountdown").textContent=
+analysisRefreshing
+?"更新中"
+:analysisCountdown+"s";
+
+},1000);
+}
 
 function stopAnalysisTracker(){
 
-  if(
-    analysisCountdownTimer
-  ){
-
-    clearInterval(
-      analysisCountdownTimer
-    );
-  }
-
-  analysisCountdownTimer=null;
+if(analysisCountdownTimer){
+clearInterval(analysisCountdownTimer);
 }
 
+analysisCountdownTimer=null;
+}
 
 async function refreshCurrentAnalysis(){
 
-  if(
-    !currentAnalysisSymbol||
-    analysisRefreshing||
-    document.hidden
-  ){
+if(
+!currentAnalysisSymbol||
+analysisRefreshing||
+document.hidden
+)return;
 
-    return;
-  }
+analysisRefreshing=true;
 
-  analysisRefreshing=true;
+try{
 
-  try{
+var oldScroll=scrollY;
 
-    var oldScroll=
-      scrollY;
+var data=await fetchStockData(currentAnalysisSymbol);
 
-    var data=
-      await fetchStockData(
-        currentAnalysisSymbol
-      );
+currentAnalysisData=data;
 
-    currentAnalysisData=
-      data;
+buildAnalysis(data);
 
-    buildAnalysis(
-      data
-    );
+requestAnimationFrame(function(){
+scrollTo(0,oldScroll);
+});
 
-    requestAnimationFrame(
-      function(){
+updateTrackerSuccess(data);
 
-        scrollTo(
-          0,
-          oldScroll
-        );
-      }
-    );
+}catch(error){
 
-    updateTrackerSuccess(
-      data
-    );
+console.error(error);
 
-  }catch(error){
+}finally{
 
-    console.error(
-      error
-    );
+analysisRefreshing=false;
+analysisCountdown=30;
 
-  }finally{
-
-    analysisRefreshing=false;
-    analysisCountdown=30;
-  }
+}
 }
 
+function updateTrackerSuccess(data){
 
-function updateTrackerSuccess(
-  data
-){
+if(data.market==="TW"&&data.isRealtime){
 
-  if(
-    data.market==="TW"&&
-    data.isRealtime
-  ){
+el("analysisLiveStatus").textContent=
+"🟢 台股盤中即時追蹤";
 
-    el(
-      "analysisLiveStatus"
-    ).textContent=
-      "🟢 台股盤中即時追蹤";
+}else if(data.market==="TW"){
 
-  }else if(
-    data.market==="TW"
-  ){
+el("analysisLiveStatus").textContent=
+"🟡 台股最新行情";
 
-    el(
-      "analysisLiveStatus"
-    ).textContent=
-      "🟡 台股最新行情";
+}else{
 
-  }else{
+el("analysisLiveStatus").textContent=
+"🇺🇸 美股行情追蹤";
+}
 
-    el(
-      "analysisLiveStatus"
-    ).textContent=
-      "🇺🇸 美股行情追蹤";
-  }
-
-  el(
-    "analysisLiveTime"
-  ).textContent=
-    "最後更新 "+
-    currentTimeText()+
-    " · 每 30 秒重新分析";
+el("analysisLiveTime").textContent=
+"最後更新 "+currentTimeText()+" · 每 30 秒重新分析";
 }
 
 
 /* =========================================================
-   FUGLE K BAR
+   MARKET
 ========================================================= */
 
-async function fetchKBar(
-  symbol,
-  timeframe
-){
+function marketOf(data){
 
-  var response=
-    await fetch(
+var rows=Array.isArray(data.rows)?data.rows:[];
 
-      "/api/kbar?symbol="+
-      encodeURIComponent(
-        symbol
-      )+
-      "&timeframe="+
-      encodeURIComponent(
-        timeframe
-      )+
-      "&t="+
-      Date.now(),
+var closes=rows.map(function(x){
+return +x.close;
+});
 
-      {
-        cache:"no-store"
-      }
-    );
+var price=Number(data.livePrice);
 
-  var data=
-    await response.json();
-
-  if(
-    !response.ok||
-    !data.ok
-  ){
-
-    throw new Error(
-      data.error||
-      "K 棒取得失敗"
-    );
-  }
-
-  return data;
+if(!Number.isFinite(price)){
+price=closes[closes.length-1];
 }
 
+return {
+
+price:price,
+
+ma20:SMA(closes,20),
+
+ma60:SMA(closes,60),
+
+rsi:RSI(closes,14),
+
+macd:
+EMA(closes.slice(-80),12)-
+EMA(closes.slice(-80),26),
+
+atr:ATR(rows,14),
+
+low10:
+Math.min.apply(
+null,
+rows.slice(-10).map(function(x){
+return +x.low;
+})
+),
+
+recent3Low:
+Math.min.apply(
+null,
+rows.slice(-3).map(function(x){
+return +x.low;
+})
+),
+
+resistance:
+Math.max.apply(
+null,
+rows.slice(-21,-1).map(function(x){
+return +x.high;
+})
+)
+
+};
+}
+
+
+/* =========================================================
+   K BAR TIMEFRAME
+========================================================= */
+
+function isHistoricalTF(tf){
+
+return [
+"1d",
+"1w",
+"1mo",
+"1y"
+].includes(tf);
+}
+
+function timeframeLabel(tf){
+
+var map={
+"1m":"1分",
+"3m":"3分",
+"5m":"5分",
+"10m":"10分",
+"15m":"15分",
+"30m":"30分",
+"60m":"1H",
+"2h":"2H",
+"4h":"4H",
+"6h":"6H",
+"12h":"12H",
+"1d":"日K",
+"1w":"週K",
+"1mo":"月K",
+"1y":"年K"
+};
+
+return map[tf]||tf;
+}
+
+
+/* =========================================================
+   HISTORICAL AGGREGATION
+========================================================= */
+
+function normalizeDailyRows(rows){
+
+return rows.map(function(x,index){
+
+var date=
+x.date||
+x.time||
+x.datetime||
+"";
+
+var timestamp=new Date(date).getTime();
+
+if(!Number.isFinite(timestamp)){
+
+timestamp=
+Date.now()-
+(rows.length-index)*
+86400000;
+}
+
+return {
+
+timestamp:timestamp,
+time:new Date(timestamp).toISOString(),
+
+open:+x.open,
+high:+x.high,
+low:+x.low,
+close:+x.close,
+volume:+(x.volume||0)
+
+};
+
+}).filter(function(x){
+
+return (
+Number.isFinite(x.open)&&
+Number.isFinite(x.high)&&
+Number.isFinite(x.low)&&
+Number.isFinite(x.close)
+);
+
+});
+}
+
+function weekKey(date){
+
+var d=new Date(date);
+
+var day=d.getUTCDay()||7;
+
+d.setUTCDate(
+d.getUTCDate()-day+1
+);
+
+return (
+d.getUTCFullYear()+
+"-"+
+String(d.getUTCMonth()+1).padStart(2,"0")+
+"-"+
+String(d.getUTCDate()).padStart(2,"0")
+);
+}
+
+function aggregateHistorical(rows,type){
+
+if(type==="1d"){
+return rows;
+}
+
+var map=new Map();
+
+rows.forEach(function(candle){
+
+var d=new Date(candle.timestamp);
+var key;
+
+if(type==="1w"){
+
+key=weekKey(candle.timestamp);
+
+}else if(type==="1mo"){
+
+key=
+d.getUTCFullYear()+
+"-"+
+String(d.getUTCMonth()+1).padStart(2,"0");
+
+}else{
+
+key=String(d.getUTCFullYear());
+
+}
+
+if(!map.has(key)){
+
+map.set(key,{
+
+timestamp:candle.timestamp,
+time:candle.time,
+
+open:candle.open,
+high:candle.high,
+low:candle.low,
+close:candle.close,
+volume:candle.volume
+
+});
+
+}else{
+
+var current=map.get(key);
+
+current.high=Math.max(
+current.high,
+candle.high
+);
+
+current.low=Math.min(
+current.low,
+candle.low
+);
+
+current.close=candle.close;
+
+current.volume+=
+Number(candle.volume)||0;
+
+}
+
+});
+
+return Array.from(map.values()).sort(function(a,b){
+return a.timestamp-b.timestamp;
+});
+}
+
+
+/* =========================================================
+   K BAR FETCH
+========================================================= */
+
+async function fetchKBar(symbol,timeframe){
+
+var response=await fetch(
+"/api/kbar?symbol="+
+encodeURIComponent(symbol)+
+"&timeframe="+
+encodeURIComponent(timeframe)+
+"&t="+Date.now(),
+{
+cache:"no-store"
+}
+);
+
+var data=await response.json();
+
+if(!response.ok||!data.ok){
+throw new Error(data.error||"K 棒取得失敗");
+}
+
+return data;
+}
 
 function stopKBarTimer(){
 
-  if(KBAR_TIMER){
-
-    clearInterval(
-      KBAR_TIMER
-    );
-  }
-
-  KBAR_TIMER=null;
+if(KBAR_TIMER){
+clearInterval(KBAR_TIMER);
 }
 
+KBAR_TIMER=null;
+}
 
 function startKBarTimer(){
 
-  stopKBarTimer();
+stopKBarTimer();
 
-  KBAR_TIMER=
-    setInterval(
-      function(){
+if(isHistoricalTF(KBAR_TF)){
+return;
+}
 
-        if(
-          !document.hidden&&
-          currentAnalysisSymbol
-        ){
+KBAR_TIMER=setInterval(function(){
 
-          loadKBar(
-            currentAnalysisSymbol
-          );
-        }
-      },
-      30000
-    );
+if(
+!document.hidden&&
+currentAnalysisSymbol
+){
+
+loadKBar(
+currentAnalysisSymbol,
+true
+);
+
+}
+
+},30000);
+}
+
+async function loadKBar(symbol,preserveView){
+
+if(KBAR_LOADING)return;
+
+KBAR_LOADING=true;
+
+var status=el("kbarStatus");
+
+if(status&&!preserveView){
+status.className="kbar-status";
+status.textContent="正在取得 "+timeframeLabel(KBAR_TF)+"…";
+}
+
+try{
+
+var candles=[];
+
+if(isHistoricalTF(KBAR_TF)){
+
+if(!currentAnalysisData){
+throw new Error("日線資料尚未載入");
+}
+
+var daily=
+normalizeDailyRows(
+currentAnalysisData.rows||[]
+);
+
+candles=
+aggregateHistorical(
+daily,
+KBAR_TF
+);
+
+}else{
+
+var data=
+await fetchKBar(
+symbol,
+KBAR_TF
+);
+
+candles=
+Array.isArray(data.candles)
+?data.candles
+:[];
+
+}
+
+if(!candles.length){
+throw new Error("目前沒有這個週期的 K 棒資料");
+}
+
+var wasLatest=
+KBAR_END_INDEX===0||
+KBAR_END_INDEX>=KBAR_DATA.length-1;
+
+KBAR_DATA=candles;
+
+if(!preserveView||wasLatest){
+
+KBAR_END_INDEX=
+KBAR_DATA.length-1;
+
+}
+
+KBAR_END_INDEX=Math.max(
+0,
+Math.min(
+KBAR_DATA.length-1,
+KBAR_END_INDEX
+)
+);
+
+KBAR_SELECTED_INDEX=null;
+
+drawKBar();
+
+updateKInfo(
+KBAR_DATA[KBAR_END_INDEX]
+);
+
+if(status){
+
+status.className="kbar-status live";
+
+status.textContent=
+"🟢 "+
+timeframeLabel(KBAR_TF)+
+" · "+
+KBAR_DATA.length+
+" 根 · 更新 "+
+currentTimeText();
+
+}
+
+refreshAverage();
+
+}catch(error){
+
+if(status){
+
+status.className="kbar-status error";
+
+status.textContent=
+"⚠️ "+error.message;
+
+}
+
+}finally{
+
+KBAR_LOADING=false;
+
+}
 }
 
 
-async function loadKBar(symbol){
+/* =========================================================
+   K BAR VISIBLE RANGE
+========================================================= */
 
-  if(KBAR_LOADING){
-    return;
-  }
+function getVisibleRange(){
 
-  KBAR_LOADING=true;
+if(!KBAR_DATA.length){
+return {start:0,end:0};
+}
 
-  try{
+var end=Math.min(
+KBAR_END_INDEX,
+KBAR_DATA.length-1
+);
 
-    var data=
-      await fetchKBar(
-        symbol,
-        KBAR_TF
-      );
+var start=Math.max(
+0,
+end-KBAR_VIEW_COUNT+1
+);
 
-    KBAR_DATA=
-      Array.isArray(
-        data.candles
-      )
-        ?data.candles
-        :[];
-
-    drawKBar(
-      KBAR_DATA
-    );
-
-    updateKInfo(
-      KBAR_DATA[
-        KBAR_DATA.length-1
-      ]
-    );
-
-    var status=
-      el("kbarStatus");
-
-    if(status){
-
-      status.className=
-        "kbar-status live";
-
-      status.textContent=
-        "🟢 Fugle "+
-        KBAR_TF+
-        " 分 K · "+
-        KBAR_DATA.length+
-        " 根 · "+
-        currentTimeText();
-    }
-
-    refreshAverage();
-
-  }catch(error){
-
-    var status=
-      el("kbarStatus");
-
-    if(status){
-
-      status.className=
-        "kbar-status error";
-
-      status.textContent=
-        "⚠️ "+
-        error.message;
-    }
-
-  }finally{
-
-    KBAR_LOADING=false;
-  }
+return {
+start:start,
+end:end
+};
 }
 
 
@@ -2993,1029 +2246,1069 @@ async function loadKBar(symbol){
    K BAR INFO
 ========================================================= */
 
-function updateKInfo(
-  candle
-){
+function formatCandleTime(candle){
 
-  var root=
-    el("kbarInfo");
+if(!candle)return "--";
 
-  if(
-    !candle||
-    !root
-  ){
+var d=new Date(candle.timestamp);
 
-    return;
-  }
+if(isHistoricalTF(KBAR_TF)){
 
-  root.innerHTML=
+return d.toLocaleDateString(
+"zh-TW",
+{
+year:"numeric",
+month:"2-digit",
+day:"2-digit"
+}
+);
 
-    '<div class="kbar-info-item">'+
-      'O'+
-      '<strong>'+
-        fmt(candle.open)+
-      '</strong>'+
-    '</div>'+
+}
 
-    '<div class="kbar-info-item">'+
-      'H'+
-      '<strong>'+
-        fmt(candle.high)+
-      '</strong>'+
-    '</div>'+
+return d.toLocaleString(
+"zh-TW",
+{
+month:"2-digit",
+day:"2-digit",
+hour:"2-digit",
+minute:"2-digit",
+hour12:false
+}
+);
+}
 
-    '<div class="kbar-info-item">'+
-      'L'+
-      '<strong>'+
-        fmt(candle.low)+
-      '</strong>'+
-    '</div>'+
+function updateKInfo(candle){
 
-    '<div class="kbar-info-item">'+
-      'C'+
-      '<strong>'+
-        fmt(candle.close)+
-      '</strong>'+
-    '</div>'+
+var root=el("kbarInfo");
 
-    '<div class="kbar-info-item">'+
-      'V'+
-      '<strong>'+
-        fmt(
-          candle.volume,
-          0
-        )+
-      '</strong>'+
-    '</div>'+
+if(!root||!candle)return;
 
-    '<div class="kbar-info-item">'+
-      '週期'+
-      '<strong>'+
-        safe(KBAR_TF)+
-        '分'+
-      '</strong>'+
-    '</div>';
+root.innerHTML=
+
+'<div class="kbar-info-item">'+
+'時間'+
+'<strong>'+
+safe(formatCandleTime(candle))+
+'</strong>'+
+'</div>'+
+
+'<div class="kbar-info-item">'+
+'O'+
+'<strong>'+fmt(candle.open)+'</strong>'+
+'</div>'+
+
+'<div class="kbar-info-item">'+
+'H'+
+'<strong>'+fmt(candle.high)+'</strong>'+
+'</div>'+
+
+'<div class="kbar-info-item">'+
+'L'+
+'<strong>'+fmt(candle.low)+'</strong>'+
+'</div>'+
+
+'<div class="kbar-info-item">'+
+'C'+
+'<strong>'+fmt(candle.close)+'</strong>'+
+'</div>'+
+
+'<div class="kbar-info-item">'+
+'V'+
+'<strong>'+fmt(candle.volume,0)+'</strong>'+
+'</div>';
 }
 
 
 /* =========================================================
-   DRAW REAL CANDLESTICK
+   DRAW K BAR
 ========================================================= */
 
-function drawKBar(rows){
+function drawKBar(){
 
-  var canvas=
-    el("kbarCanvas");
+var canvas=el("kbarCanvas");
 
-  if(
-    !canvas||
-    !rows||
-    !rows.length
-  ){
+if(!canvas||!KBAR_DATA.length)return;
 
-    return;
-  }
+var rect=canvas.getBoundingClientRect();
 
-  var width=
-    Math.max(
-      300,
-      canvas
-        .getBoundingClientRect()
-        .width
-    );
+var width=Math.max(300,rect.width);
+var height=Math.max(300,rect.height);
 
-  var height=330;
+var dpr=window.devicePixelRatio||1;
 
-  var dpr=
-    window.devicePixelRatio||
-    1;
+canvas.width=width*dpr;
+canvas.height=height*dpr;
 
-  canvas.width=
-    width*dpr;
+var ctx=canvas.getContext("2d");
 
-  canvas.height=
-    height*dpr;
+ctx.setTransform(dpr,0,0,dpr,0,0);
 
-  canvas.style.height=
-    height+"px";
+ctx.clearRect(
+0,
+0,
+width,
+height
+);
 
-  var ctx=
-    canvas.getContext(
-      "2d"
-    );
+var range=getVisibleRange();
 
-  ctx.scale(
-    dpr,
-    dpr
-  );
+var visible=
+KBAR_DATA.slice(
+range.start,
+range.end+1
+);
 
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
+if(!visible.length)return;
 
-  var visible=
-    rows.slice(-60);
+var highs=visible.map(function(x){
+return +x.high;
+});
 
-  var highs=
-    visible.map(
-      function(x){
-        return Number(x.high);
-      }
-    );
+var lows=visible.map(function(x){
+return +x.low;
+});
 
-  var lows=
-    visible.map(
-      function(x){
-        return Number(x.low);
-      }
-    );
+var volumes=visible.map(function(x){
+return +(x.volume||0);
+});
 
-  var volumes=
-    visible.map(
-      function(x){
-        return Number(x.volume)||0;
-      }
-    );
+var maxPrice=Math.max.apply(null,highs);
+var minPrice=Math.min.apply(null,lows);
 
-  var maxPrice=
-    Math.max.apply(
-      null,
-      highs
-    );
+var maxVolume=Math.max.apply(
+null,
+volumes.concat([1])
+);
 
-  var minPrice=
-    Math.min.apply(
-      null,
-      lows
-    );
+var originalRange=maxPrice-minPrice||1;
 
-  var maxVolume=
-    Math.max.apply(
-      null,
-      volumes.concat([1])
-    );
+maxPrice+=originalRange*.08;
+minPrice-=originalRange*.08;
 
-  var originalRange=
-    maxPrice-minPrice||
-    1;
+var priceRange=maxPrice-minPrice||1;
 
-  maxPrice+=
-    originalRange*.08;
+var left=8;
+var right=55;
+var top=42;
+var priceBottom=275;
+var volumeTop=292;
+var volumeBottom=350;
 
-  minPrice-=
-    originalRange*.08;
+var chartWidth=
+width-left-right;
 
-  var priceRange=
-    maxPrice-minPrice||
-    1;
+var step=
+chartWidth/
+visible.length;
 
-  var left=8;
-  var right=48;
-  var top=12;
-  var priceBottom=245;
+var bodyWidth=Math.max(
+2,
+Math.min(
+10,
+step*.62
+)
+);
 
-  var volumeBottom=315;
-  var volumeHeight=55;
+function priceY(price){
 
-  var step=
-    (
-      width-
-      left-
-      right
-    )/
-    visible.length;
+return top+
+(maxPrice-price)/
+priceRange*
+(priceBottom-top);
+}
 
-  var bodyWidth=
-    Math.max(
-      2,
-      Math.min(
-        8,
-        step*.62
-      )
-    );
+/* horizontal grid */
 
-  function priceY(price){
+for(var grid=0;grid<=4;grid++){
 
-    return top+
-      (
-        maxPrice-price
-      )/
-      priceRange*
-      (
-        priceBottom-top
-      );
-  }
+var y=
+top+
+(priceBottom-top)*
+grid/4;
 
-  for(
-    var grid=0;
-    grid<=4;
-    grid++
-  ){
+ctx.strokeStyle=
+"rgba(255,255,255,.065)";
 
-    var y=
-      top+
-      (
-        priceBottom-top
-      )*
-      grid/4;
+ctx.lineWidth=1;
 
-    ctx.strokeStyle=
-      "rgba(255,255,255,.07)";
+ctx.beginPath();
 
-    ctx.beginPath();
+ctx.moveTo(left,y);
+ctx.lineTo(width-right,y);
 
-    ctx.moveTo(
-      left,
-      y
-    );
+ctx.stroke();
 
-    ctx.lineTo(
-      width-right,
-      y
-    );
+var label=
+maxPrice-
+priceRange*
+grid/4;
 
-    ctx.stroke();
+ctx.fillStyle="#747a76";
+ctx.font="10px -apple-system";
 
-    var label=
-      maxPrice-
-      priceRange*
-      grid/4;
+ctx.fillText(
+fmt(label),
+width-right+5,
+y+3
+);
+}
 
-    ctx.fillStyle=
-      "#777";
+/* volume separator */
 
-    ctx.font=
-      "10px sans-serif";
+ctx.strokeStyle=
+"rgba(255,255,255,.06)";
 
-    ctx.fillText(
-      fmt(label),
-      width-right+4,
-      y+3
-    );
-  }
+ctx.beginPath();
 
-  visible.forEach(
-    function(candle,index){
+ctx.moveTo(
+left,
+volumeTop-5
+);
 
-      var open=
-        Number(candle.open);
+ctx.lineTo(
+width-right,
+volumeTop-5
+);
 
-      var high=
-        Number(candle.high);
+ctx.stroke();
 
-      var low=
-        Number(candle.low);
 
-      var close=
-        Number(candle.close);
+visible.forEach(function(candle,index){
 
-      var volume=
-        Number(candle.volume)||
-        0;
+var open=+candle.open;
+var high=+candle.high;
+var low=+candle.low;
+var close=+candle.close;
+var volume=+(candle.volume||0);
 
-      var x=
-        left+
-        step*index+
-        step/2;
+var x=
+left+
+step*index+
+step/2;
 
-      var color=
-        close>=open
-          ?"#45e0ad"
-          :"#ff6976";
+var color=
+close>=open
+?"#45e0ad"
+:"#ff6976";
 
-      ctx.strokeStyle=
-        color;
+/* wick */
 
-      ctx.fillStyle=
-        color;
+ctx.strokeStyle=color;
+ctx.lineWidth=1;
 
-      ctx.beginPath();
+ctx.beginPath();
 
-      ctx.moveTo(
-        x,
-        priceY(high)
-      );
+ctx.moveTo(
+x,
+priceY(high)
+);
 
-      ctx.lineTo(
-        x,
-        priceY(low)
-      );
+ctx.lineTo(
+x,
+priceY(low)
+);
 
-      ctx.stroke();
+ctx.stroke();
 
-      var bodyTop=
-        Math.min(
-          priceY(open),
-          priceY(close)
-        );
+/* body */
 
-      var bodyHeight=
-        Math.max(
-          1,
-          Math.abs(
-            priceY(open)-
-            priceY(close)
-          )
-        );
+var yOpen=priceY(open);
+var yClose=priceY(close);
 
-      ctx.fillRect(
-        x-bodyWidth/2,
-        bodyTop,
-        bodyWidth,
-        bodyHeight
-      );
+var bodyTop=
+Math.min(
+yOpen,
+yClose
+);
 
-      var vh=
-        volume/
-        maxVolume*
-        volumeHeight;
+var bodyHeight=
+Math.max(
+1.5,
+Math.abs(
+yOpen-yClose
+)
+);
 
-      ctx.globalAlpha=.5;
+ctx.fillStyle=color;
 
-      ctx.fillRect(
-        x-bodyWidth/2,
-        volumeBottom-vh,
-        bodyWidth,
-        vh
-      );
+ctx.fillRect(
+x-bodyWidth/2,
+bodyTop,
+bodyWidth,
+bodyHeight
+);
 
-      ctx.globalAlpha=1;
-    }
-  );
+/* volume */
+
+var vh=
+volume/
+maxVolume*
+(volumeBottom-volumeTop);
+
+ctx.globalAlpha=.48;
+
+ctx.fillRect(
+x-bodyWidth/2,
+volumeBottom-vh,
+bodyWidth,
+vh
+);
+
+ctx.globalAlpha=1;
+
+/* selected */
+
+var realIndex=
+range.start+
+index;
+
+if(realIndex===KBAR_SELECTED_INDEX){
+
+ctx.strokeStyle=
+"rgba(255,255,255,.5)";
+
+ctx.setLineDash([4,4]);
+
+ctx.beginPath();
+
+ctx.moveTo(
+x,
+top
+);
+
+ctx.lineTo(
+x,
+volumeBottom
+);
+
+ctx.stroke();
+
+ctx.setLineDash([]);
+
+}
+
+});
+
+/* bottom time labels */
+
+var labels=4;
+
+for(var i=0;i<labels;i++){
+
+var index=Math.round(
+(visible.length-1)*
+i/(labels-1)
+);
+
+var candle=
+visible[index];
+
+if(!candle)continue;
+
+var x=
+left+
+step*index;
+
+var d=
+new Date(
+candle.timestamp
+);
+
+var label;
+
+if(
+KBAR_TF==="1w"||
+KBAR_TF==="1mo"||
+KBAR_TF==="1y"
+){
+
+label=
+(d.getMonth()+1)+
+"/"+
+String(d.getFullYear()).slice(-2);
+
+}else{
+
+label=
+String(d.getMonth()+1).padStart(2,"0")+
+"/"+
+String(d.getDate()).padStart(2,"0");
+
+}
+
+ctx.fillStyle="#6f7571";
+ctx.font="9px -apple-system";
+
+ctx.fillText(
+label,
+Math.min(
+width-right-28,
+x
+),
+height-5
+);
+}
+
 }
 
 
 /* =========================================================
-   INTRADAY CONFIRMATION
+   K BAR TOUCH / MOUSE
+========================================================= */
+
+function setupKBarInteraction(){
+
+var canvas=el("kbarCanvas");
+
+if(!canvas)return;
+
+/* pointer drag */
+
+canvas.onpointerdown=function(event){
+
+if(event.pointerType==="touch"){
+return;
+}
+
+KBAR_DRAGGING=true;
+KBAR_DRAG_START_X=event.clientX;
+KBAR_DRAG_START_END=KBAR_END_INDEX;
+
+canvas.setPointerCapture(
+event.pointerId
+);
+};
+
+canvas.onpointermove=function(event){
+
+if(!KBAR_DRAGGING)return;
+
+var rect=
+canvas.getBoundingClientRect();
+
+var pixelsPerCandle=
+rect.width/
+KBAR_VIEW_COUNT;
+
+var diff=
+event.clientX-
+KBAR_DRAG_START_X;
+
+var shift=
+Math.round(
+diff/
+pixelsPerCandle
+);
+
+KBAR_END_INDEX=
+KBAR_DRAG_START_END-
+shift;
+
+KBAR_END_INDEX=
+Math.max(
+KBAR_VIEW_COUNT-1,
+Math.min(
+KBAR_DATA.length-1,
+KBAR_END_INDEX
+)
+);
+
+drawKBar();
+};
+
+canvas.onpointerup=function(event){
+
+KBAR_DRAGGING=false;
+
+try{
+canvas.releasePointerCapture(event.pointerId);
+}catch(e){}
+};
+
+/* wheel zoom desktop */
+
+canvas.onwheel=function(event){
+
+event.preventDefault();
+
+if(event.deltaY>0){
+
+KBAR_VIEW_COUNT=
+Math.min(
+120,
+KBAR_VIEW_COUNT+5
+);
+
+}else{
+
+KBAR_VIEW_COUNT=
+Math.max(
+15,
+KBAR_VIEW_COUNT-5
+);
+
+}
+
+drawKBar();
+
+};
+
+/* tap select */
+
+canvas.onclick=function(event){
+
+if(!KBAR_DATA.length)return;
+
+var rect=
+canvas.getBoundingClientRect();
+
+var range=
+getVisibleRange();
+
+var visibleCount=
+range.end-
+range.start+
+1;
+
+var usableWidth=
+rect.width-
+63;
+
+var x=
+event.clientX-
+rect.left-
+8;
+
+var index=
+Math.floor(
+x/
+usableWidth*
+visibleCount
+);
+
+index=Math.max(
+0,
+Math.min(
+visibleCount-1,
+index
+)
+);
+
+KBAR_SELECTED_INDEX=
+range.start+
+index;
+
+var candle=
+KBAR_DATA[
+KBAR_SELECTED_INDEX
+];
+
+updateKInfo(candle);
+
+drawKBar();
+
+};
+
+
+/* mobile touch */
+
+var touchStartX=0;
+var touchStartEnd=0;
+
+canvas.ontouchstart=function(event){
+
+if(event.touches.length===1){
+
+touchStartX=
+event.touches[0].clientX;
+
+touchStartEnd=
+KBAR_END_INDEX;
+
+}else if(event.touches.length===2){
+
+KBAR_PINCH_START_DISTANCE=
+Math.abs(
+event.touches[0].clientX-
+event.touches[1].clientX
+);
+
+KBAR_PINCH_START_COUNT=
+KBAR_VIEW_COUNT;
+
+}
+
+};
+
+canvas.ontouchmove=function(event){
+
+if(event.touches.length===1){
+
+var rect=
+canvas.getBoundingClientRect();
+
+var pixelsPerCandle=
+rect.width/
+KBAR_VIEW_COUNT;
+
+var diff=
+event.touches[0].clientX-
+touchStartX;
+
+var shift=
+Math.round(
+diff/
+pixelsPerCandle
+);
+
+KBAR_END_INDEX=
+touchStartEnd-
+shift;
+
+var minimumEnd=
+Math.min(
+KBAR_DATA.length-1,
+KBAR_VIEW_COUNT-1
+);
+
+KBAR_END_INDEX=
+Math.max(
+minimumEnd,
+Math.min(
+KBAR_DATA.length-1,
+KBAR_END_INDEX
+)
+);
+
+drawKBar();
+
+}else if(event.touches.length===2){
+
+event.preventDefault();
+
+var distance=
+Math.abs(
+event.touches[0].clientX-
+event.touches[1].clientX
+);
+
+if(!KBAR_PINCH_START_DISTANCE)return;
+
+var ratio=
+KBAR_PINCH_START_DISTANCE/
+distance;
+
+var count=
+Math.round(
+KBAR_PINCH_START_COUNT*
+ratio
+);
+
+KBAR_VIEW_COUNT=
+Math.max(
+15,
+Math.min(
+120,
+count
+)
+);
+
+drawKBar();
+
+}
+
+};
+
+canvas.ontouchend=function(event){
+
+if(event.touches.length===0){
+
+KBAR_PINCH_START_DISTANCE=0;
+
+}
+
+};
+
+}
+
+
+/* =========================================================
+   INTRADAY SIGNAL
 ========================================================= */
 
 function intradaySignal(){
 
-  var rows=
-    KBAR_DATA.slice(-20);
+/*
+均價分析固定優先使用盤中資料。
+如果目前正在看日/週/月/年，
+不直接拿大週期當作盤中加碼確認。
+*/
 
-  if(rows.length<5){
+if(isHistoricalTF(KBAR_TF)){
 
-    return {
+return {
+ready:false,
+score:0,
+reasons:[
+"△ 均價確認請切回 1～15 分 K"
+]
+};
 
-      ready:false,
+}
 
-      score:0,
+var rows=
+KBAR_DATA.slice(-20);
 
-      reasons:[
-        "△ 盤中 K 棒資料不足"
-      ]
-    };
-  }
+if(rows.length<5){
 
-  var closes=
-    rows.map(
-      function(x){
-        return Number(x.close);
-      }
-    );
+return {
+ready:false,
+score:0,
+reasons:[
+"△ 盤中 K 棒資料不足"
+]
+};
+}
 
-  var last=
-    closes[
-      closes.length-1
-    ];
+var closes=
+rows.map(function(x){
+return +x.close;
+});
 
-  var previous=
-    closes[
-      closes.length-2
-    ];
+var last=
+closes[closes.length-1];
 
-  var score=0;
+var previous=
+closes[closes.length-2];
 
-  var reasons=[];
+var score=0;
+var reasons=[];
 
-  var shortMA=
-    SMA(
-      closes,
-      5
-    );
+var shortMA=
+SMA(closes,5);
 
-  if(
-    last>=shortMA
-  ){
+if(last>=shortMA){
 
-    score+=30;
+score+=30;
 
-    reasons.push(
-      "✓ 盤中價格站回短均線"
-    );
+reasons.push(
+"✓ 盤中站回短均線"
+);
 
-  }else{
+}else{
 
-    reasons.push(
-      "△ 尚未站回盤中短均線"
-    );
-  }
+reasons.push(
+"△ 尚未站回短均線"
+);
 
-  if(
-    last>=previous
-  ){
+}
 
-    score+=20;
+if(last>=previous){
 
-    reasons.push(
-      "✓ 最新收盤未再走低"
-    );
+score+=20;
 
-  }else{
+reasons.push(
+"✓ 最新收盤未再走低"
+);
 
-    reasons.push(
-      "△ 最新 K 棒仍在走低"
-    );
-  }
+}else{
 
-  var latest5=
-    rows.slice(-5);
+reasons.push(
+"△ 最新 K 仍在走低"
+);
 
-  var previous5=
-    rows.slice(-10,-5);
+}
 
-  if(
-    previous5.length>=5
-  ){
+var latest5=
+rows.slice(-5);
 
-    var latestLow=
-      Math.min.apply(
-        null,
-        latest5.map(
-          function(x){
-            return Number(x.low);
-          }
-        )
-      );
+var previous5=
+rows.slice(-10,-5);
 
-    var previousLow=
-      Math.min.apply(
-        null,
-        previous5.map(
-          function(x){
-            return Number(x.low);
-          }
-        )
-      );
+if(previous5.length>=5){
 
-    if(
-      latestLow>=
-      previousLow
-    ){
+var latestLow=
+Math.min.apply(
+null,
+latest5.map(function(x){
+return +x.low;
+})
+);
 
-      score+=25;
+var previousLow=
+Math.min.apply(
+null,
+previous5.map(function(x){
+return +x.low;
+})
+);
 
-      reasons.push(
-        "✓ 近期低點沒有繼續破低"
-      );
+if(latestLow>=previousLow){
 
-    }else{
+score+=25;
 
-      reasons.push(
-        "△ 近期仍出現更低低點"
-      );
-    }
-  }
+reasons.push(
+"✓ 近期低點沒有再破低"
+);
 
-  var latest=
-    rows[
-      rows.length-1
-    ];
+}else{
 
-  if(
-    Number(latest.close)>=
-    Number(latest.open)
-  ){
+reasons.push(
+"△ 近期仍出現更低低點"
+);
 
-    score+=15;
+}
 
-    reasons.push(
-      "✓ 最新 K 棒收高"
-    );
+}
 
-  }else{
+var latest=
+rows[rows.length-1];
 
-    reasons.push(
-      "△ 最新 K 棒尚未收高"
-    );
-  }
+if(+latest.close>=+latest.open){
 
-  var lastVolumes=
-    rows
-      .slice(-6,-1)
-      .map(
-        function(x){
-          return Number(x.volume)||0;
-        }
-      );
+score+=15;
 
-  var avgVolume=
-    lastVolumes.length
-      ?lastVolumes.reduce(
-        function(s,v){
-          return s+v;
-        },
-        0
-      )/
-      lastVolumes.length
-      :0;
+reasons.push(
+"✓ 最新 K 收高"
+);
 
-  if(
-    avgVolume>0&&
-    Number(latest.volume)>=
-    avgVolume
-  ){
+}else{
 
-    score+=10;
+reasons.push(
+"△ 最新 K 尚未收高"
+);
 
-    reasons.push(
-      "✓ 最新量能沒有明顯萎縮"
-    );
-  }
+}
 
-  return {
-
-    ready:
-      score>=60,
-
-    score:
-      score,
-
-    reasons:
-      reasons,
-
-    shortMA:
-      shortMA
-  };
+return {
+ready:score>=60,
+score:score,
+reasons:reasons
+};
 }
 
 
 /* =========================================================
-   AVERAGING ANALYSIS
+   AVERAGE
 ========================================================= */
 
-function averageHTML(
-  position,
-  market,
-  data
-){
+function averageHTML(position,market,data){
 
-  if(
-    !position||
-    data.market!=="TW"
-  ){
-
-    return "";
-  }
-
-  var entry=
-    Number(
-      position.entryPrice
-    );
-
-  var quantity=
-    Number(
-      position.quantity
-    );
-
-  var price=
-    market.price;
-
-  var pnl=
-    (
-      price-entry
-    )/
-    entry*
-    100;
-
-  var invalidation=
-    Math.max(
-
-      Number(
-        position.initialStop
-      ),
-
-      Number(
-        position.protectPrice
-      )
-    );
-
-  var intraday=
-    intradaySignal();
-
-  var dailyStructure=
-
-    price>
-    invalidation&&
-
-    market.ma20>
-    market.ma60&&
-
-    market.macd>=0&&
-
-    market.rsi>=40&&
-    market.rsi<=80;
-
-  var status="wait";
-
-  var title=
-    "🟡 等待均價調整條件";
-
-  var description=
-    "目前先觀察止跌與重新轉強，不因帳面虧損本身就增加部位。";
-
-
-  if(
-    pnl>=0
-  ){
-
-    title=
-      "🟢 目前不是虧損持倉";
-
-    description=
-      "目前持倉沒有進入虧損，因此不啟動向下均價調整分析。";
-
-    status=
-      "good";
-
-  }else if(
-    price<=invalidation||
-    !dailyStructure
-  ){
-
-    status=
-      "bad";
-
-    title=
-      "🔴 不符合均價調整條件";
-
-    description=
-      "原持倉結構已失效，或日線趨勢條件不足；系統不把持續下跌視為攤均價機會。";
-
-  }else if(
-    pnl<=-2&&
-    intraday.ready
-  ){
-
-    status=
-      "good";
-
-    title=
-      "🟢 均價調整條件出現";
-
-    description=
-      "日線結構尚未失效，而且盤中 K 棒出現止跌／重新轉強條件。以下提供不同部位的均價試算。";
-  }
-
-
-  var addSizes=
-    [
-      .25,
-      .5,
-      1
-    ];
-
-
-  var scenarios=
-    addSizes
-      .map(
-        function(add){
-
-          var newQuantity=
-            quantity+
-            add;
-
-          var newAverage=
-            (
-              entry*
-              quantity+
-              price*
-              add
-            )/
-            newQuantity;
-
-          var breakEvenPercent=
-            (
-              newAverage/
-              price-
-              1
-            )*
-            100;
-
-          var riskMoney=
-            Math.max(
-              0,
-              newAverage-
-              invalidation
-            )*
-            newQuantity*
-            1000;
-
-          return (
-
-            '<div class="average-scenario">'+
-
-              '<div class="average-scenario-title">'+
-                '＋'+
-                add+
-                ' 張'+
-              '</div>'+
-
-              '新均價 '+
-              '<strong>'+
-                fmt(newAverage)+
-              '</strong><br>'+
-
-              '總部位 '+
-              '<strong>'+
-                fmt(
-                  newQuantity,
-                  2
-                )+
-                ' 張'+
-              '</strong><br>'+
-
-              '現價至新均價 '+
-              '<strong>'+
-                pct(
-                  breakEvenPercent
-                )+
-              '</strong><br>'+
-
-              '成本至失效價估算風險 '+
-              '<strong>'+
-                'NT$'+
-                fmt(
-                  riskMoney,
-                  0
-                )+
-              '</strong>'+
-
-            '</div>'
-          );
-        }
-      )
-      .join("");
-
-
-  return (
-
-    '<div '+
-      'id="averagePanel" '+
-      'class="average-card '+
-      status+
-      '">'+
-
-      '<div class="average-title">'+
-        title+
-      '</div>'+
-
-      '<div class="average-text">'+
-        description+
-      '</div>'+
-
-      '<div class="average-zone">'+
-        '<span>目前持倉損益</span>'+
-        '<strong class="'+
-          pclass(pnl)+
-          '">'+
-          pct(pnl)+
-        '</strong>'+
-      '</div>'+
-
-      '<div class="average-zone">'+
-        '<span>結構失效位置</span>'+
-        '<strong class="down">'+
-          fmt(invalidation)+
-        '</strong>'+
-      '</div>'+
-
-      '<div class="average-zone">'+
-        '<span>盤中轉強分數</span>'+
-        '<strong>'+
-          intraday.score+
-          '/100'+
-        '</strong>'+
-      '</div>'+
-
-      '<div class="average-reasons">'+
-
-        intraday.reasons
-          .map(
-            function(reason){
-
-              return (
-                '<div class="average-reason">'+
-                  reason+
-                '</div>'
-              );
-            }
-          )
-          .join("")+
-
-      '</div>'+
-
-      (
-        pnl<0
-          ?'<div class="average-scenarios">'+
-            scenarios+
-          '</div>'
-          :""
-      )+
-
-      '<div class="position-note">'+
-        '均價調整為條件式試算，不是自動加碼指令。'+
-        '若跌破結構失效位置，系統不再把繼續下跌視為向下均價條件。'+
-      '</div>'+
-
-    '</div>'
-  );
+if(!position||data.market!=="TW"){
+return "";
 }
 
+var entry=+position.entryPrice;
+var quantity=+position.quantity;
+var price=market.price;
+
+var pnl=
+(price-entry)/
+entry*
+100;
+
+var invalidation=
+Math.max(
++position.initialStop,
++position.protectPrice
+);
+
+var intraday=
+intradaySignal();
+
+var dailyStructure=
+price>invalidation&&
+market.ma20>market.ma60&&
+market.macd>=0&&
+market.rsi>=40&&
+market.rsi<=80;
+
+var status="wait";
+
+var title=
+"🟡 等待均價調整條件";
+
+var description=
+"原結構仍需搭配盤中止跌確認，不會只因為帳面虧損就增加部位。";
+
+if(pnl>=0){
+
+status="good";
+
+title=
+"🟢 目前不是虧損持倉";
+
+description=
+"目前沒有進入虧損，因此不啟動向下均價分析。";
+
+}else if(
+price<=invalidation||
+!dailyStructure
+){
+
+status="bad";
+
+title=
+"🔴 不符合均價調整條件";
+
+description=
+"日線結構不足或已接近／跌破失效位置，不把繼續下跌視為攤均價條件。";
+
+}else if(
+pnl<=-2&&
+intraday.ready
+){
+
+status="good";
+
+title=
+"🟢 均價調整條件出現";
+
+description=
+"日線結構尚未失效，而且短週期 K 棒出現止跌或重新轉強條件。";
+
+}
+
+var scenarios=
+[.25,.5,1]
+.map(function(add){
+
+var newQuantity=
+quantity+add;
+
+var newAverage=
+(
+entry*quantity+
+price*add
+)/
+newQuantity;
+
+var breakEven=
+(
+newAverage/
+price-
+1
+)*
+100;
+
+var riskMoney=
+Math.max(
+0,
+newAverage-invalidation
+)*
+newQuantity*
+1000;
+
+return (
+
+'<div class="average-scenario">'+
+
+'<div class="average-scenario-title">'+
+'＋'+add+' 張'+
+'</div>'+
+
+'新均價 <strong>'+
+fmt(newAverage)+
+'</strong><br>'+
+
+'總部位 <strong>'+
+fmt(newQuantity,2)+
+' 張</strong><br>'+
+
+'現價至新均價 <strong>'+
+pct(breakEven)+
+'</strong><br>'+
+
+'至失效價估算曝險 <strong>'+
+'NT$'+fmt(riskMoney,0)+
+'</strong>'+
+
+'</div>'
+);
+
+}).join("");
+
+return (
+
+'<div id="averagePanel" class="average-card '+status+'">'+
+
+'<div class="average-title">'+
+title+
+'</div>'+
+
+'<div class="average-text">'+
+description+
+'</div>'+
+
+'<div class="average-zone">'+
+'<span>目前持倉損益</span>'+
+'<strong class="'+pclass(pnl)+'">'+
+pct(pnl)+
+'</strong>'+
+'</div>'+
+
+'<div class="average-zone">'+
+'<span>結構失效位置</span>'+
+'<strong class="down">'+
+fmt(invalidation)+
+'</strong>'+
+'</div>'+
+
+'<div class="average-zone">'+
+'<span>盤中轉強分數</span>'+
+'<strong>'+
+intraday.score+
+'/100</strong>'+
+'</div>'+
+
+intraday.reasons.map(function(reason){
+
+return (
+'<div class="average-reason">'+
+reason+
+'</div>'
+);
+
+}).join("")+
+
+(
+pnl<0
+?'<div class="average-scenarios">'+
+scenarios+
+'</div>'
+:""
+)+
+
+'<div class="position-note">'+
+'均價調整是條件式風險試算。跌破結構失效位置後，不再顯示向下攤均價條件。'+
+'</div>'+
+
+'</div>'
+);
+}
 
 function refreshAverage(){
 
-  if(
-    !currentAnalysisData
-  ){
+if(!currentAnalysisData)return;
 
-    return;
-  }
+var old=
+el("averagePanel");
 
-  buildAverageOnly(
-    currentAnalysisData
-  );
-}
+if(!old)return;
 
+var position=
+getPosition(
+currentAnalysisData.symbol
+);
 
-function buildAverageOnly(
-  data
-){
+if(!position)return;
 
-  var position=
-    getPosition(
-      data.symbol
-    );
-
-  var old=
-    el("averagePanel");
-
-  if(
-    !position||
-    !old
-  ){
-
-    return;
-  }
-
-  var market=
-    marketOf(data);
-
-  old.outerHTML=
-    averageHTML(
-      position,
-      market,
-      data
-    );
-}
-
-
-/* =========================================================
-   MARKET DATA
-========================================================= */
-
-function marketOf(data){
-
-  var rows=
-    Array.isArray(data.rows)
-      ?data.rows
-      :[];
-
-  var closes=
-    rows.map(
-      function(x){
-        return Number(x.close);
-      }
-    );
-
-  var price=
-    Number(
-      data.livePrice
-    );
-
-  if(
-    !Number.isFinite(price)
-  ){
-
-    price=
-      closes[
-        closes.length-1
-      ];
-  }
-
-  var ma20=
-    SMA(
-      closes,
-      20
-    );
-
-  var ma60=
-    SMA(
-      closes,
-      60
-    );
-
-  var rsi=
-    RSI(
-      closes,
-      14
-    );
-
-  var macd=
-    EMA(
-      closes.slice(-80),
-      12
-    )-
-    EMA(
-      closes.slice(-80),
-      26
-    );
-
-  var atr=
-    ATR(
-      rows,
-      14
-    );
-
-  var low10=
-    Math.min.apply(
-      null,
-      rows
-        .slice(-10)
-        .map(
-          function(x){
-            return Number(x.low);
-          }
-        )
-    );
-
-  var recent3Low=
-    Math.min.apply(
-      null,
-      rows
-        .slice(-3)
-        .map(
-          function(x){
-            return Number(x.low);
-          }
-        )
-    );
-
-  var resistance=
-    Math.max.apply(
-      null,
-      rows
-        .slice(-21,-1)
-        .map(
-          function(x){
-            return Number(x.high);
-          }
-        )
-    );
-
-  return {
-
-    price:
-      price,
-
-    ma20:
-      ma20,
-
-    ma60:
-      ma60,
-
-    rsi:
-      rsi,
-
-    macd:
-      macd,
-
-    atr:
-      atr,
-
-    low10:
-      low10,
-
-    recent3Low:
-      recent3Low,
-
-    resistance:
-      resistance
-  };
+old.outerHTML=
+averageHTML(
+position,
+marketOf(currentAnalysisData),
+currentAnalysisData
+);
 }
 
 
@@ -4023,359 +3316,319 @@ function marketOf(data){
    POSITION HTML
 ========================================================= */
 
-function positionHTML(
-  data,
-  market,
-  position
-){
+function positionHTML(data,market,position){
 
-  if(!position){
+if(!position){
 
-    return (
+return (
 
-      '<div class="position-card">'+
+'<div class="position-card">'+
 
-        '<div class="position-title">'+
-          '建立持倉分析'+
-        '</div>'+
+'<div class="position-title">'+
+'建立持倉分析'+
+'</div>'+
 
-        '<div class="position-sub">'+
-          '輸入你的真正成本與持有數量，平台會建立固定初始風險與動態保護位置。'+
-        '</div>'+
+'<div class="position-sub">'+
+'輸入真正成本與持有數量。台股數量 1 代表 1 張。'+
+'</div>'+
 
-        '<div class="position-form">'+
+'<div class="position-form">'+
 
-          '<div class="position-field">'+
+'<div class="position-field">'+
+'<label>我的進場價</label>'+
+'<input id="positionEntry" class="position-input" type="number" step="any">'+
+'</div>'+
 
-            '<label>'+
-              '我的進場價'+
-            '</label>'+
+'<div class="position-field">'+
+'<label>'+
+(data.market==="TW"
+?"持有張數"
+:"持有股數")+
+'</label>'+
+'<input id="positionQuantity" class="position-input" type="number" step="any">'+
+'</div>'+
 
-            '<input '+
-              'id="positionEntry" '+
-              'class="position-input" '+
-              'type="number" '+
-              'step="any"'+
-            '>'+
+'</div>'+
 
-          '</div>'+
+'<button id="positionSaveButton" class="position-save">'+
+'開始持倉分析'+
+'</button>'+
 
-          '<div class="position-field">'+
+'</div>'
+);
+}
 
-            '<label>'+
-              (
-                data.market==="TW"
-                  ?"持有張數（1 = 1000 股）"
-                  :"持有股數"
-              )+
-            '</label>'+
+position=
+updatePosition(
+position,
+market
+);
 
-            '<input '+
-              'id="positionQuantity" '+
-              'class="position-input" '+
-              'type="number" '+
-              'step="any"'+
-            '>'+
+setPosition(
+data.symbol,
+position
+);
 
-          '</div>'+
+var pnl=
+(market.price-position.entryPrice)/
+position.entryPrice*
+100;
 
-        '</div>'+
+var multiplier=
+data.market==="TW"
+?1000
+:1;
 
-        '<button '+
-          'id="positionSaveButton" '+
-          'class="position-save">'+
-          '開始持倉分析'+
-        '</button>'+
+var money=
+(market.price-position.entryPrice)*
+position.quantity*
+multiplier;
 
-      '</div>'
-    );
-  }
+var state;
+var stateClass;
 
+if(market.price<=position.protectPrice){
 
-  position=
-    updatePosition(
-      position,
-      market
-    );
+state="🔴 結構失效";
+stateClass="red";
 
-  setPosition(
-    data.symbol,
-    position
-  );
+}else if(pnl>=0){
 
+state="🟢 持倉追蹤中";
+stateClass="green";
 
-  var pnl=
-    (
-      market.price-
-      position.entryPrice
-    )/
-    position.entryPrice*
-    100;
+}else{
 
+state="🟡 虧損觀察中";
+stateClass="yellow";
 
-  var multiplier=
-    data.market==="TW"
-      ?1000
-      :1;
+}
 
+return (
 
-  var money=
-    (
-      market.price-
-      position.entryPrice
-    )*
-    position.quantity*
-    multiplier;
+'<div class="position-card">'+
 
+'<div class="position-title">'+
+'💼 '+safe(data.symbol)+' '+safe(data.name||"")+
+'</div>'+
 
-  var invalidation=
-    Number(
-      position.protectPrice
-    );
+'<div class="position-grid">'+
 
+'<div class="position-stat">'+
+'<span>進場成本</span>'+
+'<strong>'+fmt(position.entryPrice)+'</strong>'+
+'</div>'+
 
-  var state;
+'<div class="position-stat">'+
+'<span>目前價格</span>'+
+'<strong>'+fmt(market.price)+'</strong>'+
+'</div>'+
 
-  var stateClass;
+'<div class="position-stat">'+
+'<span>浮動損益</span>'+
+'<strong class="'+pclass(pnl)+'">'+pct(pnl)+'</strong>'+
+'</div>'+
 
+'<div class="position-stat">'+
+'<span>預估損益</span>'+
+'<strong class="'+pclass(money)+'">'+
+(money>=0?"+":"")+
+'NT$'+fmt(money,0)+
+'</strong>'+
+'</div>'+
 
-  if(
-    market.price<=
-    invalidation
-  ){
+'</div>'+
 
-    state=
-      "🔴 結構失效";
+'<div class="position-state '+stateClass+'">'+
 
-    stateClass=
-      "red";
+'<div class="position-state-title">'+
+state+
+'</div>'+
 
-  }else if(
-    pnl>=0
-  ){
+'<div class="position-state-text">'+
+'動態保護價只升不降。均價分析會另外檢查日線與盤中 K 棒。'+
+'</div>'+
 
-    state=
-      "🟢 持倉追蹤中";
+'</div>'+
 
-    stateClass=
-      "green";
+'<div class="position-levels">'+
 
-  }else{
+'<div class="position-level protect">'+
+'<span>🛡 動態保護價</span>'+
+'<strong>'+fmt(position.protectPrice)+'</strong>'+
+'</div>'+
 
-    state=
-      "🟡 虧損觀察中";
+'<div class="position-level tp">'+
+'<span>💰 TP1</span>'+
+'<strong>'+fmt(position.tp1)+'</strong>'+
+'</div>'+
 
-    stateClass=
-      "yellow";
-  }
+'<div class="position-level tp">'+
+'<span>💰 TP2</span>'+
+'<strong>'+fmt(position.tp2)+'</strong>'+
+'</div>'+
 
+'<div class="position-level tp3">'+
+'<span>🔥 TP3</span>'+
+'<strong>'+fmt(position.tp3)+'</strong>'+
+'</div>'+
 
-  return (
+'</div>'+
 
-    '<div class="position-card">'+
+'<button id="positionDeleteButton" class="position-delete">'+
+'刪除 / 重新設定這筆持倉'+
+'</button>'+
 
-      '<div class="position-title">'+
-        '💼 '+
-        safe(data.symbol)+
-        ' '+
-        safe(data.name||"")+
-      '</div>'+
-
-      '<div class="position-grid">'+
-
-        '<div class="position-stat">'+
-          '<span>進場成本</span>'+
-          '<strong>'+
-            fmt(
-              position.entryPrice
-            )+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-stat">'+
-          '<span>目前價格</span>'+
-          '<strong>'+
-            fmt(
-              market.price
-            )+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-stat">'+
-          '<span>浮動損益</span>'+
-          '<strong class="'+
-            pclass(pnl)+
-            '">'+
-            pct(pnl)+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-stat">'+
-          '<span>預估損益</span>'+
-          '<strong class="'+
-            pclass(money)+
-            '">'+
-            (
-              money>=0
-                ?"+"
-                :""
-            )+
-            'NT$'+
-            fmt(
-              money,
-              0
-            )+
-          '</strong>'+
-        '</div>'+
-
-      '</div>'+
-
-      '<div class="position-state '+
-        stateClass+
-        '">'+
-
-        '<div class="position-state-title">'+
-          state+
-        '</div>'+
-
-        '<div class="position-state-text">'+
-          '動態保護價只會上移、不會下移。'+
-          '虧損持倉的均價分析會另外檢查日線結構與盤中 K 棒。'+
-        '</div>'+
-
-      '</div>'+
-
-      '<div class="position-levels">'+
-
-        '<div class="position-level protect">'+
-          '<span>🛡 動態保護價</span>'+
-          '<strong>'+
-            fmt(
-              position.protectPrice
-            )+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-level tp">'+
-          '<span>💰 TP1</span>'+
-          '<strong>'+
-            fmt(
-              position.tp1
-            )+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-level tp">'+
-          '<span>💰 TP2</span>'+
-          '<strong>'+
-            fmt(
-              position.tp2
-            )+
-          '</strong>'+
-        '</div>'+
-
-        '<div class="position-level tp3">'+
-          '<span>🔥 TP3</span>'+
-          '<strong>'+
-            fmt(
-              position.tp3
-            )+
-          '</strong>'+
-        '</div>'+
-
-      '</div>'+
-
-      '<button '+
-        'id="positionDeleteButton" '+
-        'class="position-delete">'+
-        '刪除 / 重新設定這筆持倉'+
-      '</button>'+
-
-    '</div>'
-  );
+'</div>'
+);
 }
 
 
 /* =========================================================
-   SMALL HTML HELPERS
+   HELPERS
 ========================================================= */
 
-function overviewRow(
-  label,
-  value,
-  color
-){
+function overviewRow(label,value,color){
 
-  return (
+return (
 
-    '<div class="overview-row">'+
+'<div class="overview-row">'+
 
-      '<div class="overview-label">'+
-        label+
-      '</div>'+
+'<div class="overview-label">'+
+label+
+'</div>'+
 
-      '<div class="overview-value '+
-        (
-          color||""
-        )+
-        '">'+
-        value+
-      '</div>'+
+'<div class="overview-value '+(color||"")+'">'+
+value+
+'</div>'+
 
-    '</div>'
-  );
+'</div>'
+);
+}
+
+function targets(tp1,tp2,tp3,stop){
+
+return (
+
+'<div class="target-stack">'+
+
+'<div class="target-box tp">'+
+'<div class="target-label">💰 TP1</div>'+
+'<div class="target-value">'+fmt(tp1)+'</div>'+
+'</div>'+
+
+'<div class="target-box tp">'+
+'<div class="target-label">💰 TP2</div>'+
+'<div class="target-value">'+fmt(tp2)+'</div>'+
+'</div>'+
+
+'<div class="target-box tp3">'+
+'<div class="target-label">🔥 TP3</div>'+
+'<div class="target-value">'+fmt(tp3)+'</div>'+
+'</div>'+
+
+'<div class="target-box stop">'+
+'<div class="target-label">🛑 結構失效</div>'+
+'<div class="target-value">'+fmt(stop)+'</div>'+
+'</div>'+
+
+'</div>'
+);
 }
 
 
-function targets(
-  tp1,
-  tp2,
-  tp3,
-  stop
-){
+/* =========================================================
+   K BAR HTML
+========================================================= */
 
-  return (
+function kbarHTML(data){
 
-    '<div class="target-stack">'+
+if(data.market!=="TW"){
 
-      '<div class="target-box tp">'+
-        '<div class="target-label">'+
-          '💰 TP1'+
-        '</div>'+
-        '<div class="target-value">'+
-          fmt(tp1)+
-        '</div>'+
-      '</div>'+
+return (
 
-      '<div class="target-box tp">'+
-        '<div class="target-label">'+
-          '💰 TP2'+
-        '</div>'+
-        '<div class="target-value">'+
-          fmt(tp2)+
-        '</div>'+
-      '</div>'+
+'<div class="kbar-card">'+
+'<div class="section-title">📈 多週期 K 線</div>'+
+'<div class="kbar-status">'+
+'目前 Fugle 盤中 K 棒模組先支援台股。'+
+'</div>'+
+'</div>'
+);
+}
 
-      '<div class="target-box tp3">'+
-        '<div class="target-label">'+
-          '🔥 TP3'+
-        '</div>'+
-        '<div class="target-value">'+
-          fmt(tp3)+
-        '</div>'+
-      '</div>'+
+var periods=[
+["1m","1分"],
+["3m","3分"],
+["5m","5分"],
+["10m","10分"],
+["15m","15分"],
+["30m","30分"],
+["60m","1H"],
+["2h","2H"],
+["4h","4H"],
+["6h","6H"],
+["12h","12H"],
+["1d","日"],
+["1w","週"],
+["1mo","月"],
+["1y","年"]
+];
 
-      '<div class="target-box stop">'+
-        '<div class="target-label">'+
-          '🛑 結構失效'+
-        '</div>'+
-        '<div class="target-value">'+
-          fmt(stop)+
-        '</div>'+
-      '</div>'+
+return (
 
-    '</div>'
-  );
+'<div class="kbar-card">'+
+
+'<div class="section-title">'+
+'📈 多週期 K 線'+
+'</div>'+
+
+'<div class="section-sub">'+
+'分鐘 / 小時 / 日 / 週 / 月 / 年 · 可左右滑動與縮放'+
+'</div>'+
+
+'<div class="kbar-toolbar">'+
+
+'<div class="kbar-periods">'+
+
+periods.map(function(item){
+
+return (
+
+'<button class="kbar-tab '+
+(KBAR_TF===item[0]?"active":"")+
+'" data-kbar-tf="'+item[0]+'">'+
+item[1]+
+'</button>'
+);
+
+}).join("")+
+
+'</div>'+
+
+'<button id="kbarLatestButton" class="kbar-latest">'+
+'最新'+
+'</button>'+
+
+'</div>'+
+
+'<div id="kbarInfo" class="kbar-info"></div>'+
+
+'<div class="kbar-viewport">'+
+
+'<canvas id="kbarCanvas"></canvas>'+
+
+'</div>'+
+
+'<div class="kbar-help">'+
+'👆 點 K 棒：查看該根 OHLCV　← → 左右滑：看歷史　🤏 雙指：縮放 K 棒數量　「最新」：回到最新一根'+
+'</div>'+
+
+'<div id="kbarStatus" class="kbar-status">'+
+'正在載入 K 棒…'+
+'</div>'+
+
+'</div>'
+);
 }
 
 
@@ -4383,843 +3636,456 @@ function targets(
    BUILD ANALYSIS
 ========================================================= */
 
-function buildAnalysis(
-  data
-){
+function buildAnalysis(data){
 
-  var rows=
-    Array.isArray(data.rows)
-      ?data.rows
-      :[];
+var rows=Array.isArray(data.rows)?data.rows:[];
 
+if(rows.length<60){
+throw new Error("歷史資料不足");
+}
 
-  if(
-    rows.length<60
-  ){
+var market=marketOf(data);
 
-    throw new Error(
-      "歷史資料不足"
-    );
-  }
+var price=market.price;
+var atr=market.atr;
+var resistance=market.resistance;
 
+var support=Math.max(
+market.low10,
+Math.min(market.ma20,price)-atr*.5
+);
 
-  var market=
-    marketOf(data);
+var entryLow=Math.max(
+support,
+market.ma20-atr*.5
+);
 
+var entryHigh=
+market.ma20+
+atr*.35;
 
-  var price=
-    market.price;
+if(entryLow>entryHigh){
 
+var temp=entryLow;
+entryLow=entryHigh;
+entryHigh=temp;
 
-  var atr=
-    market.atr;
+}
 
+var entryCenter=
+(entryLow+entryHigh)/2;
 
-  var resistance=
-    market.resistance;
+var stop=Math.min(
+support-atr*.5,
+entryLow-atr
+);
 
+var risk=Math.max(
+entryCenter-stop,
+atr*.5
+);
 
-  var support=
-    Math.max(
+var breakoutLow=
+resistance-
+atr*.25;
 
-      market.low10,
+var breakoutHigh=
+resistance+
+atr*.35;
 
-      Math.min(
-        market.ma20,
-        price
-      )-
-      atr*.5
-    );
+var breakoutCenter=
+(breakoutLow+breakoutHigh)/2;
 
+var breakoutStop=Math.min(
+resistance-atr*.8,
+breakoutCenter-atr*.5
+);
 
-  /* 支撐回踩 */
+var breakoutRisk=Math.max(
+breakoutCenter-breakoutStop,
+atr*.5
+);
 
-  var entryLow=
-    Math.max(
+var surgeLow=
+price-
+atr*.2;
 
-      support,
+var surgeHigh=
+price+
+atr*.15;
 
-      market.ma20-
-      atr*.5
-    );
+var surgeCenter=
+(surgeLow+surgeHigh)/2;
 
+var surgeStop=Math.max(
+market.recent3Low-atr*.15,
+surgeCenter-atr*1.2
+);
 
-  var entryHigh=
-    market.ma20+
-    atr*.35;
+if(surgeStop>=surgeCenter){
+surgeStop=surgeCenter-atr*1.2;
+}
 
+var surgeRisk=
+surgeCenter-
+surgeStop;
 
-  if(
-    entryLow>
-    entryHigh
-  ){
+var change=
+Number(data.changePercent);
 
-    var temp=
-      entryLow;
+var position=
+getPosition(data.symbol);
 
-    entryLow=
-      entryHigh;
+currentStock={
+symbol:String(data.symbol),
+name:data.name||"",
+market:data.market||""
+};
 
-    entryHigh=
-      temp;
-  }
+el("analysisResult").innerHTML=
 
+'<div class="hero-card">'+
 
-  var entryCenter=
-    (
-      entryLow+
-      entryHigh
-    )/2;
+'<div class="hero-top">'+
 
+'<div>'+
+'<div class="hero-symbol">'+safe(data.symbol)+'</div>'+
+'<div class="hero-name">'+safe(data.name||"")+'</div>'+
+'<div class="market-pill">'+
+(data.market==="US"?"🇺🇸 美股":"🇹🇼 台股")+
+'</div>'+
+'</div>'+
 
-  var stop=
-    Math.min(
+'<div>'+
+'<div class="hero-price">'+fmt(price)+'</div>'+
+'<div class="hero-change '+pclass(change)+'">'+pct(change)+'</div>'+
+'</div>'+
 
-      support-
-      atr*.5,
+'</div>'+
 
-      entryLow-
-      atr
-    );
+'<button id="favoriteButton" class="favorite-btn">'+
+'☆ 加入自選'+
+'</button>'+
 
+'<div class="indicator-strip">'+
 
-  var risk=
-    Math.max(
+[
+["MA20",market.ma20,2],
+["MA60",market.ma60,2],
+["RSI 14",market.rsi,1],
+["MACD",market.macd,2],
+["ATR",atr,2],
+["20日壓力",resistance,2]
+]
+.map(function(item){
 
-      entryCenter-
-      stop,
+return (
 
-      atr*.5
-    );
+'<div class="indicator">'+
+'<span>'+item[0]+'</span>'+
+'<strong>'+fmt(item[1],item[2])+'</strong>'+
+'</div>'
+);
 
+}).join("")+
 
-  /* 高 R 突破回測 */
+'</div>'+
 
-  var breakoutLow=
-    resistance-
-    atr*.25;
+'</div>'+
 
 
-  var breakoutHigh=
-    resistance+
-    atr*.35;
+'<div class="big-section-title">'+
+'💼 我的持倉管理'+
+'</div>'+
 
+positionHTML(
+data,
+market,
+position
+)+
 
-  var breakoutCenter=
-    (
-      breakoutLow+
-      breakoutHigh
-    )/2;
+(
+position
+?averageHTML(position,market,data)
+:""
+)+
 
 
-  var breakoutStop=
-    Math.min(
+'<div class="big-section-title">'+
+'📊 K 線圖'+
+'</div>'+
 
-      resistance-
-      atr*.8,
+kbarHTML(data)+
 
-      breakoutCenter-
-      atr*.5
-    );
 
+'<div class="big-section-title">'+
+'🟢 支撐回踩波段'+
+'</div>'+
 
-  var breakoutRisk=
-    Math.max(
+'<div class="overview-card">'+
 
-      breakoutCenter-
-      breakoutStop,
+overviewRow(
+"回踩觀察區",
+fmt(entryLow)+" ～ "+fmt(entryHigh),
+"green"
+)+
 
-      atr*.5
-    );
+overviewRow(
+"結構支撐",
+fmt(support),
+"green"
+)+
 
+targets(
+entryCenter+risk*1.5,
+entryCenter+risk*2.5,
+entryCenter+risk*4,
+stop
+)+
 
-  /* 強勢續攻 */
+'</div>'+
 
-  var surgeLow=
-    price-
-    atr*.2;
 
+'<div class="big-section-title">'+
+'🟣 高 R 突破回測'+
+'</div>'+
 
-  var surgeHigh=
-    price+
-    atr*.15;
+'<div class="overview-card purple-card">'+
 
+overviewRow(
+"20 日壓力",
+fmt(resistance),
+"purple"
+)+
 
-  var surgeCenter=
-    (
-      surgeLow+
-      surgeHigh
-    )/2;
+overviewRow(
+"突破回測觀察區",
+fmt(breakoutLow)+" ～ "+fmt(breakoutHigh),
+"purple"
+)+
 
+targets(
+breakoutCenter+breakoutRisk*2,
+breakoutCenter+breakoutRisk*3,
+breakoutCenter+breakoutRisk*5,
+breakoutStop
+)+
 
-  var surgeStop=
-    Math.max(
+'</div>'+
 
-      market.recent3Low-
-      atr*.15,
 
-      surgeCenter-
-      atr*1.2
-    );
+'<div class="big-section-title">'+
+'🔥 強勢續攻'+
+'</div>'+
 
+'<div class="overview-card surge-card">'+
 
-  if(
-    surgeStop>=
-    surgeCenter
-  ){
+overviewRow(
+"續攻觀察區",
+fmt(surgeLow)+" ～ "+fmt(surgeHigh),
+"orange"
+)+
 
-    surgeStop=
-      surgeCenter-
-      atr*1.2;
-  }
+targets(
+surgeCenter+surgeRisk*1.5,
+surgeCenter+surgeRisk*2.5,
+surgeCenter+surgeRisk*4,
+surgeStop
+)+
 
+'</div>'+
 
-  var surgeRisk=
-    surgeCenter-
-    surgeStop;
 
+'<div class="big-section-title">'+
+'🧠 系統綜合判讀'+
+'</div>'+
 
-  var change=
-    Number(
-      data.changePercent
-    );
+'<div class="brain-card">'+
 
+'<div class="brain-summary">'+
+'現價 '+fmt(price)+
+' · MA20 '+fmt(market.ma20)+
+' · MA60 '+fmt(market.ma60)+
+' · RSI '+fmt(market.rsi,1)+
+' · MACD '+fmt(market.macd)+
+'</div>'+
 
-  var position=
-    getPosition(
-      data.symbol
-    );
+'<div class="brain-item '+(price>market.ma20?"good":"warn")+'">'+
+(price>market.ma20
+?"✓ 現價位於 MA20 上方"
+:"△ 現價位於 MA20 下方")+
+'</div>'+
 
+'<div class="brain-item '+(market.ma20>market.ma60?"good":"warn")+'">'+
+(market.ma20>market.ma60
+?"✓ MA20 高於 MA60"
+:"△ MA20 尚未高於 MA60")+
+'</div>'+
 
-  currentStock={
+'<div class="brain-item '+(market.macd>=0?"good":"warn")+'">'+
+(market.macd>=0
+?"✓ MACD 位於正值"
+:"△ MACD 動能偏弱")+
+'</div>'+
 
-    symbol:
-      String(
-        data.symbol
-      ),
+'</div>'+
 
-    name:
-      data.name||"",
 
-    market:
-      data.market||""
-  };
+'<div class="data-note">'+
+'個股資料：'+safe(data.liveSource||"FinMind")+
+' · 分鐘 / 小時 K：Fugle MarketData'+
+' · 日週月年：歷史日 K 聚合'+
+'<br>'+
+'技術分析、均價調整與目標區間皆為規則式試算。'+
+'</div>';
 
 
-  var kbarHTML;
+/* favorite */
 
+el("favoriteButton").onclick=function(){
+toggleFavorite(currentStock);
+};
 
-  if(
-    data.market==="TW"
-  ){
+updateFavoriteButton();
 
-    kbarHTML=
 
-      '<div class="kbar-card">'+
+/* position save */
 
-        '<div class="section-title">'+
-          '📈 Fugle 即時 K 線'+
-        '</div>'+
+var saveButton=
+el("positionSaveButton");
 
-        '<div class="section-sub">'+
-          '盤中 OHLCV · 每 30 秒更新'+
-        '</div>'+
+if(saveButton){
 
-        '<div class="kbar-tabs">'+
+saveButton.onclick=function(){
 
-          [
-            "1",
-            "5",
-            "15",
-            "30",
-            "60"
-          ]
-          .map(
-            function(tf){
+try{
 
-              return (
+var p=createPosition(
+data,
+el("positionEntry").value,
+el("positionQuantity").value,
+market
+);
 
-                '<button '+
-                  'class="kbar-tab '+
-                  (
-                    KBAR_TF===tf
-                      ?"active"
-                      :""
-                  )+
-                  '" '+
-                  'data-tf="'+
-                  tf+
-                  '">'+
-                  tf+
-                  '分'+
-                '</button>'
-              );
-            }
-          )
-          .join("")+
+setPosition(
+data.symbol,
+p
+);
 
-        '</div>'+
+buildAnalysis(data);
 
-        '<div class="kbar-chart-wrap">'+
+}catch(error){
 
-          '<div '+
-            'id="kbarInfo" '+
-            'class="kbar-info">'+
-          '</div>'+
+alert(error.message);
 
-          '<canvas id="kbarCanvas"></canvas>'+
+}
 
-          '<div '+
-            'id="kbarStatus" '+
-            'class="kbar-status">'+
-            '正在取得 Fugle K 棒…'+
-          '</div>'+
+};
 
-        '</div>'+
+}
 
-      '</div>';
 
-  }else{
+/* delete position */
 
-    kbarHTML=
+var deleteButton=
+el("positionDeleteButton");
 
-      '<div class="kbar-card">'+
+if(deleteButton){
 
-        '<div class="section-title">'+
-          '📈 K 線'+
-        '</div>'+
+deleteButton.onclick=function(){
 
-        '<div class="kbar-status">'+
-          '目前 Fugle 盤中 K 棒模組先支援台股。美股維持日 K 技術分析。'+
-        '</div>'+
+if(confirm("確定刪除這筆持倉設定？")){
 
-      '</div>';
-  }
+deletePosition(data.symbol);
 
+buildAnalysis(data);
 
-  el("analysisResult")
-    .innerHTML=
+}
 
-    /* HERO */
+};
 
-    '<div class="hero-card">'+
+}
 
-      '<div class="hero-top">'+
 
-        '<div>'+
+/* timeframe buttons */
 
-          '<div class="hero-symbol">'+
-            safe(
-              data.symbol
-            )+
-          '</div>'+
+document.querySelectorAll("[data-kbar-tf]").forEach(function(button){
 
-          '<div class="hero-name">'+
-            safe(
-              data.name||""
-            )+
-          '</div>'+
+button.onclick=function(){
 
-          '<div class="market-pill">'+
-            (
-              data.market==="US"
-                ?"🇺🇸 美股"
-                :"🇹🇼 台股"
-            )+
-          '</div>'+
+KBAR_TF=
+button.dataset.kbarTf;
 
-        '</div>'+
+KBAR_SELECTED_INDEX=null;
+KBAR_END_INDEX=0;
 
-        '<div>'+
+document.querySelectorAll("[data-kbar-tf]").forEach(function(item){
 
-          '<div class="hero-price">'+
-            fmt(price)+
-          '</div>'+
+item.classList.toggle(
+"active",
+item.dataset.kbarTf===KBAR_TF
+);
 
-          '<div class="hero-change '+
-            pclass(change)+
-            '">'+
-            pct(change)+
-          '</div>'+
+});
 
-        '</div>'+
+loadKBar(
+data.symbol,
+false
+);
 
-      '</div>'+
+startKBarTimer();
 
-      '<button '+
-        'id="favoriteButton" '+
-        'class="favorite-btn">'+
-        '☆ 加入自選'+
-      '</button>'+
+};
 
-      '<div class="indicator-strip">'+
+});
 
-        [
-          [
-            "MA20",
-            market.ma20,
-            2
-          ],
-          [
-            "MA60",
-            market.ma60,
-            2
-          ],
-          [
-            "RSI 14",
-            market.rsi,
-            1
-          ],
-          [
-            "MACD",
-            market.macd,
-            2
-          ],
-          [
-            "ATR",
-            atr,
-            2
-          ],
-          [
-            "20日壓力",
-            resistance,
-            2
-          ]
-        ]
-        .map(
-          function(item){
 
-            return (
+/* latest */
 
-              '<div class="indicator">'+
+var latestButton=
+el("kbarLatestButton");
 
-                '<span>'+
-                  item[0]+
-                '</span>'+
+if(latestButton){
 
-                '<strong>'+
-                  fmt(
-                    item[1],
-                    item[2]
-                  )+
-                '</strong>'+
+latestButton.onclick=function(){
 
-              '</div>'
-            );
-          }
-        )
-        .join("")+
+if(!KBAR_DATA.length)return;
 
-      '</div>'+
+KBAR_END_INDEX=
+KBAR_DATA.length-1;
 
-    '</div>'+
+KBAR_SELECTED_INDEX=null;
 
+drawKBar();
 
-    /* POSITION */
+updateKInfo(
+KBAR_DATA[
+KBAR_DATA.length-1
+]
+);
 
-    '<div class="big-section-title">'+
-      '💼 我的持倉管理'+
-    '</div>'+
+};
 
-    positionHTML(
-      data,
-      market,
-      position
-    )+
+}
 
-    (
-      position
-        ?averageHTML(
-          position,
-          market,
-          data
-        )
-        :""
-    )+
 
+if(data.market==="TW"){
 
-    /* K BAR */
+setupKBarInteraction();
 
-    '<div class="big-section-title">'+
-      '📊 盤中 K 棒'+
-    '</div>'+
+loadKBar(
+data.symbol,
+false
+);
 
-    kbarHTML+
+startKBarTimer();
 
+}else{
 
-    /* STRATEGY 1 */
+stopKBarTimer();
 
-    '<div class="big-section-title">'+
-      '🟢 支撐回踩波段'+
-    '</div>'+
+}
 
-    '<div class="overview-card">'+
-
-      overviewRow(
-        "回踩觀察區",
-        fmt(entryLow)+
-        " ～ "+
-        fmt(entryHigh),
-        "green"
-      )+
-
-      overviewRow(
-        "結構支撐",
-        fmt(support),
-        "green"
-      )+
-
-      targets(
-
-        entryCenter+
-        risk*1.5,
-
-        entryCenter+
-        risk*2.5,
-
-        entryCenter+
-        risk*4,
-
-        stop
-      )+
-
-    '</div>'+
-
-
-    /* STRATEGY 2 */
-
-    '<div class="big-section-title">'+
-      '🟣 高 R 突破回測'+
-    '</div>'+
-
-    '<div class="overview-card purple-card">'+
-
-      overviewRow(
-        "20 日壓力",
-        fmt(
-          resistance
-        ),
-        "purple"
-      )+
-
-      overviewRow(
-        "突破回測觀察區",
-        fmt(
-          breakoutLow
-        )+
-        " ～ "+
-        fmt(
-          breakoutHigh
-        ),
-        "purple"
-      )+
-
-      targets(
-
-        breakoutCenter+
-        breakoutRisk*2,
-
-        breakoutCenter+
-        breakoutRisk*3,
-
-        breakoutCenter+
-        breakoutRisk*5,
-
-        breakoutStop
-      )+
-
-    '</div>'+
-
-
-    /* STRATEGY 3 */
-
-    '<div class="big-section-title">'+
-      '🔥 強勢續攻'+
-    '</div>'+
-
-    '<div class="overview-card surge-card">'+
-
-      overviewRow(
-        "續攻觀察區",
-        fmt(
-          surgeLow
-        )+
-        " ～ "+
-        fmt(
-          surgeHigh
-        ),
-        "orange"
-      )+
-
-      targets(
-
-        surgeCenter+
-        surgeRisk*1.5,
-
-        surgeCenter+
-        surgeRisk*2.5,
-
-        surgeCenter+
-        surgeRisk*4,
-
-        surgeStop
-      )+
-
-    '</div>'+
-
-
-    /* BRAIN */
-
-    '<div class="big-section-title">'+
-      '🧠 系統綜合判讀'+
-    '</div>'+
-
-    '<div class="brain-card">'+
-
-      '<div class="brain-summary">'+
-        '現價 '+
-        fmt(price)+
-        ' · MA20 '+
-        fmt(
-          market.ma20
-        )+
-        ' · MA60 '+
-        fmt(
-          market.ma60
-        )+
-        ' · RSI '+
-        fmt(
-          market.rsi,
-          1
-        )+
-        ' · MACD '+
-        fmt(
-          market.macd
-        )+
-      '</div>'+
-
-      '<div class="brain-item '+
-        (
-          price>
-          market.ma20
-            ?"good"
-            :"warn"
-        )+
-        '">'+
-
-        (
-          price>
-          market.ma20
-            ?"✓ 現價位於 MA20 上方"
-            :"△ 現價位於 MA20 下方"
-        )+
-
-      '</div>'+
-
-      '<div class="brain-item '+
-        (
-          market.ma20>
-          market.ma60
-            ?"good"
-            :"warn"
-        )+
-        '">'+
-
-        (
-          market.ma20>
-          market.ma60
-            ?"✓ MA20 高於 MA60"
-            :"△ MA20 尚未高於 MA60"
-        )+
-
-      '</div>'+
-
-      '<div class="brain-item '+
-        (
-          market.macd>=0
-            ?"good"
-            :"warn"
-        )+
-        '">'+
-
-        (
-          market.macd>=0
-            ?"✓ MACD 位於正值"
-            :"△ MACD 動能偏弱"
-        )+
-
-      '</div>'+
-
-    '</div>'+
-
-
-    '<div class="data-note">'+
-      '個股資料來源：'+
-      safe(
-        data.liveSource||
-        "FinMind"
-      )+
-      ' · 台股盤中 K 棒：Fugle MarketData'+
-      '<br>'+
-      '均價調整、觀察區、目標價與結構失效位置皆為規則式技術分析與試算，不代表保證報酬。'+
-    '</div>';
-
-
-  /* FAVORITE */
-
-  el(
-    "favoriteButton"
-  ).onclick=
-    function(){
-
-      toggleFavorite(
-        currentStock
-      );
-    };
-
-
-  updateFavoriteButton();
-
-
-  /* POSITION SAVE */
-
-  var saveButton=
-    el(
-      "positionSaveButton"
-    );
-
-
-  if(saveButton){
-
-    saveButton.onclick=
-      function(){
-
-        try{
-
-          var position=
-            createPosition(
-
-              data,
-
-              el(
-                "positionEntry"
-              ).value,
-
-              el(
-                "positionQuantity"
-              ).value,
-
-              market
-            );
-
-          setPosition(
-            data.symbol,
-            position
-          );
-
-          buildAnalysis(
-            data
-          );
-
-        }catch(error){
-
-          alert(
-            error.message
-          );
-        }
-      };
-  }
-
-
-  /* POSITION DELETE */
-
-  var deleteButton=
-    el(
-      "positionDeleteButton"
-    );
-
-
-  if(deleteButton){
-
-    deleteButton.onclick=
-      function(){
-
-        if(
-          confirm(
-            "確定刪除這筆持倉設定？"
-          )
-        ){
-
-          deletePosition(
-            data.symbol
-          );
-
-          buildAnalysis(
-            data
-          );
-        }
-      };
-  }
-
-
-  /* KBAR TABS */
-
-  document
-    .querySelectorAll(
-      "[data-tf]"
-    )
-    .forEach(
-      function(button){
-
-        button.onclick=
-          function(){
-
-            KBAR_TF=
-              button.dataset.tf;
-
-            document
-              .querySelectorAll(
-                "[data-tf]"
-              )
-              .forEach(
-                function(item){
-
-                  item
-                    .classList
-                    .toggle(
-
-                      "active",
-
-                      item.dataset.tf===
-                      KBAR_TF
-                    );
-                }
-              );
-
-            loadKBar(
-              data.symbol
-            );
-          };
-      }
-    );
-
-
-  /* START KBAR */
-
-  if(
-    data.market==="TW"
-  ){
-
-    loadKBar(
-      data.symbol
-    );
-
-    startKBarTimer();
-
-  }else{
-
-    stopKBarTimer();
-  }
 }
 
 
@@ -5227,354 +4093,219 @@ function buildAnalysis(
    RADAR
 ========================================================= */
 
-el(
-  "refreshButton"
-).onclick=
-  loadRadar;
-
+el("refreshButton").onclick=
+loadRadar;
 
 async function loadRadar(){
 
-  try{
+try{
 
-    el(
-      "updateText"
-    ).textContent=
-      "正在連線 FinMind…";
+el("updateText").textContent=
+"正在連線 FinMind…";
 
+var response=
+await fetch(
+"/api/radar?t="+Date.now(),
+{
+cache:"no-store"
+}
+);
 
-    var response=
-      await fetch(
-        "/api/radar?t="+
-        Date.now(),
-        {
-          cache:"no-store"
-        }
-      );
+var data=
+await response.json();
 
+if(!response.ok||!data.ok){
+throw new Error(data.error||"Radar error");
+}
 
-    var data=
-      await response.json();
+el("scanCount").textContent=
+fmt(data.scanned,0);
 
+el("radarCount").textContent=
+fmt(data.found,0);
 
-    if(
-      !response.ok||
-      !data.ok
-    ){
+el("longCount").textContent=
+fmt(data.longWatchCount,0);
 
-      throw new Error(
-        data.error||
-        "Radar error"
-      );
-    }
+el("updateText").textContent=
+"FinMind Sponsor 即時資料 · 更新 "+
+currentTimeText();
 
+renderStocks(
+"longGrid",
+data.longWatch||[],
+true
+);
 
-    el(
-      "scanCount"
-    ).textContent=
-      fmt(
-        data.scanned,
-        0
-      );
+renderStocks(
+"radarGrid",
+data.radar||[],
+false
+);
 
+countdownSeconds=300;
 
-    el(
-      "radarCount"
-    ).textContent=
-      fmt(
-        data.found,
-        0
-      );
+}catch(error){
 
+el("updateText").textContent=
+"即時雷達連線失敗";
 
-    el(
-      "longCount"
-    ).textContent=
-      fmt(
-        data.longWatchCount,
-        0
-      );
+console.error(error);
 
+}
 
-    el(
-      "updateText"
-    ).textContent=
-      "FinMind Sponsor 即時資料 · 更新 "+
-      currentTimeText();
+}
 
+function renderStocks(id,stocks,longMode){
 
-    renderStocks(
-      "longGrid",
-      data.longWatch||[],
-      true
-    );
+var root=el(id);
 
+if(!stocks.length){
 
-    renderStocks(
-      "radarGrid",
-      data.radar||[],
-      false
-    );
+root.innerHTML=
+'<div class="card">'+
+'目前沒有符合條件的股票'+
+'</div>';
 
+return;
+}
 
-    countdownSeconds=300;
+root.innerHTML=
+stocks.map(function(stock){
 
-  }catch(error){
+return (
 
-    el(
-      "updateText"
-    ).textContent=
-      "即時雷達連線失敗";
+'<article class="stock-card" data-stock="'+safe(stock.symbol)+'">'+
 
-    console.error(
-      error
-    );
-  }
+'<div class="stock-top">'+
+
+'<div>'+
+'<div class="symbol">'+safe(stock.symbol)+'</div>'+
+'<div class="name">'+
+safe(stock.name||"台股")+
+' · '+
+safe(longMode?stock.longStatus:stock.level)+
+'</div>'+
+'</div>'+
+
+'<div class="score">'+
+'<strong>'+safe(stock.score)+'</strong>'+
+'<span>異動分數</span>'+
+'</div>'+
+
+'</div>'+
+
+'<div class="price-row">'+
+'<div class="price">'+fmt(stock.price)+'</div>'+
+'<div class="'+pclass(stock.changePercent)+'">'+
+pct(stock.changePercent)+
+'</div>'+
+'</div>'+
+
+'<div class="chips">'+
+'<div class="chip green">'+
+'量比 '+fmt(stock.volumeRatio,1)+'x'+
+'</div>'+
+'<div class="chip">'+
+'高點 '+fmt(stock.high)+
+'</div>'+
+'</div>'+
+
+'</article>'
+);
+
+}).join("");
+
+root.querySelectorAll("[data-stock]").forEach(function(node){
+
+node.onclick=function(){
+analyze(node.dataset.stock);
+};
+
+});
+
 }
 
 
 /* =========================================================
-   RADAR CARDS
+   HOME TIMER
 ========================================================= */
 
-function renderStocks(
-  id,
-  stocks,
-  longMode
+setInterval(function(){
+
+countdownSeconds--;
+
+if(countdownSeconds<=0){
+
+countdownSeconds=300;
+
+loadRadar();
+
+}
+
+var minutes=
+Math.floor(
+countdownSeconds/60
+);
+
+var seconds=
+countdownSeconds%60;
+
+el("countdown").textContent=
+String(minutes).padStart(2,"0")+
+":"+
+String(seconds).padStart(2,"0");
+
+},1000);
+
+
+/* =========================================================
+   VISIBILITY
+========================================================= */
+
+document.addEventListener(
+"visibilitychange",
+function(){
+
+if(
+!document.hidden&&
+currentAnalysisSymbol
 ){
 
-  var root=
-    el(id);
+refreshCurrentAnalysis();
 
+if(
+currentAnalysisData&&
+currentAnalysisData.market==="TW"
+){
 
-  if(!stocks.length){
+loadKBar(
+currentAnalysisSymbol,
+true
+);
 
-    root.innerHTML=
-      '<div class="card">'+
-        '目前沒有符合條件的股票'+
-      '</div>';
-
-    return;
-  }
-
-
-  root.innerHTML=
-    stocks
-      .map(
-        function(stock){
-
-          return (
-
-            '<article '+
-              'class="stock-card" '+
-              'data-stock="'+
-              safe(
-                stock.symbol
-              )+
-              '">'+
-
-              '<div class="stock-top">'+
-
-                '<div>'+
-
-                  '<div class="symbol">'+
-                    safe(
-                      stock.symbol
-                    )+
-                  '</div>'+
-
-                  '<div class="name">'+
-                    safe(
-                      stock.name||
-                      "台股"
-                    )+
-                    ' · '+
-                    safe(
-                      longMode
-                        ?stock.longStatus
-                        :stock.level
-                    )+
-                  '</div>'+
-
-                '</div>'+
-
-                '<div class="score">'+
-
-                  '<strong>'+
-                    safe(
-                      stock.score
-                    )+
-                  '</strong>'+
-
-                  '<span>'+
-                    '異動分數'+
-                  '</span>'+
-
-                '</div>'+
-
-              '</div>'+
-
-              '<div class="price-row">'+
-
-                '<div class="price">'+
-                  fmt(
-                    stock.price
-                  )+
-                '</div>'+
-
-                '<div class="'+
-                  pclass(
-                    stock.changePercent
-                  )+
-                  '">'+
-                  pct(
-                    stock.changePercent
-                  )+
-                '</div>'+
-
-              '</div>'+
-
-              '<div class="chips">'+
-
-                '<div class="chip green">'+
-                  '量比 '+
-                  fmt(
-                    stock.volumeRatio,
-                    1
-                  )+
-                  'x'+
-                '</div>'+
-
-                '<div class="chip">'+
-                  '高點 '+
-                  fmt(
-                    stock.high
-                  )+
-                '</div>'+
-
-              '</div>'+
-
-            '</article>'
-          );
-        }
-      )
-      .join("");
-
-
-  root
-    .querySelectorAll(
-      "[data-stock]"
-    )
-    .forEach(
-      function(node){
-
-        node.onclick=
-          function(){
-
-            analyze(
-              node.dataset.stock
-            );
-          };
-      }
-    );
 }
 
+}
 
-/* =========================================================
-   HOME RADAR COUNTDOWN
-========================================================= */
-
-setInterval(
-  function(){
-
-    countdownSeconds--;
-
-    if(
-      countdownSeconds<=0
-    ){
-
-      countdownSeconds=300;
-
-      loadRadar();
-    }
-
-
-    var minutes=
-      Math.floor(
-        countdownSeconds/60
-      );
-
-
-    var seconds=
-      countdownSeconds%60;
-
-
-    el(
-      "countdown"
-    ).textContent=
-
-      String(minutes)
-        .padStart(
-          2,
-          "0"
-        )+
-      ":"+
-      String(seconds)
-        .padStart(
-          2,
-          "0"
-        );
-
-  },
-  1000
+}
 );
 
 
 /* =========================================================
-   VISIBILITY / RESIZE
+   RESIZE
 ========================================================= */
 
-document
-  .addEventListener(
-    "visibilitychange",
-    function(){
+window.addEventListener(
+"resize",
+function(){
 
-      if(
-        !document.hidden&&
-        currentAnalysisSymbol
-      ){
+if(KBAR_DATA.length){
+drawKBar();
+}
 
-        refreshCurrentAnalysis();
-
-        if(
-          currentAnalysisData&&
-          currentAnalysisData.market==="TW"
-        ){
-
-          loadKBar(
-            currentAnalysisSymbol
-          );
-        }
-      }
-    }
-  );
-
-
-window
-  .addEventListener(
-    "resize",
-    function(){
-
-      if(
-        KBAR_DATA.length
-      ){
-
-        drawKBar(
-          KBAR_DATA
-        );
-      }
-    }
-  );
+}
+);
 
 
 /* =========================================================
