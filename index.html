@@ -80,10 +80,7 @@ button{cursor:pointer}
 .chip{border:1px solid #292e2b;background:#131614;border-radius:9px;padding:5px 8px;color:#bcc1be;font-size:10px}
 .chip.green{color:var(--green)}
 
-.strategy-auto-card{
-border-color:rgba(69,224,173,.30);
-background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
-}
+.strategy-auto-card{border-color:rgba(69,224,173,.30);background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)}
 .strategy-auto-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .strategy-auto-name{margin-top:12px;border:1px solid #292e2b;background:#070908;border-radius:14px;padding:12px 13px}
 .strategy-auto-name.green{border-color:rgba(69,224,173,.25)}
@@ -294,12 +291,9 @@ background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
 <div class="section-head">
 <div>
 <div class="section-title">🎯 自動偵測符合策略股票</div>
-<div id="strategyReadyText" class="section-sub">
-正在掃描支撐回踩、高 R、強勢續攻策略…
+<div id="strategyReadyText" class="section-sub">正在掃描支撐回踩、高 R、強勢續攻策略…</div>
 </div>
 </div>
-</div>
-
 <div id="strategyReadyGrid" class="grid">
 <div class="loading">正在分析策略條件…</div>
 </div>
@@ -307,23 +301,18 @@ background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
 
 <section class="section">
 <div class="section-title">🚀 今日做多觀察</div>
-<div id="longGrid" class="grid">
-<div class="loading">正在掃描…</div>
-</div>
+<div id="longGrid" class="grid"><div class="loading">正在掃描…</div></div>
 </section>
 
 <section class="section">
 <div class="section-title">🔥 台股即時異動雷達</div>
-<div id="radarGrid" class="grid">
-<div class="loading">正在載入…</div>
-</div>
+<div id="radarGrid" class="grid"><div class="loading">正在載入…</div></div>
 </section>
 
 <div class="footer">妖子平台 4.5 · FinMind × Fugle · 70% Historical Target</div>
 </div>
 
 <div id="analysisPage" class="hidden">
-
 <button id="backTop" class="back-btn">← 返回市場首頁</button>
 
 <div class="analysis-heading">
@@ -339,12 +328,9 @@ background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
 <div id="analysisLiveCountdown" class="live-tracker-count">30s</div>
 </div>
 
-<div id="analysisResult">
-<div class="loading">正在分析…</div>
-</div>
+<div id="analysisResult"><div class="loading">正在分析…</div></div>
 
 <button id="backBottom" class="back-btn full">← 看完了，返回市場首頁</button>
-
 </div>
 </main>
 
@@ -1269,7 +1255,7 @@ kbarHTML(data.market)+
 '<div id="pullbackStrategy" class="big-section-title">🟢 支撐回踩波段</div>'+
 '<div class="overview-card">'+
 overviewRow("目前價格",fmt(price),"")+
-targetBox("🎯 回踩觀察區",fmt(entryLow)+" ～ "+fmt(entryHigh),"entry")+
+targetBox("📍 建議入場區間",fmt(entryLow)+" ～ "+fmt(entryHigh),"entry")+
 targetBox("TP1 · 1.5R",fmt(center+R*1.5),"tp")+
 targetBox("TP2 · 2.5R",fmt(center+R*2.5),"tp")+
 targetBox("TP3 · 4R",fmt(center+R*4),"tp3")+
@@ -1327,7 +1313,7 @@ conditionLine(!structureState.broken,"日 K 波段結構尚未失效","日 K 波
 '<div class="overview-card surge-card">'+
 overviewRow("嚴格模式",strictSurge?"條件符合":"等待確認",strictSurge?"green":"")+
 overviewRow("日 K 結構低點",fmt(structureLow),"")+
-targetBox("📍 續攻觀察區",fmt(price-atr*.2)+" ～ "+fmt(price+atr*.15),"orange")+
+targetBox("📍 建議入場區間",fmt(price-atr*.2)+" ～ "+fmt(price+atr*.15),"orange")+
 targetBox("💰 TP1 · 1.5R",fmt(sCenter+sR*1.5),"tp")+
 targetBox("💰 TP2 · 2.5R",fmt(sCenter+sR*2.5),"tp")+
 targetBox("🔥 TP3 · 4R",fmt(sCenter+sR*4),"tp3")+
@@ -1797,23 +1783,18 @@ return(
 '<article class="stock-card strategy-auto-card" data-strategy-stock="'+safe(s.symbol)+'">'+
 
 '<div class="strategy-auto-top">'+
-
 '<div>'+
 '<div class="symbol">'+safe(s.symbol)+'</div>'+
 '<div class="name">'+safe(s.name||"台股")+'</div>'+
 '</div>'+
-
 '<div class="score">'+
 '<strong class="'+gradeClass+'">'+safe(s.entryScore)+'</strong>'+
 '<span>建議入場分數</span>'+
 '</div>'+
-
 '</div>'+
 
 '<div class="strategy-auto-name '+strategyClass+'">'+
-'<strong>'+
-safe((s.strategyEmoji||"")+" "+(s.recommendedStrategy||""))+
-'</strong>'+
+'<strong>'+safe((s.strategyEmoji||"")+" "+(s.recommendedStrategy||""))+'</strong>'+
 '<span>'+safe(s.strategyGrade||"")+'</span>'+
 '</div>'+
 
@@ -1829,22 +1810,9 @@ safe((s.strategyEmoji||"")+" "+(s.recommendedStrategy||""))+
 '</div>'+
 
 '<div class="strategy-score-grid">'+
-
-'<div class="strategy-mini-score">'+
-'<span>🟢 支撐回踩</span>'+
-'<strong>'+safe(s.pullbackScore)+'</strong>'+
-'</div>'+
-
-'<div class="strategy-mini-score">'+
-'<span>🟣 高 R</span>'+
-'<strong>'+safe(s.highRScore)+'</strong>'+
-'</div>'+
-
-'<div class="strategy-mini-score">'+
-'<span>🔥 強勢續攻</span>'+
-'<strong>'+safe(s.surgeScore)+'</strong>'+
-'</div>'+
-
+'<div class="strategy-mini-score"><span>🟢 支撐回踩</span><strong>'+safe(s.pullbackScore)+'</strong></div>'+
+'<div class="strategy-mini-score"><span>🟣 高 R</span><strong>'+safe(s.highRScore)+'</strong></div>'+
+'<div class="strategy-mini-score"><span>🔥 強勢續攻</span><strong>'+safe(s.surgeScore)+'</strong></div>'+
 '</div>'+
 
 '<div class="strategy-auto-meta">'+
@@ -1857,7 +1825,6 @@ safe((s.strategyEmoji||"")+" "+(s.recommendedStrategy||""))+
 '</div>'+
 
 '<div class="strategy-open">查看完整策略分析 →</div>'+
-
 '</article>'
 );
 
