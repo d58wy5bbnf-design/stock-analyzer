@@ -12,39 +12,88 @@
 <style>
 *{box-sizing:border-box}
 :root{
---bg:#030504;--card:#0b0e0c;--border:#292e2b;
---text:#f6f7f6;--muted:#8c918e;
---green:#45e0ad;--red:#ff6976;--yellow:#ffc85a;
---purple:#ae63ff;--orange:#ff9f43;--blue:#70b7ff
+--bg:#030504;
+--card:#0b0e0c;
+--border:#292e2b;
+--text:#f6f7f6;
+--muted:#8c918e;
+--green:#45e0ad;
+--red:#ff6976;
+--yellow:#ffc85a;
+--purple:#bd7cff;
+--orange:#ff9f43;
+--blue:#70b7ff
 }
-html{background:var(--bg);scroll-behavior:smooth}
+
+html{
+background:var(--bg);
+scroll-behavior:smooth
+}
+
 body{
 margin:0;
-background:radial-gradient(circle at top,rgba(43,111,84,.09),transparent 28%),var(--bg);
+background:
+radial-gradient(circle at top,rgba(43,111,84,.09),transparent 28%),
+var(--bg);
 color:var(--text);
-font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif
+font-family:
+-apple-system,
+BlinkMacSystemFont,
+"PingFang TC",
+"Noto Sans TC",
+sans-serif
 }
+
 button,input{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
+
 .app{
 width:min(100%,900px);
 margin:auto;
-padding:calc(22px + env(safe-area-inset-top)) 16px calc(60px + env(safe-area-inset-bottom))
+padding:
+calc(22px + env(safe-area-inset-top))
+16px
+calc(60px + env(safe-area-inset-bottom))
 }
 
 .header{margin-bottom:24px}
-.header-row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.brand{font-size:31px;font-weight:950;letter-spacing:-1.5px}
-.subtitle{margin-top:9px;color:var(--muted);font-size:13px}
-.version{
-padding:7px 11px;border-radius:999px;color:var(--green);
-border:1px solid rgba(69,224,173,.25);
-background:rgba(69,224,173,.07);
-font-size:12px;font-weight:900
+
+.header-row{
+display:flex;
+justify-content:space-between;
+align-items:flex-end;
+gap:12px
 }
 
-.card,.hero-card,.overview-card,.brain-card,.backtest-card{
+.brand{
+font-size:31px;
+font-weight:950;
+letter-spacing:-1.5px
+}
+
+.subtitle{
+margin-top:9px;
+color:var(--muted);
+font-size:13px
+}
+
+.version{
+padding:7px 11px;
+border-radius:999px;
+color:var(--green);
+border:1px solid rgba(69,224,173,.25);
+background:rgba(69,224,173,.07);
+font-size:12px;
+font-weight:900
+}
+
+.card,
+.hero-card,
+.overview-card,
+.brain-card,
+.backtest-card,
+.strategy-card{
 background:rgba(11,14,12,.97);
 border:1px solid var(--border);
 border-radius:21px;
@@ -53,371 +102,1054 @@ margin-bottom:15px
 }
 
 .section{margin-top:27px}
-.section-title{font-size:20px;font-weight:950}
-.section-sub{color:var(--muted);font-size:11px;margin-top:5px;line-height:1.6}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 3px 13px}
-.big-section-title{margin:31px 5px 15px;font-size:24px;font-weight:950}
+
+.section-title{
+font-size:20px;
+font-weight:950
+}
+
+.section-sub{
+color:var(--muted);
+font-size:11px;
+margin-top:5px;
+line-height:1.7
+}
+
+.section-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin:0 3px 13px
+}
+
+.big-section-title{
+margin:31px 5px 15px;
+font-size:24px;
+font-weight:950
+}
 
 .market-tabs{
-display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-bottom:15px
 }
+
 .market-tab{
-border:1px solid #303532;background:#0c0f0d;color:#9da39f;
-border-radius:15px;padding:13px;font-weight:900
+border:1px solid #303532;
+background:#0c0f0d;
+color:#9da39f;
+border-radius:15px;
+padding:13px;
+font-weight:900
 }
+
 .market-tab.active{
 color:var(--green);
 border-color:rgba(69,224,173,.42);
 background:rgba(69,224,173,.07)
 }
 
-.search-title{color:var(--muted);font-size:12px;margin:0 0 10px 4px}
-.search-form{display:grid;grid-template-columns:1fr 100px;gap:9px}
-.search-input{
-width:100%;height:53px;border:1px solid #303532;border-radius:15px;
-padding:0 15px;background:#070908;color:white;outline:none;font-size:16px
+.search-title{
+color:var(--muted);
+font-size:12px;
+margin:0 0 10px 4px
 }
-.search-btn{border:0;border-radius:15px;background:var(--green);color:#06130e;font-weight:950}
-.search-help{margin-top:10px;color:#777d79;font-size:10px;line-height:1.6}
 
-.examples,.chips,.history-list{
-display:flex;flex-wrap:wrap;gap:7px;margin-top:11px
+.search-form{
+display:grid;
+grid-template-columns:1fr 100px;
+gap:9px
 }
-.example,.chip,.history-chip{
-border:1px solid #292e2b;background:#111412;color:#a6aca8;
-border-radius:999px;padding:6px 10px;font-size:10px
+
+.search-input{
+width:100%;
+height:53px;
+border:1px solid #303532;
+border-radius:15px;
+padding:0 15px;
+background:#070908;
+color:white;
+outline:none;
+font-size:16px
 }
+
+.search-btn{
+border:0;
+border-radius:15px;
+background:var(--green);
+color:#06130e;
+font-weight:950
+}
+
+.search-help{
+margin-top:10px;
+color:#777d79;
+font-size:10px;
+line-height:1.6
+}
+
+.examples,
+.chips,
+.history-list{
+display:flex;
+flex-wrap:wrap;
+gap:7px;
+margin-top:11px
+}
+
+.example,
+.chip,
+.history-chip{
+border:1px solid #292e2b;
+background:#111412;
+color:#a6aca8;
+border-radius:999px;
+padding:6px 10px;
+font-size:10px
+}
+
 .chip.green{color:var(--green)}
 .chip.red{color:var(--red)}
 .chip.yellow{color:var(--yellow)}
 .chip.purple{color:#c899ff}
 
 .history-head{
-display:flex;justify-content:space-between;align-items:center;
+display:flex;
+justify-content:space-between;
+align-items:center;
 margin-top:16px
 }
-.history-title{font-size:11px;color:#929894;font-weight:900}
-.history-clear{
-border:0;background:none;color:#777;font-size:10px;padding:5px
+
+.history-title{
+font-size:11px;
+color:#929894;
+font-weight:900
 }
-.history-chip{display:flex;align-items:center;gap:7px}
+
+.history-clear{
+border:0;
+background:none;
+color:#777;
+font-size:10px;
+padding:5px
+}
+
+.history-chip{
+display:flex;
+align-items:center;
+gap:7px
+}
+
 .history-delete{
-border:0;background:none;color:#777;padding:0;font-size:13px
+border:0;
+background:none;
+color:#777;
+padding:0;
+font-size:13px
 }
 
 .watch-section{margin-top:25px}
-.watch-grid,.grid{display:grid;gap:9px}
+
+.watch-grid,
+.grid{
+display:grid;
+gap:9px
+}
+
 .watch-card{
-display:flex;justify-content:space-between;align-items:center;gap:12px;
-background:#0b0e0c;border:1px solid rgba(255,200,90,.20);
-border-radius:17px;padding:14px
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+background:#0b0e0c;
+border:1px solid rgba(255,200,90,.20);
+border-radius:17px;
+padding:14px
 }
-.watch-main{flex:1;cursor:pointer}
-.watch-symbol{font-size:18px;font-weight:950}
-.watch-name{color:var(--muted);font-size:11px;margin-top:4px}
-.watch-open{color:var(--yellow);font-size:11px;margin-top:8px}
+
+.watch-main{
+flex:1;
+cursor:pointer
+}
+
+.watch-symbol{
+font-size:18px;
+font-weight:950
+}
+
+.watch-name{
+color:var(--muted);
+font-size:11px;
+margin-top:4px
+}
+
+.watch-open{
+color:var(--yellow);
+font-size:11px;
+margin-top:8px
+}
+
 .watch-remove{
-width:38px;height:38px;border:1px solid #303532;background:#101311;
-color:#888e8a;border-radius:12px;font-size:17px
+width:38px;
+height:38px;
+border:1px solid #303532;
+background:#101311;
+color:#888e8a;
+border-radius:12px;
+font-size:17px
 }
+
 .empty-watch{
-color:#777d79;border:1px dashed #292e2b;border-radius:16px;
-padding:18px;text-align:center;font-size:12px;line-height:1.7
+color:#777d79;
+border:1px dashed #292e2b;
+border-radius:16px;
+padding:18px;
+text-align:center;
+font-size:12px;
+line-height:1.7
 }
+
 .favorite-btn{
-width:100%;min-height:48px;margin-top:15px;border-radius:15px;
+width:100%;
+min-height:48px;
+margin-top:15px;
+border-radius:15px;
 border:1px solid rgba(255,200,90,.28);
 background:rgba(255,200,90,.06);
-color:var(--yellow);font-weight:900
+color:var(--yellow);
+font-weight:900
 }
-.favorite-btn.active{background:rgba(255,200,90,.12)}
 
-.refresh,.back-btn,.more-btn,.notify-btn{
-border:1px solid #303532;background:#111412;color:#d7dbd8;
-border-radius:12px;padding:9px 11px;font-size:12px
+.favorite-btn.active{
+background:rgba(255,200,90,.12)
 }
-.more-btn{
-width:100%;margin-top:10px;min-height:43px;color:var(--green)
-}
+
+.refresh,
+.back-btn,
+.more-btn,
 .notify-btn{
-width:100%;margin-top:12px;color:var(--yellow)
+border:1px solid #303532;
+background:#111412;
+color:#d7dbd8;
+border-radius:12px;
+padding:9px 11px;
+font-size:12px
 }
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.stat{
-text-align:center;background:#0a0d0b;border:1px solid #252a27;
-border-radius:14px;padding:12px 4px
+.more-btn{
+width:100%;
+margin-top:10px;
+min-height:43px;
+color:var(--green)
 }
-.stat strong{display:block;font-size:17px}
-.stat span{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+
+.notify-btn{
+width:100%;
+margin-top:12px;
+color:var(--yellow)
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px
+}
+
+.stat{
+text-align:center;
+background:#0a0d0b;
+border:1px solid #252a27;
+border-radius:14px;
+padding:12px 4px
+}
+
+.stat strong{
+display:block;
+font-size:17px
+}
+
+.stat span{
+display:block;
+margin-top:5px;
+color:var(--muted);
+font-size:9px
+}
 
 .stock-card{
-padding:15px;border-radius:18px;border:1px solid #292e2b;
-background:#0b0e0c;cursor:pointer
+padding:15px;
+border-radius:18px;
+border:1px solid #292e2b;
+background:#0b0e0c;
+cursor:pointer
 }
-.stock-card.priority{border-color:rgba(69,224,173,.28)}
+
+.stock-card.priority{
+border-color:rgba(69,224,173,.28)
+}
+
 .stock-card.alert-stock{
 border-color:rgba(255,200,90,.5);
 box-shadow:0 0 0 1px rgba(255,200,90,.08)
 }
-.stock-top,.hero-top{display:flex;justify-content:space-between;gap:10px}
-.symbol{font-size:19px;font-weight:950}
-.name{color:#9da39f;font-size:12px;margin-top:4px}
+
+.stock-top,
+.hero-top{
+display:flex;
+justify-content:space-between;
+gap:10px
+}
+
+.symbol{
+font-size:19px;
+font-weight:950
+}
+
+.name{
+color:#9da39f;
+font-size:12px;
+margin-top:4px
+}
+
 .score{text-align:right}
-.score strong{display:block;font-size:23px}
-.score span{color:var(--muted);font-size:9px}
-.price-row{display:flex;gap:9px;align-items:baseline;margin-top:13px}
-.price{font-size:22px;font-weight:950}
+
+.score strong{
+display:block;
+font-size:23px
+}
+
+.score span{
+color:var(--muted);
+font-size:9px
+}
+
+.price-row{
+display:flex;
+gap:9px;
+align-items:baseline;
+margin-top:13px
+}
+
+.price{
+font-size:22px;
+font-weight:950
+}
+
 .up{color:var(--green)}
 .down{color:var(--red)}
 .flat{color:#ddd}
 
-.analysis-heading{margin:24px 3px 15px}
-.analysis-heading h1{margin:0;font-size:27px}
-.analysis-heading p{color:var(--muted);font-size:12px}
-.back-btn.full{width:100%;margin-top:22px;min-height:48px}
+.analysis-heading{
+margin:24px 3px 15px
+}
+
+.analysis-heading h1{
+margin:0;
+font-size:27px
+}
+
+.analysis-heading p{
+color:var(--muted);
+font-size:12px
+}
+
+.back-btn.full{
+width:100%;
+margin-top:22px;
+min-height:48px
+}
 
 .live-tracker{
-margin:0 0 15px;display:flex;justify-content:space-between;align-items:center;
-gap:12px;border:1px solid rgba(69,224,173,.28);
+margin:0 0 15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+border:1px solid rgba(69,224,173,.28);
 background:rgba(69,224,173,.06);
-border-radius:17px;padding:13px 15px
+border-radius:17px;
+padding:13px 15px
 }
-.live-tracker-main{color:var(--green);font-size:12px;font-weight:950}
-.live-tracker-sub{color:var(--muted);font-size:10px;margin-top:5px}
-.live-tracker-count{font-size:21px;font-weight:950}
 
-.hero-card{border-radius:24px;padding:21px}
-.hero-symbol{font-size:31px;font-weight:950}
-.hero-name{color:var(--muted);font-size:14px;margin-top:5px}
-.hero-price{text-align:right;font-size:30px;font-weight:950}
-.hero-change{text-align:right;margin-top:5px;font-size:13px}
+.live-tracker-main{
+color:var(--green);
+font-size:12px;
+font-weight:950
+}
+
+.live-tracker-sub{
+color:var(--muted);
+font-size:10px;
+margin-top:5px
+}
+
+.live-tracker-count{
+font-size:21px;
+font-weight:950
+}
+
+.hero-card{
+border-radius:24px;
+padding:21px
+}
+
+.hero-symbol{
+font-size:31px;
+font-weight:950
+}
+
+.hero-name{
+color:var(--muted);
+font-size:14px;
+margin-top:5px
+}
+
+.hero-price{
+text-align:right;
+font-size:30px;
+font-weight:950
+}
+
+.hero-change{
+text-align:right;
+margin-top:5px;
+font-size:13px
+}
+
 .market-pill{
-display:inline-block;margin-top:12px;border:1px solid #303532;
-border-radius:999px;padding:6px 10px;color:var(--green);font-size:11px
+display:inline-block;
+margin-top:12px;
+border:1px solid #303532;
+border-radius:999px;
+padding:6px 10px;
+color:var(--green);
+font-size:11px
 }
+
 .indicator-strip{
-display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:20px
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:20px
 }
+
 .indicator{
-background:#070a08;border:1px solid #242925;border-radius:14px;padding:12px
+background:#070a08;
+border:1px solid #242925;
+border-radius:14px;
+padding:12px
 }
-.indicator span{color:var(--muted);font-size:10px}
-.indicator strong{display:block;margin-top:5px;font-size:15px}
+
+.indicator span{
+color:var(--muted);
+font-size:10px
+}
+
+.indicator strong{
+display:block;
+margin-top:5px;
+font-size:15px
+}
 
 .volume-card{
 border:1px solid rgba(112,183,255,.3);
-border-radius:18px;padding:15px;margin-top:15px;background:#070a08
+border-radius:18px;
+padding:15px;
+margin-top:15px;
+background:#070a08
 }
-.volume-title{font-weight:950}
+
+.volume-title{
+font-weight:950
+}
+
 .volume-grid{
-display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:7px;
+margin-top:12px
 }
+
 .volume-box{
-border:1px solid #252a27;border-radius:12px;padding:10px;text-align:center
+border:1px solid #252a27;
+border-radius:12px;
+padding:10px;
+text-align:center
 }
-.volume-box span{display:block;color:var(--muted);font-size:9px}
-.volume-box strong{display:block;margin-top:5px;font-size:14px}
+
+.volume-box span{
+display:block;
+color:var(--muted);
+font-size:9px
+}
+
+.volume-box strong{
+display:block;
+margin-top:5px;
+font-size:14px
+}
+
+/* =========================
+   STRATEGY
+========================= */
+
+.strategy-card{
+padding:20px;
+border-radius:24px
+}
+
+.strategy-card.green{
+border-color:rgba(69,224,173,.35)
+}
+
+.strategy-card.purple{
+border-color:rgba(174,99,255,.48)
+}
+
+.strategy-card.orange{
+border-color:rgba(255,159,67,.48)
+}
+
+.strategy-status-row,
+.strategy-entry-row{
+display:flex;
+justify-content:space-between;
+gap:15px;
+align-items:center;
+padding:8px 0
+}
+
+.strategy-label{
+color:#8d938f;
+font-size:12px
+}
+
+.strategy-status{
+font-size:13px;
+font-weight:950
+}
+
+.strategy-entry{
+font-size:14px;
+font-weight:950
+}
+
+.strategy-entry.green{color:var(--green)}
+.strategy-entry.purple{color:#c899ff}
+.strategy-entry.orange{color:var(--orange)}
+
+.condition-summary{
+margin-top:15px;
+border:1px solid #292e2b;
+border-radius:16px;
+padding:14px;
+background:#070908
+}
+
+.condition-summary-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px
+}
+
+.condition-summary-title{
+font-size:13px;
+font-weight:950
+}
+
+.condition-count{
+font-size:18px;
+font-weight:950;
+color:var(--yellow)
+}
+
+.condition-list{
+margin-top:10px
+}
+
+.condition-item{
+display:grid;
+grid-template-columns:25px 1fr;
+gap:8px;
+padding:10px 0;
+border-top:1px solid #202522
+}
+
+.condition-icon{
+font-size:14px
+}
+
+.condition-main{
+font-size:12px;
+font-weight:850
+}
+
+.condition-main.pass{
+color:#bdf2dc
+}
+
+.condition-main.fail{
+color:#d6b979
+}
+
+.condition-explain{
+color:#858b87;
+font-size:10px;
+line-height:1.65;
+margin-top:4px
+}
+
+.strategy-explanation{
+margin-top:13px;
+padding:13px;
+border-radius:14px;
+background:#070908;
+border:1px solid #252a27;
+font-size:11px;
+line-height:1.8;
+color:#c4c9c6
+}
+
+.target-stack{
+display:grid;
+gap:11px;
+margin-top:18px
+}
+
+.target-box{
+background:#070a08;
+border:1px solid #252a27;
+border-radius:18px;
+padding:17px 18px
+}
+
+.target-label{
+color:#8d938f;
+font-size:13px
+}
+
+.target-value{
+font-size:25px;
+font-weight:950
+}
+
+.target-box.tp .target-value{
+color:var(--green)
+}
+
+.target-box.tp3 .target-value{
+color:var(--yellow)
+}
+
+.target-box.stop .target-value{
+color:var(--red)
+}
+
+/* =========================
+   POSITION
+========================= */
 
 .position-card{
-border:1px solid rgba(112,183,255,.38);border-radius:24px;
-padding:20px;background:#0a0d0c
+border:1px solid rgba(112,183,255,.38);
+border-radius:24px;
+padding:20px;
+background:#0a0d0c
 }
-.position-title{font-size:22px;font-weight:950}
-.position-sub{margin-top:6px;color:var(--muted);font-size:11px;line-height:1.7}
-.position-form,.position-grid{
-display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px
+
+.position-title{
+font-size:22px;
+font-weight:950
 }
-.position-field label{display:block;color:var(--muted);font-size:10px;margin:0 0 7px 3px}
+
+.position-sub{
+margin-top:6px;
+color:var(--muted);
+font-size:11px;
+line-height:1.7
+}
+
+.position-form,
+.position-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:17px
+}
+
+.position-field label{
+display:block;
+color:var(--muted);
+font-size:10px;
+margin:0 0 7px 3px
+}
+
 .position-input{
-width:100%;height:49px;border:1px solid #303532;border-radius:14px;
-padding:0 13px;background:#070908;color:white
+width:100%;
+height:49px;
+border:1px solid #303532;
+border-radius:14px;
+padding:0 13px;
+background:#070908;
+color:white
 }
+
 .position-save{
-width:100%;min-height:49px;margin-top:10px;border:0;border-radius:14px;
-background:var(--blue);font-weight:950
+width:100%;
+min-height:49px;
+margin-top:10px;
+border:0;
+border-radius:14px;
+background:var(--blue);
+font-weight:950
 }
+
 .position-delete{
-width:100%;min-height:43px;margin-top:8px;
-border:1px solid rgba(255,105,118,.28);border-radius:14px;
-background:rgba(255,105,118,.05);color:#ff8d97;font-weight:850
+width:100%;
+min-height:43px;
+margin-top:8px;
+border:1px solid rgba(255,105,118,.28);
+border-radius:14px;
+background:rgba(255,105,118,.05);
+color:#ff8d97;
+font-weight:850
 }
+
 .position-stat{
-background:#070908;border:1px solid #252a27;border-radius:15px;padding:13px
+background:#070908;
+border:1px solid #252a27;
+border-radius:15px;
+padding:13px
 }
-.position-stat span{display:block;color:#858b87;font-size:10px}
-.position-stat strong{display:block;margin-top:6px;font-size:17px}
+
+.position-stat span{
+display:block;
+color:#858b87;
+font-size:10px
+}
+
+.position-stat strong{
+display:block;
+margin-top:6px;
+font-size:17px
+}
+
 .position-state{
-margin-top:14px;border-radius:18px;padding:17px;
-border:1px solid #303532;background:#070908
+margin-top:14px;
+border-radius:18px;
+padding:17px;
+border:1px solid #303532;
+background:#070908
 }
-.position-state.green{border-color:rgba(69,224,173,.4)}
-.position-state.yellow{border-color:rgba(255,200,90,.4)}
-.position-state.orange{border-color:rgba(255,159,67,.45)}
-.position-state.red{border-color:rgba(255,105,118,.45)}
-.position-state-title{font-size:21px;font-weight:950}
-.position-state.green .position-state-title{color:var(--green)}
-.position-state.yellow .position-state-title{color:var(--yellow)}
-.position-state.orange .position-state-title{color:var(--orange)}
-.position-state.red .position-state-title{color:var(--red)}
-.position-state-text,.overview-text{
-margin-top:9px;color:#c7ccc9;font-size:12px;line-height:1.9
+
+.position-state.green{
+border-color:rgba(69,224,173,.4)
 }
-.position-levels{display:grid;gap:9px;margin-top:15px}
+
+.position-state.yellow{
+border-color:rgba(255,200,90,.4)
+}
+
+.position-state.red{
+border-color:rgba(255,105,118,.45)
+}
+
+.position-state-title{
+font-size:21px;
+font-weight:950
+}
+
+.position-state.green .position-state-title{
+color:var(--green)
+}
+
+.position-state.yellow .position-state-title{
+color:var(--yellow)
+}
+
+.position-state.red .position-state-title{
+color:var(--red)
+}
+
+.position-state-text{
+margin-top:9px;
+color:#c7ccc9;
+font-size:12px;
+line-height:1.9
+}
+
+.position-levels{
+display:grid;
+gap:9px;
+margin-top:15px
+}
+
 .position-level{
-display:flex;justify-content:space-between;gap:15px;background:#070908;
-border:1px solid #252a27;border-radius:14px;padding:13px 14px
+display:flex;
+justify-content:space-between;
+gap:15px;
+background:#070908;
+border:1px solid #252a27;
+border-radius:14px;
+padding:13px 14px
 }
-.position-level span{color:#8d938f;font-size:11px}
-.position-level.protect strong{color:var(--blue)}
-.position-level.tp strong{color:var(--green)}
-.position-level.tp3 strong{color:var(--yellow)}
-.position-note,.data-note{
-margin-top:15px;color:#747a76;font-size:10px;line-height:1.8
+
+.position-level span{
+color:#8d938f;
+font-size:11px
 }
+
+.position-level.protect strong{
+color:var(--blue)
+}
+
+.position-level.tp strong{
+color:var(--green)
+}
+
+.position-level.tp3 strong{
+color:var(--yellow)
+}
+
+.position-note,
+.data-note{
+margin-top:15px;
+color:#747a76;
+font-size:10px;
+line-height:1.8
+}
+
+/* =========================
+   K BAR
+========================= */
 
 .kbar-card{
-border:1px solid #292e2b;border-radius:22px;padding:18px;background:#0b0e0c
+border:1px solid #292e2b;
+border-radius:22px;
+padding:18px;
+background:#0b0e0c
 }
-.kbar-tabs{display:flex;gap:6px;overflow-x:auto;margin-top:15px}
+
+.kbar-tabs{
+display:flex;
+gap:6px;
+overflow-x:auto;
+margin-top:15px
+}
+
 .kbar-tab{
-min-width:55px;border:1px solid #303532;background:#0d100e;
-color:#969c98;border-radius:10px;padding:9px 10px;font-size:11px
+min-width:55px;
+border:1px solid #303532;
+background:#0d100e;
+color:#969c98;
+border-radius:10px;
+padding:9px 10px;
+font-size:11px
 }
+
 .kbar-tab.active{
-color:var(--green);border-color:rgba(69,224,173,.45);
+color:var(--green);
+border-color:rgba(69,224,173,.45);
 background:rgba(69,224,173,.06)
 }
+
 .kbar-chart-wrap{
-margin-top:14px;border:1px solid #252a27;border-radius:17px;
-overflow:hidden;background:#050706
+margin-top:14px;
+border:1px solid #252a27;
+border-radius:17px;
+overflow:hidden;
+background:#050706
 }
+
 .kbar-info{
-display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
-padding:10px;border-bottom:1px solid #202522
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:6px;
+padding:10px;
+border-bottom:1px solid #202522
 }
-.kbar-info-item{font-size:10px;color:#858b87}
-.kbar-info-item strong{display:block;margin-top:3px;color:#e5e8e6;font-size:12px}
-#kbarCanvas{display:block;width:100%;height:330px;touch-action:none}
+
+.kbar-info-item{
+font-size:10px;
+color:#858b87
+}
+
+.kbar-info-item strong{
+display:block;
+margin-top:3px;
+color:#e5e8e6;
+font-size:12px
+}
+
+#kbarCanvas{
+display:block;
+width:100%;
+height:330px;
+touch-action:none
+}
+
 .kbar-status{
-padding:11px 12px;color:#858b87;font-size:10px;border-top:1px solid #202522
+padding:11px 12px;
+color:#858b87;
+font-size:10px;
+border-top:1px solid #202522
 }
-.kbar-status.live{color:var(--green)}
-.kbar-status.error{color:var(--red)}
 
-.average-card{
-margin-top:15px;border:1px solid rgba(255,200,90,.32);
-border-radius:19px;padding:16px;background:#0a0d0c
+.kbar-status.live{
+color:var(--green)
 }
-.average-card.good{border-color:rgba(69,224,173,.38)}
-.average-card.bad{border-color:rgba(255,105,118,.4)}
-.average-title{font-size:19px;font-weight:950}
-.average-card.good .average-title{color:var(--green)}
-.average-card.bad .average-title{color:var(--red)}
-.average-card.wait .average-title{color:var(--yellow)}
-.average-text{margin-top:8px;color:#c7ccc9;font-size:11px;line-height:1.8}
-.average-zone{
-display:flex;justify-content:space-between;gap:10px;margin-top:10px;
-padding:12px;border:1px solid #292e2b;border-radius:13px;background:#070908
-}
-.average-zone span{color:#888e8a;font-size:11px}
-.average-reason{padding:7px 0;border-bottom:1px solid #202522;font-size:11px}
-.average-scenarios{display:grid;gap:8px;margin-top:14px}
-.average-scenario{
-border:1px solid #292e2b;background:#070908;border-radius:14px;
-padding:13px;color:#aeb4b0;font-size:11px;line-height:1.9
-}
-.average-scenario-title{color:var(--yellow);font-size:15px;font-weight:950}
 
-.overview-card{border-radius:24px;padding:21px}
-.overview-card.purple-card{border-color:rgba(174,99,255,.42)}
-.overview-card.surge-card{border-color:rgba(255,159,67,.45)}
-.overview-value{font-weight:950}
-.overview-value.green{color:var(--green)}
-.overview-value.purple{color:#c899ff}
-.overview-value.orange{color:var(--orange)}
-.overview-row{
-display:flex;justify-content:space-between;gap:15px;padding:8px 0;font-size:12px
+.kbar-status.error{
+color:var(--red)
 }
-.overview-label{color:#8d938f}
 
-.target-stack{display:grid;gap:11px;margin-top:18px}
-.target-box{
-background:#070a08;border:1px solid #252a27;border-radius:18px;padding:17px 18px
+/* =========================
+   BACKTEST
+========================= */
+
+.backtest-card{
+padding:18px
 }
-.target-label{color:#8d938f;font-size:13px}
-.target-value{font-size:25px;font-weight:950}
-.target-box.tp .target-value{color:var(--green)}
-.target-box.tp3 .target-value{color:var(--yellow)}
-.target-box.stop .target-value{color:var(--red)}
 
-.backtest-card{padding:18px}
 .backtest-head{
-display:flex;justify-content:space-between;align-items:center;gap:10px
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px
 }
-.backtest-name{font-size:18px;font-weight:950}
-.winrate{font-size:28px;font-weight:950;color:var(--green)}
+
+.backtest-name{
+font-size:18px;
+font-weight:950
+}
+
+.winrate{
+font-size:28px;
+font-weight:950;
+color:var(--green)
+}
+
 .backtest-grid{
-display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:15px
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:7px;
+margin-top:15px
 }
+
 .backtest-stat{
-background:#070908;border:1px solid #252a27;border-radius:13px;
-padding:10px;text-align:center
+background:#070908;
+border:1px solid #252a27;
+border-radius:13px;
+padding:10px;
+text-align:center
 }
-.backtest-stat span{display:block;color:var(--muted);font-size:9px}
-.backtest-stat strong{display:block;margin-top:5px;font-size:14px}
+
+.backtest-stat span{
+display:block;
+color:var(--muted);
+font-size:9px
+}
+
+.backtest-stat strong{
+display:block;
+margin-top:5px;
+font-size:14px
+}
+
 .qualified-badge{
-display:inline-block;margin-top:10px;border-radius:999px;padding:6px 9px;
-font-size:10px;color:var(--green);border:1px solid rgba(69,224,173,.35)
-}
-.not-qualified{color:var(--yellow);border-color:rgba(255,200,90,.3)}
-
-.diagnosis{
-border:1px solid rgba(255,200,90,.25);border-radius:18px;
-padding:15px;background:#0a0d0c
-}
-.diagnosis-item{
-padding:9px 0;border-bottom:1px solid #202522;
-font-size:11px;line-height:1.7
+display:inline-block;
+margin-top:10px;
+border-radius:999px;
+padding:6px 9px;
+font-size:10px;
+color:var(--green);
+border:1px solid rgba(69,224,173,.35)
 }
 
-.alert-banner{
-border:1px solid rgba(255,200,90,.48);
-background:rgba(255,200,90,.07);
-border-radius:19px;padding:16px;margin-bottom:15px
+.not-qualified{
+color:var(--yellow);
+border-color:rgba(255,200,90,.3)
 }
-.alert-title{font-size:18px;font-weight:950;color:var(--yellow)}
-.alert-text{margin-top:8px;color:#d9d5c7;font-size:11px;line-height:1.8}
 
-.brain-summary{color:#e1e4e2;font-size:14px;line-height:2}
+.brain-summary{
+color:#e1e4e2;
+font-size:14px;
+line-height:2
+}
+
 .brain-item{
-margin-top:10px;border-radius:13px;padding:12px;background:#070a08;font-size:12px
+margin-top:10px;
+border-radius:13px;
+padding:12px;
+background:#070a08;
+font-size:12px
 }
+
 .good{color:#bdf2dc}
 .warn{color:#f4d68b}
-.loading{text-align:center;padding:50px 10px;color:var(--muted)}
-.error{
-padding:16px;color:var(--red);
-border:1px solid rgba(255,105,118,.25);border-radius:15px
+
+.loading{
+text-align:center;
+padding:50px 10px;
+color:var(--muted)
 }
-.footer{text-align:center;color:#515653;font-size:10px;margin-top:30px}
+
+.error{
+padding:16px;
+color:var(--red);
+border:1px solid rgba(255,105,118,.25);
+border-radius:15px
+}
+
+.footer{
+text-align:center;
+color:#515653;
+font-size:10px;
+margin-top:30px
+}
 
 .toast{
-position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));
-z-index:9999;max-width:600px;margin:auto;
-background:#15140b;border:1px solid rgba(255,200,90,.55);
-border-radius:18px;padding:15px;
+position:fixed;
+left:16px;
+right:16px;
+bottom:calc(20px + env(safe-area-inset-bottom));
+z-index:9999;
+max-width:600px;
+margin:auto;
+background:#15140b;
+border:1px solid rgba(255,200,90,.55);
+border-radius:18px;
+padding:15px;
 box-shadow:0 20px 60px #000;
 display:none
 }
-.toast.show{display:block}
-.toast-title{font-weight:950;color:var(--yellow)}
-.toast-text{font-size:11px;color:#d5d2c5;line-height:1.7;margin-top:6px}
+
+.toast.show{
+display:block
+}
+
+.toast-title{
+font-weight:950;
+color:var(--yellow)
+}
+
+.toast-text{
+font-size:11px;
+color:#d5d2c5;
+line-height:1.7;
+margin-top:6px
+}
 
 @media(min-width:700px){
-.grid,.watch-grid{grid-template-columns:repeat(2,1fr)}
-.indicator-strip,.position-grid{grid-template-columns:repeat(4,1fr)}
-.average-scenarios{grid-template-columns:repeat(3,1fr)}
+.grid,.watch-grid{
+grid-template-columns:repeat(2,1fr)
+}
+
+.indicator-strip,
+.position-grid{
+grid-template-columns:repeat(4,1fr)
+}
 }
 </style>
 </head>
@@ -444,12 +1176,28 @@ display:none
 </div>
 
 <section class="card">
-<div class="search-title">搜尋股票名稱 / 台股代號 / 美股代號</div>
+
+<div class="search-title">
+搜尋股票名稱 / 台股代號 / 美股代號
+</div>
 
 <form id="stockSearchForm" class="search-form">
-<input id="symbolInput" class="search-input" type="text"
-placeholder="台積電 / 2330 / NVDA" autocomplete="off">
-<button class="search-btn" type="submit">分析</button>
+
+<input
+id="symbolInput"
+class="search-input"
+type="text"
+placeholder="台積電 / 2330 / NVDA"
+autocomplete="off"
+>
+
+<button
+class="search-btn"
+type="submit"
+>
+分析
+</button>
+
 </form>
 
 <div class="search-help">
@@ -457,82 +1205,179 @@ placeholder="台積電 / 2330 / NVDA" autocomplete="off">
 </div>
 
 <div class="examples">
-<button class="example" data-symbol="台積電">台積電</button>
-<button class="example" data-symbol="聯電">聯電</button>
-<button class="example" data-symbol="鴻海">鴻海</button>
-<button class="example" data-symbol="NVDA">NVDA</button>
-<button class="example" data-symbol="AAPL">AAPL</button>
+
+<button class="example" data-symbol="台積電">
+台積電
+</button>
+
+<button class="example" data-symbol="聯電">
+聯電
+</button>
+
+<button class="example" data-symbol="鴻海">
+鴻海
+</button>
+
+<button class="example" data-symbol="NVDA">
+NVDA
+</button>
+
+<button class="example" data-symbol="AAPL">
+AAPL
+</button>
+
 </div>
 
 <div class="history-head">
 <div class="history-title">最近搜尋</div>
-<button id="clearHistory" class="history-clear">清除全部</button>
+<button id="clearHistory" class="history-clear">
+清除全部
+</button>
 </div>
+
 <div id="searchHistory" class="history-list"></div>
+
 </section>
 
 <section class="watch-section">
+
 <div class="section-head">
 <div>
-<div class="section-title">⭐ 我的自選股</div>
-<div class="section-sub">每台裝置獨立保存 · 點擊直接分析</div>
+<div class="section-title">
+⭐ 我的自選股
+</div>
+<div class="section-sub">
+每台裝置獨立保存 · 點擊直接分析
 </div>
 </div>
+</div>
+
 <div id="watchGrid" class="watch-grid"></div>
+
 </section>
 
 <div id="twMarket">
 
 <section class="section">
+
 <div class="section-head">
+
 <div>
-<div class="section-title">⚡ 台股即時市場掃描</div>
-<div id="updateText" class="section-sub">正在連線 FinMind…</div>
+<div class="section-title">
+⚡ 台股即時市場掃描
 </div>
-<button id="refreshButton" class="refresh">↻ 立即掃描</button>
+
+<div id="updateText" class="section-sub">
+正在連線 FinMind…
+</div>
+</div>
+
+<button id="refreshButton" class="refresh">
+↻ 立即掃描
+</button>
+
 </div>
 
 <div class="stats">
-<div class="stat"><strong id="scanCount">--</strong><span>掃描股票</span></div>
-<div class="stat"><strong id="strategyCount">--</strong><span>符合策略</span></div>
-<div class="stat"><strong id="radarCount">--</strong><span>異動</span></div>
-<div class="stat"><strong id="countdown">01:00</strong><span>下次更新</span></div>
+
+<div class="stat">
+<strong id="scanCount">--</strong>
+<span>掃描股票</span>
 </div>
 
-<button id="notifyButton" class="notify-btn">🔔 開啟高勝率策略通知</button>
+<div class="stat">
+<strong id="strategyCount">--</strong>
+<span>符合策略</span>
+</div>
+
+<div class="stat">
+<strong id="radarCount">--</strong>
+<span>異動</span>
+</div>
+
+<div class="stat">
+<strong id="countdown">01:00</strong>
+<span>下次更新</span>
+</div>
+
+</div>
+
+<button id="notifyButton" class="notify-btn">
+🔔 開啟高勝率策略通知
+</button>
+
 </section>
 
 <section class="section">
+
 <div class="section-head">
 <div>
-<div class="section-title">🎯 自動偵測符合策略股票</div>
-<div class="section-sub">當下策略條件符合 · 歷史勝率另外顯示</div>
+<div class="section-title">
+🎯 自動偵測符合策略股票
+</div>
+
+<div class="section-sub">
+目前技術條件符合或接近策略的股票。這裡不要求 70% 歷史勝率。
 </div>
 </div>
-<div id="strategyGrid" class="grid"><div class="loading">正在掃描…</div></div>
-<button class="more-btn" data-more="strategy">查看更多符合策略股票</button>
+</div>
+
+<div id="strategyGrid" class="grid">
+<div class="loading">正在掃描…</div>
+</div>
+
+<button class="more-btn" data-more="strategy">
+查看更多符合策略股票
+</button>
+
 </section>
 
 <section class="section">
+
 <div class="section-head">
 <div>
-<div class="section-title">🚀 今日做多觀察</div>
-<div class="section-sub">即時量價與盤中強度條件篩選</div>
+<div class="section-title">
+🚀 今日做多觀察
+</div>
+
+<div class="section-sub">
+即時量價與盤中強度條件篩選
 </div>
 </div>
-<div id="longGrid" class="grid"><div class="loading">正在掃描…</div></div>
-<button class="more-btn" data-more="long">查看更多做多觀察股票</button>
+</div>
+
+<div id="longGrid" class="grid">
+<div class="loading">正在掃描…</div>
+</div>
+
+<button class="more-btn" data-more="long">
+查看更多做多觀察股票
+</button>
+
 </section>
 
 <section class="section">
+
 <div class="section-head">
 <div>
-<div class="section-title">🔥 台股即時異動雷達</div>
-<div class="section-sub">異動分數不是勝率；高勝率提醒另有嚴格門檻</div>
+<div class="section-title">
+🔥 台股即時異動雷達
+</div>
+
+<div class="section-sub">
+異動分數不是勝率；高勝率通知另外使用嚴格門檻
 </div>
 </div>
-<div id="radarGrid" class="grid"><div class="loading">正在載入…</div></div>
-<button class="more-btn" data-more="radar">查看更多異動股票</button>
+</div>
+
+<div id="radarGrid" class="grid">
+<div class="loading">正在載入…</div>
+</div>
+
+<button class="more-btn" data-more="radar">
+查看更多異動股票
+</button>
+
 </section>
 
 </div>
@@ -540,69 +1385,90 @@ placeholder="台積電 / 2330 / NVDA" autocomplete="off">
 <div id="usMarket" class="hidden">
 
 <section class="section">
+
 <div class="card">
-<div class="section-title">🇺🇸 美股專區</div>
+
+<div class="section-title">
+🇺🇸 美股專區
+</div>
+
 <div class="section-sub">
-美股目前由 FinMind 提供最新可取得的日行情，不冒充盤中即時報價。
-搜尋任一支支援的美股代號即可進入完整分析。
+美股目前使用 FinMind 最新可取得日行情。
+不把日行情標示成盤中即時行情。
 </div>
+
 </div>
+
 </section>
 
 <section class="section">
-<div class="section-title">⭐ 美股自選</div>
-<div class="section-sub">從上方自選股直接進入完整分析</div>
+
+<div class="section-title">
+⭐ 美股自選
+</div>
+
 <div id="usWatchGrid" class="watch-grid"></div>
+
 </section>
 
 <section class="section">
-<div class="section-title">🎯 美股符合策略</div>
-<div class="section-sub">搜尋美股後會顯示 365 交易日回測與目前策略狀態</div>
-<div id="usStrategyGrid" class="grid"></div>
-</section>
 
-<section class="section">
-<div class="section-title">🚀 美股今日做多觀察</div>
-<div class="section-sub">目前 API 沒有美股全市場即時 Snapshot，因此不虛構即時排行榜</div>
-<div id="usLongGrid" class="grid"></div>
-</section>
+<div class="section-title">
+🎯 最近分析的美股
+</div>
 
-<section class="section">
-<div class="section-title">🔥 美股異動／異常成交量雷達</div>
-<div class="section-sub">目前使用最新日 K 成交量；個股分析可正常使用</div>
-<div id="usRadarGrid" class="grid"></div>
+<div id="usRecentGrid" class="grid"></div>
+
 </section>
 
 </div>
 
 <div class="footer">
-妖子平台 4.5 · FinMind + Fugle Market Data · 365 交易日滾動回測
+妖子平台 4.5 · FinMind + Fugle Market Data
 </div>
 
 </div>
 
 <div id="analysisPage" class="hidden">
 
-<button id="backTop" class="back-btn">← 返回市場首頁</button>
+<button id="backTop" class="back-btn">
+← 返回市場首頁
+</button>
 
 <div class="analysis-heading">
 <h1>📊 個股技術分析</h1>
-<p>量價追蹤 · 三策略 · 365 日回測 · 持倉管理 · K 線</p>
+<p>
+量價追蹤 · 三策略完整條件 · 365 日回測 · 持倉管理 · K 線
+</p>
 </div>
 
 <div class="live-tracker">
+
 <div>
-<div id="analysisLiveStatus" class="live-tracker-main">🟢 自動追蹤</div>
-<div id="analysisLiveTime" class="live-tracker-sub">每 30 秒重新分析</div>
+
+<div id="analysisLiveStatus" class="live-tracker-main">
+🟢 自動追蹤
 </div>
-<div id="analysisLiveCountdown" class="live-tracker-count">30s</div>
+
+<div id="analysisLiveTime" class="live-tracker-sub">
+每 30 秒重新分析
+</div>
+
+</div>
+
+<div id="analysisLiveCountdown" class="live-tracker-count">
+30s
+</div>
+
 </div>
 
 <div id="analysisResult">
 <div class="loading">正在分析…</div>
 </div>
 
-<button id="backBottom" class="back-btn full">← 看完了，返回市場首頁</button>
+<button id="backBottom" class="back-btn full">
+← 看完了，返回市場首頁
+</button>
 
 </div>
 
@@ -630,9 +1496,11 @@ var STRICT_MIN_SAMPLE=20;
 
 var countdownSeconds=60;
 var homeScroll=0;
+
 var currentStock=null;
 var currentAnalysisSymbol="";
 var currentAnalysisData=null;
+
 var analysisCountdownTimer=null;
 var analysisCountdown=30;
 var analysisRefreshing=false;
@@ -663,94 +1531,227 @@ return document.getElementById(id);
 }
 
 function safe(v){
-var d=document.createElement("div");
-d.textContent=v==null?"":String(v);
+
+var d=
+document.createElement("div");
+
+d.textContent=
+v==null
+?""
+:String(v);
+
 return d.innerHTML;
 }
 
 function fmt(v,d){
-if(d===undefined)d=2;
-var n=Number(v);
+
+if(d===undefined){
+d=2;
+}
+
+var n=
+Number(v);
+
 return Number.isFinite(n)
-?n.toLocaleString("zh-TW",{maximumFractionDigits:d})
+?n.toLocaleString(
+"zh-TW",
+{
+maximumFractionDigits:d
+}
+)
 :"--";
 }
 
 function pct(v){
-var n=Number(v);
+
+var n=
+Number(v);
+
 return Number.isFinite(n)
-?(n>0?"+":"")+n.toFixed(2)+"%"
+?(n>0?"+":"")+
+n.toFixed(2)+
+"%"
 :"--";
 }
 
 function pclass(v){
-return Number(v)>0?"up":Number(v)<0?"down":"flat";
+
+return Number(v)>0
+?"up"
+:Number(v)<0
+?"down"
+:"flat";
 }
 
 function currentTimeText(){
-return new Date().toLocaleTimeString("zh-TW",{hour12:false});
+
+return new Date()
+.toLocaleTimeString(
+"zh-TW",
+{
+hour12:false
+}
+);
 }
 
 function SMA(a,p){
-if(a.length<p)return NaN;
-return a.slice(-p).reduce((s,v)=>s+Number(v),0)/p;
+
+if(a.length<p){
+return NaN;
+}
+
+return a
+.slice(-p)
+.reduce(
+(s,v)=>s+Number(v),
+0
+)/p;
 }
 
 function EMA(a,p){
-if(a.length<p)return NaN;
-var e=a.slice(0,p).reduce((s,v)=>s+Number(v),0)/p;
-var k=2/(p+1);
-for(var i=p;i<a.length;i++){
-e=Number(a[i])*k+e*(1-k);
+
+if(a.length<p){
+return NaN;
 }
+
+var e=
+a.slice(0,p)
+.reduce(
+(s,v)=>s+Number(v),
+0
+)/p;
+
+var k=
+2/(p+1);
+
+for(
+var i=p;
+i<a.length;
+i++
+){
+e=
+Number(a[i])*k+
+e*(1-k);
+}
+
 return e;
 }
 
 function RSI(a,p){
+
 p=p||14;
-if(a.length<=p)return NaN;
-var r=a.slice(-(p+1)),g=0,l=0;
-for(var i=1;i<r.length;i++){
-var x=Number(r[i])-Number(r[i-1]);
-if(x>0)g+=x;
-else l+=Math.abs(x);
+
+if(a.length<=p){
+return NaN;
 }
-if(l===0)return 100;
-return 100-(100/(1+(g/p)/(l/p)));
+
+var r=
+a.slice(-(p+1));
+
+var g=0;
+var l=0;
+
+for(
+var i=1;
+i<r.length;
+i++
+){
+
+var x=
+Number(r[i])-
+Number(r[i-1]);
+
+if(x>0){
+g+=x;
+}else{
+l+=Math.abs(x);
+}
+}
+
+if(l===0){
+return 100;
+}
+
+return 100-
+100/
+(
+1+
+(g/p)/(l/p)
+);
 }
 
 function ATR(rows,p){
+
 p=p||14;
-if(rows.length<=p)return NaN;
-var t=[];
-for(var i=1;i<rows.length;i++){
-var h=+rows[i].high;
-var l=+rows[i].low;
-var pc=+rows[i-1].close;
-t.push(Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc)));
+
+if(rows.length<=p){
+return NaN;
 }
+
+var t=[];
+
+for(
+var i=1;
+i<rows.length;
+i++
+){
+
+var h=
++rows[i].high;
+
+var l=
++rows[i].low;
+
+var pc=
++rows[i-1].close;
+
+t.push(
+Math.max(
+h-l,
+Math.abs(h-pc),
+Math.abs(l-pc)
+)
+);
+}
+
 return SMA(t,p);
 }
 
 /* =========================
-   SEARCH HISTORY
+   HISTORY
 ========================= */
 
 function getHistory(){
+
 try{
-return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+
+return JSON.parse(
+localStorage.getItem(
+HISTORY_KEY
+)||"[]"
+);
+
 }catch(e){
-return[];
+
+return [];
 }
 }
 
 function saveHistoryItem(d){
-var a=getHistory();
 
-a=a.filter(x=>!(
-String(x.symbol)===String(d.symbol) &&
-String(x.market)===String(d.market)
-));
+var a=
+getHistory();
+
+a=
+a.filter(
+x=>!(
+String(x.symbol)===
+String(d.symbol)
+&&
+String(x.market)===
+String(d.market)
+)
+);
 
 a.unshift({
 symbol:String(d.symbol),
@@ -758,55 +1759,125 @@ name:d.name||"",
 market:d.market||""
 });
 
-a=a.slice(0,12);
+a=
+a.slice(0,12);
 
-localStorage.setItem(HISTORY_KEY,JSON.stringify(a));
+localStorage.setItem(
+HISTORY_KEY,
+JSON.stringify(a)
+);
+
 renderHistory();
+renderUSRecent();
 }
 
-function removeHistory(symbol,market){
-var a=getHistory().filter(x=>!(
-String(x.symbol)===String(symbol) &&
-String(x.market)===String(market)
-));
-localStorage.setItem(HISTORY_KEY,JSON.stringify(a));
+function removeHistory(
+symbol,
+market
+){
+
+var a=
+getHistory()
+.filter(
+x=>!(
+String(x.symbol)===
+String(symbol)
+&&
+String(x.market)===
+String(market)
+)
+);
+
+localStorage.setItem(
+HISTORY_KEY,
+JSON.stringify(a)
+);
+
 renderHistory();
+renderUSRecent();
 }
 
 function renderHistory(){
-var box=el("searchHistory");
-var a=getHistory();
+
+var box=
+el("searchHistory");
+
+var a=
+getHistory();
 
 if(!a.length){
-box.innerHTML='<span class="section-sub">尚無搜尋紀錄</span>';
+
+box.innerHTML=
+'<span class="section-sub">尚無搜尋紀錄</span>';
+
 return;
 }
 
-box.innerHTML=a.map(x=>
+box.innerHTML=
+a.map(
+x=>
 '<div class="history-chip">'+
-'<span data-history="'+safe(x.symbol)+'">'+
-(x.market==="US"?"🇺🇸 ":"🇹🇼 ")+
-safe(x.symbol)+" "+safe(x.name||"")+
+'<span data-history="'+
+safe(x.symbol)+
+'">'+
+(
+x.market==="US"
+?"🇺🇸 "
+:"🇹🇼 "
+)+
+safe(x.symbol)+
+" "+
+safe(x.name||"")+
 '</span>'+
-'<button class="history-delete" data-history-remove="'+safe(x.symbol)+'" data-market="'+safe(x.market)+'">×</button>'+
+'<button class="history-delete" data-history-remove="'+
+safe(x.symbol)+
+'" data-market="'+
+safe(x.market)+
+'">×</button>'+
 '</div>'
 ).join("");
 
-box.querySelectorAll("[data-history]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.history);
-});
+box
+.querySelectorAll(
+"[data-history]"
+)
+.forEach(
+x=>{
+x.onclick=
+()=>analyze(
+x.dataset.history
+);
+}
+);
 
-box.querySelectorAll("[data-history-remove]").forEach(x=>{
-x.onclick=e=>{
+box
+.querySelectorAll(
+"[data-history-remove]"
+)
+.forEach(
+x=>{
+x.onclick=
+e=>{
 e.stopPropagation();
-removeHistory(x.dataset.historyRemove,x.dataset.market);
+
+removeHistory(
+x.dataset.historyRemove,
+x.dataset.market
+);
 };
-});
+}
+);
 }
 
-el("clearHistory").onclick=()=>{
-localStorage.removeItem(HISTORY_KEY);
+el("clearHistory").onclick=
+()=>{
+
+localStorage.removeItem(
+HISTORY_KEY
+);
+
 renderHistory();
+renderUSRecent();
 };
 
 /* =========================
@@ -814,92 +1885,194 @@ renderHistory();
 ========================= */
 
 function getWatchlist(){
+
 try{
+
 var r=
-localStorage.getItem(WATCH_KEY)||
-localStorage.getItem("yaozi_watchlist_v26")||
+localStorage.getItem(
+WATCH_KEY
+)||
+localStorage.getItem(
+"yaozi_watchlist_v26"
+)||
 "[]";
+
 return JSON.parse(r);
+
 }catch(e){
-return[];
+
+return [];
 }
 }
 
 function saveWatchlist(x){
-localStorage.setItem(WATCH_KEY,JSON.stringify(x));
+
+localStorage.setItem(
+WATCH_KEY,
+JSON.stringify(x)
+);
+
 renderWatchlist();
 }
 
 function isFavorite(s){
-return getWatchlist().some(x=>String(x.symbol)===String(s));
+
+return getWatchlist()
+.some(
+x=>
+String(x.symbol)===
+String(s)
+);
 }
 
 function toggleFavorite(s){
-var a=getWatchlist();
-var i=a.findIndex(x=>String(x.symbol)===String(s.symbol));
 
-if(i>=0)a.splice(i,1);
-else a.unshift(s);
+var a=
+getWatchlist();
+
+var i=
+a.findIndex(
+x=>
+String(x.symbol)===
+String(s.symbol)
+);
+
+if(i>=0){
+
+a.splice(i,1);
+
+}else{
+
+a.unshift(s);
+}
 
 saveWatchlist(a);
+
 updateFavoriteButton();
 }
 
 function removeFavorite(s){
+
 saveWatchlist(
-getWatchlist().filter(x=>String(x.symbol)!==String(s))
+getWatchlist()
+.filter(
+x=>
+String(x.symbol)!==
+String(s)
+)
 );
 }
 
-function renderWatchCards(box,a){
+function renderWatchCards(
+box,
+a
+){
+
 if(!a.length){
-box.innerHTML='<div class="empty-watch">目前還沒有自選股</div>';
+
+box.innerHTML=
+'<div class="empty-watch">目前還沒有自選股</div>';
+
 return;
 }
 
-box.innerHTML=a.map(x=>
+box.innerHTML=
+a.map(
+x=>
 '<div class="watch-card">'+
-'<div class="watch-main" data-open="'+safe(x.symbol)+'">'+
-'<div class="watch-symbol">⭐ '+safe(x.symbol)+'</div>'+
-'<div class="watch-name">'+safe(x.name||"")+'</div>'+
+'<div class="watch-main" data-open="'+
+safe(x.symbol)+
+'">'+
+'<div class="watch-symbol">⭐ '+
+safe(x.symbol)+
+'</div>'+
+'<div class="watch-name">'+
+safe(x.name||"")+
+'</div>'+
 '<div class="watch-open">查看分析 →</div>'+
 '</div>'+
-'<button class="watch-remove" data-remove="'+safe(x.symbol)+'">×</button>'+
+'<button class="watch-remove" data-remove="'+
+safe(x.symbol)+
+'">×</button>'+
 '</div>'
 ).join("");
 
-box.querySelectorAll("[data-open]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.open);
-});
+box
+.querySelectorAll(
+"[data-open]"
+)
+.forEach(
+x=>{
+x.onclick=
+()=>analyze(
+x.dataset.open
+);
+}
+);
 
-box.querySelectorAll("[data-remove]").forEach(x=>{
-x.onclick=e=>{
+box
+.querySelectorAll(
+"[data-remove]"
+)
+.forEach(
+x=>{
+x.onclick=
+e=>{
+
 e.stopPropagation();
-removeFavorite(x.dataset.remove);
+
+removeFavorite(
+x.dataset.remove
+);
 };
-});
+}
+);
 }
 
 function renderWatchlist(){
-var a=getWatchlist();
 
-renderWatchCards(el("watchGrid"),a);
+var a=
+getWatchlist();
 
-var us=a.filter(x=>x.market==="US");
-renderWatchCards(el("usWatchGrid"),us);
+renderWatchCards(
+el("watchGrid"),
+a
+);
+
+renderWatchCards(
+el("usWatchGrid"),
+a.filter(
+x=>x.market==="US"
+)
+);
 }
 
 function updateFavoriteButton(){
-var b=el("favoriteButton");
-if(!b||!currentStock)return;
 
-var yes=isFavorite(currentStock.symbol);
+var b=
+el("favoriteButton");
 
-b.textContent=yes
+if(
+!b||
+!currentStock
+){
+return;
+}
+
+var yes=
+isFavorite(
+currentStock.symbol
+);
+
+b.textContent=
+yes
 ?"★ 已加入自選 · 點擊移除"
 :"☆ 加入自選";
 
-b.classList.toggle("active",yes);
+b.classList.toggle(
+"active",
+yes
+);
 }
 
 /* =========================
@@ -907,110 +2080,52 @@ b.classList.toggle("active",yes);
 ========================= */
 
 function getPositions(){
+
 try{
-return JSON.parse(localStorage.getItem(POSITION_KEY)||"{}");
+
+return JSON.parse(
+localStorage.getItem(
+POSITION_KEY
+)||"{}"
+);
+
 }catch(e){
-return{};
+
+return {};
 }
 }
 
 function getPosition(s){
-return getPositions()[String(s)]||null;
+
+return getPositions()[
+String(s)
+]||null;
 }
 
 function setPosition(s,d){
-var a=getPositions();
+
+var a=
+getPositions();
+
 a[String(s)]=d;
-localStorage.setItem(POSITION_KEY,JSON.stringify(a));
+
+localStorage.setItem(
+POSITION_KEY,
+JSON.stringify(a)
+);
 }
 
 function deletePosition(s){
-var a=getPositions();
+
+var a=
+getPositions();
+
 delete a[String(s)];
-localStorage.setItem(POSITION_KEY,JSON.stringify(a));
-}
 
-function createPosition(data,entry,qty,m){
-entry=+entry;
-qty=+qty;
-
-if(!(entry>0&&qty>0)){
-throw Error("請輸入正確的進場價與數量");
-}
-
-var sl=Math.max(
-m.ma20-m.atr*.5,
-m.low10-m.atr*.25
+localStorage.setItem(
+POSITION_KEY,
+JSON.stringify(a)
 );
-
-if(!Number.isFinite(sl)||sl>=entry){
-sl=entry-m.atr;
-}
-
-var min=m.atr*.75;
-
-if(entry-sl<min){
-sl=entry-min;
-}
-
-var risk=entry-sl;
-
-return{
-symbol:String(data.symbol),
-name:data.name||"",
-market:data.market||"",
-entryPrice:entry,
-quantity:qty,
-initialStop:sl,
-initialRisk:risk,
-protectPrice:sl,
-highWater:Math.max(entry,m.price),
-tp1:entry+risk*1.5,
-tp2:entry+risk*2.5,
-tp3:entry+risk*4,
-createdAt:new Date().toISOString()
-};
-}
-
-function updatePosition(p,m){
-var e=+p.entryPrice;
-var r=+p.initialRisk;
-
-var old=
-Number.isFinite(+p.protectPrice)
-?+p.protectPrice
-:+p.initialStop;
-
-var hi=Math.max(+p.highWater||e,m.price);
-var best=r>0?(hi-e)/r:0;
-var protect=old;
-
-if(best>=1)protect=Math.max(protect,e);
-if(best>=1.5)protect=Math.max(protect,e+r*.25);
-if(best>=2)protect=Math.max(protect,e+r*.75);
-if(best>=3)protect=Math.max(protect,e+r*1.5);
-
-if(best>=1){
-var s=Math.max(
-m.ma20-m.atr*.5,
-m.recent3Low-m.atr*.25
-);
-
-s=Math.min(s,m.price-m.atr*.35);
-
-if(Number.isFinite(s)){
-protect=Math.max(protect,s);
-}
-}
-
-p.highWater=hi;
-
-/*
-保護價只升不降
-*/
-p.protectPrice=Math.max(old,protect);
-
-return p;
 }
 
 /* =========================
@@ -1018,129 +2133,269 @@ return p;
 ========================= */
 
 function openAnalysis(){
-homeScroll=scrollY;
-el("homePage").classList.add("hidden");
-el("analysisPage").classList.remove("hidden");
+
+homeScroll=
+scrollY;
+
+el("homePage")
+.classList.add(
+"hidden"
+);
+
+el("analysisPage")
+.classList.remove(
+"hidden"
+);
+
 scrollTo(0,0);
 }
 
 function backHome(){
+
 stopAnalysisTracker();
 stopKBarTimer();
 
-el("analysisPage").classList.add("hidden");
-el("homePage").classList.remove("hidden");
+el("analysisPage")
+.classList.add(
+"hidden"
+);
+
+el("homePage")
+.classList.remove(
+"hidden"
+);
 
 currentAnalysisSymbol="";
 KBAR_DATA=[];
 
 renderWatchlist();
 
-setTimeout(()=>{
-scrollTo(0,homeScroll);
-},10);
+setTimeout(
+()=>{
+scrollTo(
+0,
+homeScroll
+);
+},
+10
+);
 }
 
-el("backTop").onclick=backHome;
-el("backBottom").onclick=backHome;
+el("backTop").onclick=
+backHome;
+
+el("backBottom").onclick=
+backHome;
 
 /* =========================
    SWIPE BACK
 ========================= */
 
-document.addEventListener("touchstart",e=>{
-if(el("analysisPage").classList.contains("hidden"))return;
-if(!e.touches||!e.touches.length)return;
-
-var t=e.touches[0];
-var target=e.target;
+document.addEventListener(
+"touchstart",
+e=>{
 
 if(
-target.closest(".kbar-card") ||
-target.closest(".kbar-chart-wrap") ||
-target.closest("canvas")
+el("analysisPage")
+.classList.contains(
+"hidden"
+)
 ){
+return;
+}
+
+if(
+!e.touches||
+!e.touches.length
+){
+return;
+}
+
+var t=
+e.touches[0];
+
+var target=
+e.target;
+
+if(
+target.closest(
+".kbar-card"
+)||
+target.closest(
+".kbar-chart-wrap"
+)||
+target.closest(
+"canvas"
+)
+){
+
 swipeAllowed=false;
 return;
 }
 
-swipeStartX=t.clientX;
-swipeStartY=t.clientY;
-swipeAllowed=swipeStartX<=28;
-},{passive:true});
+swipeStartX=
+t.clientX;
 
-document.addEventListener("touchend",e=>{
-if(!swipeAllowed)return;
-if(!e.changedTouches||!e.changedTouches.length)return;
+swipeStartY=
+t.clientY;
 
-var t=e.changedTouches[0];
-var dx=t.clientX-swipeStartX;
-var dy=Math.abs(t.clientY-swipeStartY);
+swipeAllowed=
+swipeStartX<=28;
 
-if(dx>=90 && dx>dy*1.5){
+},
+{
+passive:true
+}
+);
+
+document.addEventListener(
+"touchend",
+e=>{
+
+if(!swipeAllowed){
+return;
+}
+
+if(
+!e.changedTouches||
+!e.changedTouches.length
+){
+return;
+}
+
+var t=
+e.changedTouches[0];
+
+var dx=
+t.clientX-
+swipeStartX;
+
+var dy=
+Math.abs(
+t.clientY-
+swipeStartY
+);
+
+if(
+dx>=90&&
+dx>dy*1.5
+){
+
 backHome();
 }
 
 swipeAllowed=false;
-},{passive:true});
+
+},
+{
+passive:true
+}
+);
 
 /* =========================
    SEARCH
 ========================= */
 
-el("stockSearchForm").onsubmit=e=>{
+el("stockSearchForm")
+.onsubmit=
+e=>{
+
 e.preventDefault();
-analyze(el("symbolInput").value);
+
+analyze(
+el("symbolInput").value
+);
 };
 
-document.querySelectorAll(".example").forEach(b=>{
-b.onclick=()=>analyze(b.dataset.symbol);
-});
+document
+.querySelectorAll(
+".example"
+)
+.forEach(
+b=>{
 
-async function fetchStockData(q){
-var r=await fetch(
-"/api/stock?symbol="+
-encodeURIComponent(q)+
-"&t="+Date.now(),
-{cache:"no-store"}
+b.onclick=
+()=>analyze(
+b.dataset.symbol
+);
+}
 );
 
-var d=await r.json();
+async function fetchStockData(q){
 
-if(!r.ok||!d.ok){
-throw Error(d.error||"資料取得失敗");
+var r=
+await fetch(
+"/api/stock?symbol="+
+encodeURIComponent(q)+
+"&t="+
+Date.now(),
+{
+cache:"no-store"
+}
+);
+
+var d=
+await r.json();
+
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+"資料取得失敗"
+);
 }
 
 return d;
 }
 
 async function analyze(q){
-q=String(q||"").trim();
-if(!q)return;
+
+q=
+String(q||"")
+.trim();
+
+if(!q){
+return;
+}
 
 stopAnalysisTracker();
+
 openAnalysis();
 
-el("analysisResult").innerHTML=
-'<div class="loading">正在分析 '+safe(q)+'…</div>';
+el("analysisResult")
+.innerHTML=
+'<div class="loading">正在分析 '+
+safe(q)+
+'…</div>';
 
 try{
-var d=await fetchStockData(q);
 
-currentAnalysisSymbol=String(d.symbol);
+var d=
+await fetchStockData(q);
+
+currentAnalysisSymbol=
+String(d.symbol);
+
 currentAnalysisData=d;
 
 saveHistoryItem(d);
 
 buildAnalysis(d);
+
 updateTrackerSuccess(d);
-checkIndividualAlert(d);
 
 startAnalysisTracker();
 
 }catch(e){
-el("analysisResult").innerHTML=
-'<div class="error">分析失敗：'+safe(e.message)+'</div>';
+
+el("analysisResult")
+.innerHTML=
+'<div class="error">分析失敗：'+
+safe(e.message)+
+'</div>';
 }
 }
 
@@ -1149,76 +2404,120 @@ el("analysisResult").innerHTML=
 ========================= */
 
 function startAnalysisTracker(){
+
 stopAnalysisTracker();
 
 analysisCountdown=30;
 
-analysisCountdownTimer=setInterval(()=>{
+analysisCountdownTimer=
+setInterval(
+()=>{
+
 analysisCountdown--;
 
-if(analysisCountdown<=0){
+if(
+analysisCountdown<=0
+){
+
 analysisCountdown=30;
+
 refreshCurrentAnalysis();
 }
 
-var x=el("analysisLiveCountdown");
+var x=
+el(
+"analysisLiveCountdown"
+);
 
 if(x){
+
 x.textContent=
 analysisRefreshing
 ?"更新中"
-:analysisCountdown+"s";
+:analysisCountdown+
+"s";
 }
 
-},1000);
+},
+1000
+);
 }
 
 function stopAnalysisTracker(){
-if(analysisCountdownTimer){
-clearInterval(analysisCountdownTimer);
+
+if(
+analysisCountdownTimer
+){
+
+clearInterval(
+analysisCountdownTimer
+);
 }
+
 analysisCountdownTimer=null;
 }
 
 async function refreshCurrentAnalysis(){
+
 if(
-!currentAnalysisSymbol ||
-analysisRefreshing ||
+!currentAnalysisSymbol||
+analysisRefreshing||
 document.hidden
-)return;
+){
+return;
+}
 
 analysisRefreshing=true;
 
 try{
-var y=scrollY;
-var d=await fetchStockData(currentAnalysisSymbol);
+
+var y=
+scrollY;
+
+var d=
+await fetchStockData(
+currentAnalysisSymbol
+);
 
 currentAnalysisData=d;
 
 buildAnalysis(d);
-checkIndividualAlert(d);
 
-requestAnimationFrame(()=>{
+requestAnimationFrame(
+()=>{
 scrollTo(0,y);
-});
+}
+);
 
 updateTrackerSuccess(d);
 
 }catch(e){
+
 }finally{
+
 analysisRefreshing=false;
 analysisCountdown=30;
 }
 }
 
 function updateTrackerSuccess(d){
-var s=el("analysisLiveStatus");
-var t=el("analysisLiveTime");
 
-if(!s||!t)return;
+var s=
+el("analysisLiveStatus");
+
+var t=
+el("analysisLiveTime");
+
+if(
+!s||
+!t
+){
+return;
+}
 
 s.textContent=
-d.market==="TW"&&d.isRealtime
+d.market==="TW"&&
+d.isRealtime
 ?"🟢 台股盤中量價追蹤"
 :d.market==="TW"
 ?"🟡 台股最新行情"
@@ -1235,390 +2534,1196 @@ currentTimeText()+
 ========================= */
 
 function marketOf(d){
-var rows=d.rows||[];
-var cl=rows.map(x=>+x.close);
 
-var price=+d.livePrice;
+var rows=
+d.rows||[];
 
-if(!Number.isFinite(price)){
-price=cl.at(-1);
+var cl=
+rows.map(
+x=>+x.close
+);
+
+var price=
++d.livePrice;
+
+if(
+!Number.isFinite(price)
+){
+
+price=
+cl.at(-1);
 }
 
-var atr=ATR(rows,14);
+var atr=
+ATR(
+rows,
+14
+);
 
 if(!(atr>0)){
-atr=Math.max(price*.02,.01);
+
+atr=
+Math.max(
+price*.02,
+.01
+);
 }
 
+var old20=
+SMA(
+cl.slice(0,-5),
+20
+);
+
+var old60=
+SMA(
+cl.slice(0,-10),
+60
+);
+
 return{
+
 price:price,
-ma20:SMA(cl,20),
-ma60:SMA(cl,60),
-rsi:RSI(cl,14),
+
+ma20:
+SMA(cl,20),
+
+ma60:
+SMA(cl,60),
+
+old20:old20,
+
+old60:old60,
+
+ma20Up:
+Number.isFinite(old20)&&
+SMA(cl,20)>old20,
+
+ma60Up:
+Number.isFinite(old60)&&
+SMA(cl,60)>old60,
+
+rsi:
+RSI(cl,14),
+
 macd:
-EMA(cl.slice(-80),12)-
-EMA(cl.slice(-80),26),
+EMA(
+cl.slice(-80),
+12
+)-
+EMA(
+cl.slice(-80),
+26
+),
+
 atr:atr,
+
 low10:
-Math.min(...rows.slice(-10).map(x=>+x.low)),
+Math.min(
+...rows
+.slice(-10)
+.map(
+x=>+x.low
+)
+),
+
 recent3Low:
-Math.min(...rows.slice(-3).map(x=>+x.low)),
+Math.min(
+...rows
+.slice(-3)
+.map(
+x=>+x.low
+)
+),
+
 resistance:
-Math.max(...rows.slice(-21,-1).map(x=>+x.high))
+Math.max(
+...rows
+.slice(-21,-1)
+.map(
+x=>+x.high
+)
+)
 };
 }
 
 /* =========================
-   K BAR
+   VOLUME
 ========================= */
 
-async function fetchKBar(s,tf){
-var r=await fetch(
-"/api/kbar?symbol="+
-encodeURIComponent(s)+
-"&timeframe="+tf+
-"&t="+Date.now(),
-{cache:"no-store"}
+function volumeMetrics(
+d,
+rows
+){
+
+if(
+d.volumeAnalysis
+){
+
+return d.volumeAnalysis;
+}
+
+var vols=
+rows
+.slice(-21,-1)
+.map(
+x=>+x.volume
+)
+.filter(
+Number.isFinite
 );
 
-var d=await r.json();
+var avg=
+vols.length
+?vols.reduce(
+(a,b)=>a+b,
+0
+)/vols.length
+:0;
 
-if(!r.ok||!d.ok){
-throw Error(d.error||"K 棒取得失敗");
+var current=
+Number(d.volume);
+
+if(
+!Number.isFinite(current)
+){
+
+current=
+Number(
+rows.at(-1)?.volume
+)||0;
 }
 
-return d;
+var ratio=
+avg>0
+?current/avg
+:0;
+
+var level=
+ratio>=2
+?"異常爆量"
+:ratio>=1.35
+?"成交量放大"
+:ratio<=.7
+?"量能收縮"
+:"正常量";
+
+return{
+ratio:ratio,
+average20:avg,
+current:current,
+level:level,
+expanded:
+ratio>=1.35,
+abnormal:
+ratio>=2
+};
 }
 
-function stopKBarTimer(){
-if(KBAR_TIMER)clearInterval(KBAR_TIMER);
-KBAR_TIMER=null;
-}
+/* =========================
+   STRATEGY CONDITIONS
+========================= */
 
-function startKBarTimer(){
-stopKBarTimer();
+function strategyConditions(
+type,
+d,
+m,
+v
+){
 
-KBAR_TIMER=setInterval(()=>{
-if(!document.hidden&&currentAnalysisSymbol){
-loadKBar(currentAnalysisSymbol);
-}
-},30000);
-}
+var price=
+m.price;
 
-async function loadKBar(s){
-if(KBAR_LOADING)return;
+var bd=
+(price-
+m.resistance)/
+m.atr;
 
-KBAR_LOADING=true;
+var above=
+(price-
+m.ma20)/
+m.atr;
 
-try{
-var d=await fetchKBar(s,KBAR_TF);
-
-KBAR_DATA=d.candles||[];
-
-drawKBar(KBAR_DATA);
-updateKInfo(KBAR_DATA.at(-1));
-
-var x=el("kbarStatus");
-
-if(x){
-x.className="kbar-status live";
-x.textContent=
-"🟢 Fugle "+
-KBAR_TF+
-" 分 K · "+
-KBAR_DATA.length+
-" 根 · "+
-currentTimeText();
-}
-
-refreshAverage();
-
-}catch(e){
-var y=el("kbarStatus");
-
-if(y){
-y.className="kbar-status error";
-y.textContent="⚠️ "+e.message;
-}
-}finally{
-KBAR_LOADING=false;
-}
-}
-
-function updateKInfo(c){
-if(!c||!el("kbarInfo"))return;
-
-el("kbarInfo").innerHTML=
-["O","H","L","C","V"].map((x,i)=>
-'<div class="kbar-info-item">'+
-x+
-'<strong>'+
-fmt(
-c[["open","high","low","close","volume"][i]],
-i===4?0:2
-)+
-'</strong></div>'
-).join("")+
-'<div class="kbar-info-item">週期<strong>'+
-KBAR_TF+
-'分</strong></div>';
-}
-
-function drawKBar(rows){
-var c=el("kbarCanvas");
-if(!c||!rows.length)return;
-
-var w=Math.max(300,c.getBoundingClientRect().width);
-var h=330;
-var dpr=devicePixelRatio||1;
-
-c.width=w*dpr;
-c.height=h*dpr;
-
-var g=c.getContext("2d");
-g.scale(dpr,dpr);
-g.clearRect(0,0,w,h);
-
-var a=rows.slice(-60);
-
-var hi=Math.max(...a.map(x=>+x.high));
-var lo=Math.min(...a.map(x=>+x.low));
-var vr=Math.max(...a.map(x=>+x.volume||0),1);
-
-var range=hi-lo||1;
-var L=8,R=48,T=12,B=245,V=55;
-var step=(w-L-R)/a.length;
-var bw=Math.max(2,Math.min(8,step*.62));
-
-hi+=range*.08;
-lo-=range*.08;
-range=hi-lo;
-
-var y=p=>T+(hi-p)/range*(B-T);
-
-for(var k=0;k<=4;k++){
-var yy=T+(B-T)*k/4;
-
-g.strokeStyle="rgba(255,255,255,.07)";
-g.beginPath();
-g.moveTo(L,yy);
-g.lineTo(w-R,yy);
-g.stroke();
-
-g.fillStyle="#777";
-g.font="10px sans-serif";
-g.fillText(fmt(hi-range*k/4),w-R+4,yy+3);
-}
-
-a.forEach((x,i)=>{
-var o=+x.open;
-var cl=+x.close;
-var X=L+step*i+step/2;
-var col=cl>=o?"#45e0ad":"#ff6976";
-
-g.strokeStyle=col;
-g.fillStyle=col;
-
-g.beginPath();
-g.moveTo(X,y(+x.high));
-g.lineTo(X,y(+x.low));
-g.stroke();
-
-g.fillRect(
-X-bw/2,
-Math.min(y(o),y(cl)),
-bw,
-Math.max(1,Math.abs(y(o)-y(cl)))
+var entryLow=
+Math.max(
+m.low10,
+Math.min(
+m.ma20,
+price
+)-
+m.atr*.5
 );
 
-g.globalAlpha=.5;
+var entryHigh=
+m.ma20+
+m.atr*.35;
 
-var vh=(+x.volume||0)/vr*V;
+var list=[];
 
-g.fillRect(
-X-bw/2,
-315-vh,
-bw,
-vh
-);
+function add(
+pass,
+title,
+explain
+){
 
-g.globalAlpha=1;
+list.push({
+pass:!!pass,
+title:title,
+explain:explain
 });
 }
 
+if(
+type==="PULLBACK"
+){
+
+add(
+price>m.ma60,
+"價格位於 MA60 上方",
+"代表中期趨勢仍維持在相對偏多的區域。"
+);
+
+add(
+m.ma20>m.ma60,
+"MA20 高於 MA60",
+"短中期均線排列偏多，回踩才比較有趨勢支撐。"
+);
+
+add(
+m.ma20Up,
+"MA20 維持上升",
+"MA20 向上代表近期平均成本仍在抬高。"
+);
+
+add(
+m.macd>=0,
+"MACD 位於零軸以上",
+"動能尚未明顯轉成空方。"
+);
+
+add(
+m.rsi>=42&&
+m.rsi<=68,
+"RSI 位於 42～68",
+"避免 RSI 過弱，也避免在過熱區追價。"
+);
+
+add(
+price>=
+entryLow-
+m.atr*.15
+&&
+price<=
+entryHigh+
+m.atr*.15,
+"價格進入回踩觀察區",
+"現價接近 MA20／近期支撐，而不是離支撐太遠。"
+);
+
+add(
+v.ratio<=1.35,
+"回踩沒有出現重度爆量",
+"回踩時量能沒有異常放大，通常比放量下殺健康。"
+);
+
+add(
+Number(d.changePercent)>=-1&&
+Number(d.changePercent)<=4,
+"當日漲跌仍在合理範圍",
+"避免大跌結構與已經急漲過度的價格。"
+);
+
+}
+
+if(
+type==="HIGH_R"
+){
+
+add(
+price>m.ma20&&
+m.ma20>m.ma60,
+"價格 > MA20 > MA60",
+"價格與均線維持多頭排列。"
+);
+
+add(
+m.ma20Up,
+"MA20 維持上升",
+"短期趨勢仍在抬高。"
+);
+
+add(
+m.macd>0,
+"MACD 為正",
+"突破時仍具有正向動能。"
+);
+
+add(
+m.rsi>=54&&
+m.rsi<=70,
+"RSI 位於 54～70",
+"保留強勢動能，同時避免 RSI 過度過熱。"
+);
+
+add(
+price>=m.resistance,
+"價格突破 20 日壓力",
+"現價已站上近期主要壓力位置。"
+);
+
+add(
+bd>=0&&
+bd<=.8,
+"突破距離控制在 0～0.8 ATR",
+"避免突破太遠後才追價，維持較好的風險報酬。"
+);
+
+add(
+above<=2.5,
+"價格沒有離 MA20 過遠",
+"避免乖離過大造成回撤風險增加。"
+);
+
+add(
+v.ratio>=1.2,
+"突破具有成交量確認",
+"量比至少 1.2x，避免只有價格突破但量能沒有跟上。"
+);
+
+}
+
+if(
+type==="SURGE"
+){
+
+add(
+price>m.ma20&&
+m.ma20>m.ma60,
+"價格 > MA20 > MA60",
+"目前維持明顯的多頭排列。"
+);
+
+add(
+m.ma20Up&&
+m.ma60Up,
+"MA20 與 MA60 同步上升",
+"短中期趨勢同時往上，續攻結構比較完整。"
+);
+
+add(
+m.macd>0,
+"MACD 維持正值",
+"目前動能仍偏向多方。"
+);
+
+add(
+m.rsi>=58&&
+m.rsi<=73,
+"RSI 位於 58～73",
+"要求比一般突破更強的動能，但避免極端過熱。"
+);
+
+add(
+price>=m.resistance,
+"價格站上近期壓力",
+"強勢續攻必須先突破近期壓力。"
+);
+
+add(
+bd>=.1&&
+bd<=.9,
+"突破幅度位於 0.1～0.9 ATR",
+"需要確認突破，但不希望價格已經拉得太遠。"
+);
+
+add(
+v.ratio>=1.5,
+"成交量明顯放大",
+"強勢續攻要求至少約 1.5x 量能確認。"
+);
+
+add(
+Number(d.changePercent)<=7,
+"當日漲幅沒有過度延伸",
+"漲幅太大時不把追高視為新的理想續攻點。"
+);
+
+}
+
+return list;
+}
+
+function countPassed(list){
+
+return list.filter(
+x=>x.pass
+).length;
+}
+
 /* =========================
-   AVERAGE
+   STRATEGY SETUPS
 ========================= */
 
-function intradaySignal(){
-var a=KBAR_DATA.slice(-20);
+function buildStrategySetups(
+d,
+m,
+v
+){
 
-if(a.length<5){
+var price=
+m.price;
+
+var pullLow=
+Math.max(
+m.low10,
+Math.min(
+m.ma20,
+price
+)-
+m.atr*.5
+);
+
+var pullHigh=
+m.ma20+
+m.atr*.35;
+
+if(
+pullLow>
+pullHigh
+){
+
+var temp=
+pullLow;
+
+pullLow=
+pullHigh;
+
+pullHigh=
+temp;
+}
+
+var pullCenter=
+(
+pullLow+
+pullHigh
+)/2;
+
+var pullStop=
+Math.min(
+pullLow-
+m.atr,
+m.low10-
+m.atr*.25
+);
+
+var pullR=
+Math.max(
+pullCenter-
+pullStop,
+m.atr*.5
+);
+
+var highLow=
+m.resistance-
+m.atr*.25;
+
+var highHigh=
+m.resistance+
+m.atr*.35;
+
+var highCenter=
+(
+highLow+
+highHigh
+)/2;
+
+var highStop=
+m.low10-
+m.atr*.15;
+
+if(
+highStop>=highCenter
+){
+
+highStop=
+highCenter-
+m.atr*1.2;
+}
+
+var highR=
+Math.max(
+highCenter-
+highStop,
+m.atr*.5
+);
+
+var surgeLow=
+price-
+m.atr*.2;
+
+var surgeHigh=
+price+
+m.atr*.15;
+
+var surgeCenter=
+(
+surgeLow+
+surgeHigh
+)/2;
+
+var surgeStop=
+m.recent3Low-
+m.atr*.15;
+
+if(
+surgeStop>=surgeCenter
+){
+
+surgeStop=
+surgeCenter-
+m.atr*1.2;
+}
+
+var surgeR=
+Math.max(
+surgeCenter-
+surgeStop,
+m.atr*.5
+);
+
+var pullConditions=
+strategyConditions(
+"PULLBACK",
+d,
+m,
+v
+);
+
+var highConditions=
+strategyConditions(
+"HIGH_R",
+d,
+m,
+v
+);
+
+var surgeConditions=
+strategyConditions(
+"SURGE",
+d,
+m,
+v
+);
+
 return{
-ready:false,
-score:0,
-reasons:["△ 盤中 K 棒不足"]
+
+PULLBACK:{
+
+key:"PULLBACK",
+name:"支撐回踩",
+
+entryLow:pullLow,
+entryHigh:pullHigh,
+
+stop:pullStop,
+
+tp1:
+pullCenter+
+pullR*1.5,
+
+tp2:
+pullCenter+
+pullR*2.5,
+
+tp3:
+pullCenter+
+pullR*4,
+
+conditions:
+pullConditions,
+
+passed:
+countPassed(
+pullConditions
+),
+
+qualified:
+countPassed(
+pullConditions
+)>=7
+
+},
+
+HIGH_R:{
+
+key:"HIGH_R",
+name:"高 R 突破",
+
+entryLow:
+highLow,
+
+entryHigh:
+highHigh,
+
+stop:
+highStop,
+
+tp1:
+highCenter+
+highR*2,
+
+tp2:
+highCenter+
+highR*3,
+
+tp3:
+highCenter+
+highR*5,
+
+conditions:
+highConditions,
+
+passed:
+countPassed(
+highConditions
+),
+
+qualified:
+countPassed(
+highConditions
+)>=7
+
+},
+
+SURGE:{
+
+key:"SURGE",
+name:"強勢續攻",
+
+entryLow:
+surgeLow,
+
+entryHigh:
+surgeHigh,
+
+stop:
+surgeStop,
+
+tp1:
+surgeCenter+
+surgeR*1.5,
+
+tp2:
+surgeCenter+
+surgeR*2.5,
+
+tp3:
+surgeCenter+
+surgeR*4,
+
+conditions:
+surgeConditions,
+
+passed:
+countPassed(
+surgeConditions
+),
+
+qualified:
+countPassed(
+surgeConditions
+)>=7
+
+}
+
 };
 }
 
-var cl=a.map(x=>+x.close);
-var last=cl.at(-1);
-var score=0;
-var r=[];
+/* =========================
+   STRATEGY HTML
+========================= */
 
-if(last>=SMA(cl,5)){
-score+=30;
-r.push("✓ 盤中站回短均線");
-}else{
-r.push("△ 尚未站回短均線");
+function strategyExplanation(
+type,
+setup
+){
+
+if(
+type==="PULLBACK"
+){
+
+return setup.qualified
+?"目前多頭趨勢仍在，而且價格已經靠近支撐／均線區域。這套策略重點不是追突破，而是等回踩後確認支撐仍有效。"
+:"目前尚未同時滿足回踩策略的主要條件。重點觀察 MA20、MA60、價格是否進入支撐區，以及回踩時成交量是否保持正常或縮量。";
 }
 
-if(last>=cl.at(-2)){
-score+=20;
-r.push("✓ 最新收盤未再走低");
-}else{
-r.push("△ 最新 K 仍走低");
+if(
+type==="HIGH_R"
+){
+
+return setup.qualified
+?"目前已接近或進入突破型高 R 結構。這套策略重點是突破壓力後，停損仍能放在合理結構下方，讓潛在報酬大於風險。"
+:"目前高 R 突破條件尚未完整。重點等待價格突破近期壓力，同時需要 RSI、MACD、均線與成交量共同確認，避免假突破。";
 }
 
-var l5=Math.min(...a.slice(-5).map(x=>+x.low));
-var p5=Math.min(...a.slice(-10,-5).map(x=>+x.low));
-
-if(l5>=p5){
-score+=25;
-r.push("✓ 近期低點未再破低");
-}else{
-r.push("△ 近期仍有破低");
+return setup.qualified
+?"目前屬於強勢續攻型態。這套策略要求趨勢、動能、突破與成交量同時偏強，因此條件會比一般突破更嚴格。"
+:"目前尚未達到完整的強勢續攻條件。除了價格站上壓力之外，還需要均線同步上升、MACD 正值與明顯量能確認。";
 }
 
-if(+a.at(-1).close>=+a.at(-1).open){
-score+=15;
-r.push("✓ 最新 K 收高");
-}else{
-r.push("△ 最新 K 未收高");
-}
+function strategyHTML(
+type,
+setup,
+color
+){
 
-return{
-ready:score>=60,
-score:score,
-reasons:r,
-recentLow:l5,
-shortMA:SMA(cl,5)
-};
-}
+var colorClass=
+color==="purple"
+?"purple"
+:color==="orange"
+?"orange"
+:"green";
 
-function averageHTML(p,m,d){
-if(!p||d.market!=="TW")return"";
+var conditions=
+setup.conditions||[];
 
-var e=+p.entryPrice;
-var q=+p.quantity;
-var price=m.price;
+var total=
+conditions.length;
 
-var pnl=(price-e)/e*100;
-
-var inv=Math.max(
-+p.initialStop,
-+p.protectPrice
-);
-
-var i=intradaySignal();
-
-var day=
-price>inv &&
-m.ma20>m.ma60 &&
-m.macd>=0 &&
-m.rsi>=40;
-
-var status="wait";
-var title="🟡 等待均價調整條件";
-var text="目前先觀察止跌與重新轉強，不因帳面虧損本身就增加部位。";
-
-if(price<=inv||!day){
-status="bad";
-title="🔴 不符合均價調整條件";
-text="原持倉結構失效或日線條件不足，系統不顯示向下攤均價訊號。";
-}else if(pnl<=-2&&i.ready){
-status="good";
-title="🟢 均價調整條件出現";
-text="日線結構尚未失效，盤中 K 出現止跌／轉強；以下為部位試算。";
-}
-
-var scenarios=[.25,.5,1].map(add=>{
-var nq=q+add;
-var avg=(e*q+price*add)/nq;
-var be=(avg/price-1)*100;
-var risk=Math.max(0,avg-inv)*nq*1000;
+var passed=
+setup.passed||0;
 
 return(
-'<div class="average-scenario">'+
-'<div class="average-scenario-title">＋'+add+' 張</div>'+
-'新均價 <strong>'+fmt(avg)+'</strong><br>'+
-'總部位 <strong>'+fmt(nq,2)+' 張</strong><br>'+
-'現價至回本 <strong>'+pct(be)+'</strong><br>'+
-'至失效價估算曝險 <strong>NT$'+fmt(risk,0)+'</strong>'+
-'</div>'
-);
-}).join("");
+'<div class="strategy-card '+colorClass+'">'+
 
-return(
-'<div id="averagePanel" class="average-card '+status+'">'+
-'<div class="average-title">'+title+'</div>'+
-'<div class="average-text">'+text+'</div>'+
-'<div class="average-zone"><span>目前損益</span><strong class="'+pclass(pnl)+'">'+pct(pnl)+'</strong></div>'+
-'<div class="average-zone"><span>結構失效位置</span><strong class="down">'+fmt(inv)+'</strong></div>'+
-'<div class="average-zone"><span>盤中轉強分數</span><strong>'+i.score+'/100</strong></div>'+
-'<div class="average-reasons">'+
-i.reasons.map(x=>'<div class="average-reason">'+x+'</div>').join("")+
+'<div class="strategy-status-row">'+
+'<div class="strategy-label">目前狀態</div>'+
+'<div class="strategy-status">'+
+(
+setup.qualified
+?"✓ 符合觀察條件"
+:"等待條件"
+)+
 '</div>'+
-'<div class="average-scenarios">'+scenarios+'</div>'+
-'<div class="position-note">均價試算不是自動加碼指令；跌破結構失效位置後，不再把下跌視為均價調整條件。</div>'+
+'</div>'+
+
+'<div class="strategy-entry-row">'+
+'<div class="strategy-label">觀察入場區</div>'+
+'<div class="strategy-entry '+colorClass+'">'+
+fmt(setup.entryLow)+
+" ～ "+
+fmt(setup.entryHigh)+
+'</div>'+
+'</div>'+
+
+'<div class="condition-summary">'+
+
+'<div class="condition-summary-top">'+
+
+'<div class="condition-summary-title">'+
+'策略條件符合順序'+
+'</div>'+
+
+'<div class="condition-count">'+
+passed+
+" / "+
+total+
+'</div>'+
+
+'</div>'+
+
+'<div class="condition-list">'+
+
+conditions.map(
+(x,i)=>
+'<div class="condition-item">'+
+
+'<div class="condition-icon">'+
+(
+x.pass
+?"✓"
+:"△"
+)+
+'</div>'+
+
+'<div>'+
+
+'<div class="condition-main '+(
+x.pass
+?"pass"
+:"fail"
+)+'">'+
+(i+1)+
+". "+
+safe(x.title)+
+'</div>'+
+
+'<div class="condition-explain">'+
+safe(x.explain)+
+'</div>'+
+
+'</div>'+
+
+'</div>'
+).join("")+
+
+'</div>'+
+
+'</div>'+
+
+'<div class="strategy-explanation">'+
+'<strong>系統解說：</strong><br>'+
+safe(
+strategyExplanation(
+type,
+setup
+)
+)+
+'</div>'+
+
+'<div class="target-stack">'+
+
+'<div class="target-box tp">'+
+'<div class="target-label">💰 TP1</div>'+
+'<div class="target-value">'+
+fmt(setup.tp1)+
+'</div>'+
+'</div>'+
+
+'<div class="target-box tp">'+
+'<div class="target-label">💰 TP2</div>'+
+'<div class="target-value">'+
+fmt(setup.tp2)+
+'</div>'+
+'</div>'+
+
+'<div class="target-box tp3">'+
+'<div class="target-label">🔥 TP3</div>'+
+'<div class="target-value">'+
+fmt(setup.tp3)+
+'</div>'+
+'</div>'+
+
+'<div class="target-box stop">'+
+'<div class="target-label">🛑 結構失效 / SL</div>'+
+'<div class="target-value">'+
+fmt(setup.stop)+
+'</div>'+
+'</div>'+
+
+'</div>'+
+
 '</div>'
 );
 }
 
-function refreshAverage(){
-if(currentAnalysisData){
-buildAverageOnly(currentAnalysisData);
-}
-}
-
-function buildAverageOnly(d){
-var p=getPosition(d.symbol);
-var old=el("averagePanel");
-
-if(!p||!old)return;
-
-var m=marketOf(d);
-old.outerHTML=averageHTML(p,m,d);
-}
-
 /* =========================
-   POSITION HTML
+   POSITION
 ========================= */
 
-function positionHTML(d,m,p){
+function createPosition(
+data,
+entry,
+qty,
+m
+){
+
+entry=
++entry;
+
+qty=
++qty;
+
+if(
+!(
+entry>0&&
+qty>0
+)
+){
+
+throw Error(
+"請輸入正確的進場價與數量"
+);
+}
+
+var sl=
+Math.max(
+m.ma20-
+m.atr*.5,
+m.low10-
+m.atr*.25
+);
+
+if(
+!Number.isFinite(sl)||
+sl>=entry
+){
+
+sl=
+entry-
+m.atr;
+}
+
+var min=
+m.atr*.75;
+
+if(
+entry-sl<
+min
+){
+
+sl=
+entry-
+min;
+}
+
+var risk=
+entry-sl;
+
+return{
+
+symbol:
+String(data.symbol),
+
+name:
+data.name||"",
+
+market:
+data.market||"",
+
+entryPrice:
+entry,
+
+quantity:
+qty,
+
+initialStop:
+sl,
+
+initialRisk:
+risk,
+
+protectPrice:
+sl,
+
+highWater:
+Math.max(
+entry,
+m.price
+),
+
+tp1:
+entry+
+risk*1.5,
+
+tp2:
+entry+
+risk*2.5,
+
+tp3:
+entry+
+risk*4,
+
+createdAt:
+new Date()
+.toISOString()
+
+};
+}
+
+function updatePosition(
+p,
+m
+){
+
+var e=
++p.entryPrice;
+
+var r=
++p.initialRisk;
+
+var old=
+Number.isFinite(
++p.protectPrice
+)
+?+p.protectPrice
+:+p.initialStop;
+
+var hi=
+Math.max(
++p.highWater||e,
+m.price
+);
+
+var best=
+r>0
+?(hi-e)/r
+:0;
+
+var protect=
+old;
+
+if(best>=1){
+
+protect=
+Math.max(
+protect,
+e
+);
+}
+
+if(best>=1.5){
+
+protect=
+Math.max(
+protect,
+e+r*.25
+);
+}
+
+if(best>=2){
+
+protect=
+Math.max(
+protect,
+e+r*.75
+);
+}
+
+if(best>=3){
+
+protect=
+Math.max(
+protect,
+e+r*1.5
+);
+}
+
+if(best>=1){
+
+var s=
+Math.max(
+m.ma20-
+m.atr*.5,
+m.recent3Low-
+m.atr*.25
+);
+
+s=
+Math.min(
+s,
+m.price-
+m.atr*.35
+);
+
+if(
+Number.isFinite(s)
+){
+
+protect=
+Math.max(
+protect,
+s
+);
+}
+}
+
+p.highWater=
+hi;
+
+/*
+保護價只升不降
+*/
+p.protectPrice=
+Math.max(
+old,
+protect
+);
+
+return p;
+}
+
+function positionHTML(
+d,
+m,
+p
+){
+
 if(!p){
+
 return(
 '<div class="position-card">'+
-'<div class="position-title">建立持倉分析</div>'+
-'<div class="position-sub">輸入真正成本與持有數量。</div>'+
-'<div class="position-form">'+
-'<div class="position-field"><label>我的進場價</label><input id="positionEntry" class="position-input" type="number"></div>'+
-'<div class="position-field"><label>'+
-(d.market==="TW"?"持有張數":"持有股數")+
-'</label><input id="positionQuantity" class="position-input" type="number"></div>'+
+
+'<div class="position-title">'+
+'建立持倉分析'+
 '</div>'+
-'<button id="positionSaveButton" class="position-save">開始持倉分析</button>'+
+
+'<div class="position-sub">'+
+'輸入真正成本與持有數量。'+
+'</div>'+
+
+'<div class="position-form">'+
+
+'<div class="position-field">'+
+'<label>我的進場價</label>'+
+'<input id="positionEntry" class="position-input" type="number">'+
+'</div>'+
+
+'<div class="position-field">'+
+'<label>'+
+(
+d.market==="TW"
+?"持有張數"
+:"持有股數"
+)+
+'</label>'+
+'<input id="positionQuantity" class="position-input" type="number">'+
+'</div>'+
+
+'</div>'+
+
+'<button id="positionSaveButton" class="position-save">'+
+'開始持倉分析'+
+'</button>'+
+
 '</div>'
 );
 }
 
-p=updatePosition(p,m);
-setPosition(d.symbol,p);
+p=
+updatePosition(
+p,
+m
+);
 
-var pnl=(m.price-p.entryPrice)/p.entryPrice*100;
-var mult=d.market==="TW"?1000:1;
-var money=(m.price-p.entryPrice)*p.quantity*mult;
-var inv=+p.protectPrice;
+setPosition(
+d.symbol,
+p
+);
+
+var pnl=
+(
+m.price-
+p.entryPrice
+)/
+p.entryPrice*
+100;
+
+var mult=
+d.market==="TW"
+?1000
+:1;
+
+var money=
+(
+m.price-
+p.entryPrice
+)*
+p.quantity*
+mult;
+
+var inv=
++p.protectPrice;
 
 var state=
 m.price<=inv
@@ -1634,44 +3739,566 @@ m.price<=inv
 ?"green"
 :"yellow";
 
-var currency=d.market==="TW"?"NT$":"US$";
+var currency=
+d.market==="TW"
+?"NT$"
+:"US$";
 
 return(
 '<div class="position-card">'+
-'<div class="position-title">💼 '+safe(d.symbol)+' '+safe(d.name||"")+'</div>'+
+
+'<div class="position-title">'+
+'💼 '+
+safe(d.symbol)+
+" "+
+safe(d.name||"")+
+'</div>'+
+
 '<div class="position-grid">'+
-'<div class="position-stat"><span>進場成本</span><strong>'+fmt(p.entryPrice)+'</strong></div>'+
-'<div class="position-stat"><span>目前價格</span><strong>'+fmt(m.price)+'</strong></div>'+
-'<div class="position-stat"><span>浮動損益</span><strong class="'+pclass(pnl)+'">'+pct(pnl)+'</strong></div>'+
-'<div class="position-stat"><span>預估損益</span><strong class="'+pclass(money)+'">'+(money>=0?"+":"")+currency+fmt(money,0)+'</strong></div>'+
+
+'<div class="position-stat">'+
+'<span>進場成本</span>'+
+'<strong>'+
+fmt(p.entryPrice)+
+'</strong>'+
 '</div>'+
+
+'<div class="position-stat">'+
+'<span>目前價格</span>'+
+'<strong>'+
+fmt(m.price)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-stat">'+
+'<span>浮動損益</span>'+
+'<strong class="'+
+pclass(pnl)+
+'">'+
+pct(pnl)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-stat">'+
+'<span>預估損益</span>'+
+'<strong class="'+
+pclass(money)+
+'">'+
+(
+money>=0
+?"+"
+:""
+)+
+currency+
+fmt(money,0)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+
 '<div class="position-state '+cls+'">'+
-'<div class="position-state-title">'+state+'</div>'+
-'<div class="position-state-text">保護價只升不降；不會因現價下跌自動把停損往下移。</div>'+
+
+'<div class="position-state-title">'+
+state+
 '</div>'+
+
+'<div class="position-state-text">'+
+'保護價只升不降；不會因現價下跌自動把停損往下移。'+
+'</div>'+
+
+'</div>'+
+
 '<div class="position-levels">'+
-'<div class="position-level protect"><span>🛡 動態保護價</span><strong>'+fmt(p.protectPrice)+'</strong></div>'+
-'<div class="position-level tp"><span>💰 TP1</span><strong>'+fmt(p.tp1)+'</strong></div>'+
-'<div class="position-level tp"><span>💰 TP2</span><strong>'+fmt(p.tp2)+'</strong></div>'+
-'<div class="position-level tp3"><span>🔥 TP3</span><strong>'+fmt(p.tp3)+'</strong></div>'+
+
+'<div class="position-level protect">'+
+'<span>🛡 動態保護價</span>'+
+'<strong>'+
+fmt(p.protectPrice)+
+'</strong>'+
 '</div>'+
-'<button id="positionDeleteButton" class="position-delete">刪除 / 重新設定這筆持倉</button>'+
+
+'<div class="position-level tp">'+
+'<span>💰 TP1</span>'+
+'<strong>'+
+fmt(p.tp1)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-level tp">'+
+'<span>💰 TP2</span>'+
+'<strong>'+
+fmt(p.tp2)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-level tp3">'+
+'<span>🔥 TP3</span>'+
+'<strong>'+
+fmt(p.tp3)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+
+'<button id="positionDeleteButton" class="position-delete">'+
+'刪除 / 重新設定這筆持倉'+
+'</button>'+
+
 '</div>'
 );
 }
 
 /* =========================
-   BACKTEST UI
+   K BAR
+========================= */
+
+async function fetchKBar(
+s,
+tf
+){
+
+var r=
+await fetch(
+"/api/kbar?symbol="+
+encodeURIComponent(s)+
+"&timeframe="+
+tf+
+"&t="+
+Date.now(),
+{
+cache:"no-store"
+}
+);
+
+var d=
+await r.json();
+
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+"K 棒取得失敗"
+);
+}
+
+return d;
+}
+
+function stopKBarTimer(){
+
+if(KBAR_TIMER){
+
+clearInterval(
+KBAR_TIMER
+);
+}
+
+KBAR_TIMER=null;
+}
+
+function startKBarTimer(){
+
+stopKBarTimer();
+
+KBAR_TIMER=
+setInterval(
+()=>{
+
+if(
+!document.hidden&&
+currentAnalysisSymbol
+){
+
+loadKBar(
+currentAnalysisSymbol
+);
+}
+
+},
+30000
+);
+}
+
+async function loadKBar(s){
+
+if(KBAR_LOADING){
+return;
+}
+
+KBAR_LOADING=true;
+
+try{
+
+var d=
+await fetchKBar(
+s,
+KBAR_TF
+);
+
+KBAR_DATA=
+d.candles||
+d.rows||
+[];
+
+drawKBar(
+KBAR_DATA
+);
+
+updateKInfo(
+KBAR_DATA.at(-1)
+);
+
+var x=
+el("kbarStatus");
+
+if(x){
+
+x.className=
+"kbar-status live";
+
+x.textContent=
+"🟢 Fugle "+
+KBAR_TF+
+(
+String(KBAR_TF)
+.includes("h")
+?" K"
+:" 分 K"
+)+
+" · "+
+KBAR_DATA.length+
+" 根 · "+
+currentTimeText();
+}
+
+}catch(e){
+
+var y=
+el("kbarStatus");
+
+if(y){
+
+y.className=
+"kbar-status error";
+
+y.textContent=
+"⚠️ "+
+e.message;
+}
+
+}finally{
+
+KBAR_LOADING=false;
+}
+}
+
+function updateKInfo(c){
+
+if(
+!c||
+!el("kbarInfo")
+){
+return;
+}
+
+el("kbarInfo")
+.innerHTML=
+[
+["O","open"],
+["H","high"],
+["L","low"],
+["C","close"],
+["V","volume"]
+]
+.map(
+x=>
+'<div class="kbar-info-item">'+
+x[0]+
+'<strong>'+
+fmt(
+c[x[1]],
+x[1]==="volume"
+?0
+:2
+)+
+'</strong>'+
+'</div>'
+)
+.join("")+
+'<div class="kbar-info-item">'+
+'週期'+
+'<strong>'+
+KBAR_TF+
+'</strong>'+
+'</div>';
+}
+
+function drawKBar(rows){
+
+var c=
+el("kbarCanvas");
+
+if(
+!c||
+!rows.length
+){
+return;
+}
+
+var w=
+Math.max(
+300,
+c.getBoundingClientRect()
+.width
+);
+
+var h=
+330;
+
+var dpr=
+devicePixelRatio||
+1;
+
+c.width=
+w*dpr;
+
+c.height=
+h*dpr;
+
+var g=
+c.getContext(
+"2d"
+);
+
+g.scale(
+dpr,
+dpr
+);
+
+g.clearRect(
+0,
+0,
+w,
+h
+);
+
+var a=
+rows.slice(-60);
+
+var hi=
+Math.max(
+...a.map(
+x=>+x.high
+)
+);
+
+var lo=
+Math.min(
+...a.map(
+x=>+x.low
+)
+);
+
+var vr=
+Math.max(
+...a.map(
+x=>+x.volume||0
+),
+1
+);
+
+var range=
+hi-lo||
+1;
+
+var L=8;
+var R=48;
+var T=12;
+var B=245;
+var V=55;
+
+var step=
+(
+w-L-R
+)/
+a.length;
+
+var bw=
+Math.max(
+2,
+Math.min(
+8,
+step*.62
+)
+);
+
+hi+=
+range*.08;
+
+lo-=
+range*.08;
+
+range=
+hi-lo;
+
+var y=
+p=>
+T+
+(
+hi-p
+)/
+range*
+(
+B-T
+);
+
+for(
+var k=0;
+k<=4;
+k++
+){
+
+var yy=
+T+
+(
+B-T
+)*
+k/
+4;
+
+g.strokeStyle=
+"rgba(255,255,255,.07)";
+
+g.beginPath();
+
+g.moveTo(
+L,
+yy
+);
+
+g.lineTo(
+w-R,
+yy
+);
+
+g.stroke();
+
+g.fillStyle=
+"#777";
+
+g.font=
+"10px sans-serif";
+
+g.fillText(
+fmt(
+hi-
+range*k/4
+),
+w-R+4,
+yy+3
+);
+}
+
+a.forEach(
+(x,i)=>{
+
+var o=
++x.open;
+
+var cl=
++x.close;
+
+var X=
+L+
+step*i+
+step/2;
+
+var col=
+cl>=o
+?"#45e0ad"
+:"#ff6976";
+
+g.strokeStyle=
+col;
+
+g.fillStyle=
+col;
+
+g.beginPath();
+
+g.moveTo(
+X,
+y(+x.high)
+);
+
+g.lineTo(
+X,
+y(+x.low)
+);
+
+g.stroke();
+
+g.fillRect(
+X-bw/2,
+Math.min(
+y(o),
+y(cl)
+),
+bw,
+Math.max(
+1,
+Math.abs(
+y(o)-
+y(cl)
+)
+)
+);
+
+g.globalAlpha=.5;
+
+var vh=
+(
++x.volume||
+0
+)/
+vr*
+V;
+
+g.fillRect(
+X-bw/2,
+315-vh,
+bw,
+vh
+);
+
+g.globalAlpha=1;
+
+}
+);
+}
+
+/* =========================
+   BACKTEST
 ========================= */
 
 function backtestHTML(d){
-var bt=d.backtest;
 
-if(!bt)return(
+var bt=
+d.backtest;
+
+if(!bt){
+
+return(
 '<div class="backtest-card">'+
-'<div class="section-sub">目前沒有回測資料</div>'+
+'<div class="section-sub">'+
+'目前後端沒有回傳 365 日回測資料。策略條件仍可正常使用。'+
+'</div>'+
 '</div>'
 );
+}
 
 var configs=[
 ["PULLBACK","🟢 支撐回踩"],
@@ -1679,114 +4306,128 @@ var configs=[
 ["SURGE","🔥 強勢續攻"]
 ];
 
-return configs.map(x=>{
-var b=bt[x[0]]||{};
-var enough=Number(b.samples)>=STRICT_MIN_SAMPLE;
-var pass=enough&&Number(b.winRate)>=STRICT_TARGET_WINRATE;
+return configs.map(
+x=>{
+
+var b=
+bt[x[0]]||
+{};
+
+var enough=
+Number(b.samples)>=
+STRICT_MIN_SAMPLE;
+
+var pass=
+enough&&
+Number(b.winRate)>=
+STRICT_TARGET_WINRATE;
 
 return(
 '<div class="backtest-card">'+
+
 '<div class="backtest-head">'+
+
 '<div>'+
-'<div class="backtest-name">'+x[1]+'</div>'+
-'<div class="section-sub">最近 365 個交易日滾動回測</div>'+
+'<div class="backtest-name">'+
+x[1]+
 '</div>'+
-'<div class="winrate '+(pass?"":"warn")+'">'+fmt(b.winRate,1)+'%</div>'+
+'<div class="section-sub">'+
+'最近 365 個交易日滾動回測'+
 '</div>'+
+'</div>'+
+
+'<div class="winrate">'+
+fmt(
+b.winRate,
+1
+)+
+'%'+
+'</div>'+
+
+'</div>'+
+
 '<div class="backtest-grid">'+
-'<div class="backtest-stat"><span>樣本</span><strong>'+fmt(b.samples,0)+'</strong></div>'+
-'<div class="backtest-stat"><span>TP1</span><strong>'+fmt(b.tp1Rate,1)+'%</strong></div>'+
-'<div class="backtest-stat"><span>TP2</span><strong>'+fmt(b.tp2Rate,1)+'%</strong></div>'+
-'<div class="backtest-stat"><span>TP3</span><strong>'+fmt(b.tp3Rate,1)+'%</strong></div>'+
-'<div class="backtest-stat"><span>停損率</span><strong>'+fmt(b.stopRate,1)+'%</strong></div>'+
-'<div class="backtest-stat"><span>平均 R</span><strong>'+fmt(b.averageR,2)+'</strong></div>'+
+
+'<div class="backtest-stat">'+
+'<span>樣本</span>'+
+'<strong>'+
+fmt(
+b.samples,
+0
+)+
+'</strong>'+
 '</div>'+
-'<div class="qualified-badge '+(pass?"":"not-qualified")+'">'+
+
+'<div class="backtest-stat">'+
+'<span>TP1</span>'+
+'<strong>'+
+fmt(
+b.tp1Rate,
+1
+)+
+'%</strong>'+
+'</div>'+
+
+'<div class="backtest-stat">'+
+'<span>TP2</span>'+
+'<strong>'+
+fmt(
+b.tp2Rate,
+1
+)+
+'%</strong>'+
+'</div>'+
+
+'<div class="backtest-stat">'+
+'<span>TP3</span>'+
+'<strong>'+
+fmt(
+b.tp3Rate,
+1
+)+
+'%</strong>'+
+'</div>'+
+
+'<div class="backtest-stat">'+
+'<span>停損率</span>'+
+'<strong>'+
+fmt(
+b.stopRate,
+1
+)+
+'%</strong>'+
+'</div>'+
+
+'<div class="backtest-stat">'+
+'<span>平均 R</span>'+
+'<strong>'+
+fmt(
+b.averageR,
+2
+)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+
+'<div class="qualified-badge '+(
+pass
+?""
+:"not-qualified"
+)+'">'+
 (
 !enough
-?"樣本不足 20 筆"
+?"樣本不足 20 筆，不發高勝率通知"
 :pass
-?"✓ 達 70% 高勝率提醒門檻"
-:"未達 70% 高勝率提醒門檻"
+?"✓ 達 70% 高勝率通知門檻"
+:"未達 70% 高勝率通知門檻"
 )+
 '</div>'+
-'<div class="section-sub">最大連敗：'+fmt(b.maxLosingStreak,0)+' 次</div>'+
-'</div>'
-);
-}).join("");
-}
 
-function diagnosisHTML(d){
-var x=d.diagnosis;
-
-if(!x)return"";
-
-var items=[]
-.concat(x.strengths||[])
-.concat(x.defects||[]);
-
-if(!items.length){
-items.push("目前未偵測到明顯回測缺陷。");
-}
-
-return(
-'<div class="diagnosis">'+
-'<div class="section-title">🧪 策略缺陷診斷</div>'+
-items.map(v=>
-'<div class="diagnosis-item">'+safe(v)+'</div>'
-).join("")+
-'<div class="section-sub">'+safe(x.recommendation||"")+'</div>'+
 '</div>'
 );
 }
-
-/* =========================
-   STRATEGY UI
-========================= */
-
-function setupHTML(title,setup,color){
-if(!setup)return"";
-
-return(
-'<div class="overview-card '+(color==="purple"?"purple-card":color==="orange"?"surge-card":"")+'">'+
-row(
-"目前狀態",
-setup.qualified?"✓ 符合策略觀察條件":"等待條件",
-setup.qualified?"green":""
-)+
-row(
-"觀察入場區",
-fmt(setup.entryLow)+" ～ "+fmt(setup.entryHigh),
-color
-)+
-targets(
-setup.tp1,
-setup.tp2,
-setup.tp3,
-setup.stop
-)+
-'</div>'
-);
-}
-
-function row(l,v,c){
-return(
-'<div class="overview-row">'+
-'<div class="overview-label">'+l+'</div>'+
-'<div class="overview-value '+(c||"")+'">'+v+'</div>'+
-'</div>'
-);
-}
-
-function targets(a,b,c,sl){
-return(
-'<div class="target-stack">'+
-'<div class="target-box tp"><div class="target-label">💰 TP1</div><div class="target-value">'+fmt(a)+'</div></div>'+
-'<div class="target-box tp"><div class="target-label">💰 TP2</div><div class="target-value">'+fmt(b)+'</div></div>'+
-'<div class="target-box tp3"><div class="target-label">🔥 TP3</div><div class="target-value">'+fmt(c)+'</div></div>'+
-'<div class="target-box stop"><div class="target-label">🛑 結構失效 / SL</div><div class="target-value">'+fmt(sl)+'</div></div>'+
-'</div>'
-);
+).join("");
 }
 
 /* =========================
@@ -1794,169 +4435,186 @@ return(
 ========================= */
 
 function buildAnalysis(d){
-var rows=d.rows||[];
 
-if(rows.length<60){
-throw Error("歷史資料不足");
+var rows=
+d.rows||
+[];
+
+if(
+rows.length<60
+){
+
+throw Error(
+"歷史資料不足"
+);
 }
 
-var m=marketOf(d);
-var price=m.price;
-var change=+d.changePercent;
-var p=getPosition(d.symbol);
+var m=
+marketOf(d);
+
+var v=
+volumeMetrics(
+d,
+rows
+);
+
+var setups=
+buildStrategySetups(
+d,
+m,
+v
+);
+
+var price=
+m.price;
+
+var change=
++d.changePercent;
+
+var p=
+getPosition(
+d.symbol
+);
 
 currentStock={
-symbol:String(d.symbol),
-name:d.name||"",
-market:d.market||""
+symbol:
+String(d.symbol),
+
+name:
+d.name||"",
+
+market:
+d.market||""
 };
-
-var va=d.volumeAnalysis||{};
-var strategies=d.strategies||{};
-
-var pull=strategies.PULLBACK;
-var high=strategies.HIGH_R;
-var surge=strategies.SURGE;
-
-if(!pull){
-var support=Math.max(
-m.low10,
-Math.min(m.ma20,price)-m.atr*.5
-);
-
-var eL=Math.max(
-support,
-m.ma20-m.atr*.5
-);
-
-var eH=m.ma20+m.atr*.35;
-
-if(eL>eH){
-var tmp=eL;eL=eH;eH=tmp;
-}
-
-var center=(eL+eH)/2;
-var sl=Math.min(support-m.atr*.5,eL-m.atr);
-var risk=Math.max(center-sl,m.atr*.5);
-
-pull={
-qualified:false,
-entryLow:eL,
-entryHigh:eH,
-entry:center,
-stop:sl,
-tp1:center+risk*1.5,
-tp2:center+risk*2.5,
-tp3:center+risk*4
-};
-}
-
-if(!high){
-var bL=m.resistance-m.atr*.25;
-var bH=m.resistance+m.atr*.35;
-var bC=(bL+bH)/2;
-var bSL=m.low10-m.atr*.15;
-var bR=Math.max(bC-bSL,m.atr*.5);
-
-high={
-qualified:false,
-entryLow:bL,
-entryHigh:bH,
-entry:bC,
-stop:bSL,
-tp1:bC+bR*2,
-tp2:bC+bR*3,
-tp3:bC+bR*5
-};
-}
-
-if(!surge){
-var sL=price-m.atr*.2;
-var sH=price+m.atr*.15;
-var sC=(sL+sH)/2;
-var sSL=m.recent3Low-m.atr*.15;
-
-if(sSL>=sC){
-sSL=sC-m.atr*1.2;
-}
-
-var sR=sC-sSL;
-
-surge={
-qualified:false,
-entryLow:sL,
-entryHigh:sH,
-entry:sC,
-stop:sSL,
-tp1:sC+sR*1.5,
-tp2:sC+sR*2.5,
-tp3:sC+sR*4
-};
-}
 
 var khtml="";
 
-if(d.market==="TW"){
+if(
+d.market==="TW"
+){
+
 khtml=
 '<div class="kbar-card">'+
-'<div class="section-title">📈 Fugle 即時 K 線</div>'+
-'<div class="section-sub">盤中 OHLCV · 每 30 秒更新</div>'+
+
+'<div class="section-title">'+
+'📈 Fugle 即時 K 線'+
+'</div>'+
+
+'<div class="section-sub">'+
+'盤中 OHLCV · 每 30 秒更新'+
+'</div>'+
+
 '<div class="kbar-tabs">'+
-["1","3","5","10","15","30","60","2h","4h","6h","12h"].map(tf=>
-'<button class="kbar-tab '+(KBAR_TF===tf?"active":"")+'" data-tf="'+tf+'">'+tf+(tf.includes("h")?"":"分")+'</button>'
-).join("")+
+
+[
+"1",
+"3",
+"5",
+"10",
+"15",
+"30",
+"60",
+"2h",
+"4h",
+"6h",
+"12h"
+]
+.map(
+tf=>
+'<button class="kbar-tab '+(
+KBAR_TF===tf
+?"active"
+:""
+)+'" data-tf="'+
+tf+
+'">'+
+tf+
+(
+tf.includes("h")
+?""
+:"分"
+)+
+'</button>'
+)
+.join("")+
+
 '</div>'+
+
 '<div class="kbar-chart-wrap">'+
-'<div id="kbarInfo" class="kbar-info"></div>'+
-'<canvas id="kbarCanvas"></canvas>'+
-'<div id="kbarStatus" class="kbar-status">正在取得 Fugle K 棒…</div>'+
+
+'<div id="kbarInfo" class="kbar-info">'+
 '</div>'+
+
+'<canvas id="kbarCanvas">'+
+'</canvas>'+
+
+'<div id="kbarStatus" class="kbar-status">'+
+'正在取得 Fugle K 棒…'+
+'</div>'+
+
+'</div>'+
+
 '</div>';
+
 }else{
+
 khtml=
 '<div class="kbar-card">'+
-'<div class="kbar-status">🇺🇸 美股目前使用 FinMind 最新可取得日 K；不顯示假的盤中分 K。</div>'+
-'</div>';
-}
-
-var alertHTML="";
-
-if(d.strictAlertQualified&&d.bestQualifiedStrategy){
-var best=d.bestQualifiedStrategy;
-var hb=best.historical||{};
-
-alertHTML=
-'<div class="alert-banner">'+
-'<div class="alert-title">🔔 高勝率策略觀察條件成立</div>'+
-'<div class="alert-text">'+
-safe(best.name||best.key||"策略")+
-' · 365 日歷史勝率 '+fmt(hb.winRate,1)+'%'+
-' · 樣本 '+fmt(hb.samples,0)+' 筆'+
-'<br>目前同時符合價格異動、異常成交量與策略條件。'+
+'<div class="kbar-status">'+
+'🇺🇸 美股目前使用 FinMind 最新可取得日 K，不顯示假的盤中分 K。'+
 '</div>'+
 '</div>';
 }
 
-el("analysisResult").innerHTML=
-
-alertHTML+
+el("analysisResult")
+.innerHTML=
 
 '<div class="hero-card">'+
+
 '<div class="hero-top">'+
+
 '<div>'+
-'<div class="hero-symbol">'+safe(d.symbol)+'</div>'+
-'<div class="hero-name">'+safe(d.name||"")+'</div>'+
-'<div class="market-pill">'+(d.market==="US"?"🇺🇸 美股":"🇹🇼 台股")+'</div>'+
-'</div>'+
-'<div>'+
-'<div class="hero-price">'+fmt(price)+'</div>'+
-'<div class="hero-change '+pclass(change)+'">'+pct(change)+'</div>'+
-'</div>'+
+
+'<div class="hero-symbol">'+
+safe(d.symbol)+
 '</div>'+
 
-'<button id="favoriteButton" class="favorite-btn">☆ 加入自選</button>'+
+'<div class="hero-name">'+
+safe(d.name||"")+
+'</div>'+
+
+'<div class="market-pill">'+
+(
+d.market==="US"
+?"🇺🇸 美股"
+:"🇹🇼 台股"
+)+
+'</div>'+
+
+'</div>'+
+
+'<div>'+
+
+'<div class="hero-price">'+
+fmt(price)+
+'</div>'+
+
+'<div class="hero-change '+
+pclass(change)+
+'">'+
+pct(change)+
+'</div>'+
+
+'</div>'+
+
+'</div>'+
+
+'<button id="favoriteButton" class="favorite-btn">'+
+'☆ 加入自選'+
+'</button>'+
 
 '<div class="indicator-strip">'+
+
 [
 ["MA20",m.ma20],
 ["MA60",m.ma60],
@@ -1964,457 +4622,686 @@ alertHTML+
 ["MACD",m.macd],
 ["ATR",m.atr],
 ["20日壓力",m.resistance]
-].map(x=>
+]
+.map(
+x=>
 '<div class="indicator">'+
-'<span>'+x[0]+'</span>'+
-'<strong>'+fmt(x[1],x[0].includes("RSI")?1:2)+'</strong>'+
+'<span>'+
+x[0]+
+'</span>'+
+'<strong>'+
+fmt(
+x[1],
+x[0].includes(
+"RSI"
+)
+?1
+:2
+)+
+'</strong>'+
 '</div>'
-).join("")+
+)
+.join("")+
+
 '</div>'+
 
 '<div class="volume-card">'+
-'<div class="volume-title">📊 成交量分析 · '+safe(va.level||"等待資料")+'</div>'+
-'<div class="section-sub">'+safe(va.label||"成交量比")+'</div>'+
+
+'<div class="volume-title">'+
+'📊 成交量分析 · '+
+safe(
+v.level||
+"等待資料"
+)+
+'</div>'+
+
+'<div class="section-sub">'+
+(
+d.market==="TW"
+?"盤中成交量會跟著最新可取得資料重新分析。"
+:"美股目前使用最新日成交量比較。"
+)+
+'</div>'+
+
 '<div class="volume-grid">'+
-'<div class="volume-box"><span>目前量比</span><strong>'+fmt(va.ratio,2)+'x</strong></div>'+
-'<div class="volume-box"><span>目前成交量</span><strong>'+fmt(va.current||d.volume,0)+'</strong></div>'+
-'<div class="volume-box"><span>20日均量</span><strong>'+fmt(va.average20,0)+'</strong></div>'+
+
+'<div class="volume-box">'+
+'<span>量比</span>'+
+'<strong>'+
+fmt(
+v.ratio,
+2
+)+
+'x</strong>'+
 '</div>'+
+
+'<div class="volume-box">'+
+'<span>目前成交量</span>'+
+'<strong>'+
+fmt(
+v.current||
+d.volume,
+0
+)+
+'</strong>'+
+'</div>'+
+
+'<div class="volume-box">'+
+'<span>20日均量</span>'+
+'<strong>'+
+fmt(
+v.average20,
+0
+)+
+'</strong>'+
 '</div>'+
 
 '</div>'+
 
-'<div class="big-section-title">💼 我的持倉管理</div>'+
-positionHTML(d,m,p)+
-(p?averageHTML(p,m,d):"")+
+'</div>'+
 
-'<div class="big-section-title">📊 K 棒</div>'+
+'</div>'+
+
+'<div class="big-section-title">'+
+'💼 我的持倉管理'+
+'</div>'+
+
+positionHTML(
+d,
+m,
+p
+)+
+
+'<div class="big-section-title">'+
+'📊 K 棒'+
+'</div>'+
+
 khtml+
 
-'<div class="big-section-title">🟢 支撐回踩策略</div>'+
-setupHTML("支撐回踩",pull,"green")+
+'<div class="big-section-title">'+
+'🟢 支撐回踩策略'+
+'</div>'+
 
-'<div class="big-section-title">🟣 高 R 突破策略</div>'+
-setupHTML("高 R",high,"purple")+
+strategyHTML(
+"PULLBACK",
+setups.PULLBACK,
+"green"
+)+
 
-'<div class="big-section-title">🔥 強勢續攻策略</div>'+
-setupHTML("強勢續攻",surge,"orange")+
+'<div class="big-section-title">'+
+'🟣 高 R 突破策略'+
+'</div>'+
 
-'<div class="big-section-title">📈 365 交易日歷史回測</div>'+
+strategyHTML(
+"HIGH_R",
+setups.HIGH_R,
+"purple"
+)+
+
+'<div class="big-section-title">'+
+'🔥 強勢續攻策略'+
+'</div>'+
+
+strategyHTML(
+"SURGE",
+setups.SURGE,
+"orange"
+)+
+
+'<div class="big-section-title">'+
+'📈 365 交易日歷史回測'+
+'</div>'+
+
 backtestHTML(d)+
 
-'<div class="big-section-title">🧪 系統缺陷檢查</div>'+
-diagnosisHTML(d)+
+'<div class="big-section-title">'+
+'🧠 系統綜合判讀'+
+'</div>'+
 
-'<div class="big-section-title">🧠 系統綜合判讀</div>'+
 '<div class="brain-card">'+
+
 '<div class="brain-summary">'+
-'現價 '+fmt(price)+
-' · MA20 '+fmt(m.ma20)+
-' · MA60 '+fmt(m.ma60)+
-' · RSI '+fmt(m.rsi,1)+
-' · MACD '+fmt(m.macd)+
+'現價 '+
+fmt(price)+
+' · MA20 '+
+fmt(m.ma20)+
+' · MA60 '+
+fmt(m.ma60)+
+' · RSI '+
+fmt(m.rsi,1)+
+' · MACD '+
+fmt(m.macd)+
 '</div>'+
-'<div class="brain-item '+(price>m.ma20?"good":"warn")+'">'+
-(price>m.ma20?"✓ 現價位於 MA20 上方":"△ 現價位於 MA20 下方")+
+
+'<div class="brain-item '+(
+price>m.ma20
+?"good"
+:"warn"
+)+'">'+
+(
+price>m.ma20
+?"✓ 現價位於 MA20 上方"
+:"△ 現價位於 MA20 下方"
+)+
 '</div>'+
-'<div class="brain-item '+(m.ma20>m.ma60?"good":"warn")+'">'+
-(m.ma20>m.ma60?"✓ MA20 高於 MA60":"△ MA20 尚未高於 MA60")+
+
+'<div class="brain-item '+(
+m.ma20>m.ma60
+?"good"
+:"warn"
+)+'">'+
+(
+m.ma20>m.ma60
+?"✓ MA20 高於 MA60"
+:"△ MA20 尚未高於 MA60"
+)+
 '</div>'+
-'<div class="brain-item '+(va.expanded?"good":"warn")+'">'+
-(va.expanded
-?"✓ 成交量已放大 "+fmt(va.ratio,2)+"x"
-:"△ 成交量尚未明顯放大")+
+
+'<div class="brain-item '+(
+v.ratio>=1.35
+?"good"
+:"warn"
+)+'">'+
+(
+v.ratio>=1.35
+?"✓ 成交量已放大 "+
+fmt(
+v.ratio,
+2
+)+
+"x"
+:"△ 成交量尚未明顯放大"
+)+
 '</div>'+
+
 '</div>'+
 
 '<div class="data-note">'+
-'資料來源：'+safe(d.liveSource||"FinMind")+
+'資料來源：'+
+safe(
+d.liveSource||
+"FinMind"
+)+
 '<br>'+
-(d.market==="TW"
+(
+d.market==="TW"
 ?"台股每 30 秒依最新可取得價格與成交量重新分析。"
-:"美股目前為最新可取得日行情，不標示為盤中即時。")+
-'<br>365 日勝率為歷史規則回測結果，不代表未來勝率；策略觀察區不是自動買進指令。'+
+:"美股目前為最新可取得日行情，不標示為盤中即時。"
+)+
+'<br>'+
+'「目前符合策略」與「歷史勝率」分開判定；歷史樣本不足不會讓目前符合條件的策略消失。'+
+'<br>'+
+'365 日歷史勝率只用於回測與高勝率通知門檻，不代表未來結果。'+
 '</div>';
 
-el("favoriteButton").onclick=()=>{
-toggleFavorite(currentStock);
+el("favoriteButton")
+.onclick=
+()=>{
+
+toggleFavorite(
+currentStock
+);
 };
 
 updateFavoriteButton();
 
-var sb=el("positionSaveButton");
+var sb=
+el(
+"positionSaveButton"
+);
 
 if(sb){
-sb.onclick=()=>{
+
+sb.onclick=
+()=>{
+
 try{
+
 setPosition(
 d.symbol,
 createPosition(
 d,
-el("positionEntry").value,
-el("positionQuantity").value,
+el(
+"positionEntry"
+).value,
+el(
+"positionQuantity"
+).value,
 m
 )
 );
+
 buildAnalysis(d);
+
 }catch(e){
-alert(e.message);
+
+alert(
+e.message
+);
 }
 };
 }
 
-var db=el("positionDeleteButton");
+var db=
+el(
+"positionDeleteButton"
+);
 
 if(db){
-db.onclick=()=>{
-if(confirm("確定刪除這筆持倉設定？")){
-deletePosition(d.symbol);
+
+db.onclick=
+()=>{
+
+if(
+confirm(
+"確定刪除這筆持倉設定？"
+)
+){
+
+deletePosition(
+d.symbol
+);
+
 buildAnalysis(d);
 }
 };
 }
 
-document.querySelectorAll("[data-tf]").forEach(b=>{
-b.onclick=()=>{
-KBAR_TF=b.dataset.tf;
+document
+.querySelectorAll(
+"[data-tf]"
+)
+.forEach(
+b=>{
+
+b.onclick=
+()=>{
+
+KBAR_TF=
+b.dataset.tf;
+
 buildAnalysis(d);
 };
-});
+}
+);
 
-if(d.market==="TW"){
-loadKBar(d.symbol);
+if(
+d.market==="TW"
+){
+
+loadKBar(
+d.symbol
+);
+
 startKBarTimer();
 }
 }
 
 /* =========================
-   NOTIFICATION
-========================= */
-
-function getAlertState(){
-try{
-return JSON.parse(localStorage.getItem(ALERT_STATE_KEY)||"{}");
-}catch(e){
-return{};
-}
-}
-
-function setAlertState(a){
-localStorage.setItem(ALERT_STATE_KEY,JSON.stringify(a));
-}
-
-function alertKey(symbol,strategy){
-return String(symbol)+"_"+String(strategy);
-}
-
-function showToast(title,text){
-el("toastTitle").textContent=title;
-el("toastText").textContent=text;
-el("toast").classList.add("show");
-
-setTimeout(()=>{
-el("toast").classList.remove("show");
-},7000);
-}
-
-function fireAlert(d,best){
-var h=best.historical||{};
-var s=best.current||{};
-
-var title=
-(d.market==="US"?"🇺🇸 ":"🇹🇼 ")+
-d.symbol+
-" "+(d.name||"")+
-" · 高勝率策略";
-
-var text=
-(best.name||best.key)+
-"｜歷史勝率 "+fmt(h.winRate,1)+"%"+
-"｜樣本 "+fmt(h.samples,0)+
-"｜量比 "+fmt(d.volumeAnalysis?.ratio,2)+"x"+
-"｜已進入策略觀察條件";
-
-showToast(title,text);
-
-if(navigator.vibrate){
-navigator.vibrate([120,70,120]);
-}
-
-if(
-"Notification" in window &&
-Notification.permission==="granted"
-){
-try{
-new Notification(title,{
-body:text+
-"\n觀察區 "+
-fmt(s.entryLow)+"～"+fmt(s.entryHigh)+
-"｜TP1 "+fmt(s.tp1)+
-"｜SL "+fmt(s.stop)
-});
-}catch(e){}
-}
-}
-
-function checkIndividualAlert(d){
-var best=d.bestQualifiedStrategy;
-
-var state=getAlertState();
-
-if(!best){
-Object.keys(state).forEach(k=>{
-if(k.startsWith(String(d.symbol)+"_")){
-state[k]=false;
-}
-});
-setAlertState(state);
-return;
-}
-
-var key=alertKey(
-d.symbol,
-best.key
-);
-
-var qualifies=
-d.strictAlertQualified &&
-Number(best.historical?.samples)>=STRICT_MIN_SAMPLE &&
-Number(best.historical?.winRate)>=STRICT_TARGET_WINRATE;
-
-var was=!!state[key];
-
-if(qualifies&&!was){
-fireAlert(d,best);
-}
-
-state[key]=qualifies;
-setAlertState(state);
-}
-
-function checkRadarAlerts(alerts){
-var state=getAlertState();
-var active={};
-
-(alerts||[]).forEach(s=>{
-if(!s.alert)return;
-
-var key=alertKey(
-s.symbol,
-s.alert.strategyKey
-);
-
-active[key]=true;
-
-if(!state[key]){
-var title=
-"🇹🇼 "+s.symbol+
-" "+(s.name||"")+
-" · 高勝率異動";
-
-var text=
-s.alert.strategy+
-"｜勝率 "+fmt(s.alert.winRate,1)+"%"+
-"｜樣本 "+fmt(s.alert.samples,0)+
-"｜量比 "+fmt(s.volumeRatio,2)+"x"+
-"｜已進入策略觀察條件";
-
-showToast(title,text);
-
-if(navigator.vibrate){
-navigator.vibrate([120,70,120]);
-}
-
-if(
-"Notification" in window &&
-Notification.permission==="granted"
-){
-try{
-new Notification(title,{body:text});
-}catch(e){}
-}
-}
-});
-
-Object.keys(state).forEach(k=>{
-if(!active[k]&&k.match(/^\d/)){
-state[k]=false;
-}
-});
-
-Object.keys(active).forEach(k=>{
-state[k]=true;
-});
-
-setAlertState(state);
-}
-
-el("notifyButton").onclick=async()=>{
-if(!("Notification" in window)){
-alert("目前瀏覽器不支援系統通知。");
-return;
-}
-
-if(Notification.permission==="granted"){
-alert("高勝率策略通知已開啟。");
-return;
-}
-
-try{
-var p=await Notification.requestPermission();
-
-if(p==="granted"){
-el("notifyButton").textContent="🔔 高勝率策略通知已開啟";
-}else{
-el("notifyButton").textContent="🔕 系統通知未允許";
-}
-}catch(e){}
-};
-
-/* =========================
    RADAR
 ========================= */
 
-el("refreshButton").onclick=loadRadar;
+el("refreshButton")
+.onclick=
+loadRadar;
 
 async function loadRadar(){
-try{
-el("updateText").textContent="正在重新掃描市場…";
 
-var r=await fetch(
-"/api/radar?t="+Date.now(),
-{cache:"no-store"}
+try{
+
+el("updateText")
+.textContent=
+"正在重新掃描市場…";
+
+var r=
+await fetch(
+"/api/radar?t="+
+Date.now(),
+{
+cache:"no-store"
+}
 );
 
-var d=await r.json();
+var d=
+await r.json();
 
-if(!r.ok||!d.ok){
-throw Error(d.error||"雷達取得失敗");
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+"雷達取得失敗"
+);
 }
 
 radarData=d;
 
-el("scanCount").textContent=fmt(d.scanned,0);
-el("strategyCount").textContent=fmt(d.strategyReadyCount,0);
-el("radarCount").textContent=fmt(d.found,0);
+el("scanCount")
+.textContent=
+fmt(
+d.scanned,
+0
+);
 
-el("updateText").textContent=
+el("strategyCount")
+.textContent=
+fmt(
+(
+d.strategyReady||
+[]
+).length,
+0
+);
+
+el("radarCount")
+.textContent=
+fmt(
+(
+d.radar||
+[]
+).length,
+0
+);
+
+el("updateText")
+.textContent=
 "FinMind · 最後更新 "+
 currentTimeText()+
 " · 每 60 秒重新掃描";
 
 renderRadarSections();
 
-checkRadarAlerts(d.alerts||[]);
-
 countdownSeconds=60;
 
 }catch(e){
-el("updateText").textContent=
-"雷達連線失敗："+e.message;
+
+el("updateText")
+.textContent=
+"雷達連線失敗："+
+e.message;
 }
 }
 
 function renderRadarSections(){
-if(!radarData)return;
+
+if(!radarData){
+return;
+}
 
 renderStocks(
 "strategyGrid",
-radarData.strategyReady||[],
+radarData.strategyReady||
+[],
 "strategy",
 expanded.strategy
 );
 
 renderStocks(
 "longGrid",
-radarData.longWatch||[],
+radarData.longWatch||
+[],
 "long",
 expanded.long
 );
 
 renderStocks(
 "radarGrid",
-radarData.radar||[],
+radarData.radar||
+[],
 "radar",
 expanded.radar
 );
 }
 
-function renderStocks(id,a,mode,showAll){
-var r=el(id);
+function renderStocks(
+id,
+a,
+mode,
+showAll
+){
+
+var r=
+el(id);
 
 if(!a.length){
+
 r.innerHTML=
-'<div class="card">目前沒有符合條件的股票</div>';
+'<div class="card">'+
+(
+mode==="strategy"
+?"目前這一輪沒有達到策略掃描門檻的股票。這與 70% 歷史勝率無關。"
+:"目前沒有符合條件的股票"
+)+
+'</div>';
+
 return;
 }
 
-var data=showAll?a:a.slice(0,6);
+var data=
+showAll
+?a
+:a.slice(0,6);
 
-r.innerHTML=data.map(s=>{
-var historical=s.historical||{};
-var alertClass=s.alertQualified?" alert-stock":"";
+r.innerHTML=
+data.map(
+s=>{
+
+var score=
+mode==="strategy"
+?(
+s.entryScore??
+s.score
+)
+:s.score;
+
+var strategyText=
+s.recommendedStrategy||
+"";
+
+var grade=
+s.strategyGrade||
+"";
 
 return(
-'<article class="stock-card'+alertClass+'" data-stock="'+safe(s.symbol)+'">'+
-'<div class="stock-top">'+
-'<div>'+
-'<div class="symbol">'+safe(s.symbol)+'</div>'+
-'<div class="name">'+
-safe(s.name||"台股")+
-(
-mode==="strategy"&&s.recommendedStrategy
-?" · "+safe(s.strategyEmoji||"")+" "+safe(s.recommendedStrategy)
-:mode==="long"
-?" · "+safe(s.longStatus||"觀察")
-:" · "+safe(s.level||"異動")
-)+
-'</div>'+
-'</div>'+
-'<div class="score">'+
-'<strong>'+safe(
+'<article class="stock-card '+(
 mode==="strategy"
-?(s.entryScore??s.score)
-:s.score
-)+'</strong>'+
-'<span>'+(mode==="strategy"?"策略分數":"異動分數")+'</span>'+
+?"priority"
+:""
+)+'" data-stock="'+
+safe(s.symbol)+
+'">'+
+
+'<div class="stock-top">'+
+
+'<div>'+
+
+'<div class="symbol">'+
+safe(s.symbol)+
 '</div>'+
+
+'<div class="name">'+
+safe(
+s.name||
+"台股"
+)+
+(
+mode==="strategy"
+&&
+strategyText
+?" · "+
+safe(
+s.strategyEmoji||
+""
+)+
+" "+
+safe(
+strategyText
+)
+:mode==="long"
+?" · "+
+safe(
+s.longStatus||
+"觀察"
+)
+:""
+)+
 '</div>'+
+
+'</div>'+
+
+'<div class="score">'+
+'<strong>'+
+safe(score)+
+'</strong>'+
+'<span>'+
+(
+mode==="strategy"
+?"策略符合分數"
+:"異動分數"
+)+
+'</span>'+
+'</div>'+
+
+'</div>'+
+
 '<div class="price-row">'+
-'<div class="price">'+fmt(s.price)+'</div>'+
-'<div class="'+pclass(s.changePercent)+'">'+pct(s.changePercent)+'</div>'+
+
+'<div class="price">'+
+fmt(
+s.price
+)+
 '</div>'+
+
+'<div class="'+
+pclass(
+s.changePercent
+)+
+'">'+
+pct(
+s.changePercent
+)+
+'</div>'+
+
+'</div>'+
+
 '<div class="chips">'+
-'<div class="chip green">量比 '+fmt(s.volumeRatio,1)+'x</div>'+
-(
-historical.samples
-?'<div class="chip purple">365日勝率 '+fmt(historical.winRate,1)+'%</div>'
-:""
+
+'<div class="chip green">'+
+'量比 '+
+fmt(
+s.volumeRatio,
+1
 )+
-(
-historical.samples
-?'<div class="chip">樣本 '+fmt(historical.samples,0)+'</div>'
-:""
-)+
-(
-s.alertQualified
-?'<div class="chip yellow">🔔 高勝率異動</div>'
-:""
-)+
+'x'+
 '</div>'+
+
+(
+mode==="strategy"
+&&
+grade
+?'<div class="chip purple">'+
+safe(grade)+
+'</div>'
+:""
+)+
+
+(
+mode==="strategy"
+&&
+Number.isFinite(
+Number(
+s.pullbackScore
+)
+)
+?'<div class="chip">'+
+'回踩 '+
+fmt(
+s.pullbackScore,
+0
+)+
+'</div>'
+:""
+)+
+
+(
+mode==="strategy"
+&&
+Number.isFinite(
+Number(
+s.highRScore
+)
+)
+?'<div class="chip">'+
+'高R '+
+fmt(
+s.highRScore,
+0
+)+
+'</div>'
+:""
+)+
+
+(
+mode==="strategy"
+&&
+Number.isFinite(
+Number(
+s.surgeScore
+)
+)
+?'<div class="chip">'+
+'續攻 '+
+fmt(
+s.surgeScore,
+0
+)+
+'</div>'
+:""
+)+
+
+'</div>'+
+
+'<div class="watch-open">'+
+'查看完整策略條件 →'+
+'</div>'+
+
 '</article>'
 );
-}).join("");
+}
+).join("");
 
-r.querySelectorAll("[data-stock]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.stock);
-});
+r
+.querySelectorAll(
+"[data-stock]"
+)
+.forEach(
+x=>{
+
+x.onclick=
+()=>analyze(
+x.dataset.stock
+);
+}
+);
 }
 
-document.querySelectorAll("[data-more]").forEach(b=>{
-b.onclick=()=>{
-var k=b.dataset.more;
-expanded[k]=!expanded[k];
+document
+.querySelectorAll(
+"[data-more]"
+)
+.forEach(
+b=>{
+
+b.onclick=
+()=>{
+
+var k=
+b.dataset.more;
+
+expanded[k]=
+!expanded[k];
 
 b.textContent=
 expanded[k]
@@ -2427,111 +5314,256 @@ expanded[k]
 
 renderRadarSections();
 };
-});
+}
+);
 
 /* =========================
    MARKET TABS
 ========================= */
 
 function showMarket(market){
-var tw=market==="TW";
 
-el("twMarket").classList.toggle("hidden",!tw);
-el("usMarket").classList.toggle("hidden",tw);
+var tw=
+market==="TW";
 
-el("twTab").classList.toggle("active",tw);
-el("usTab").classList.toggle("active",!tw);
+el("twMarket")
+.classList.toggle(
+"hidden",
+!tw
+);
+
+el("usMarket")
+.classList.toggle(
+"hidden",
+tw
+);
+
+el("twTab")
+.classList.toggle(
+"active",
+tw
+);
+
+el("usTab")
+.classList.toggle(
+"active",
+!tw
+);
 
 renderWatchlist();
+renderUSRecent();
 }
 
-el("twTab").onclick=()=>showMarket("TW");
-el("usTab").onclick=()=>showMarket("US");
+el("twTab").onclick=
+()=>showMarket("TW");
 
-/* =========================
-   US PERSONAL SECTION
-
-   目前沒有全美股即時 Snapshot API，
-   所以不製造假的排行榜。
-   用最近搜尋的美股形成專區清單。
-========================= */
+el("usTab").onclick=
+()=>showMarket("US");
 
 function renderUSRecent(){
-var a=getHistory()
-.filter(x=>x.market==="US")
+
+var box=
+el("usRecentGrid");
+
+var a=
+getHistory()
+.filter(
+x=>x.market==="US"
+)
 .slice(0,12);
 
-var boxes=[
-el("usStrategyGrid"),
-el("usLongGrid"),
-el("usRadarGrid")
-];
-
-boxes.forEach(box=>{
 if(!a.length){
+
 box.innerHTML=
-'<div class="card"><div class="section-sub">搜尋 NVDA、AAPL、TSLA 等美股後，會保留在最近搜尋並可直接進入完整分析。</div></div>';
+'<div class="card">'+
+'<div class="section-sub">'+
+'搜尋 NVDA、AAPL、TSLA 等美股後，會顯示在這裡。'+
+'</div>'+
+'</div>';
+
 return;
 }
 
-box.innerHTML=a.map(x=>
-'<article class="stock-card" data-us="'+safe(x.symbol)+'">'+
-'<div class="symbol">🇺🇸 '+safe(x.symbol)+'</div>'+
-'<div class="name">'+safe(x.name||"")+'</div>'+
-'<div class="section-sub">點擊查看最新日行情、成交量、三策略與 365 日回測 →</div>'+
+box.innerHTML=
+a.map(
+x=>
+'<article class="stock-card" data-us="'+
+safe(x.symbol)+
+'">'+
+'<div class="symbol">🇺🇸 '+
+safe(x.symbol)+
+'</div>'+
+'<div class="name">'+
+safe(x.name||"")+
+'</div>'+
+'<div class="watch-open">'+
+'查看完整分析 →'+
+'</div>'+
 '</article>'
 ).join("");
 
-box.querySelectorAll("[data-us]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.us);
-});
-});
+box
+.querySelectorAll(
+"[data-us]"
+)
+.forEach(
+x=>{
+
+x.onclick=
+()=>analyze(
+x.dataset.us
+);
 }
+);
+}
+
+/* =========================
+   NOTIFICATION
+========================= */
+
+el("notifyButton")
+.onclick=
+async()=>{
+
+if(
+!(
+"Notification"
+in window
+)
+){
+
+alert(
+"目前瀏覽器不支援系統通知。"
+);
+
+return;
+}
+
+if(
+Notification.permission===
+"granted"
+){
+
+alert(
+"高勝率策略通知已開啟。"
+);
+
+return;
+}
+
+try{
+
+var p=
+await Notification
+.requestPermission();
+
+if(
+p==="granted"
+){
+
+el("notifyButton")
+.textContent=
+"🔔 高勝率策略通知已開啟";
+
+}else{
+
+el("notifyButton")
+.textContent=
+"🔕 系統通知未允許";
+}
+
+}catch(e){}
+};
 
 /* =========================
    TIMER
 ========================= */
 
-setInterval(()=>{
+setInterval(
+()=>{
+
 countdownSeconds--;
 
-if(countdownSeconds<=0){
+if(
+countdownSeconds<=0
+){
+
 countdownSeconds=60;
 
-if(!document.hidden){
+if(
+!document.hidden
+){
+
 loadRadar();
 }
 }
 
-var m=Math.floor(countdownSeconds/60);
-var s=countdownSeconds%60;
+var m=
+Math.floor(
+countdownSeconds/60
+);
 
-el("countdown").textContent=
-String(m).padStart(2,"0")+
+var s=
+countdownSeconds%60;
+
+el("countdown")
+.textContent=
+String(m)
+.padStart(
+2,
+"0"
+)+
 ":"+
-String(s).padStart(2,"0");
+String(s)
+.padStart(
+2,
+"0"
+);
 
-},1000);
+},
+1000
+);
 
 /* =========================
    VISIBILITY
 ========================= */
 
-document.addEventListener("visibilitychange",()=>{
-if(!document.hidden){
-if(currentAnalysisSymbol){
+document.addEventListener(
+"visibilitychange",
+()=>{
+
+if(
+!document.hidden
+){
+
+if(
+currentAnalysisSymbol
+){
+
 refreshCurrentAnalysis();
+
 }else{
+
 loadRadar();
 }
 }
-});
-
-window.addEventListener("resize",()=>{
-if(KBAR_DATA.length){
-drawKBar(KBAR_DATA);
 }
-});
+);
+
+window.addEventListener(
+"resize",
+()=>{
+
+if(
+KBAR_DATA.length
+){
+
+drawKBar(
+KBAR_DATA
+);
+}
+}
+);
 
 /* =========================
    INIT
@@ -2543,12 +5575,18 @@ renderUSRecent();
 loadRadar();
 
 if(
-"Notification" in window &&
-Notification.permission==="granted"
+"Notification"
+in window
+&&
+Notification.permission===
+"granted"
 ){
-el("notifyButton").textContent=
+
+el("notifyButton")
+.textContent=
 "🔔 高勝率策略通知已開啟";
 }
+
 </script>
 
 </body>
