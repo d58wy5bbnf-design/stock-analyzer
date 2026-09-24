@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>妖子平台 4.5</title>
+<title>妖子平台 4.6</title>
 <meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -77,7 +77,8 @@ margin-top:3px
 .notify-btn,
 .refresh-btn,
 .more-btn,
-.favorite-btn{
+.favorite-btn,
+.position-save-btn{
 border:1px solid var(--border);
 background:#101411;
 color:#e7eae8;
@@ -90,7 +91,8 @@ font-weight:850
 .refresh-btn:active,
 .more-btn:active,
 .notify-btn:active,
-.favorite-btn:active{
+.favorite-btn:active,
+.position-save-btn:active{
 transform:scale(.98)
 }
 
@@ -129,7 +131,8 @@ color:white
 .card,
 .hero-card,
 .strategy-card,
-.recommend-card{
+.recommend-card,
+.position-card{
 background:linear-gradient(180deg,#0d110f,#090c0a);
 border:1px solid var(--border);
 border-radius:18px;
@@ -332,9 +335,7 @@ margin-top:5px;
 font-weight:800
 }
 
-.score{
-text-align:right
-}
+.score{text-align:right}
 
 .score strong{
 display:block;
@@ -466,9 +467,7 @@ font-size:11px;
 line-height:1.7
 }
 
-.hidden{
-display:none!important
-}
+.hidden{display:none!important}
 
 .back-row{
 display:flex;
@@ -617,6 +616,205 @@ font-weight:950;
 margin:20px 2px 10px
 }
 
+/* ===== 我的持倉 / 加碼分析 ===== */
+
+.position-card{
+padding:15px;
+margin-bottom:14px
+}
+
+.position-title{
+font-size:17px;
+font-weight:950
+}
+
+.position-desc{
+font-size:10px;
+color:var(--muted);
+line-height:1.7;
+margin-top:5px
+}
+
+.position-form{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:13px
+}
+
+.position-field{
+background:#080b09;
+border:1px solid #252b27;
+border-radius:12px;
+padding:10px
+}
+
+.position-field.full{
+grid-column:1/-1
+}
+
+.position-field label{
+display:block;
+font-size:9px;
+font-weight:850;
+color:#8b918d;
+margin-bottom:7px
+}
+
+.position-input{
+width:100%;
+border:0;
+outline:none;
+background:transparent;
+color:#fff;
+font-size:17px;
+font-weight:950;
+padding:0
+}
+
+.position-input::placeholder{
+color:#454a47
+}
+
+.position-unit{
+font-size:8px;
+color:#656b67;
+margin-top:5px
+}
+
+.position-save-btn{
+width:100%;
+margin-top:10px;
+background:#141a16
+}
+
+.position-summary-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:13px
+}
+
+.position-summary{
+border:1px solid #252b27;
+background:#080b09;
+border-radius:12px;
+padding:10px
+}
+
+.position-summary span{
+display:block;
+font-size:8px;
+color:#777d79
+}
+
+.position-summary strong{
+display:block;
+font-size:15px;
+margin-top:5px
+}
+
+.position-summary.full{
+grid-column:1/-1
+}
+
+.position-risk{
+margin-top:12px;
+border:1px solid #292e2b;
+border-radius:13px;
+padding:12px;
+font-size:10px;
+line-height:1.75;
+color:#b4b9b6
+}
+
+.position-risk.good{
+border-color:#24513f;
+background:#0b1712
+}
+
+.position-risk.warn{
+border-color:#5b4822;
+background:#181307
+}
+
+.position-risk.bad{
+border-color:#57282e;
+background:#190c0e
+}
+
+.position-risk-title{
+font-size:13px;
+font-weight:950;
+margin-bottom:5px;
+color:#f5f7f6
+}
+
+.add-plan{
+margin-top:12px;
+border-top:1px solid #202522;
+padding-top:12px
+}
+
+.add-plan-title{
+font-size:12px;
+font-weight:950
+}
+
+.add-plan-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:9px
+}
+
+.add-plan-box{
+border:1px solid #294760;
+background:#081119;
+border-radius:12px;
+padding:10px
+}
+
+.add-plan-box span{
+display:block;
+font-size:8px;
+color:#7f929f
+}
+
+.add-plan-box strong{
+display:block;
+font-size:16px;
+color:#8bc9ff;
+margin-top:4px
+}
+
+.add-plan-box.green{
+border-color:#28493c;
+background:#09140f
+}
+
+.add-plan-box.green strong{
+color:#a6ead3
+}
+
+.add-plan-box.yellow{
+border-color:#554a24;
+background:#151206
+}
+
+.add-plan-box.yellow strong{
+color:#ffc85a
+}
+
+.position-note{
+font-size:9px;
+color:#747a76;
+line-height:1.7;
+margin-top:10px
+}
+
+/* ===== 推薦 ===== */
+
 .recommend-card{
 padding:15px;
 margin-bottom:14px
@@ -703,9 +901,7 @@ font-size:14px;
 margin-top:4px
 }
 
-.strategy-jump{
-cursor:pointer
-}
+.strategy-jump{cursor:pointer}
 
 .strategy-card{
 padding:15px;
@@ -861,9 +1057,7 @@ touch-action:pan-y;
 transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease
 }
 
-#analysisView.swiping-back{
-transition:none
-}
+#analysisView.swiping-back{transition:none}
 
 #analysisView.swipe-return{
 transition:transform .22s cubic-bezier(.22,.61,.36,1),opacity .22s ease
@@ -887,6 +1081,10 @@ grid-template-columns:repeat(2,1fr)
 grid-template-columns:1fr 1fr
 }
 
+.position-form{
+grid-template-columns:1fr 1fr
+}
+
 }
 </style>
 </head>
@@ -898,16 +1096,14 @@ grid-template-columns:1fr 1fr
 <div id="homeView">
 
 <div class="header">
-
 <div class="logo">
 妖子平台
-<small>股票策略分析 4.5</small>
+<small>股票策略分析 4.6</small>
 </div>
 
 <button id="notifyButton" class="notify-btn">
 🔔 高勝率策略通知
 </button>
-
 </div>
 
 <div class="market-tabs">
@@ -918,17 +1114,8 @@ grid-template-columns:1fr 1fr
 <div class="search-card">
 
 <div class="search-row">
-
-<input
-id="searchInput"
-class="search-input"
-placeholder="輸入股票代號，例如 2330 / NVDA"
->
-
-<button id="searchButton" class="search-button">
-分析
-</button>
-
+<input id="searchInput" class="search-input" placeholder="輸入股票代號，例如 2330 / NVDA">
+<button id="searchButton" class="search-button">分析</button>
 </div>
 
 <div class="search-examples">
@@ -941,21 +1128,11 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 </div>
 
 <div id="searchHistory" class="search-history hidden">
-
 <div class="search-history-head">
-
-<div class="search-history-title">
-🕘 最近搜尋
+<div class="search-history-title">🕘 最近搜尋</div>
+<button id="clearHistory" class="search-history-clear">清除</button>
 </div>
-
-<button id="clearHistory" class="search-history-clear">
-清除
-</button>
-
-</div>
-
 <div id="searchHistoryList" class="search-history-list"></div>
-
 </div>
 
 </div>
@@ -963,12 +1140,10 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 <div id="watchSection">
 
 <div class="section-head">
-
 <div>
 <div class="section-title">⭐ 我的自選</div>
 <div class="section-sub">搜尋股票後可加入自選，點股票直接進入完整分析</div>
 </div>
-
 </div>
 
 <div id="watchList" class="watch-list"></div>
@@ -978,35 +1153,17 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 <div id="twMarket">
 
 <div class="section-head">
-
 <div>
 <div class="section-title">🇹🇼 台股市場掃描</div>
 <div class="section-sub">使用母版本策略掃描條件</div>
 </div>
-
-<button id="refreshButton" class="refresh-btn">
-重新掃描
-</button>
-
+<button id="refreshButton" class="refresh-btn">重新掃描</button>
 </div>
 
 <div class="stats">
-
-<div class="stat">
-<span>掃描股票</span>
-<strong id="scanCount">--</strong>
-</div>
-
-<div class="stat">
-<span>符合策略</span>
-<strong id="strategyCount">--</strong>
-</div>
-
-<div class="stat">
-<span>異動股票</span>
-<strong id="radarCount">--</strong>
-</div>
-
+<div class="stat"><span>掃描股票</span><strong id="scanCount">--</strong></div>
+<div class="stat"><span>符合策略</span><strong id="strategyCount">--</strong></div>
+<div class="stat"><span>異動股票</span><strong id="radarCount">--</strong></div>
 </div>
 
 <div class="update-line">
@@ -1015,46 +1172,31 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 </div>
 
 <div class="section-head">
-
 <div>
 <div class="section-title">🎯 自動偵測符合策略股票</div>
 <div class="section-sub">母版本策略掃描結果</div>
 </div>
-
-<button class="more-btn" data-more="strategy">
-查看更多符合策略股票
-</button>
-
+<button class="more-btn" data-more="strategy">查看更多符合策略股票</button>
 </div>
 
 <div id="strategyGrid" class="stock-grid"></div>
 
 <div class="section-head">
-
 <div>
 <div class="section-title">🟢 做多觀察</div>
 <div class="section-sub">趨勢與位置較適合持續觀察</div>
 </div>
-
-<button class="more-btn" data-more="long">
-查看更多做多觀察股票
-</button>
-
+<button class="more-btn" data-more="long">查看更多做多觀察股票</button>
 </div>
 
 <div id="longGrid" class="stock-grid"></div>
 
 <div class="section-head">
-
 <div>
 <div class="section-title">⚡ 市場異動雷達</div>
 <div class="section-sub">價格與成交量異動</div>
 </div>
-
-<button class="more-btn" data-more="radar">
-查看更多異動股票
-</button>
-
+<button class="more-btn" data-more="radar">查看更多異動股票</button>
 </div>
 
 <div id="radarGrid" class="stock-grid"></div>
@@ -1079,15 +1221,8 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 <div id="analysisView" class="hidden">
 
 <div class="back-row">
-
-<button id="backButton" class="back-button">
-← 返回
-</button>
-
-<div id="analysisRefresh" class="analysis-refresh">
-每 30 秒更新
-</div>
-
+<button id="backButton" class="back-button">← 返回</button>
+<div id="analysisRefresh" class="analysis-refresh">每 30 秒更新</div>
 </div>
 
 <div id="analysisResult"></div>
@@ -1100,10 +1235,13 @@ placeholder="輸入股票代號，例如 2330 / NVDA"
 
 const WATCH_KEY="yaozi_watchlist";
 const HISTORY_KEY="yaozi_search_history_v1";
+const POSITION_KEY="yaozi_positions_v46";
 
 var currentAnalysisSymbol="";
 var currentAnalysisData=null;
 var radarData=null;
+var currentMarketMetrics=null;
+var currentSetups=null;
 
 var expanded={
 strategy:false,
@@ -1118,447 +1256,232 @@ return document.getElementById(id)
 }
 
 function safe(v){
-
 return String(v??"")
 .replaceAll("&","&amp;")
 .replaceAll("<","&lt;")
 .replaceAll(">","&gt;")
 .replaceAll('"',"&quot;")
 .replaceAll("'","&#039;")
-
 }
 
 function fmt(v,d=2){
-
 var n=Number(v);
-
-if(!Number.isFinite(n)){
-return"--"
-}
-
+if(!Number.isFinite(n))return"--";
 return n.toLocaleString("zh-TW",{
 minimumFractionDigits:d,
 maximumFractionDigits:d
 })
-
 }
 
 function pct(v){
-
 var n=Number(v);
-
-if(!Number.isFinite(n)){
-return"--"
-}
-
+if(!Number.isFinite(n))return"--";
 return(n>0?"+":"")+fmt(n,2)+"%"
-
 }
 
 function pclass(v){
-
 var n=Number(v);
-
 if(n>0)return"up";
 if(n<0)return"down";
-
 return"flat"
-
 }
 
 function currentTimeText(){
-
-return new Date().toLocaleTimeString(
-"zh-TW",
-{
+return new Date().toLocaleTimeString("zh-TW",{
 hour:"2-digit",
 minute:"2-digit",
 second:"2-digit",
 hour12:false
+})
 }
-)
-
-}
-
 
 /* ==================================================
    搜尋紀錄
 ================================================== */
 
 function getSearchHistory(){
-
 try{
-
-var data=
-JSON.parse(
-localStorage.getItem(HISTORY_KEY)||
-"[]"
-);
-
-return Array.isArray(data)
-?data
-:[];
-
+var data=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+return Array.isArray(data)?data:[];
 }catch(e){
-
 return[]
-
 }
-
 }
 
 function saveSearchHistory(symbol){
-
-symbol=
-String(symbol||"")
-.trim()
-.toUpperCase();
-
+symbol=String(symbol||"").trim().toUpperCase();
 if(!symbol)return;
 
-var history=
-getSearchHistory()
-.filter(x=>x!==symbol);
-
+var history=getSearchHistory().filter(x=>x!==symbol);
 history.unshift(symbol);
+history=history.slice(0,10);
 
-history=
-history.slice(0,10);
-
-localStorage.setItem(
-HISTORY_KEY,
-JSON.stringify(history)
-);
-
+localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
 renderSearchHistory()
-
 }
 
 function renderSearchHistory(){
-
 var box=el("searchHistory");
 var list=el("searchHistoryList");
-
 if(!box||!list)return;
 
 var history=getSearchHistory();
 
 if(!history.length){
-
 box.classList.add("hidden");
 list.innerHTML="";
-
 return
-
 }
 
 box.classList.remove("hidden");
 
-list.innerHTML=
-history.map(symbol=>
-
-'<button class="history-item" data-history="'+
-safe(symbol)+
-'">'+
+list.innerHTML=history.map(symbol=>
+'<button class="history-item" data-history="'+safe(symbol)+'">'+
 safe(symbol)+
 '</button>'
-
 ).join("");
 
-list
-.querySelectorAll("[data-history]")
-.forEach(button=>{
-
+list.querySelectorAll("[data-history]").forEach(button=>{
 button.onclick=()=>{
-
-el("searchInput").value=
-button.dataset.history;
-
-analyze(
-button.dataset.history
-)
-
+el("searchInput").value=button.dataset.history;
+analyze(button.dataset.history)
 }
-
 })
-
 }
-
 
 /* ==================================================
-   自選股
+   自選
 ================================================== */
 
 function getWatchlist(){
-
 try{
+var data=JSON.parse(localStorage.getItem(WATCH_KEY)||"[]");
 
-var data=
-JSON.parse(
-localStorage.getItem(WATCH_KEY)||
-"[]"
-);
-
-if(!Array.isArray(data)){
-return[]
-}
-
-/* 相容以前只存代號的版本 */
+if(!Array.isArray(data))return[];
 
 return data.map(item=>{
-
 if(typeof item==="string"){
-
 return{
 symbol:item,
 name:"",
 price:null,
 changePercent:null
 }
-
 }
-
 return item
-
 }).filter(item=>item&&item.symbol);
 
 }catch(e){
-
 return[]
-
 }
-
 }
 
 function saveWatchlist(list){
-
-localStorage.setItem(
-WATCH_KEY,
-JSON.stringify(list)
-);
-
+localStorage.setItem(WATCH_KEY,JSON.stringify(list));
 renderWatchlist()
-
 }
 
 function isFavorite(symbol){
+symbol=String(symbol||"").toUpperCase();
 
-symbol=
-String(symbol||"")
-.toUpperCase();
-
-return getWatchlist()
-.some(
-item=>
-String(item.symbol||"")
-.toUpperCase()===symbol
+return getWatchlist().some(
+item=>String(item.symbol||"").toUpperCase()===symbol
 )
-
 }
 
 function addFavorite(d){
+if(!d||!d.symbol)return;
 
-if(!d||!d.symbol){
-return
-}
+var symbol=String(d.symbol).toUpperCase();
 
-var symbol=
-String(d.symbol)
-.toUpperCase();
-
-var list=
-getWatchlist()
-.filter(
-item=>
-String(item.symbol||"")
-.toUpperCase()!==symbol
+var list=getWatchlist().filter(
+item=>String(item.symbol||"").toUpperCase()!==symbol
 );
 
 list.unshift({
-
-symbol:symbol,
-
-name:
-d.name||
-"",
-
-price:
-Number.isFinite(Number(d.price))
-?Number(d.price)
-:null,
-
-changePercent:
-Number.isFinite(Number(d.changePercent))
-?Number(d.changePercent)
-:null,
-
-market:
-d.market||
-"",
-
-addedAt:
-Date.now()
-
+symbol,
+name:d.name||"",
+price:Number.isFinite(Number(d.price))?Number(d.price):null,
+changePercent:Number.isFinite(Number(d.changePercent))?Number(d.changePercent):null,
+market:d.market||"",
+addedAt:Date.now()
 });
 
-saveWatchlist(
-list
-)
-
+saveWatchlist(list)
 }
 
 function removeFavorite(symbol){
+symbol=String(symbol||"").toUpperCase();
 
-symbol=
-String(symbol||"")
-.toUpperCase();
-
-var list=
-getWatchlist()
-.filter(
-item=>
-String(item.symbol||"")
-.toUpperCase()!==symbol
+var list=getWatchlist().filter(
+item=>String(item.symbol||"").toUpperCase()!==symbol
 );
 
-saveWatchlist(
-list
-)
-
+saveWatchlist(list)
 }
 
 function toggleFavorite(){
+if(!currentAnalysisData||!currentAnalysisData.symbol)return;
 
-if(
-!currentAnalysisData||
-!currentAnalysisData.symbol
-){
-
-return
-
-}
-
-var symbol=
-String(
-currentAnalysisData.symbol
-)
-.toUpperCase();
+var symbol=String(currentAnalysisData.symbol).toUpperCase();
 
 if(isFavorite(symbol)){
-
-removeFavorite(
-symbol
-);
-
+removeFavorite(symbol)
 }else{
-
-addFavorite(
-currentAnalysisData
-);
-
+addFavorite(currentAnalysisData)
 }
 
 updateFavoriteButton()
-
 }
 
 function updateFavoriteButton(){
+var button=el("favoriteButton");
+if(!button)return;
 
-var button=
-el("favoriteButton");
-
-if(!button){
+if(!currentAnalysisData||!currentAnalysisData.symbol){
+button.classList.remove("active");
+button.textContent="☆ 加入自選";
 return
 }
 
-if(
-!currentAnalysisData||
-!currentAnalysisData.symbol
-){
+var active=isFavorite(currentAnalysisData.symbol);
 
-button.classList.remove(
-"active"
-);
-
-button.textContent=
-"☆ 加入自選";
-
-return
-
-}
-
-var active=
-isFavorite(
-currentAnalysisData.symbol
-);
-
-button.classList.toggle(
-"active",
-active
-);
+button.classList.toggle("active",active);
 
 button.textContent=
 active
 ?"★ 已加入自選｜點擊移除"
 :"☆ 加入自選"
-
 }
 
 function renderWatchlist(){
-
-var box=
-el("watchList");
-
+var box=el("watchList");
 if(!box)return;
 
-var list=
-getWatchlist();
+var list=getWatchlist();
 
 if(!list.length){
-
 box.innerHTML=
-
 '<div class="watch-empty">'+
 '目前還沒有自選股票<br>'+
 '搜尋股票進入分析後，點「☆ 加入自選」即可加入。'+
 '</div>';
-
 return
-
 }
 
-box.innerHTML=
+box.innerHTML=list.map(item=>{
 
-list.map(item=>{
-
-var change=
-Number(item.changePercent);
-
-var changeText=
-Number.isFinite(change)
-?pct(change)
-:"";
-
-var priceText=
-Number.isFinite(Number(item.price))
-?fmt(item.price)
-:"";
+var change=Number(item.changePercent);
+var changeText=Number.isFinite(change)?pct(change):"";
+var priceText=Number.isFinite(Number(item.price))?fmt(item.price):"";
 
 return(
-
 '<div class="watch-item">'+
 
-'<div class="watch-main" data-watch-open="'+
-safe(item.symbol)+
-'">'+
+'<div class="watch-main" data-watch-open="'+safe(item.symbol)+'">'+
 
-'<div class="watch-symbol">'+
-safe(item.symbol)+
-'</div>'+
-
-'<div class="watch-name">'+
-safe(item.name||"")+
-'</div>'+
+'<div class="watch-symbol">'+safe(item.symbol)+'</div>'+
+'<div class="watch-name">'+safe(item.name||"")+'</div>'+
 
 (
 priceText
@@ -1567,12 +1490,7 @@ priceText
 priceText+
 (
 changeText
-?
-' · <span class="'+
-pclass(change)+
-'">'+
-changeText+
-'</span>'
+?' · <span class="'+pclass(change)+'">'+changeText+'</span>'
 :""
 )+
 '</div>'
@@ -1581,190 +1499,752 @@ changeText+
 
 '</div>'+
 
-'<button class="watch-remove" data-watch-remove="'+
-safe(item.symbol)+
-'">'+
+'<button class="watch-remove" data-watch-remove="'+safe(item.symbol)+'">'+
 '移除'+
 '</button>'+
+
+'</div>'
+)
+
+}).join("");
+
+box.querySelectorAll("[data-watch-open]").forEach(item=>{
+item.onclick=()=>{
+analyze(item.dataset.watchOpen)
+}
+});
+
+box.querySelectorAll("[data-watch-remove]").forEach(button=>{
+button.onclick=e=>{
+e.stopPropagation();
+removeFavorite(button.dataset.watchRemove)
+}
+})
+}
+
+/* ==================================================
+   我的持倉資料
+================================================== */
+
+function getPositions(){
+try{
+var data=JSON.parse(localStorage.getItem(POSITION_KEY)||"{}");
+return data&&typeof data==="object"?data:{};
+}catch(e){
+return{}
+}
+}
+
+function getPosition(symbol){
+var all=getPositions();
+return all[String(symbol||"").toUpperCase()]||null
+}
+
+function savePosition(symbol,data){
+var all=getPositions();
+symbol=String(symbol||"").toUpperCase();
+
+if(!symbol)return;
+
+all[symbol]={
+entry:Number(data.entry)||0,
+lots:Math.max(0,Math.floor(Number(data.lots)||0)),
+odd:Math.max(0,Math.floor(Number(data.odd)||0)),
+updatedAt:Date.now()
+};
+
+localStorage.setItem(
+POSITION_KEY,
+JSON.stringify(all)
+)
+}
+
+function positionShares(position,market){
+
+if(!position)return 0;
+
+if(market==="US"){
+return Math.max(
+0,
+Number(position.lots)||0
+)+
+Math.max(
+0,
+Number(position.odd)||0
+)
+}
+
+/* 台股：1 張 = 1000 股 */
+return(
+Math.max(
+0,
+Number(position.lots)||0
+)*1000
+)+
+Math.max(
+0,
+Number(position.odd)||0
+)
+
+}
+
+function bestSetup(setups){
+
+var arr=[
+{
+type:"PULLBACK",
+name:"支撐回踩",
+setup:setups.PULLBACK
+},
+{
+type:"HIGH_R",
+name:"高 R 突破",
+setup:setups.HIGH_R
+},
+{
+type:"SURGE",
+name:"強勢續攻",
+setup:setups.SURGE
+}
+];
+
+arr.sort((a,b)=>
+b.setup.score-a.setup.score||
+b.setup.passed-a.setup.passed
+);
+
+return arr[0]
+}
+
+/* ==================================================
+   持倉 / 攤平 / 加碼分析
+================================================== */
+
+function buildPositionAnalysis(d,m,setups){
+
+var position=getPosition(d.symbol);
+
+var entry=
+position?
+Number(position.entry)||0
+:0;
+
+var lots=
+position?
+Number(position.lots)||0
+:0;
+
+var odd=
+position?
+Number(position.odd)||0
+:0;
+
+var shares=
+positionShares(
+position,
+d.market
+);
+
+var price=
+Number(m.price)||0;
+
+var cost=
+entry>0&&shares>0
+?entry*shares
+:0;
+
+var marketValue=
+price>0&&shares>0
+?price*shares
+:0;
+
+var pnl=
+marketValue-cost;
+
+var pnlPct=
+cost>0
+?pnl/cost*100
+:0;
+
+var setupBest=
+bestSetup(setups);
+
+var targets=
+strategyTargets(
+setupBest.type,
+m
+);
+
+var riskLine=
+targets.stop1;
+
+var deepRisk=
+targets.stop2;
+
+var addPrice=
+targets.entryLow;
+
+var secondAdd=
+Math.max(
+deepRisk,
+Math.min(
+m.ma20,
+targets.entryHigh
+)
+);
+
+var structureGood=
+m.ma20>m.ma60 &&
+price>=m.ma60*.97;
+
+var setupStrong=
+setupBest.setup.score>=75;
+
+var aboveStop=
+price>riskLine;
+
+var lossPct=
+entry>0
+?(price-entry)/entry*100
+:0;
+
+var averageDecision="";
+var riskClass="warn";
+
+if(!entry||!shares){
+
+averageDecision=
+"先輸入你的實際入場均價與持有數量，系統才會依目前價格、策略分數、MA20／MA60、SL1／SL2 與支撐區分析是否適合加碼或攤低均價。";
+
+riskClass="warn";
+
+}
+
+else if(
+price<=deepRisk ||
+!structureGood
+){
+
+averageDecision=
+"目前不適合只為了降低均價而加買。價格已接近／跌破較深結構風險區，或 MA20／MA60 多頭結構不足。這種情況應先觀察結構是否重新站回，而不是單純因為帳面虧損就攤平。";
+
+riskClass="bad";
+
+}
+
+else if(
+price<entry &&
+aboveStop &&
+structureGood &&
+setupStrong
+){
+
+averageDecision=
+"目前屬於可以『條件式觀察加碼』的區域：你的持倉在虧損，但多頭結構仍在、價格仍高於主要停損區，而且目前最佳策略條件分數仍有支撐。若要降低均價，應靠近策略入場／支撐區分批，不建議直接用現價一次補滿。";
+
+riskClass="good";
+
+}
+
+else if(
+price<entry &&
+aboveStop
+){
+
+averageDecision=
+"目前雖然低於你的均價，但策略條件還不夠強，不建議單純因為跌了就攤平。可以等價格靠近支撐區並出現止穩，或策略分數重新提高後再考慮。";
+
+riskClass="warn";
+
+}
+
+else if(price>=entry){
+
+averageDecision=
+"目前價格沒有低於你的原始均價，因此這不屬於『攤低均價』。若要再買，應視為順勢加碼，優先等回踩支撐或突破確認，不建議因為帳面獲利就追高。";
+
+riskClass=
+structureGood&&setupStrong
+?"good"
+:"warn";
+
+}
+
+else{
+
+averageDecision=
+"目前風險條件偏高，先不要把『降低均價』當成主要理由。加碼前應先確認價格沒有跌破策略失效點，且多頭結構重新穩定。";
+
+riskClass="bad";
+
+}
+
+/* ===== 建議加碼股數 =====
+   以目前持股的 25% / 50% 做分批參考
+   台股會同時換算張數與零股
+================================================== */
+
+var addShares25=
+shares>0
+?Math.max(1,Math.round(shares*.25))
+:0;
+
+var addShares50=
+shares>0
+?Math.max(1,Math.round(shares*.5))
+:0;
+
+function sharesText(n){
+
+n=Math.max(
+0,
+Math.round(n)
+);
+
+if(d.market==="US"){
+return n+" 股"
+}
+
+var l=Math.floor(n/1000);
+var o=n%1000;
+
+if(l>0&&o>0){
+return l+" 張 "+o+" 股"
+}
+
+if(l>0){
+return l+" 張"
+}
+
+return o+" 股"
+
+}
+
+function newAverage(addP,addS){
+
+if(
+!entry||
+!shares||
+!addP||
+!addS
+){
+return null
+}
+
+return(
+(entry*shares)+
+(addP*addS)
+)/
+(shares+addS)
+
+}
+
+var avg25=
+newAverage(
+addPrice,
+addShares25
+);
+
+var avg50=
+newAverage(
+secondAdd,
+addShares50
+);
+
+var slLoss=
+entry>0&&shares>0
+?(riskLine-entry)*shares
+:0;
+
+var slLossPct=
+cost>0
+?slLoss/cost*100
+:0;
+
+return(
+
+'<div class="big-section-title">'+
+'💼 我的持倉與加碼分析'+
+'</div>'+
+
+'<div class="position-card">'+
+
+'<div class="position-title">'+
+'設定我的入場'+
+'</div>'+
+
+'<div class="position-desc">'+
+'輸入你的實際平均入場價、張數與零股。資料只儲存在這台裝置，下次開啟這檔股票會自動帶入。'+
+'</div>'+
+
+'<div class="position-form">'+
+
+'<div class="position-field full">'+
+'<label>我的平均入場價</label>'+
+'<input id="myEntryPrice" class="position-input" inputmode="decimal" type="number" step="0.01" min="0" placeholder="例如 980" value="'+
+(entry||"")+
+'">'+
+'<div class="position-unit">實際成交平均成本</div>'+
+'</div>'+
+
+'<div class="position-field">'+
+'<label>'+
+(d.market==="US"?"整股":"張數")+
+'</label>'+
+'<input id="myLots" class="position-input" inputmode="numeric" type="number" step="1" min="0" placeholder="0" value="'+
+(lots||"")+
+'">'+
+'<div class="position-unit">'+
+(d.market==="US"?"整股數":"1 張 = 1000 股")+
+'</div>'+
+'</div>'+
+
+'<div class="position-field">'+
+'<label>'+
+(d.market==="US"?"其他股數":"零股")+
+'</label>'+
+'<input id="myOddShares" class="position-input" inputmode="numeric" type="number" step="1" min="0" placeholder="0" value="'+
+(odd||"")+
+'">'+
+'<div class="position-unit">'+
+(d.market==="US"?"額外股數":"不足 1 張的股數")+
+'</div>'+
+'</div>'+
+
+'</div>'+
+
+'<button id="savePositionButton" class="position-save-btn">'+
+'儲存並重新分析持倉'+
+'</button>'+
+
+(
+entry>0&&shares>0
+?
+
+'<div class="position-summary-grid">'+
+
+'<div class="position-summary">'+
+'<span>總持有數量</span>'+
+'<strong>'+
+sharesText(shares)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>我的平均成本</span>'+
+'<strong>'+
+fmt(entry)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>目前股價</span>'+
+'<strong>'+
+fmt(price)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>目前損益</span>'+
+'<strong class="'+
+pclass(pnl)+
+'">'+
+(pnl>=0?"+":"")+
+fmt(pnl,0)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>報酬率</span>'+
+'<strong class="'+
+pclass(pnlPct)+
+'">'+
+pct(pnlPct)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>目前最佳策略</span>'+
+'<strong>'+
+safe(setupBest.name)+
+' '+
+setupBest.setup.score+
+'分'+
+'</strong>'+
+'</div>'+
+
+'</div>'
+
+:
+''
+)+
+
+'<div class="position-risk '+riskClass+'">'+
+
+'<div class="position-risk-title">'+
+(
+riskClass==="good"
+?"🟢 加碼條件尚可":
+riskClass==="bad"
+?"🔴 目前不宜攤平":
+"🟡 等待更好條件"
+)+
+'</div>'+
+
+safe(averageDecision)+
+
+'</div>'+
+
+(
+entry>0&&shares>0
+?
+
+'<div class="add-plan">'+
+
+'<div class="add-plan-title">'+
+'📍 可以再加買的位置'+
+'</div>'+
+
+'<div class="add-plan-grid">'+
+
+'<div class="add-plan-box green">'+
+'<span>第一加碼觀察價</span>'+
+'<strong>'+
+fmt(addPrice)+
+'</strong>'+
+'</div>'+
+
+'<div class="add-plan-box">'+
+'<span>第二加碼觀察價</span>'+
+'<strong>'+
+fmt(secondAdd)+
+'</strong>'+
+'</div>'+
+
+'<div class="add-plan-box yellow">'+
+'<span>SL1｜停止攤平</span>'+
+'<strong>'+
+fmt(riskLine)+
+'</strong>'+
+'</div>'+
+
+'<div class="add-plan-box yellow">'+
+'<span>SL2｜結構失效</span>'+
+'<strong>'+
+fmt(deepRisk)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+
+'<div class="position-summary-grid">'+
+
+'<div class="position-summary">'+
+'<span>第一批參考數量｜原持股 25%</span>'+
+'<strong>'+
+sharesText(addShares25)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>第一批買後新均價</span>'+
+'<strong>'+
+(avg25!==null?fmt(avg25):"--")+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>第二批參考數量｜原持股 50%</span>'+
+'<strong>'+
+sharesText(addShares50)+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary">'+
+'<span>第二批買後新均價</span>'+
+'<strong>'+
+(avg50!==null?fmt(avg50):"--")+
+'</strong>'+
+'</div>'+
+
+'<div class="position-summary full">'+
+'<span>若原持倉跌到 SL1 的約略損益</span>'+
+'<strong class="'+
+pclass(slLoss)+
+'">'+
+(slLoss>=0?"+":"")+
+fmt(slLoss,0)+
+' ｜ '+
+pct(slLossPct)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+
+'<div class="position-note">'+
+'第一、第二加碼價是依目前最佳策略的入場區、MA20、SL1／SL2 與結構位置計算。25%／50% 是分批試算，不代表必須買到該數量；跌破 SL1 後不再把降低均價當成加碼理由，跌破 SL2 視為更明顯的結構失效。'+
+'</div>'+
+
+'</div>'
+
+:
+''
+)+
 
 '</div>'
 
 )
 
-}).join("");
-
-box
-.querySelectorAll("[data-watch-open]")
-.forEach(item=>{
-
-item.onclick=
-()=>{
-
-analyze(
-item.dataset.watchOpen
-)
-
 }
 
-});
+function bindPositionControls(){
 
-box
-.querySelectorAll("[data-watch-remove]")
-.forEach(button=>{
+var button=
+el("savePositionButton");
+
+if(!button)return;
 
 button.onclick=
-e=>{
+()=>{
 
-e.stopPropagation();
+if(
+!currentAnalysisData||
+!currentAnalysisData.symbol
+){
+return
+}
 
-removeFavorite(
-button.dataset.watchRemove
+var entry=
+Number(
+el("myEntryPrice").value
+);
+
+var lots=
+Number(
+el("myLots").value
+);
+
+var odd=
+Number(
+el("myOddShares").value
+);
+
+if(
+!Number.isFinite(entry)||
+entry<=0
+){
+
+alert(
+"請輸入正確的平均入場價。"
+);
+
+return
+
+}
+
+if(
+(!Number.isFinite(lots)||lots<0)||
+(!Number.isFinite(odd)||odd<0)
+){
+
+alert(
+"請輸入正確的持有數量。"
+);
+
+return
+
+}
+
+if(
+Math.floor(lots)<=0&&
+Math.floor(odd)<=0
+){
+
+alert(
+"請至少輸入張數或零股數量。"
+);
+
+return
+
+}
+
+savePosition(
+currentAnalysisData.symbol,
+{
+entry,
+lots,
+odd
+}
+);
+
+buildAnalysis(
+currentAnalysisData
 )
 
 }
 
-})
-
 }
 
-
 /* ==================================================
-   市場資料整理
+   市場資料
 ================================================== */
 
 function marketOf(d){
 
 var rows=d.rows||[];
-
-var last=
-rows.at(-1)||{};
+var last=rows.at(-1)||{};
 
 var price=
 Number(d.price)||
 Number(last.close)||
 0;
 
-var ma20=
-Number(d.ma20);
-
-var ma60=
-Number(d.ma60);
-
-var rsi=
-Number(d.rsi);
-
-var macd=
-Number(d.macd);
-
-var atr=
-Number(d.atr);
+var ma20=Number(d.ma20);
+var ma60=Number(d.ma60);
+var rsi=Number(d.rsi);
+var macd=Number(d.macd);
+var atr=Number(d.atr);
 
 if(!Number.isFinite(ma20)){
-
-var a=
-rows.slice(-20)
-.map(x=>Number(x.close))
-.filter(Number.isFinite);
-
-ma20=
-a.length
-?a.reduce((x,y)=>x+y,0)/a.length
-:price
-
+var a=rows.slice(-20).map(x=>Number(x.close)).filter(Number.isFinite);
+ma20=a.length?a.reduce((x,y)=>x+y,0)/a.length:price
 }
 
 if(!Number.isFinite(ma60)){
-
-var b=
-rows.slice(-60)
-.map(x=>Number(x.close))
-.filter(Number.isFinite);
-
-ma60=
-b.length
-?b.reduce((x,y)=>x+y,0)/b.length
-:price
-
+var b=rows.slice(-60).map(x=>Number(x.close)).filter(Number.isFinite);
+ma60=b.length?b.reduce((x,y)=>x+y,0)/b.length:price
 }
 
-if(!Number.isFinite(rsi)){
-rsi=50
-}
-
-if(!Number.isFinite(macd)){
-macd=0
-}
+if(!Number.isFinite(rsi))rsi=50;
+if(!Number.isFinite(macd))macd=0;
 
 if(!Number.isFinite(atr)||atr<=0){
-
-var recent=
-rows.slice(-14);
-
-var ranges=
-recent
-.map(
-x=>
-Number(x.high)-
-Number(x.low)
-)
-.filter(Number.isFinite);
-
-atr=
-ranges.length
-?ranges.reduce((x,y)=>x+y,0)/ranges.length
-:price*.02
-
+var recent=rows.slice(-14);
+var ranges=recent.map(x=>Number(x.high)-Number(x.low)).filter(Number.isFinite);
+atr=ranges.length?ranges.reduce((x,y)=>x+y,0)/ranges.length:price*.02
 }
 
-var recent20=
-rows.slice(-20);
+var recent20=rows.slice(-20);
 
-var highs=
-recent20
-.map(x=>Number(x.high))
-.filter(Number.isFinite);
+var highs=recent20.map(x=>Number(x.high)).filter(Number.isFinite);
+var lows=recent20.map(x=>Number(x.low)).filter(Number.isFinite);
 
-var lows=
-recent20
-.map(x=>Number(x.low))
-.filter(Number.isFinite);
+var recent10=rows.slice(-10);
+var lows10=recent10.map(x=>Number(x.low)).filter(Number.isFinite);
 
-var recent10=
-rows.slice(-10);
-
-var lows10=
-recent10
-.map(x=>Number(x.low))
-.filter(Number.isFinite);
-
-var resistance=
-Number(d.resistance);
+var resistance=Number(d.resistance);
 
 if(!Number.isFinite(resistance)){
-
-resistance=
-highs.length
-?Math.max(...highs)
-:price
-
+resistance=highs.length?Math.max(...highs):price
 }
 
-var support=
-Number(d.support);
+var support=Number(d.support);
 
 if(!Number.isFinite(support)){
-
-support=
-lows.length
-?Math.min(...lows)
-:ma20
-
+support=lows.length?Math.min(...lows):ma20
 }
 
-var low10=
-lows10.length
-?Math.min(...lows10)
-:support;
+var low10=lows10.length?Math.min(...lows10):support;
 
 return{
 price,
@@ -1778,70 +2258,34 @@ support,
 low10,
 rows
 }
-
 }
-
-
-/* ==================================================
-   成交量
-================================================== */
 
 function volumeMetrics(d,rows){
 
-var last=
-rows.at(-1)||{};
+var last=rows.at(-1)||{};
 
-var current=
-Number(
-d.volume??
-last.volume
-);
+var current=Number(d.volume??last.volume);
+if(!Number.isFinite(current))current=0;
 
-if(!Number.isFinite(current)){
-current=0
-}
-
-var vols=
-rows
-.slice(-21,-1)
-.map(x=>Number(x.volume))
-.filter(Number.isFinite);
+var vols=rows.slice(-21,-1).map(x=>Number(x.volume)).filter(Number.isFinite);
 
 var average20=
 vols.length
 ?vols.reduce((a,b)=>a+b,0)/vols.length
 :0;
 
-var ratio=
-Number(d.volumeRatio);
+var ratio=Number(d.volumeRatio);
 
-if(
-!Number.isFinite(ratio)||
-ratio<=0
-){
-
-ratio=
-average20>0
-?current/average20
-:1
-
+if(!Number.isFinite(ratio)||ratio<=0){
+ratio=average20>0?current/average20:1
 }
 
-var level=
-"正常量";
+var level="正常量";
 
-if(ratio>=2){
-level="明顯放量"
-}
-else if(ratio>=1.5){
-level="放量"
-}
-else if(ratio>=1.2){
-level="量能增溫"
-}
-else if(ratio<.7){
-level="量縮"
-}
+if(ratio>=2)level="明顯放量";
+else if(ratio>=1.5)level="放量";
+else if(ratio>=1.2)level="量能增溫";
+else if(ratio<.7)level="量縮";
 
 return{
 current,
@@ -1849,36 +2293,26 @@ average20,
 ratio,
 level
 }
-
 }
 
 function structureHealthy(m){
 
 var rows=m.rows||[];
 
-if(rows.length<10){
-return true
-}
+if(rows.length<10)return true;
 
-var closes=
-rows.slice(-5)
-.map(x=>Number(x.close))
-.filter(Number.isFinite);
+var closes=rows.slice(-5).map(x=>Number(x.close)).filter(Number.isFinite);
 
-if(closes.length<3){
-return true
-}
+if(closes.length<3)return true;
 
 return(
 closes.at(-1)>=closes[0]*.96 &&
 m.price>=m.ma60*.97
 )
-
 }
 
-
 /* ==================================================
-   三套策略
+   原本三套策略
 ================================================== */
 
 function buildStrategySetups(d,m,v){
@@ -1891,185 +2325,143 @@ var macd=m.macd;
 var atr=m.atr;
 var resistance=m.resistance;
 
-var notBroken=
-price>=ma60*.97;
-
-var structure=
-structureHealthy(m);
-
-
-/* ===== 支撐回踩 ===== */
+var notBroken=price>=ma60*.97;
+var structure=structureHealthy(m);
 
 var pullbackConditions=[
-
 {
 title:"MA20 高於 MA60",
 pass:ma20>ma60,
 explain:"短期均線位於中期均線上方，代表主要趨勢仍偏多。"
 },
-
 {
 title:"價格沒有明顯跌破 MA20",
 pass:price>=ma20-atr*.5,
 explain:"允許正常波動，但價格不能明顯離開短期多頭支撐。"
 },
-
 {
 title:"價格沒有離 MA20 過遠",
 pass:price<=ma20+atr*1.3,
 explain:"避免價格已經拉太遠才追價，保留較合理的風報比。"
 },
-
 {
 title:"RSI 不低於 42",
 pass:rsi>=42,
 explain:"避免動能過弱、回踩已經演變成明顯轉弱。"
 },
-
 {
 title:"RSI 不高於 68",
 pass:rsi<=68,
 explain:"避免短線已經過熱，降低高位追價風險。"
 },
-
 {
 title:"MACD 不低於 0",
 pass:macd>=0,
 explain:"中短期動能仍維持在相對偏多區域。"
 },
-
 {
 title:"中期結構尚未跌破",
 pass:notBroken,
 explain:"價格仍維持在 MA60 附近之上，避免多頭結構已失效。"
 },
-
 {
 title:"量能沒有過度爆量",
 pass:v.ratio<=1.6,
 explain:"支撐回踩策略不希望在短線爆量急拉後追高。"
 }
-
 ];
 
-var pullbackPassed=
-pullbackConditions.filter(x=>x.pass).length;
-
-
-/* ===== 高 R 突破 ===== */
+var pullbackPassed=pullbackConditions.filter(x=>x.pass).length;
 
 var highRConditions=[
-
 {
 title:"MA20 高於 MA60",
 pass:ma20>ma60,
 explain:"突破策略優先選擇中短期趨勢一致向上的股票。"
 },
-
 {
 title:"價格站在 MA20 上方",
 pass:price>ma20,
 explain:"價格仍位於短期趨勢支撐之上。"
 },
-
 {
 title:"MACD 大於 0",
 pass:macd>0,
 explain:"突破前需要有正向動能配合。"
 },
-
 {
 title:"RSI 至少 52",
 pass:rsi>=52,
 explain:"RSI 進入偏強區域，代表買方動能較明顯。"
 },
-
 {
 title:"RSI 不高於 72",
 pass:rsi<=72,
 explain:"避免突破前已經過度過熱。"
 },
-
 {
 title:"價格接近前高／壓力",
 pass:price>=resistance-atr*.5,
 explain:"高 R 突破策略需要價格靠近主要壓力，才能等待突破。"
 },
-
 {
 title:"量比至少 1.2 倍",
 pass:v.ratio>=1.2,
 explain:"突破需要比平常更積極的成交量支持。"
 },
-
 {
 title:"結構沒有破壞",
 pass:notBroken&&structure,
 explain:"短中期價格結構仍維持完整。"
 }
-
 ];
 
-var highRPassed=
-highRConditions.filter(x=>x.pass).length;
-
-
-/* ===== 強勢續攻 ===== */
+var highRPassed=highRConditions.filter(x=>x.pass).length;
 
 var surgeConditions=[
-
 {
 title:"MA20 高於 MA60",
 pass:ma20>ma60,
 explain:"主要趨勢必須保持向上。"
 },
-
 {
 title:"價格站在 MA20 上方",
 pass:price>ma20,
 explain:"強勢股通常會維持在短期均線上方。"
 },
-
 {
 title:"MACD 大於 0",
 pass:macd>0,
 explain:"正向動能仍在延續。"
 },
-
 {
 title:"RSI 至少 58",
 pass:rsi>=58,
 explain:"需要比一般多頭更強的動能。"
 },
-
 {
 title:"RSI 不高於 74",
 pass:rsi<=74,
 explain:"避免動能已經極度過熱。"
 },
-
 {
 title:"價格逼近或突破前高",
 pass:price>=resistance-atr*.25,
 explain:"續攻策略需要價格處於相對強勢的位置。"
 },
-
 {
 title:"量比至少 1.5 倍",
 pass:v.ratio>=1.5,
 explain:"續攻需要更明顯的成交量推動。"
 },
-
 {
 title:"多頭結構完整",
 pass:notBroken&&structure,
 explain:"避免只剩單日急拉、但原本趨勢已經轉弱。"
 }
-
 ];
 
-var surgePassed=
-surgeConditions.filter(x=>x.pass).length;
+var surgePassed=surgeConditions.filter(x=>x.pass).length;
 
 return{
 
@@ -2077,11 +2469,7 @@ PULLBACK:{
 conditions:pullbackConditions,
 passed:pullbackPassed,
 total:pullbackConditions.length,
-score:Math.round(
-pullbackPassed/
-pullbackConditions.length*
-100
-),
+score:Math.round(pullbackPassed/pullbackConditions.length*100),
 qualified:pullbackPassed>=7
 },
 
@@ -2089,11 +2477,7 @@ HIGH_R:{
 conditions:highRConditions,
 passed:highRPassed,
 total:highRConditions.length,
-score:Math.round(
-highRPassed/
-highRConditions.length*
-100
-),
+score:Math.round(highRPassed/highRConditions.length*100),
 qualified:highRPassed>=7
 },
 
@@ -2101,18 +2485,12 @@ SURGE:{
 conditions:surgeConditions,
 passed:surgePassed,
 total:surgeConditions.length,
-score:Math.round(
-surgePassed/
-surgeConditions.length*
-100
-),
+score:Math.round(surgePassed/surgeConditions.length*100),
 qualified:surgePassed>=7
 }
 
 }
-
 }
-
 
 /* ==================================================
    策略推薦
@@ -2121,102 +2499,45 @@ qualified:surgePassed>=7
 function recommendationHTML(setups){
 
 var items=[
-
-{
-name:"支撐回踩",
-emoji:"🟢",
-target:"pullbackStrategy",
-setup:setups.PULLBACK
-},
-
-{
-name:"高 R 突破",
-emoji:"🟣",
-target:"highRStrategy",
-setup:setups.HIGH_R
-},
-
-{
-name:"強勢續攻",
-emoji:"🔥",
-target:"surgeStrategy",
-setup:setups.SURGE
-}
-
+{name:"支撐回踩",emoji:"🟢",target:"pullbackStrategy",setup:setups.PULLBACK},
+{name:"高 R 突破",emoji:"🟣",target:"highRStrategy",setup:setups.HIGH_R},
+{name:"強勢續攻",emoji:"🔥",target:"surgeStrategy",setup:setups.SURGE}
 ];
 
-items.sort(
-(a,b)=>
+items.sort((a,b)=>
 b.setup.score-a.setup.score||
 b.setup.passed-a.setup.passed
 );
 
-var best=
-items[0];
+var best=items[0];
 
 return(
-
 '<div class="big-section-title">🎯 目前策略推薦</div>'+
 
-'<div class="recommend-card strategy-jump" data-jump="'+
-best.target+
-'">'+
+'<div class="recommend-card strategy-jump" data-jump="'+best.target+'">'+
 
 '<div class="recommend-top">'+
-
 '<div>'+
-
-'<div class="recommend-name">'+
-best.emoji+
-' '+
-best.name+
-'</div>'+
-
-'<div class="recommend-badge">'+
-'目前推薦策略'+
-'</div>'+
-
+'<div class="recommend-name">'+best.emoji+' '+best.name+'</div>'+
+'<div class="recommend-badge">目前推薦策略</div>'+
 '<div class="recommend-note">'+
 '依照三套策略各自原本的條件分別計分，目前這套策略的技術條件符合度最高。點這張卡可直接跳到完整策略解說。'+
 '</div>'+
-
 '</div>'+
 
 '<div class="recommend-score">'+
-
-'<strong>'+
-best.setup.score+
-'</strong>'+
-
+'<strong>'+best.setup.score+'</strong>'+
 '<span>推薦分數</span>'+
-
 '</div>'+
-
 '</div>'+
 
 '<div class="recommend-mini-grid">'+
 
 items.map((x,index)=>
-
-'<button type="button" class="recommend-mini strategy-jump '+
-(index===0?"best":"")+
-'" data-jump="'+
-x.target+
-'">'+
-
-'<span>'+
-x.emoji+
-' '+
-x.name+
-'</span>'+
-
-'<strong>'+
-x.setup.score+
-' 分'+
-'</strong>'+
-
+'<button type="button" class="recommend-mini strategy-jump '+(index===0?"best":"")+'" data-jump="'+x.target+'">'+
+'<span>'+x.emoji+' '+x.name+'</span>'+
+'<strong>'+x.setup.score+' 分</strong>'+
 '</button>'
-
 ).join("")+
 
 '</div>'+
@@ -2226,39 +2547,30 @@ x.setup.score+
 '</div>'+
 
 '</div>'
-
 )
-
 }
 
 function bindStrategyJumps(){
 
-document
-.querySelectorAll("[data-jump]")
-.forEach(item=>{
+document.querySelectorAll("[data-jump]").forEach(item=>{
 
 item.onclick=e=>{
 
 e.stopPropagation();
 
-var target=
-el(item.dataset.jump);
+var target=el(item.dataset.jump);
 
 if(target){
-
 target.scrollIntoView({
 behavior:"smooth",
 block:"start"
 })
-
 }
 
 }
 
 })
-
 }
-
 
 /* ==================================================
    策略目標
@@ -2266,29 +2578,18 @@ block:"start"
 
 function strategyTargets(type,m){
 
-var price=
-Number(m.price)||0;
+var price=Number(m.price)||0;
 
-var atr=
-Math.max(
+var atr=Math.max(
 Number(m.atr)||price*.02,
 price*.005
 );
 
-var ma20=
-Number(m.ma20)||price;
-
-var ma60=
-Number(m.ma60)||price;
-
-var resistance=
-Number(m.resistance)||price;
-
-var support=
-Number(m.support)||ma20;
-
-var low10=
-Number(m.low10)||support;
+var ma20=Number(m.ma20)||price;
+var ma60=Number(m.ma60)||price;
+var resistance=Number(m.resistance)||price;
+var support=Number(m.support)||ma20;
+var low10=Number(m.low10)||support;
 
 var entryLow;
 var entryHigh;
@@ -2297,30 +2598,19 @@ var stop2;
 
 if(type==="PULLBACK"){
 
-entryLow=
-Math.max(
-ma20-atr*.25,
-support
-);
-
-entryHigh=
-Math.min(
-price+atr*.15,
-ma20+atr*.45
-);
+entryLow=Math.max(ma20-atr*.25,support);
+entryHigh=Math.min(price+atr*.15,ma20+atr*.45);
 
 if(entryHigh<entryLow){
 entryHigh=entryLow+atr*.25
 }
 
-stop1=
-Math.min(
+stop1=Math.min(
 entryLow-atr*.55,
 support-atr*.25
 );
 
-stop2=
-Math.min(
+stop2=Math.min(
 ma60-atr*.35,
 low10-atr*.3,
 stop1-atr*.6
@@ -2330,14 +2620,12 @@ stop1-atr*.6
 
 else if(type==="HIGH_R"){
 
-entryLow=
-Math.max(
+entryLow=Math.max(
 resistance-atr*.12,
 price-atr*.1
 );
 
-entryHigh=
-Math.max(
+entryHigh=Math.max(
 resistance+atr*.18,
 price+atr*.1
 );
@@ -2346,14 +2634,12 @@ if(entryHigh<entryLow){
 entryHigh=entryLow+atr*.3
 }
 
-stop1=
-Math.min(
+stop1=Math.min(
 resistance-atr*.55,
 entryLow-atr*.45
 );
 
-stop2=
-Math.min(
+stop2=Math.min(
 ma20-atr*.35,
 low10-atr*.25,
 stop1-atr*.65
@@ -2363,27 +2649,23 @@ stop1-atr*.65
 
 else{
 
-entryLow=
-Math.max(
+entryLow=Math.max(
 price-atr*.18,
 ma20
 );
 
-entryHigh=
-price+atr*.28;
+entryHigh=price+atr*.28;
 
 if(entryHigh<entryLow){
 entryHigh=entryLow+atr*.3
 }
 
-stop1=
-Math.min(
+stop1=Math.min(
 price-atr*.9,
 low10-atr*.15
 );
 
-stop2=
-Math.min(
+stop2=Math.min(
 ma20-atr*.45,
 low10-atr*.4,
 stop1-atr*.65
@@ -2391,20 +2673,10 @@ stop1-atr*.65
 
 }
 
-entryLow=
-Math.max(
-entryLow,
-price*.5
-);
+entryLow=Math.max(entryLow,price*.5);
+entryHigh=Math.max(entryHigh,entryLow);
 
-entryHigh=
-Math.max(
-entryHigh,
-entryLow
-);
-
-var center=
-(entryLow+entryHigh)/2;
+var center=(entryLow+entryHigh)/2;
 
 if(stop1>=center){
 stop1=center-atr*.8
@@ -2414,32 +2686,27 @@ if(stop2>=stop1){
 stop2=stop1-atr*.7
 }
 
-var risk=
-Math.max(
+var risk=Math.max(
 center-stop1,
 atr*.45
 );
 
-var previousHigh=
-Math.max(
+var previousHigh=Math.max(
 resistance,
 center
 );
 
-var tp1=
-Math.max(
+var tp1=Math.max(
 previousHigh,
 center+risk*1.2
 );
 
-var tp2=
-Math.max(
+var tp2=Math.max(
 tp1+atr*.35,
 center+risk*2
 );
 
-var tp3=
-Math.max(
+var tp3=Math.max(
 tp2+atr*.45,
 center+risk*3
 );
@@ -2456,9 +2723,7 @@ tp1,
 tp2,
 tp3
 }
-
 }
-
 
 /* ==================================================
    策略卡
@@ -2487,31 +2752,16 @@ setup.score>=63
 ?"接近形成":
 "尚待確認";
 
-var t=
-strategyTargets(
-type,
-m
-);
+var t=strategyTargets(type,m);
 
 function rr(target,stop){
 
-var reward=
-target-t.center;
+var reward=target-t.center;
+var risk=t.center-stop;
 
-var risk=
-t.center-stop;
+if(reward<=0||risk<=0)return"--";
 
-if(
-reward<=0||
-risk<=0
-){
-return"--"
-}
-
-return(
-reward/risk
-).toFixed(2)+"R"
-
+return(reward/risk).toFixed(2)+"R"
 }
 
 var rr1=rr(t.tp1,t.stop1);
@@ -2522,11 +2772,8 @@ var rr1Deep=rr(t.tp1,t.stop2);
 var rr2Deep=rr(t.tp2,t.stop2);
 var rr3Deep=rr(t.tp3,t.stop2);
 
-var atr=
-Number(m.atr)||t.risk;
-
-var breakoutBase=
-Number(m.resistance)||t.previousHigh;
+var atr=Number(m.atr)||t.risk;
+var breakoutBase=Number(m.resistance)||t.previousHigh;
 
 var holdLow;
 var holdHigh;
@@ -2542,122 +2789,62 @@ var tp3Reason="";
 
 if(type==="PULLBACK"){
 
-holdLow=
-Math.max(
+holdLow=Math.max(
 Number(m.ma20)||0,
 breakoutBase-atr*.35
 );
 
-holdHigh=
-breakoutBase+atr*.2;
+holdHigh=breakoutBase+atr*.2;
 
-entryReason=
-"以 MA20、近期支撐與 ATR 波動範圍共同計算。回到這裡止穩，仍屬多頭結構可承受的正常回踩。";
-
-stop1Reason=
-"放在回踩支撐下方並加入 ATR 緩衝。跌破代表原本預期的支撐回踩開始失效。";
-
-stop2Reason=
-"再參考 MA60、10 日低點與較深 ATR 緩衝。若連這裡都失守，中期多頭結構已有明顯破壞。";
-
-pressureReason=
-"前高／20 日壓力容易出現套牢與獲利了結賣壓，因此優先作為第一道止盈與減碼觀察。";
-
-holdReason=
-"有效突破後回踩原壓力附近仍守住，代表壓力有機會轉為支撐；沒有重新跌回突破區下方時，續抱結構仍有效。";
-
-tp1Reason=
-"TP1 優先處理前高／壓力；若前高已低於入場中心，才使用第一段風險延伸。";
-
-tp2Reason=
-"突破前高後依原始 1R 推算第二段延伸，同時要求目標高於 TP1。";
-
-tp3Reason=
-"屬於強勢趨勢延伸目標，需要突破後量價與多頭結構持續。";
+entryReason="以 MA20、近期支撐與 ATR 波動範圍共同計算。回到這裡止穩，仍屬多頭結構可承受的正常回踩。";
+stop1Reason="放在回踩支撐下方並加入 ATR 緩衝。跌破代表原本預期的支撐回踩開始失效。";
+stop2Reason="再參考 MA60、10 日低點與較深 ATR 緩衝。若連這裡都失守，中期多頭結構已有明顯破壞。";
+pressureReason="前高／20 日壓力容易出現套牢與獲利了結賣壓，因此優先作為第一道止盈與減碼觀察。";
+holdReason="有效突破後回踩原壓力附近仍守住，代表壓力有機會轉為支撐；沒有重新跌回突破區下方時，續抱結構仍有效。";
+tp1Reason="TP1 優先處理前高／壓力；若前高已低於入場中心，才使用第一段風險延伸。";
+tp2Reason="突破前高後依原始 1R 推算第二段延伸，同時要求目標高於 TP1。";
+tp3Reason="屬於強勢趨勢延伸目標，需要突破後量價與多頭結構持續。";
 
 }
 
 else if(type==="HIGH_R"){
 
-holdLow=
-breakoutBase-atr*.3;
+holdLow=breakoutBase-atr*.3;
+holdHigh=breakoutBase+atr*.2;
 
-holdHigh=
-breakoutBase+atr*.2;
-
-entryReason=
-"觀察前高／壓力附近的小幅突破區，利用 ATR 控制追價距離，讓停損仍能靠近入場區。";
-
-stop1Reason=
-"放在突破位下方。突破後快速跌回壓力下方，代表假突破風險提高。";
-
-stop2Reason=
-"再參考 MA20 與近期低點；若連短中期支撐都跌破，代表不只是突破失敗，而是整體結構轉弱。";
-
-pressureReason=
-"這裡是策略正在挑戰的主要前高／20 日壓力，也是最容易出現供給的位置。";
-
-holdReason=
-"突破後回踩前高附近仍能站回，且沒有明顯放量跌破，可視為壓力轉支撐。";
-
-tp1Reason=
-"TP1 先確認前高／壓力是否真正被消化；若入場中心已高於前高，才改用第一段延伸。";
-
-tp2Reason=
-"屬於突破確認後的延伸目標，以原始風險距離計算。";
-
-tp3Reason=
-"屬於強勢突破的較遠延伸區；若量價或突破支撐轉弱，應先保護成果。";
+entryReason="觀察前高／壓力附近的小幅突破區，利用 ATR 控制追價距離，讓停損仍能靠近入場區。";
+stop1Reason="放在突破位下方。突破後快速跌回壓力下方，代表假突破風險提高。";
+stop2Reason="再參考 MA20 與近期低點；若連短中期支撐都跌破，代表不只是突破失敗，而是整體結構轉弱。";
+pressureReason="這裡是策略正在挑戰的主要前高／20 日壓力，也是最容易出現供給的位置。";
+holdReason="突破後回踩前高附近仍能站回，且沒有明顯放量跌破，可視為壓力轉支撐。";
+tp1Reason="TP1 先確認前高／壓力是否真正被消化；若入場中心已高於前高，才改用第一段延伸。";
+tp2Reason="屬於突破確認後的延伸目標，以原始風險距離計算。";
+tp3Reason="屬於強勢突破的較遠延伸區；若量價或突破支撐轉弱，應先保護成果。";
 
 }
 
 else{
 
-holdLow=
-Math.max(
+holdLow=Math.max(
 Number(m.ma20)||0,
 breakoutBase-atr*.25
 );
 
-holdHigh=
-breakoutBase+atr*.25;
+holdHigh=breakoutBase+atr*.25;
 
-entryReason=
-"以現價附近的小範圍作為觀察區，利用 ATR 控制追價距離，避免單根急拉後追得過遠。";
-
-stop1Reason=
-"優先參考最近短線低點與 ATR。跌破代表原本的強勢續攻節奏開始被破壞。";
-
-stop2Reason=
-"再下移到 MA20、10 日低點附近；若失守，短線轉弱已進一步變成中短期結構破壞。";
-
-pressureReason=
-"前高／20 日壓力仍可能出現獲利了結，因此先處理這裡，而不是直接假設價格一定延伸。";
-
-holdReason=
-"突破前高後回踩原突破區或 MA20 附近仍守住，代表強勢結構沒有被破壞。";
-
-tp1Reason=
-"TP1 先處理前高／壓力；如果入場位置已跨過前高，才改用第一段延伸。";
-
-tp2Reason=
-"突破確認後的第二段延伸，以原始風險距離推算。";
-
-tp3Reason=
-"動能非常強時才看的延伸目標；若創高後量能或動能轉弱，應優先保護報酬。";
+entryReason="以現價附近的小範圍作為觀察區，利用 ATR 控制追價距離，避免單根急拉後追得過遠。";
+stop1Reason="優先參考最近短線低點與 ATR。跌破代表原本的強勢續攻節奏開始被破壞。";
+stop2Reason="再下移到 MA20、10 日低點附近；若失守，短線轉弱已進一步變成中短期結構破壞。";
+pressureReason="前高／20 日壓力仍可能出現獲利了結，因此先處理這裡，而不是直接假設價格一定延伸。";
+holdReason="突破前高後回踩原突破區或 MA20 附近仍守住，代表強勢結構沒有被破壞。";
+tp1Reason="TP1 先處理前高／壓力；如果入場位置已跨過前高，才改用第一段延伸。";
+tp2Reason="突破確認後的第二段延伸，以原始風險距離推算。";
+tp3Reason="動能非常強時才看的延伸目標；若創高後量能或動能轉弱，應優先保護報酬。";
 
 }
 
 if(holdLow>holdHigh){
-
-[
-holdLow,
-holdHigh
-]=[
-holdHigh,
-holdLow
-]
-
+[holdLow,holdHigh]=[holdHigh,holdLow]
 }
 
 return(
@@ -2665,39 +2852,20 @@ return(
 '<div class="strategy-card">'+
 
 '<div class="strategy-head">'+
-
 '<div>'+
-
-'<div class="strategy-name">'+
-emojis[type]+
-' '+
-names[type]+
-'</div>'+
-
-'<div class="strategy-grade">'+
-safe(grade)+
-'</div>'+
-
+'<div class="strategy-name">'+emojis[type]+' '+names[type]+'</div>'+
+'<div class="strategy-grade">'+safe(grade)+'</div>'+
 '</div>'+
 
 '<div class="strategy-score">'+
 setup.score+
-'<small>'+
-setup.passed+
-'/'+
-setup.total+
-' 條'+
-'</small>'+
+'<small>'+setup.passed+'/'+setup.total+' 條</small>'+
 '</div>'+
-
 '</div>'+
 
 '<div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">'+
 
-'<div class="section-title">'+
-'🎯 策略目標規劃'+
-'</div>'+
-
+'<div class="section-title">🎯 策略目標規劃</div>'+
 '<div class="section-sub" style="margin-top:5px">'+
 '觀察入場 → SL 結構 → 前高壓力 → 突破回踩 → TP2 / TP3 延伸'+
 '</div>'+
@@ -2706,105 +2874,58 @@ setup.total+
 
 '<div class="strategy-level level-entry" style="grid-column:1/-1">'+
 '<span>👀 觀察入場區間</span>'+
-'<strong>'+
-fmt(t.entryLow)+
-' ～ '+
-fmt(t.entryHigh)+
-'</strong>'+
-'<div class="strategy-reason">'+
-safe(entryReason)+
-'</div>'+
+'<strong>'+fmt(t.entryLow)+' ～ '+fmt(t.entryHigh)+'</strong>'+
+'<div class="strategy-reason">'+safe(entryReason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-stop">'+
 '<span>🛑 SL1｜第一停損</span>'+
-'<strong>'+
-fmt(t.stop1)+
-'</strong>'+
-'<div class="strategy-reason">'+
-safe(stop1Reason)+
-'</div>'+
+'<strong>'+fmt(t.stop1)+'</strong>'+
+'<div class="strategy-reason">'+safe(stop1Reason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-stop">'+
 '<span>🛡 SL2｜第二停損</span>'+
-'<strong>'+
-fmt(t.stop2)+
-'</strong>'+
-'<div class="strategy-reason">'+
-safe(stop2Reason)+
-'</div>'+
+'<strong>'+fmt(t.stop2)+'</strong>'+
+'<div class="strategy-reason">'+safe(stop2Reason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-pressure" style="grid-column:1/-1">'+
 '<span>🏔 前高／壓力｜第一道止盈觀察</span>'+
-'<strong>'+
-fmt(t.previousHigh)+
-'</strong>'+
-'<div class="strategy-reason">'+
-safe(pressureReason)+
-'</div>'+
+'<strong>'+fmt(t.previousHigh)+'</strong>'+
+'<div class="strategy-reason">'+safe(pressureReason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-hold" style="grid-column:1/-1">'+
 '<span>🔄 突破後回踩續抱觀察區</span>'+
-'<strong>'+
-fmt(holdLow)+
-' ～ '+
-fmt(holdHigh)+
-'</strong>'+
-'<div class="strategy-reason">'+
-safe(holdReason)+
-'</div>'+
+'<strong>'+fmt(holdLow)+' ～ '+fmt(holdHigh)+'</strong>'+
+'<div class="strategy-reason">'+safe(holdReason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-tp">'+
 '<span>💰 TP1</span>'+
-'<strong>'+
-fmt(t.tp1)+
-'</strong>'+
-'<span class="rr-text">'+
-'SL1 風報比 '+
-rr1+
-'</span>'+
-'<div class="strategy-reason">'+
-safe(tp1Reason)+
-'</div>'+
+'<strong>'+fmt(t.tp1)+'</strong>'+
+'<span class="rr-text">SL1 風報比 '+rr1+'</span>'+
+'<div class="strategy-reason">'+safe(tp1Reason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-tp">'+
 '<span>💰 TP2｜突破後延伸</span>'+
-'<strong>'+
-fmt(t.tp2)+
-'</strong>'+
-'<span class="rr-text">'+
-'SL1 風報比 '+
-rr2+
-'</span>'+
-'<div class="strategy-reason">'+
-safe(tp2Reason)+
-'</div>'+
+'<strong>'+fmt(t.tp2)+'</strong>'+
+'<span class="rr-text">SL1 風報比 '+rr2+'</span>'+
+'<div class="strategy-reason">'+safe(tp2Reason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level level-tp3" style="grid-column:1/-1">'+
 '<span>🔥 TP3｜強勢延伸</span>'+
-'<strong>'+
-fmt(t.tp3)+
-'</strong>'+
-'<span class="rr-text">'+
-'SL1 風報比 '+
-rr3+
-'</span>'+
-'<div class="strategy-reason">'+
-safe(tp3Reason)+
-'</div>'+
+'<strong>'+fmt(t.tp3)+'</strong>'+
+'<span class="rr-text">SL1 風報比 '+rr3+'</span>'+
+'<div class="strategy-reason">'+safe(tp3Reason)+'</div>'+
 '</div>'+
 
 '<div class="strategy-level">'+
 '<span>⚖️ 入場中心</span>'+
-'<strong>'+
-fmt(t.center)+
-'</strong>'+
+'<strong>'+fmt(t.center)+'</strong>'+
 '<div class="strategy-reason">'+
 '使用觀察入場區間中間值統一計算風險，避免風報比因任意挑選入場價而失真。'+
 '</div>'+
@@ -2812,9 +2933,7 @@ fmt(t.center)+
 
 '<div class="strategy-level">'+
 '<span>📐 原始風險距離｜1R</span>'+
-'<strong>'+
-fmt(t.risk)+
-'</strong>'+
+'<strong>'+fmt(t.risk)+'</strong>'+
 '<div class="strategy-reason">'+
 '以入場中心到 SL1 的距離作為 1R，後續延伸與風報比使用相同基準。'+
 '</div>'+
@@ -2823,90 +2942,36 @@ fmt(t.risk)+
 '</div>'+
 
 '<div class="strategy-summary">'+
-
-'<strong>📊 風報比總結</strong>'+
+'<strong>📊 風報比總結</strong><br>'+
+'SL1 '+fmt(t.stop1)+'：TP1 '+rr1+' · TP2 '+rr2+' · TP3 '+rr3+
 '<br>'+
-
-'SL1 '+
-fmt(t.stop1)+
-'：TP1 '+
-rr1+
-' · TP2 '+
-rr2+
-' · TP3 '+
-rr3+
-
-'<br>'+
-
-'SL2 '+
-fmt(t.stop2)+
-'：TP1 '+
-rr1Deep+
-' · TP2 '+
-rr2Deep+
-' · TP3 '+
-rr3Deep+
-
+'SL2 '+fmt(t.stop2)+'：TP1 '+rr1Deep+' · TP2 '+rr2Deep+' · TP3 '+rr3Deep+
 '<br><br>'+
-
-'<strong style="color:#70b7ff">'+
-'突破後續抱'+
-'</strong>'+
-
+'<strong style="color:#70b7ff">突破後續抱</strong><br>'+
+'前高／壓力：'+fmt(t.previousHigh)+
 '<br>'+
-
-'前高／壓力：'+
-fmt(t.previousHigh)+
-
-'<br>'+
-
-'回踩續抱區：'+
-fmt(holdLow)+
-' ～ '+
-fmt(holdHigh)+
-
+'回踩續抱區：'+fmt(holdLow)+' ～ '+fmt(holdHigh)+
 '</div>'+
 
 '</div>'+
 
 '<div style="margin-top:18px;border-top:1px solid #202522;padding-top:14px">'+
-
-'<div class="section-title">'+
-'📋 '+
-names[type]+
-'策略條件'+
-'</div>'+
-
+'<div class="section-title">📋 '+names[type]+'策略條件</div>'+
 '<div class="section-sub" style="margin-top:5px;margin-bottom:8px">'+
-'目前符合 '+
-setup.passed+
-' / '+
-setup.total+
-' 項'+
+'目前符合 '+setup.passed+' / '+setup.total+' 項'+
 '</div>'+
 
 setup.conditions.map((x,i)=>
-
-'<div class="condition-row '+
-(x.pass?"good":"bad")+
-'">'+
+'<div class="condition-row '+(x.pass?"good":"bad")+'">'+
 (x.pass?"✓":"✕")+
-' '+
-(i+1)+
-'. '+
-safe(x.title)+
-'<span class="condition-explain">'+
-safe(x.explain)+
-'</span>'+
+' '+(i+1)+'. '+safe(x.title)+
+'<span class="condition-explain">'+safe(x.explain)+'</span>'+
 '</div>'
-
 ).join("")+
 
 '</div>'+
 
-'<div class="qualified-badge '+
-(setup.qualified?"":"not-qualified")+
-'">'+
+'<div class="qualified-badge '+(setup.qualified?"":"not-qualified")+'">'+
 (
 setup.qualified
 ?"✓ 目前技術條件符合此策略"
@@ -2915,98 +2980,55 @@ setup.qualified
 '</div>'+
 
 '</div>'
-
 )
-
 }
 
-
 /* ==================================================
-   股票 API
+   API
 ================================================== */
 
 async function fetchStockData(symbol){
 
-var r=
-await fetch(
-
-"/api/stock?symbol="+
-encodeURIComponent(symbol)+
-"&t="+
-Date.now(),
-
-{
-cache:"no-store"
-}
-
+var r=await fetch(
+"/api/stock?symbol="+encodeURIComponent(symbol)+"&t="+Date.now(),
+{cache:"no-store"}
 );
 
-var d=
-await r.json();
+var d=await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
-
-throw Error(
-d.error||
-"股票資料取得失敗"
-)
-
+if(!r.ok||!d.ok){
+throw Error(d.error||"股票資料取得失敗")
 }
 
 return d
-
 }
 
-
 /* ==================================================
-   分析股票
+   分析
 ================================================== */
 
 async function analyze(symbol){
 
-symbol=
-String(symbol||"")
-.trim()
-.toUpperCase();
+symbol=String(symbol||"").trim().toUpperCase();
 
 if(!symbol)return;
 
 saveSearchHistory(symbol);
 
-el("homeView")
-.classList
-.add("hidden");
+el("homeView").classList.add("hidden");
 
-var analysisView=
-el("analysisView");
+var analysisView=el("analysisView");
 
-analysisView
-.classList
-.remove("hidden");
-
-analysisView
-.classList
-.remove(
-"swiping-back",
-"swipe-return"
-);
+analysisView.classList.remove("hidden");
+analysisView.classList.remove("swiping-back","swipe-return");
 
 analysisView.style.transform="";
 analysisView.style.opacity="";
 
 el("analysisResult").innerHTML=
+'<div class="loading">正在分析 '+safe(symbol)+'…</div>';
 
-'<div class="loading">'+
-'正在分析 '+
-safe(symbol)+
-'…'+
-'</div>';
-
-currentAnalysisSymbol=
-symbol;
+currentAnalysisSymbol=symbol;
 
 window.scrollTo({
 top:0,
@@ -3015,8 +3037,7 @@ behavior:"smooth"
 
 try{
 
-var d=
-await fetchStockData(symbol);
+var d=await fetchStockData(symbol);
 
 currentAnalysisData=d;
 
@@ -3025,63 +3046,35 @@ buildAnalysis(d);
 }catch(e){
 
 el("analysisResult").innerHTML=
-
-'<div class="error">'+
-safe(e.message)+
-'</div>'
+'<div class="error">'+safe(e.message)+'</div>'
 
 }
-
 }
-
 
 /* ==================================================
    搜尋
 ================================================== */
 
-document
-.querySelectorAll("[data-example]")
-.forEach(b=>{
+document.querySelectorAll("[data-example]").forEach(b=>{
 
-b.onclick=
-()=>{
-
-el("searchInput").value=
-b.dataset.example;
-
-analyze(
-b.dataset.example
-)
-
+b.onclick=()=>{
+el("searchInput").value=b.dataset.example;
+analyze(b.dataset.example)
 }
 
 });
 
-el("searchButton").onclick=
-()=>{
-
-analyze(
-el("searchInput").value
-)
-
+el("searchButton").onclick=()=>{
+analyze(el("searchInput").value)
 };
 
-el("searchInput")
-.addEventListener(
-"keydown",
-e=>{
+el("searchInput").addEventListener("keydown",e=>{
 
 if(e.key==="Enter"){
-
-analyze(
-el("searchInput").value
-)
-
+analyze(el("searchInput").value)
 }
 
-}
-);
-
+});
 
 /* ==================================================
    返回
@@ -3091,22 +3084,16 @@ function goBackHome(){
 
 currentAnalysisSymbol="";
 
-var view=
-el("analysisView");
+var view=el("analysisView");
 
-view.classList.remove(
-"swiping-back",
-"swipe-return"
-);
+view.classList.remove("swiping-back","swipe-return");
 
 view.style.transform="";
 view.style.opacity="";
 
 view.classList.add("hidden");
 
-el("homeView")
-.classList
-.remove("hidden");
+el("homeView").classList.remove("hidden");
 
 renderWatchlist();
 
@@ -3117,43 +3104,30 @@ behavior:"auto"
 
 }
 
-el("backButton").onclick=
-goBackHome;
-
+el("backButton").onclick=goBackHome;
 
 /* ==================================================
-   iPhone 左側右滑返回
+   iPhone 右滑返回
 ================================================== */
 
 (function(){
 
-var view=
-el("analysisView");
+var view=el("analysisView");
 
 var startX=0;
 var startY=0;
 var currentX=0;
 var startTime=0;
-
 var tracking=false;
 var locked=false;
 
-view.addEventListener(
-"touchstart",
-function(e){
+view.addEventListener("touchstart",function(e){
 
-if(
-view.classList.contains("hidden")||
-e.touches.length!==1
-){
-return
-}
+if(view.classList.contains("hidden")||e.touches.length!==1)return;
 
 var t=e.touches[0];
 
-if(t.clientX>32){
-return
-}
+if(t.clientX>32)return;
 
 startX=t.clientX;
 startY=t.clientY;
@@ -3163,60 +3137,30 @@ startTime=Date.now();
 tracking=true;
 locked=false;
 
-view.classList.add(
-"swiping-back"
-)
+view.classList.add("swiping-back")
 
-},
-{
-passive:true
-}
-);
+},{passive:true});
 
-view.addEventListener(
-"touchmove",
-function(e){
+view.addEventListener("touchmove",function(e){
 
-if(
-!tracking||
-e.touches.length!==1
-){
-return
-}
+if(!tracking||e.touches.length!==1)return;
 
 var t=e.touches[0];
 
-var dx=
-Math.max(
-0,
-t.clientX-startX
-);
-
-var dy=
-Math.abs(
-t.clientY-startY
-);
+var dx=Math.max(0,t.clientX-startX);
+var dy=Math.abs(t.clientY-startY);
 
 if(!locked){
 
-if(
-dy>10&&
-dy>dx
-){
+if(dy>10&&dy>dx){
 
 tracking=false;
-
-view.classList.remove(
-"swiping-back"
-);
-
+view.classList.remove("swiping-back");
 return
 
 }
 
-if(dx>8){
-locked=true
-}
+if(dx>8)locked=true
 
 }
 
@@ -3224,37 +3168,15 @@ if(!locked)return;
 
 currentX=t.clientX;
 
-var width=
-Math.max(
-window.innerWidth,
-1
-);
+var width=Math.max(window.innerWidth,1);
+var progress=Math.min(dx/width,1);
 
-var progress=
-Math.min(
-dx/width,
-1
-);
+view.style.transform="translate3d("+dx+"px,0,0)";
+view.style.opacity=String(1-progress*.18);
 
-view.style.transform=
-"translate3d("+
-dx+
-"px,0,0)";
+if(e.cancelable)e.preventDefault()
 
-view.style.opacity=
-String(
-1-progress*.18
-);
-
-if(e.cancelable){
-e.preventDefault()
-}
-
-},
-{
-passive:false
-}
-);
+},{passive:false});
 
 function finishSwipe(){
 
@@ -3262,98 +3184,46 @@ if(!tracking)return;
 
 tracking=false;
 
-view.classList.remove(
-"swiping-back"
-);
+view.classList.remove("swiping-back");
 
-var dx=
-Math.max(
-0,
-currentX-startX
-);
-
-var elapsed=
-Math.max(
-Date.now()-startTime,
-1
-);
-
-var velocity=
-dx/elapsed;
+var dx=Math.max(0,currentX-startX);
+var elapsed=Math.max(Date.now()-startTime,1);
+var velocity=dx/elapsed;
 
 var shouldBack=
-
-dx>
-Math.min(
-window.innerWidth*.28,
-120
-)
-
-||
-
+dx>Math.min(window.innerWidth*.28,120)||
 velocity>.55;
 
-view.classList.add(
-"swipe-return"
-);
+view.classList.add("swipe-return");
 
 if(shouldBack){
 
-view.style.transform=
-"translate3d(100vw,0,0)";
+view.style.transform="translate3d(100vw,0,0)";
+view.style.opacity="0.82";
 
-view.style.opacity=
-"0.82";
-
-setTimeout(
-goBackHome,
-210
-);
+setTimeout(goBackHome,210)
 
 }else{
 
-view.style.transform=
-"translate3d(0,0,0)";
+view.style.transform="translate3d(0,0,0)";
+view.style.opacity="1";
 
-view.style.opacity=
-"1";
+setTimeout(function(){
 
-setTimeout(
-function(){
-
-view.classList.remove(
-"swipe-return"
-);
-
+view.classList.remove("swipe-return");
 view.style.transform="";
 view.style.opacity="";
 
-},
-230
-);
+},230)
 
 }
 
 }
 
-view.addEventListener(
-"touchend",
-finishSwipe,
-{
-passive:true
-}
-);
-
-view.addEventListener(
-"touchcancel",
-finishSwipe,
-{
-passive:true
-}
-);
+view.addEventListener("touchend",finishSwipe,{passive:true});
+view.addEventListener("touchcancel",finishSwipe,{passive:true});
 
 })();
-
 
 /* ==================================================
    完整分析
@@ -3364,33 +3234,18 @@ function buildAnalysis(d){
 var rows=d.rows||[];
 
 if(rows.length<60){
-
-throw Error(
-"歷史資料不足"
-)
-
+throw Error("歷史資料不足")
 }
 
-var m=
-marketOf(d);
+var m=marketOf(d);
+var v=volumeMetrics(d,rows);
+var setups=buildStrategySetups(d,m,v);
 
-var v=
-volumeMetrics(
-d,
-rows
-);
-
-var setups=
-buildStrategySetups(
-d,
-m,
-v
-);
+currentMarketMetrics=m;
+currentSetups=setups;
 
 var price=m.price;
-
-var change=
-Number(d.changePercent);
+var change=Number(d.changePercent);
 
 el("analysisResult").innerHTML=
 
@@ -3401,39 +3256,19 @@ el("analysisResult").innerHTML=
 '<div>'+
 
 '<div class="stock-title-line">'+
-
-'<div class="hero-symbol">'+
-safe(d.symbol)+
-'</div>'+
-
-'<div class="hero-name">'+
-safe(d.name||"")+
-'</div>'+
-
+'<div class="hero-symbol">'+safe(d.symbol)+'</div>'+
+'<div class="hero-name">'+safe(d.name||"")+'</div>'+
 '</div>'+
 
 '<div class="market-pill">'+
-(
-d.market==="US"
-?"🇺🇸 美股"
-:"🇹🇼 台股"
-)+
+(d.market==="US"?"🇺🇸 美股":"🇹🇼 台股")+
 '</div>'+
 
 '</div>'+
 
 '<div>'+
-
-'<div class="hero-price">'+
-fmt(price)+
-'</div>'+
-
-'<div class="hero-change '+
-pclass(change)+
-'">'+
-pct(change)+
-'</div>'+
-
+'<div class="hero-price">'+fmt(price)+'</div>'+
+'<div class="hero-change '+pclass(change)+'">'+pct(change)+'</div>'+
 '</div>'+
 
 '</div>'+
@@ -3452,21 +3287,12 @@ pct(change)+
 ["ATR",m.atr],
 ["20日壓力",m.resistance]
 ].map(x=>
-
 '<div class="indicator">'+
-'<span>'+
-x[0]+
-'</span>'+
+'<span>'+x[0]+'</span>'+
 '<strong>'+
-fmt(
-x[1],
-x[0].includes("RSI")
-?1
-:2
-)+
+fmt(x[1],x[0].includes("RSI")?1:2)+
 '</strong>'+
 '</div>'
-
 ).join("")+
 
 '</div>'+
@@ -3474,46 +3300,44 @@ x[0].includes("RSI")
 '<div class="volume-card">'+
 
 '<div class="volume-title">'+
-'📊 成交量分析 · '+
-safe(v.level)+
+'📊 成交量分析 · '+safe(v.level)+
 '</div>'+
 
 '<div class="volume-grid">'+
 
 '<div class="volume-box">'+
 '<span>量比</span>'+
-'<strong>'+
-fmt(v.ratio,2)+
-'x'+
-'</strong>'+
+'<strong>'+fmt(v.ratio,2)+'x</strong>'+
 '</div>'+
 
 '<div class="volume-box">'+
 '<span>目前成交量</span>'+
-'<strong>'+
-fmt(v.current,0)+
-'</strong>'+
+'<strong>'+fmt(v.current,0)+'</strong>'+
 '</div>'+
 
 '<div class="volume-box">'+
 '<span>20日均量</span>'+
-'<strong>'+
-fmt(v.average20,0)+
-'</strong>'+
+'<strong>'+fmt(v.average20,0)+'</strong>'+
 '</div>'+
 
 '</div>'+
-
+'</div>'+
 '</div>'+
 
-'</div>'+
+/* ===== 新增：我的入場 / 持倉 / 攤平分析 ===== */
+
+buildPositionAnalysis(
+d,
+m,
+setups
+)+
+
+/* ===== 原本策略推薦 ===== */
 
 recommendationHTML(setups)+
 
 '<div id="pullbackStrategy">'+
-'<div class="big-section-title">'+
-'🟢 支撐回踩策略'+
-'</div>'+
+'<div class="big-section-title">🟢 支撐回踩策略</div>'+
 strategyHTML(
 "PULLBACK",
 setups.PULLBACK,
@@ -3523,9 +3347,7 @@ m
 '</div>'+
 
 '<div id="highRStrategy">'+
-'<div class="big-section-title">'+
-'🟣 高 R 突破策略'+
-'</div>'+
+'<div class="big-section-title">🟣 高 R 突破策略</div>'+
 strategyHTML(
 "HIGH_R",
 setups.HIGH_R,
@@ -3535,9 +3357,7 @@ m
 '</div>'+
 
 '<div id="surgeStrategy">'+
-'<div class="big-section-title">'+
-'🔥 強勢續攻策略'+
-'</div>'+
+'<div class="big-section-title">🔥 強勢續攻策略</div>'+
 strategyHTML(
 "SURGE",
 setups.SURGE,
@@ -3547,83 +3367,48 @@ m
 '</div>'+
 
 '<div class="data-note">'+
-'策略價格與風報比為技術條件推算，用於策略觀察；推薦分數代表條件符合程度，不代表未來上漲機率。'+
+'策略價格與風報比為技術條件推算，用於策略觀察；推薦分數代表條件符合程度，不代表未來上漲機率。持倉與加碼分析為依技術條件進行的風險試算，不代表保證獲利。'+
 '</div>';
 
 bindStrategyJumps();
+bindPositionControls();
 
-var favoriteButton=
-el("favoriteButton");
+var favoriteButton=el("favoriteButton");
 
 if(favoriteButton){
-
-favoriteButton.onclick=
-toggleFavorite;
-
+favoriteButton.onclick=toggleFavorite
 }
 
 updateFavoriteButton();
 
 }
 
-
 /* ==================================================
-   首頁雷達
+   雷達
 ================================================== */
 
 async function loadRadar(){
 
 try{
 
-var r=
-await fetch(
-
-"/api/radar?t="+
-Date.now(),
-
-{
-cache:"no-store"
-}
-
+var r=await fetch(
+"/api/radar?t="+Date.now(),
+{cache:"no-store"}
 );
 
-var d=
-await r.json();
+var d=await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
-
-throw Error(
-d.error||
-"雷達取得失敗"
-)
-
+if(!r.ok||!d.ok){
+throw Error(d.error||"雷達取得失敗")
 }
 
 radarData=d;
 
-el("scanCount").textContent=
-fmt(
-d.scanned,
-0
-);
-
-el("strategyCount").textContent=
-fmt(
-(d.strategyReady||[]).length,
-0
-);
-
-el("radarCount").textContent=
-fmt(
-(d.radar||[]).length,
-0
-);
+el("scanCount").textContent=fmt(d.scanned,0);
+el("strategyCount").textContent=fmt((d.strategyReady||[]).length,0);
+el("radarCount").textContent=fmt((d.radar||[]).length,0);
 
 el("updateText").textContent=
-
 "FinMind · 最後更新 "+
 currentTimeText()+
 " · 每 60 秒重新掃描";
@@ -3654,31 +3439,23 @@ countdownSeconds=60;
 }catch(e){
 
 el("updateText").textContent=
-"雷達連線失敗："+
-e.message
+"雷達連線失敗："+e.message
 
 }
 
 }
-
 
 /* ==================================================
    股票列表
 ================================================== */
 
-function renderStocks(
-id,
-a,
-mode,
-showAll
-){
+function renderStocks(id,a,mode,showAll){
 
 var r=el(id);
 
 if(!a.length){
 
 r.innerHTML=
-
 '<div class="card" style="padding:13px">'+
 '目前沒有符合條件的股票'+
 '</div>';
@@ -3687,135 +3464,76 @@ return
 
 }
 
-var data=
-showAll
-?a
-:a.slice(0,6);
+var data=showAll?a:a.slice(0,6);
 
-r.innerHTML=
+r.innerHTML=data.map(s=>
 
-data.map(s=>
-
-'<article class="stock-card" data-stock="'+
-safe(s.symbol)+
-'">'+
+'<article class="stock-card" data-stock="'+safe(s.symbol)+'">'+
 
 '<div class="stock-top">'+
 
 '<div>'+
-
 '<div class="stock-title-line">'+
-
-'<div class="symbol">'+
-safe(s.symbol)+
-'</div>'+
-
-'<div class="stock-inline-name">'+
-safe(s.name||"")+
-'</div>'+
-
+'<div class="symbol">'+safe(s.symbol)+'</div>'+
+'<div class="stock-inline-name">'+safe(s.name||"")+'</div>'+
 '</div>'+
 
 (
 s.strategy
-?
-'<div class="stock-strategy-line">'+
-safe(s.strategy)+
-'</div>'
-:
-''
+?'<div class="stock-strategy-line">'+safe(s.strategy)+'</div>'
+:''
 )+
-
 '</div>'+
 
 '<div class="score">'+
-
-'<strong>'+
-safe(
-s.entryScore??
-s.score??
-"--"
-)+
-'</strong>'+
-
+'<strong>'+safe(s.entryScore??s.score??"--")+'</strong>'+
 '<span>條件分數</span>'+
-
 '</div>'+
 
 '</div>'+
 
 '<div class="price-row">'+
-
-'<div class="price">'+
-fmt(s.price)+
-'</div>'+
-
-'<div class="'+
-pclass(s.changePercent)+
-'">'+
-pct(s.changePercent)+
-'</div>'+
-
+'<div class="price">'+fmt(s.price)+'</div>'+
+'<div class="'+pclass(s.changePercent)+'">'+pct(s.changePercent)+'</div>'+
 '</div>'+
 
 '<div class="chips">'+
 '<div class="chip green">'+
-'量比 '+
-fmt(
-s.volumeRatio,
-1
-)+
-'x'+
+'量比 '+fmt(s.volumeRatio,1)+'x'+
 '</div>'+
 '</div>'+
 
-'<div class="watch-open">'+
-'查看完整策略條件 →'+
-'</div>'+
+'<div class="watch-open">查看完整策略條件 →</div>'+
 
 '</article>'
 
 ).join("");
 
-r
-.querySelectorAll("[data-stock]")
-.forEach(x=>{
+r.querySelectorAll("[data-stock]").forEach(x=>{
 
-x.onclick=
-()=>{
-
-analyze(
-x.dataset.stock
-)
-
+x.onclick=()=>{
+analyze(x.dataset.stock)
 }
 
 })
 
 }
 
-
 /* ==================================================
    重新掃描
 ================================================== */
 
-el("refreshButton").onclick=
-async()=>{
+el("refreshButton").onclick=async()=>{
 
-var button=
-el("refreshButton");
+var button=el("refreshButton");
 
-if(button.disabled){
-return
-}
+if(button.disabled)return;
 
 button.disabled=true;
 
-var oldText=
-button.textContent;
+var oldText=button.textContent;
 
-button.textContent=
-"掃描中…";
+button.textContent="掃描中…";
 
 el("updateText").textContent=
 "正在重新掃描市場…";
@@ -3827,43 +3545,32 @@ await loadRadar();
 }catch(e){
 
 el("updateText").textContent=
-"重新掃描失敗："+
-e.message;
+"重新掃描失敗："+e.message;
 
 }finally{
 
 button.disabled=false;
-
-button.textContent=
-oldText;
+button.textContent=oldText;
 
 }
 
 };
 
-
 /* ==================================================
-   查看更多 / 收起
+   查看更多
 ================================================== */
 
-document
-.querySelectorAll("[data-more]")
-.forEach(button=>{
+document.querySelectorAll("[data-more]").forEach(button=>{
 
-button.onclick=
-()=>{
+button.onclick=()=>{
 
-if(!radarData){
-return
-}
+if(!radarData)return;
 
-var type=
-button.dataset.more;
+var type=button.dataset.more;
 
 if(type==="strategy"){
 
-expanded.strategy=
-!expanded.strategy;
+expanded.strategy=!expanded.strategy;
 
 renderStocks(
 "strategyGrid",
@@ -3881,8 +3588,7 @@ expanded.strategy
 
 else if(type==="long"){
 
-expanded.long=
-!expanded.long;
+expanded.long=!expanded.long;
 
 renderStocks(
 "longGrid",
@@ -3900,8 +3606,7 @@ expanded.long
 
 else if(type==="radar"){
 
-expanded.radar=
-!expanded.radar;
+expanded.radar=!expanded.radar;
 
 renderStocks(
 "radarGrid",
@@ -3921,13 +3626,11 @@ expanded.radar
 
 });
 
-
 /* ==================================================
-   雷達倒數
+   倒數
 ================================================== */
 
-setInterval(
-()=>{
+setInterval(()=>{
 
 countdownSeconds--;
 
@@ -3936,141 +3639,89 @@ if(countdownSeconds<=0){
 countdownSeconds=60;
 
 if(!document.hidden){
-
 loadRadar()
-
 }
 
 }
 
-var m=
-Math.floor(
-countdownSeconds/60
-);
-
-var s=
-countdownSeconds%60;
+var m=Math.floor(countdownSeconds/60);
+var s=countdownSeconds%60;
 
 el("countdown").textContent=
-
-String(m)
-.padStart(2,"0")+
-
+String(m).padStart(2,"0")+
 ":"+
+String(s).padStart(2,"0");
 
-String(s)
-.padStart(2,"0");
-
-},
-1000
-);
-
+},1000);
 
 /* ==================================================
    台股 / 美股
 ================================================== */
 
-el("twTab").onclick=
-()=>{
+el("twTab").onclick=()=>{
 
-el("twMarket")
-.classList.remove("hidden");
+el("twMarket").classList.remove("hidden");
+el("usMarket").classList.add("hidden");
 
-el("usMarket")
-.classList.add("hidden");
-
-el("twTab")
-.classList.add("active");
-
-el("usTab")
-.classList.remove("active");
+el("twTab").classList.add("active");
+el("usTab").classList.remove("active");
 
 };
 
-el("usTab").onclick=
-()=>{
+el("usTab").onclick=()=>{
 
-el("twMarket")
-.classList.add("hidden");
+el("twMarket").classList.add("hidden");
+el("usMarket").classList.remove("hidden");
 
-el("usMarket")
-.classList.remove("hidden");
-
-el("twTab")
-.classList.remove("active");
-
-el("usTab")
-.classList.add("active");
+el("twTab").classList.remove("active");
+el("usTab").classList.add("active");
 
 };
-
 
 /* ==================================================
    通知
 ================================================== */
 
-el("notifyButton").onclick=
-async()=>{
+el("notifyButton").onclick=async()=>{
 
-if(
-!("Notification" in window)
-){
+if(!("Notification" in window)){
 
-alert(
-"目前瀏覽器不支援系統通知。"
-);
-
+alert("目前瀏覽器不支援系統通知。");
 return
 
 }
 
-if(
-Notification.permission===
-"granted"
-){
+if(Notification.permission==="granted"){
 
-alert(
-"高勝率策略通知已開啟。"
-);
-
+alert("高勝率策略通知已開啟。");
 return
 
 }
 
 try{
-
-await Notification
-.requestPermission();
-
+await Notification.requestPermission();
 }catch(e){}
 
 };
 
-
 /* ==================================================
-   清除搜尋紀錄
+   清除搜尋
 ================================================== */
 
-el("clearHistory").onclick=
-()=>{
+el("clearHistory").onclick=()=>{
 
-localStorage.removeItem(
-HISTORY_KEY
-);
+localStorage.removeItem(HISTORY_KEY);
 
 renderSearchHistory();
 
 };
-
 
 /* ==================================================
    啟動
 ================================================== */
 
 renderSearchHistory();
-
 renderWatchlist();
-
 loadRadar();
 
 </script>
