@@ -144,7 +144,6 @@ box-shadow:0 12px 32px rgba(0,0,0,.2)
 .position-stat span{display:block;font-size:8px;color:#777d79}
 .position-stat strong{display:block;font-size:12px;margin-top:3px}
 
-/* ===== 策略卡強化 ===== */
 .strategy-card{padding:15px;margin-bottom:10px}
 .strategy-head{display:flex;justify-content:space-between;gap:10px}
 .strategy-name{font-size:16px;font-weight:950}
@@ -224,6 +223,7 @@ color:#a9ead4;background:#0d1c16;border:1px solid #224538
 }
 .qualified-badge.not-qualified{color:#c3c6c4;background:#101311;border-color:#292e2b}
 .data-note{font-size:9px;color:#6f7471;line-height:1.75;margin:16px 4px}
+
 @media(max-width:430px){
 .app{padding-left:11px;padding-right:11px}
 .logo{font-size:21px}
@@ -252,6 +252,7 @@ color:#a9ead4;background:#0d1c16;border:1px solid #224538
 <input id="searchInput" class="search-input" placeholder="輸入股票代號，例如 2330 / NVDA">
 <button id="searchButton" class="search-button">分析</button>
 </div>
+
 <div class="search-examples">
 <button class="example" data-example="2330">2330</button>
 <button class="example" data-example="2317">2317</button>
@@ -263,13 +264,22 @@ color:#a9ead4;background:#0d1c16;border:1px solid #224538
 </div>
 
 <div id="watchSection">
-<div class="section-head"><div><div class="section-title">⭐ 我的自選</div><div class="section-sub">點股票直接進入完整分析</div></div></div>
+<div class="section-head">
+<div>
+<div class="section-title">⭐ 我的自選</div>
+<div class="section-sub">點股票直接進入完整分析</div>
+</div>
+</div>
 <div id="watchList" class="watch-list"></div>
 </div>
 
 <div id="twMarket">
+
 <div class="section-head">
-<div><div class="section-title">🇹🇼 台股市場掃描</div><div class="section-sub">使用母版本策略掃描條件</div></div>
+<div>
+<div class="section-title">🇹🇼 台股市場掃描</div>
+<div class="section-sub">使用母版本策略掃描條件</div>
+</div>
 <button id="refreshButton" class="refresh-btn">重新掃描</button>
 </div>
 
@@ -279,31 +289,50 @@ color:#a9ead4;background:#0d1c16;border:1px solid #224538
 <div class="stat"><span>異動股票</span><strong id="radarCount">--</strong></div>
 </div>
 
-<div class="update-line"><span id="updateText">正在掃描市場…</span><span id="countdown">01:00</span></div>
+<div class="update-line">
+<span id="updateText">正在掃描市場…</span>
+<span id="countdown">01:00</span>
+</div>
 
 <div class="section-head">
-<div><div class="section-title">🎯 自動偵測符合策略股票</div><div class="section-sub">母版本策略掃描結果</div></div>
+<div>
+<div class="section-title">🎯 自動偵測符合策略股票</div>
+<div class="section-sub">母版本策略掃描結果</div>
+</div>
 <button class="more-btn" data-more="strategy">查看更多符合策略股票</button>
 </div>
 <div id="strategyGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div><div class="section-title">🟢 做多觀察</div><div class="section-sub">趨勢與位置較適合持續觀察</div></div>
+<div>
+<div class="section-title">🟢 做多觀察</div>
+<div class="section-sub">趨勢與位置較適合持續觀察</div>
+</div>
 <button class="more-btn" data-more="long">查看更多做多觀察股票</button>
 </div>
 <div id="longGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div><div class="section-title">⚡ 市場異動雷達</div><div class="section-sub">價格與成交量異動</div></div>
+<div>
+<div class="section-title">⚡ 市場異動雷達</div>
+<div class="section-sub">價格與成交量異動</div>
+</div>
 <button class="more-btn" data-more="radar">查看更多異動股票</button>
 </div>
 <div id="radarGrid" class="stock-grid"></div>
+
 </div>
 
 <div id="usMarket" class="hidden">
-<div class="section-head"><div><div class="section-title">🇺🇸 美股最近分析</div><div class="section-sub">搜尋過的美股會顯示在這裡</div></div></div>
+<div class="section-head">
+<div>
+<div class="section-title">🇺🇸 美股最近分析</div>
+<div class="section-sub">搜尋過的美股會顯示在這裡</div>
+</div>
+</div>
 <div id="usRecentGrid" class="stock-grid"></div>
 </div>
+
 </div>
 
 <div id="analysisView" class="hidden">
@@ -313,6 +342,7 @@ color:#a9ead4;background:#0d1c16;border:1px solid #224538
 </div>
 <div id="analysisResult"></div>
 </div>
+
 </div>
 
 <script>
@@ -327,30 +357,91 @@ var expanded={strategy:false,long:false,radar:false};
 var countdownSeconds=60;
 
 function el(id){return document.getElementById(id)}
-function safe(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-function fmt(v,d=2){var n=Number(v);if(!Number.isFinite(n))return"--";return n.toLocaleString("zh-TW",{minimumFractionDigits:d,maximumFractionDigits:d})}
-function pct(v){var n=Number(v);if(!Number.isFinite(n))return"--";return(n>0?"+":"")+fmt(n,2)+"%"}
-function pclass(v){var n=Number(v);if(n>0)return"up";if(n<0)return"down";return"flat"}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function currentTimeText(){return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})}
+
+function safe(v){
+return String(v??"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;")
+}
+
+function fmt(v,d=2){
+var n=Number(v);
+if(!Number.isFinite(n))return"--";
+return n.toLocaleString("zh-TW",{
+minimumFractionDigits:d,
+maximumFractionDigits:d
+})
+}
+
+function pct(v){
+var n=Number(v);
+if(!Number.isFinite(n))return"--";
+return(n>0?"+":"")+fmt(n,2)+"%"
+}
+
+function pclass(v){
+var n=Number(v);
+if(n>0)return"up";
+if(n<0)return"down";
+return"flat"
+}
+
+function clamp(v,a,b){
+return Math.max(a,Math.min(b,v))
+}
+
+function currentTimeText(){
+return new Date().toLocaleTimeString("zh-TW",{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit",
+hour12:false
+})
+}
 
 function marketOf(d){
 var rows=d.rows||[],last=rows.at(-1)||{};
 var price=Number(d.price)||Number(last.close)||0;
-var ma20=Number(d.ma20),ma60=Number(d.ma60),rsi=Number(d.rsi),macd=Number(d.macd),atr=Number(d.atr);
+var ma20=Number(d.ma20);
+var ma60=Number(d.ma60);
+var rsi=Number(d.rsi);
+var macd=Number(d.macd);
+var atr=Number(d.atr);
 
-if(!Number.isFinite(ma20)){var a=rows.slice(-20).map(x=>+x.close).filter(Number.isFinite);ma20=a.length?a.reduce((s,x)=>s+x,0)/a.length:price}
-if(!Number.isFinite(ma60)){var b=rows.slice(-60).map(x=>+x.close).filter(Number.isFinite);ma60=b.length?b.reduce((s,x)=>s+x,0)/b.length:price}
+if(!Number.isFinite(ma20)){
+var a=rows.slice(-20).map(x=>+x.close).filter(Number.isFinite);
+ma20=a.length?a.reduce((s,x)=>s+x,0)/a.length:price
+}
+
+if(!Number.isFinite(ma60)){
+var b=rows.slice(-60).map(x=>+x.close).filter(Number.isFinite);
+ma60=b.length?b.reduce((s,x)=>s+x,0)/b.length:price
+}
+
 if(!Number.isFinite(rsi))rsi=50;
 if(!Number.isFinite(macd))macd=0;
 
 if(!Number.isFinite(atr)){
 var recent=rows.slice(-14),trs=[];
+
 for(var i=1;i<recent.length;i++){
 var c=recent[i],p=recent[i-1];
-trs.push(Math.max(+c.high-+c.low,Math.abs(+c.high-+p.close),Math.abs(+c.low-+p.close)))
+
+trs.push(
+Math.max(
++c.high-+c.low,
+Math.abs(+c.high-+p.close),
+Math.abs(+c.low-+p.close)
+)
+)
 }
-atr=trs.length?trs.reduce((s,x)=>s+x,0)/trs.length:price*.02
+
+atr=trs.length
+?trs.reduce((s,x)=>s+x,0)/trs.length
+:price*.02
 }
 
 var highs20=rows.slice(-20).map(x=>+x.high).filter(Number.isFinite);
@@ -360,78 +451,245 @@ var highs10=rows.slice(-10).map(x=>+x.high).filter(Number.isFinite);
 var lows3=rows.slice(-3).map(x=>+x.low).filter(Number.isFinite);
 
 var resistance=Number(d.resistance);
-if(!Number.isFinite(resistance))resistance=highs20.length?Math.max(...highs20):price;
+
+if(!Number.isFinite(resistance)){
+resistance=highs20.length
+?Math.max(...highs20)
+:price
+}
 
 var support=Number(d.support);
-if(!Number.isFinite(support))support=lows20.length?Math.min(...lows20):price;
+
+if(!Number.isFinite(support)){
+support=lows20.length
+?Math.min(...lows20)
+:price
+}
 
 return{
-price,ma20,ma60,rsi,macd,atr,resistance,support,
+price,
+ma20,
+ma60,
+rsi,
+macd,
+atr,
+resistance,
+support,
 low10:lows10.length?Math.min(...lows10):price,
 high10:highs10.length?Math.max(...highs10):price,
-recent3Low:lows3.length?Math.min(...lows3):(lows10.length?Math.min(...lows10):price)
+recent3Low:lows3.length
+?Math.min(...lows3)
+:(lows10.length?Math.min(...lows10):price)
 }
 }
 
 function volumeMetrics(d,rows){
 var current=Number(d.volume)||Number(rows.at(-1)?.volume)||0;
-var vols=rows.slice(-21,-1).map(x=>Number(x.volume)).filter(x=>Number.isFinite(x)&&x>0);
-var average20=vols.length?vols.reduce((a,b)=>a+b,0)/vols.length:current;
-var ratio=average20>0?current/average20:0;
-var level=ratio>=2?"爆量":ratio>=1.5?"明顯放量":ratio>=1.2?"溫和放量":ratio>=.8?"正常":"量縮";
-return{current,average20,ratio,level}
+
+var vols=rows
+.slice(-21,-1)
+.map(x=>Number(x.volume))
+.filter(x=>Number.isFinite(x)&&x>0);
+
+var average20=vols.length
+?vols.reduce((a,b)=>a+b,0)/vols.length
+:current;
+
+var ratio=average20>0
+?current/average20
+:0;
+
+var level=
+ratio>=2?"爆量":
+ratio>=1.5?"明顯放量":
+ratio>=1.2?"溫和放量":
+ratio>=.8?"正常":
+"量縮";
+
+return{
+current,
+average20,
+ratio,
+level
 }
+}
+
+/* ==================================================
+   三套策略各自使用不同條件
+================================================== */
 
 function strategyConditions(type,d,m,v){
 var price=m.price;
-var structure=price>m.ma60&&m.ma20>=m.ma60;
-var notBroken=price>=m.low10&&price>=m.ma60*.98;
+
+var structure=
+price>m.ma60&&
+m.ma20>=m.ma60;
+
+var notBroken=
+price>=m.low10&&
+price>=m.ma60*.98;
+
+
+/* ===== 支撐回踩 ===== */
 
 if(type==="PULLBACK")return[
-{pass:m.ma20>m.ma60,title:"MA20 高於 MA60",explain:"中期趨勢維持多頭排列"},
-{pass:price>=m.ma20-m.atr*.5,title:"價格沒有明顯跌破 MA20",explain:"避免回踩已轉成明顯破位"},
-{pass:price<=m.ma20+m.atr*1.3,title:"距離 MA20 不過度延伸",explain:"避免追在離均線太遠的位置"},
-{pass:m.rsi>=42,title:"RSI 不低於 42",explain:"動能不能過度疲弱"},
-{pass:m.rsi<=68,title:"RSI 不高於 68",explain:"避免短線過熱"},
-{pass:m.macd>=0,title:"MACD 位於零軸附近或以上",explain:"確認中短線動能沒有明顯轉弱"},
-{pass:notBroken,title:"近期結構未被破壞",explain:"價格仍守住近期低點與主要趨勢位置"},
-{pass:v.ratio<=1.6,title:"回踩量能沒有異常爆量",explain:"大量下跌回踩的風險較高"}
+{
+pass:m.ma20>m.ma60,
+title:"MA20 高於 MA60",
+explain:"中期趨勢維持多頭排列"
+},
+{
+pass:price>=m.ma20-m.atr*.5,
+title:"價格沒有明顯跌破 MA20",
+explain:"避免回踩已轉成明顯破位"
+},
+{
+pass:price<=m.ma20+m.atr*1.3,
+title:"距離 MA20 不過度延伸",
+explain:"避免追在離均線太遠的位置"
+},
+{
+pass:m.rsi>=42,
+title:"RSI 不低於 42",
+explain:"動能不能過度疲弱"
+},
+{
+pass:m.rsi<=68,
+title:"RSI 不高於 68",
+explain:"避免短線過熱"
+},
+{
+pass:m.macd>=0,
+title:"MACD 位於零軸附近或以上",
+explain:"確認中短線動能沒有明顯轉弱"
+},
+{
+pass:notBroken,
+title:"近期結構未被破壞",
+explain:"價格仍守住近期低點與主要趨勢位置"
+},
+{
+pass:v.ratio<=1.6,
+title:"回踩量能沒有異常爆量",
+explain:"大量下跌回踩的風險較高"
+}
 ];
+
+
+/* ===== 高 R 突破 ===== */
 
 if(type==="HIGH_R")return[
-{pass:m.ma20>m.ma60,title:"MA20 高於 MA60",explain:"主要趨勢偏多"},
-{pass:price>m.ma20,title:"價格位於 MA20 上方",explain:"價格仍站在短中期趨勢線之上"},
-{pass:m.macd>0,title:"MACD 大於 0",explain:"動能保持正值"},
-{pass:m.rsi>=52,title:"RSI 至少 52",explain:"需要一定程度的多方動能"},
-{pass:m.rsi<=72,title:"RSI 不高於 72",explain:"避免突破前已經過熱"},
-{pass:price>=m.resistance-m.atr*.5,title:"價格接近 20 日壓力",explain:"高 R 策略等待壓力突破或突破確認"},
-{pass:v.ratio>=1.2,title:"成交量至少 1.2 倍",explain:"突破需要量能確認"},
-{pass:notBroken&&structure,title:"當下結構仍完整",explain:"MA60 與近期低點沒有被明顯跌破"}
+{
+pass:m.ma20>m.ma60,
+title:"MA20 高於 MA60",
+explain:"主要趨勢偏多"
+},
+{
+pass:price>m.ma20,
+title:"價格位於 MA20 上方",
+explain:"價格仍站在短中期趨勢線之上"
+},
+{
+pass:m.macd>0,
+title:"MACD 大於 0",
+explain:"動能保持正值"
+},
+{
+pass:m.rsi>=52,
+title:"RSI 至少 52",
+explain:"需要一定程度的多方動能"
+},
+{
+pass:m.rsi<=72,
+title:"RSI 不高於 72",
+explain:"避免突破前已經過熱"
+},
+{
+pass:price>=m.resistance-m.atr*.5,
+title:"價格接近 20 日壓力",
+explain:"高 R 策略等待壓力突破或突破確認"
+},
+{
+pass:v.ratio>=1.2,
+title:"成交量至少 1.2 倍",
+explain:"突破需要量能確認"
+},
+{
+pass:notBroken&&structure,
+title:"當下結構仍完整",
+explain:"MA60 與近期低點沒有被明顯跌破"
+}
 ];
 
+
+/* ===== 強勢續攻 ===== */
+
 return[
-{pass:m.ma20>m.ma60,title:"MA20 高於 MA60",explain:"趨勢保持偏多"},
-{pass:price>m.ma20,title:"價格位於 MA20 上方",explain:"強勢股通常保持在短中期均線上方"},
-{pass:m.macd>0,title:"MACD 大於 0",explain:"動能保持正向"},
-{pass:m.rsi>=58,title:"RSI 至少 58",explain:"續攻需要較強動能"},
-{pass:m.rsi<=74,title:"RSI 不高於 74",explain:"避免極端過熱"},
-{pass:price>=m.resistance-m.atr*.25,title:"價格逼近或突破壓力",explain:"續攻策略要求價格保持強勢"},
-{pass:v.ratio>=1.5,title:"成交量至少 1.5 倍",explain:"強勢續攻需要更明顯的量能"},
-{pass:notBroken&&structure,title:"當下多頭結構未破壞",explain:"價格與均線結構仍支持續攻"}
+{
+pass:m.ma20>m.ma60,
+title:"MA20 高於 MA60",
+explain:"趨勢保持偏多"
+},
+{
+pass:price>m.ma20,
+title:"價格位於 MA20 上方",
+explain:"強勢股通常保持在短中期均線上方"
+},
+{
+pass:m.macd>0,
+title:"MACD 大於 0",
+explain:"動能保持正向"
+},
+{
+pass:m.rsi>=58,
+title:"RSI 至少 58",
+explain:"續攻需要較強動能"
+},
+{
+pass:m.rsi<=74,
+title:"RSI 不高於 74",
+explain:"避免極端過熱"
+},
+{
+pass:price>=m.resistance-m.atr*.25,
+title:"價格逼近或突破壓力",
+explain:"續攻策略要求價格保持強勢"
+},
+{
+pass:v.ratio>=1.5,
+title:"成交量至少 1.5 倍",
+explain:"強勢續攻需要更明顯的量能"
+},
+{
+pass:notBroken&&structure,
+title:"當下多頭結構未破壞",
+explain:"價格與均線結構仍支持續攻"
+}
 ]
 }
 
 function buildStrategySetups(d,m,v){
 var result={};
+
 ["PULLBACK","HIGH_R","SURGE"].forEach(type=>{
 var conditions=strategyConditions(type,d,m,v);
 var passed=conditions.filter(x=>x.pass).length;
-result[type]={conditions,passed,total:conditions.length,score:Math.round(passed/conditions.length*100),qualified:passed>=7}
+
+result[type]={
+conditions,
+passed,
+total:conditions.length,
+score:Math.round(passed/conditions.length*100),
+qualified:passed>=7
+}
 });
+
 return result
 }
 
-/* ===== 目標價格系統 ===== */
+/* ==================================================
+   三套策略各自的目標價格
+================================================== */
 
 function strategyTargetLevels(type,m){
 var atr=Math.max(Number(m.atr)||0,.01);
@@ -441,344 +699,1368 @@ var low10=Number(m.low10)||price;
 var ma20=Number(m.ma20)||price;
 var ma60=Number(m.ma60)||price;
 var recent3Low=Number(m.recent3Low);
-if(!Number.isFinite(recent3Low))recent3Low=low10;
 
-var entryLow,entryHigh,center,stop1,stop2,risk,extension1,extension2,extension3,tp1,tp2,tp3;
+if(!Number.isFinite(recent3Low)){
+recent3Low=low10
+}
+
+var entryLow;
+var entryHigh;
+var center;
+var stop1;
+var stop2;
+var risk;
+var extension1;
+var extension2;
+var extension3;
+var tp1;
+var tp2;
+var tp3;
+
 var previousHigh=res;
 
+
+/* ===== 支撐回踩 ===== */
+
 if(type==="PULLBACK"){
-var support=Math.max(low10,Math.min(ma20,price)-atr*.5);
-entryLow=Math.max(support,ma20-atr*.5);
-entryHigh=ma20+atr*.35;
-if(entryLow>entryHigh)[entryLow,entryHigh]=[entryHigh,entryLow];
-center=(entryLow+entryHigh)/2;
-stop1=Math.min(support-atr*.5,entryLow-atr);
-stop2=Math.min(ma60-atr*.25,low10-atr*.35,stop1-atr*.35);
-if(stop2>=stop1)stop2=stop1-atr*.35;
-risk=Math.max(center-stop1,atr*.5);
-extension1=center+risk*1.5;
-extension2=center+risk*2.5;
-extension3=center+risk*4;
-tp1=previousHigh>center?previousHigh:extension1;
-tp2=Math.max(extension2,tp1+risk);
-tp3=Math.max(extension3,tp2+risk*1.25);
+var support=Math.max(
+low10,
+Math.min(ma20,price)-atr*.5
+);
+
+entryLow=Math.max(
+support,
+ma20-atr*.5
+);
+
+entryHigh=
+ma20+atr*.35;
+
+if(entryLow>entryHigh){
+[entryLow,entryHigh]=[entryHigh,entryLow]
 }
+
+center=
+(entryLow+entryHigh)/2;
+
+stop1=Math.min(
+support-atr*.5,
+entryLow-atr
+);
+
+stop2=Math.min(
+ma60-atr*.25,
+low10-atr*.35,
+stop1-atr*.35
+);
+
+if(stop2>=stop1){
+stop2=stop1-atr*.35
+}
+
+risk=Math.max(
+center-stop1,
+atr*.5
+);
+
+extension1=
+center+risk*1.5;
+
+extension2=
+center+risk*2.5;
+
+extension3=
+center+risk*4;
+
+tp1=
+previousHigh>center
+?previousHigh
+:extension1;
+
+tp2=Math.max(
+extension2,
+tp1+risk
+);
+
+tp3=Math.max(
+extension3,
+tp2+risk*1.25
+);
+}
+
+
+/* ===== 高 R 突破 ===== */
 
 else if(type==="HIGH_R"){
-entryLow=res-atr*.25;
-entryHigh=res+atr*.35;
-center=(entryLow+entryHigh)/2;
-stop1=Math.min(res-atr*.8,center-atr*.5);
-stop2=Math.min(ma20-atr*.5,low10-atr*.25,stop1-atr*.35);
-if(stop2>=stop1)stop2=stop1-atr*.35;
-risk=Math.max(center-stop1,atr*.5);
-extension1=center+risk*2;
-extension2=center+risk*3;
-extension3=center+risk*5;
-tp1=previousHigh>center?previousHigh:extension1;
-tp2=Math.max(extension2,tp1+risk);
-tp3=Math.max(extension3,tp2+risk*1.5);
+entryLow=
+res-atr*.25;
+
+entryHigh=
+res+atr*.35;
+
+center=
+(entryLow+entryHigh)/2;
+
+stop1=Math.min(
+res-atr*.8,
+center-atr*.5
+);
+
+stop2=Math.min(
+ma20-atr*.5,
+low10-atr*.25,
+stop1-atr*.35
+);
+
+if(stop2>=stop1){
+stop2=stop1-atr*.35
 }
+
+risk=Math.max(
+center-stop1,
+atr*.5
+);
+
+extension1=
+center+risk*2;
+
+extension2=
+center+risk*3;
+
+extension3=
+center+risk*5;
+
+tp1=
+previousHigh>center
+?previousHigh
+:extension1;
+
+tp2=Math.max(
+extension2,
+tp1+risk
+);
+
+tp3=Math.max(
+extension3,
+tp2+risk*1.5
+);
+}
+
+
+/* ===== 強勢續攻 ===== */
 
 else{
-entryLow=price-atr*.2;
-entryHigh=price+atr*.15;
-center=(entryLow+entryHigh)/2;
-stop1=Math.max(recent3Low-atr*.15,center-atr*1.2);
-if(stop1>=center)stop1=center-atr*1.2;
-stop2=Math.min(ma20-atr*.45,low10-atr*.2,stop1-atr*.35);
-if(stop2>=stop1)stop2=stop1-atr*.35;
-risk=Math.max(center-stop1,atr*.5);
-extension1=center+risk*1.5;
-extension2=center+risk*2.5;
-extension3=center+risk*4;
-tp1=previousHigh>center?previousHigh:extension1;
-tp2=Math.max(extension2,tp1+risk);
-tp3=Math.max(extension3,tp2+risk*1.25);
+entryLow=
+price-atr*.2;
+
+entryHigh=
+price+atr*.15;
+
+center=
+(entryLow+entryHigh)/2;
+
+stop1=Math.max(
+recent3Low-atr*.15,
+center-atr*1.2
+);
+
+if(stop1>=center){
+stop1=center-atr*1.2
 }
 
-return{entryLow,entryHigh,center,stop1,stop2,previousHigh,tp1,tp2,tp3,extension1,extension2,extension3,risk}
+stop2=Math.min(
+ma20-atr*.45,
+low10-atr*.2,
+stop1-atr*.35
+);
+
+if(stop2>=stop1){
+stop2=stop1-atr*.35
+}
+
+risk=Math.max(
+center-stop1,
+atr*.5
+);
+
+extension1=
+center+risk*1.5;
+
+extension2=
+center+risk*2.5;
+
+extension3=
+center+risk*4;
+
+tp1=
+previousHigh>center
+?previousHigh
+:extension1;
+
+tp2=Math.max(
+extension2,
+tp1+risk
+);
+
+tp3=Math.max(
+extension3,
+tp2+risk*1.25
+);
+}
+
+return{
+entryLow,
+entryHigh,
+center,
+stop1,
+stop2,
+previousHigh,
+tp1,
+tp2,
+tp3,
+extension1,
+extension2,
+extension3,
+risk
+}
 }
 
 function strategyRR(entry,target,stop){
-var risk=Number(entry)-Number(stop);
-var reward=Number(target)-Number(entry);
-if(!Number.isFinite(risk)||!Number.isFinite(reward)||risk<=0)return"--";
+var risk=
+Number(entry)-Number(stop);
+
+var reward=
+Number(target)-Number(entry);
+
+if(
+!Number.isFinite(risk)||
+!Number.isFinite(reward)||
+risk<=0
+){
+return"--"
+}
+
 return(reward/risk).toFixed(2)+"R"
 }
 
+/* ==================================================
+   策略卡
+   ★ 指引在上面
+   ★ 條件在下面
+================================================== */
+
 function strategyHTML(type,setup,color,m){
-var names={PULLBACK:"支撐回踩",HIGH_R:"高 R 突破",SURGE:"強勢續攻"};
-var emojis={PULLBACK:"🟢",HIGH_R:"🟣",SURGE:"🔥"};
-var grade=setup.qualified?"目前符合策略":setup.passed>=5?"接近符合":"條件不足";
-var t=strategyTargetLevels(type,m);
+var names={
+PULLBACK:"支撐回踩",
+HIGH_R:"高 R 突破",
+SURGE:"強勢續攻"
+};
 
-var rr1=strategyRR(t.center,t.tp1,t.stop1);
-var rr2=strategyRR(t.center,t.tp2,t.stop1);
-var rr3=strategyRR(t.center,t.tp3,t.stop1);
-var rr1Deep=strategyRR(t.center,t.tp1,t.stop2);
-var rr2Deep=strategyRR(t.center,t.tp2,t.stop2);
-var rr3Deep=strategyRR(t.center,t.tp3,t.stop2);
+var emojis={
+PULLBACK:"🟢",
+HIGH_R:"🟣",
+SURGE:"🔥"
+};
 
-var atr=Math.max(Number(m.atr)||0,.01);
-var breakoutBase=Math.max(Number(t.previousHigh)||0,Number(m.resistance)||0);
-var holdLow,holdHigh;
-var entryReason,stop1Reason,stop2Reason,pressureReason,holdReason,tp1Reason,tp2Reason,tp3Reason;
+var grade=
+setup.qualified
+?"目前符合策略"
+:setup.passed>=5
+?"接近符合"
+:"條件不足";
+
+var t=
+strategyTargetLevels(type,m);
+
+var rr1=
+strategyRR(t.center,t.tp1,t.stop1);
+
+var rr2=
+strategyRR(t.center,t.tp2,t.stop1);
+
+var rr3=
+strategyRR(t.center,t.tp3,t.stop1);
+
+var rr1Deep=
+strategyRR(t.center,t.tp1,t.stop2);
+
+var rr2Deep=
+strategyRR(t.center,t.tp2,t.stop2);
+
+var rr3Deep=
+strategyRR(t.center,t.tp3,t.stop2);
+
+var atr=
+Math.max(Number(m.atr)||0,.01);
+
+var breakoutBase=
+Math.max(
+Number(t.previousHigh)||0,
+Number(m.resistance)||0
+);
+
+var holdLow;
+var holdHigh;
+
+var entryReason;
+var stop1Reason;
+var stop2Reason;
+var pressureReason;
+var holdReason;
+var tp1Reason;
+var tp2Reason;
+var tp3Reason;
+
+
+/* ==================================================
+   支撐回踩專屬指引
+================================================== */
 
 if(type==="PULLBACK"){
-holdLow=Math.max(Number(m.ma20)||0,breakoutBase-atr*.35);
-holdHigh=breakoutBase+atr*.2;
-entryReason="以 MA20、近期支撐與 ATR 波動範圍共同計算。回到這裡止穩，仍屬多頭結構可承受的正常回踩。";
-stop1Reason="放在回踩支撐下方並加入 ATR 緩衝。跌破代表原本預期的支撐回踩開始失效。";
-stop2Reason="再參考 MA60、10 日低點與較深 ATR 緩衝。若連這裡都失守，中期多頭結構已有明顯破壞。";
-pressureReason="前高／20 日壓力容易出現套牢與獲利了結賣壓，因此優先作為第一道止盈與減碼觀察。";
-holdReason="有效突破後回踩原壓力附近仍守住，代表壓力有機會轉為支撐；沒有重新跌回突破區下方時，續抱結構仍有效。";
-tp1Reason="TP1 優先處理前高／壓力；若前高已低於入場中心，才使用第一段風險延伸。";
-tp2Reason="突破前高後依原始 1R 推算第二段延伸，同時要求目標高於 TP1。";
-tp3Reason="屬於強勢趨勢延伸目標，需要突破後量價與多頭結構持續。";
-}
-else if(type==="HIGH_R"){
-holdLow=breakoutBase-atr*.3;
-holdHigh=breakoutBase+atr*.2;
-entryReason="觀察前高／壓力附近的小幅突破區，利用 ATR 控制追價距離，讓停損仍能靠近入場區。";
-stop1Reason="放在突破位下方。突破後快速跌回壓力下方，代表假突破風險提高。";
-stop2Reason="再參考 MA20 與近期低點；若連短中期支撐都跌破，代表不只是突破失敗，而是整體結構轉弱。";
-pressureReason="這裡是策略正在挑戰的主要前高／20 日壓力，也是最容易出現供給的位置。";
-holdReason="突破後回踩前高附近仍能站回，且沒有明顯放量跌破，可視為壓力轉支撐。";
-tp1Reason="TP1 先確認前高／壓力是否真正被消化；若入場中心已高於前高，才改用第一段延伸。";
-tp2Reason="屬於突破確認後的延伸目標，以原始風險距離計算。";
-tp3Reason="屬於強勢突破的較遠延伸區；若量價或突破支撐轉弱，應先保護成果。";
-}
-else{
-holdLow=Math.max(Number(m.ma20)||0,breakoutBase-atr*.25);
-holdHigh=breakoutBase+atr*.25;
-entryReason="以現價附近的小範圍作為觀察區，利用 ATR 控制追價距離，避免單根急拉後追得過遠。";
-stop1Reason="優先參考最近短線低點與 ATR。跌破代表原本的強勢續攻節奏開始被破壞。";
-stop2Reason="再下移到 MA20、10 日低點附近；若失守，短線轉弱已進一步變成中短期結構破壞。";
-pressureReason="前高／20 日壓力仍可能出現獲利了結，因此先處理這裡，而不是直接假設價格一定延伸。";
-holdReason="突破前高後回踩原突破區或 MA20 附近仍守住，代表強勢結構沒有被破壞。";
-tp1Reason="TP1 先處理前高／壓力；如果入場位置已跨過前高，才改用第一段延伸。";
-tp2Reason="突破確認後的第二段延伸，以原始風險距離推算。";
-tp3Reason="動能非常強時才看的延伸目標；若創高後量能或動能轉弱，應優先保護報酬。";
+holdLow=Math.max(
+Number(m.ma20)||0,
+breakoutBase-atr*.35
+);
+
+holdHigh=
+breakoutBase+atr*.2;
+
+entryReason=
+"以 MA20、近期支撐與 ATR 波動範圍共同計算。回到這裡止穩，仍屬多頭結構可承受的正常回踩。";
+
+stop1Reason=
+"放在回踩支撐下方並加入 ATR 緩衝。跌破代表原本預期的支撐回踩開始失效。";
+
+stop2Reason=
+"再參考 MA60、10 日低點與較深 ATR 緩衝。若連這裡都失守，中期多頭結構已有明顯破壞。";
+
+pressureReason=
+"前高／20 日壓力容易出現套牢與獲利了結賣壓，因此優先作為第一道止盈與減碼觀察。";
+
+holdReason=
+"有效突破後回踩原壓力附近仍守住，代表壓力有機會轉為支撐；沒有重新跌回突破區下方時，續抱結構仍有效。";
+
+tp1Reason=
+"TP1 優先處理前高／壓力；若前高已低於入場中心，才使用第一段風險延伸。";
+
+tp2Reason=
+"突破前高後依原始 1R 推算第二段延伸，同時要求目標高於 TP1。";
+
+tp3Reason=
+"屬於強勢趨勢延伸目標，需要突破後量價與多頭結構持續。";
 }
 
-if(holdLow>holdHigh)[holdLow,holdHigh]=[holdHigh,holdLow];
+
+/* ==================================================
+   高 R 突破專屬指引
+================================================== */
+
+else if(type==="HIGH_R"){
+holdLow=
+breakoutBase-atr*.3;
+
+holdHigh=
+breakoutBase+atr*.2;
+
+entryReason=
+"觀察前高／壓力附近的小幅突破區，利用 ATR 控制追價距離，讓停損仍能靠近入場區。";
+
+stop1Reason=
+"放在突破位下方。突破後快速跌回壓力下方，代表假突破風險提高。";
+
+stop2Reason=
+"再參考 MA20 與近期低點；若連短中期支撐都跌破，代表不只是突破失敗，而是整體結構轉弱。";
+
+pressureReason=
+"這裡是策略正在挑戰的主要前高／20 日壓力，也是最容易出現供給的位置。";
+
+holdReason=
+"突破後回踩前高附近仍能站回，且沒有明顯放量跌破，可視為壓力轉支撐。";
+
+tp1Reason=
+"TP1 先確認前高／壓力是否真正被消化；若入場中心已高於前高，才改用第一段延伸。";
+
+tp2Reason=
+"屬於突破確認後的延伸目標，以原始風險距離計算。";
+
+tp3Reason=
+"屬於強勢突破的較遠延伸區；若量價或突破支撐轉弱，應先保護成果。";
+}
+
+
+/* ==================================================
+   強勢續攻專屬指引
+================================================== */
+
+else{
+holdLow=Math.max(
+Number(m.ma20)||0,
+breakoutBase-atr*.25
+);
+
+holdHigh=
+breakoutBase+atr*.25;
+
+entryReason=
+"以現價附近的小範圍作為觀察區，利用 ATR 控制追價距離，避免單根急拉後追得過遠。";
+
+stop1Reason=
+"優先參考最近短線低點與 ATR。跌破代表原本的強勢續攻節奏開始被破壞。";
+
+stop2Reason=
+"再下移到 MA20、10 日低點附近；若失守，短線轉弱已進一步變成中短期結構破壞。";
+
+pressureReason=
+"前高／20 日壓力仍可能出現獲利了結，因此先處理這裡，而不是直接假設價格一定延伸。";
+
+holdReason=
+"突破前高後回踩原突破區或 MA20 附近仍守住，代表強勢結構沒有被破壞。";
+
+tp1Reason=
+"TP1 先處理前高／壓力；如果入場位置已跨過前高，才改用第一段延伸。";
+
+tp2Reason=
+"突破確認後的第二段延伸，以原始風險距離推算。";
+
+tp3Reason=
+"動能非常強時才看的延伸目標；若創高後量能或動能轉弱，應優先保護報酬。";
+}
+
+if(holdLow>holdHigh){
+[holdLow,holdHigh]=
+[holdHigh,holdLow]
+}
 
 return(
 '<div class="strategy-card">'+
+
+/* ===== 策略名稱 ===== */
+
 '<div class="strategy-head">'+
-'<div><div class="strategy-name">'+emojis[type]+' '+names[type]+'</div><div class="strategy-grade">'+safe(grade)+'</div></div>'+
-'<div class="strategy-score">'+setup.score+'<small>'+setup.passed+'/'+setup.total+' 條</small></div>'+
+
+'<div>'+
+'<div class="strategy-name">'+
+emojis[type]+' '+names[type]+
 '</div>'+
 
-'<div style="margin-top:10px">'+
-setup.conditions.map((x,i)=>
-'<div class="condition-row '+(x.pass?"good":"bad")+'">'+
-(x.pass?"✓":"✕")+' '+(i+1)+'. '+safe(x.title)+
-'<span class="condition-explain">'+safe(x.explain)+'</span></div>'
-).join("")+
+'<div class="strategy-grade">'+
+safe(grade)+
 '</div>'+
+'</div>'+
+
+'<div class="strategy-score">'+
+setup.score+
+'<small>'+
+setup.passed+'/'+setup.total+' 條'+
+'</small>'+
+'</div>'+
+
+'</div>'+
+
+
+/* ==================================================
+   ① 策略指引放最上面
+================================================== */
 
 '<div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">'+
-'<div class="section-title">🎯 策略目標規劃</div>'+
-'<div class="section-sub" style="margin-top:5px">觀察入場 → SL 結構 → 前高壓力 → 突破回踩 → TP2 / TP3 延伸</div>'+
+
+'<div class="section-title">'+
+'🎯 策略目標規劃'+
+'</div>'+
+
+'<div class="section-sub" style="margin-top:5px">'+
+'觀察入場 → SL 結構 → 前高壓力 → 突破回踩 → TP2 / TP3 延伸'+
+'</div>'+
 
 '<div class="strategy-levels">'+
 
+
+/* ===== 觀察入場 ===== */
+
 '<div class="strategy-level level-entry" style="grid-column:1/-1">'+
-'<span>👀 觀察入場區間</span><strong>'+fmt(t.entryLow)+' ～ '+fmt(t.entryHigh)+'</strong>'+
-'<div class="strategy-reason">'+safe(entryReason)+'</div></div>'+
+
+'<span>'+
+'👀 觀察入場區間'+
+'</span>'+
+
+'<strong>'+
+fmt(t.entryLow)+' ～ '+fmt(t.entryHigh)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+safe(entryReason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== SL1 ===== */
 
 '<div class="strategy-level level-stop">'+
-'<span>🛑 SL1｜第一停損</span><strong>'+fmt(t.stop1)+'</strong>'+
-'<div class="strategy-reason">'+safe(stop1Reason)+'</div></div>'+
+
+'<span>'+
+'🛑 SL1｜第一停損'+
+'</span>'+
+
+'<strong>'+
+fmt(t.stop1)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+safe(stop1Reason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== SL2 ===== */
 
 '<div class="strategy-level level-stop">'+
-'<span>🛡 SL2｜第二停損</span><strong>'+fmt(t.stop2)+'</strong>'+
-'<div class="strategy-reason">'+safe(stop2Reason)+'</div></div>'+
+
+'<span>'+
+'🛡 SL2｜第二停損'+
+'</span>'+
+
+'<strong>'+
+fmt(t.stop2)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+safe(stop2Reason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== 前高 ===== */
 
 '<div class="strategy-level level-pressure" style="grid-column:1/-1">'+
-'<span>🏔 前高／壓力｜第一道止盈觀察</span><strong>'+fmt(t.previousHigh)+'</strong>'+
-'<div class="strategy-reason">'+safe(pressureReason)+'</div></div>'+
+
+'<span>'+
+'🏔 前高／壓力｜第一道止盈觀察'+
+'</span>'+
+
+'<strong>'+
+fmt(t.previousHigh)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+safe(pressureReason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== 突破後回踩 ===== */
 
 '<div class="strategy-level level-hold" style="grid-column:1/-1">'+
-'<span>🔄 突破後回踩續抱觀察區</span><strong>'+fmt(holdLow)+' ～ '+fmt(holdHigh)+'</strong>'+
-'<div class="strategy-reason">'+safe(holdReason)+'</div></div>'+
+
+'<span>'+
+'🔄 突破後回踩續抱觀察區'+
+'</span>'+
+
+'<strong>'+
+fmt(holdLow)+' ～ '+fmt(holdHigh)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+safe(holdReason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== TP1 ===== */
 
 '<div class="strategy-level level-tp">'+
-'<span>💰 TP1</span><strong>'+fmt(t.tp1)+'</strong><span class="rr-text">SL1 風報比 '+rr1+'</span>'+
-'<div class="strategy-reason">'+safe(tp1Reason)+'</div></div>'+
+
+'<span>'+
+'💰 TP1'+
+'</span>'+
+
+'<strong>'+
+fmt(t.tp1)+
+'</strong>'+
+
+'<span class="rr-text">'+
+'SL1 風報比 '+rr1+
+'</span>'+
+
+'<div class="strategy-reason">'+
+safe(tp1Reason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== TP2 ===== */
 
 '<div class="strategy-level level-tp">'+
-'<span>💰 TP2｜突破後延伸</span><strong>'+fmt(t.tp2)+'</strong><span class="rr-text">SL1 風報比 '+rr2+'</span>'+
-'<div class="strategy-reason">'+safe(tp2Reason)+'</div></div>'+
+
+'<span>'+
+'💰 TP2｜突破後延伸'+
+'</span>'+
+
+'<strong>'+
+fmt(t.tp2)+
+'</strong>'+
+
+'<span class="rr-text">'+
+'SL1 風報比 '+rr2+
+'</span>'+
+
+'<div class="strategy-reason">'+
+safe(tp2Reason)+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== TP3 ===== */
 
 '<div class="strategy-level level-tp3" style="grid-column:1/-1">'+
-'<span>🔥 TP3｜強勢延伸</span><strong>'+fmt(t.tp3)+'</strong><span class="rr-text">SL1 風報比 '+rr3+'</span>'+
-'<div class="strategy-reason">'+safe(tp3Reason)+'</div></div>'+
 
-'<div class="strategy-level"><span>⚖️ 入場中心</span><strong>'+fmt(t.center)+'</strong>'+
-'<div class="strategy-reason">使用觀察入場區間中間值統一計算風險，避免風報比因任意挑選入場價而失真。</div></div>'+
+'<span>'+
+'🔥 TP3｜強勢延伸'+
+'</span>'+
 
-'<div class="strategy-level"><span>📐 原始風險距離｜1R</span><strong>'+fmt(t.risk)+'</strong>'+
-'<div class="strategy-reason">以入場中心到 SL1 的距離作為 1R，後續延伸與風報比使用相同基準。</div></div>'+
+'<strong>'+
+fmt(t.tp3)+
+'</strong>'+
+
+'<span class="rr-text">'+
+'SL1 風報比 '+rr3+
+'</span>'+
+
+'<div class="strategy-reason">'+
+safe(tp3Reason)+
+'</div>'+
 
 '</div>'+
+
+
+/* ===== 入場中心 ===== */
+
+'<div class="strategy-level">'+
+
+'<span>'+
+'⚖️ 入場中心'+
+'</span>'+
+
+'<strong>'+
+fmt(t.center)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+'使用觀察入場區間中間值統一計算風險，避免風報比因任意挑選入場價而失真。'+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== 1R ===== */
+
+'<div class="strategy-level">'+
+
+'<span>'+
+'📐 原始風險距離｜1R'+
+'</span>'+
+
+'<strong>'+
+fmt(t.risk)+
+'</strong>'+
+
+'<div class="strategy-reason">'+
+'以入場中心到 SL1 的距離作為 1R，後續延伸與風報比使用相同基準。'+
+'</div>'+
+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== 風報比總結 ===== */
 
 '<div class="strategy-summary">'+
-'<strong>📊 風報比總結</strong><br>'+
-'SL1 '+fmt(t.stop1)+'：TP1 '+rr1+' · TP2 '+rr2+' · TP3 '+rr3+'<br>'+
-'SL2 '+fmt(t.stop2)+'：TP1 '+rr1Deep+' · TP2 '+rr2Deep+' · TP3 '+rr3Deep+
-'<br><br><strong style="color:#70b7ff">突破後續抱</strong><br>'+
-'前高／壓力：'+fmt(t.previousHigh)+'<br>'+
-'回踩續抱區：'+fmt(holdLow)+' ～ '+fmt(holdHigh)+
-'</div>'+
+
+'<strong>'+
+'📊 風報比總結'+
+'</strong>'+
+
+'<br>'+
+
+'SL1 '+fmt(t.stop1)+
+'：TP1 '+rr1+
+' · TP2 '+rr2+
+' · TP3 '+rr3+
+
+'<br>'+
+
+'SL2 '+fmt(t.stop2)+
+'：TP1 '+rr1Deep+
+' · TP2 '+rr2Deep+
+' · TP3 '+rr3Deep+
+
+'<br><br>'+
+
+'<strong style="color:#70b7ff">'+
+'突破後續抱'+
+'</strong>'+
+
+'<br>'+
+
+'前高／壓力：'+
+fmt(t.previousHigh)+
+
+'<br>'+
+
+'回踩續抱區：'+
+fmt(holdLow)+' ～ '+fmt(holdHigh)+
+
 '</div>'+
 
-'<div class="qualified-badge '+(setup.qualified?"":"not-qualified")+'">'+
-(setup.qualified?"✓ 目前技術條件符合此策略":"目前尚未完整符合此策略")+
-'</div></div>'
+'</div>'+
+
+
+/* ==================================================
+   ② 策略條件移到最下面
+================================================== */
+
+'<div style="margin-top:18px;border-top:1px solid #202522;padding-top:14px">'+
+
+'<div class="section-title">'+
+'📋 '+names[type]+'策略條件'+
+'</div>'+
+
+'<div class="section-sub" style="margin-top:5px;margin-bottom:8px">'+
+'目前符合 '+setup.passed+' / '+setup.total+' 項'+
+'</div>'+
+
+setup.conditions.map((x,i)=>
+
+'<div class="condition-row '+(x.pass?"good":"bad")+'">'+
+
+(x.pass?"✓":"✕")+
+' '+(i+1)+'. '+safe(x.title)+
+
+'<span class="condition-explain">'+
+safe(x.explain)+
+'</span>'+
+
+'</div>'
+
+).join("")+
+
+'</div>'+
+
+
+/* ===== 最終狀態 ===== */
+
+'<div class="qualified-badge '+(
+setup.qualified
+?""
+:"not-qualified"
+)+'">'+
+
+(
+setup.qualified
+?"✓ 目前技術條件符合此策略"
+:"目前尚未完整符合此策略"
+)+
+
+'</div>'+
+
+'</div>'
 )
 }
 
-/* ===== 以下保留你原本搜尋與分析 API ===== */
+/* ==================================================
+   股票 API
+================================================== */
 
 async function fetchStockData(symbol){
-var r=await fetch("/api/stock?symbol="+encodeURIComponent(symbol)+"&t="+Date.now(),{cache:"no-store"});
+var r=await fetch(
+"/api/stock?symbol="+
+encodeURIComponent(symbol)+
+"&t="+Date.now(),
+{cache:"no-store"}
+);
+
 var d=await r.json();
-if(!r.ok||!d.ok)throw Error(d.error||"股票資料取得失敗");
+
+if(!r.ok||!d.ok){
+throw Error(
+d.error||
+"股票資料取得失敗"
+)
+}
+
 return d
 }
 
 async function analyze(symbol){
-symbol=String(symbol||"").trim().toUpperCase();
+symbol=
+String(symbol||"")
+.trim()
+.toUpperCase();
+
 if(!symbol)return;
-el("homeView").classList.add("hidden");
-el("analysisView").classList.remove("hidden");
-el("analysisResult").innerHTML='<div class="loading">正在分析 '+safe(symbol)+'…</div>';
-currentAnalysisSymbol=symbol;
-window.scrollTo({top:0,behavior:"smooth"});
+
+el("homeView")
+.classList.add("hidden");
+
+el("analysisView")
+.classList.remove("hidden");
+
+el("analysisResult").innerHTML=
+'<div class="loading">'+
+'正在分析 '+
+safe(symbol)+
+'…'+
+'</div>';
+
+currentAnalysisSymbol=
+symbol;
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
 try{
-var d=await fetchStockData(symbol);
+var d=
+await fetchStockData(symbol);
+
 currentAnalysisData=d;
+
 buildAnalysis(d);
+
 }catch(e){
-el("analysisResult").innerHTML='<div class="error">'+safe(e.message)+'</div>'
+
+el("analysisResult").innerHTML=
+'<div class="error">'+
+safe(e.message)+
+'</div>'
 }
 }
 
-document.querySelectorAll("[data-example]").forEach(b=>b.onclick=()=>analyze(b.dataset.example));
-el("searchButton").onclick=()=>analyze(el("searchInput").value);
-el("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")analyze(el("searchInput").value)});
-el("backButton").onclick=()=>{currentAnalysisSymbol="";el("analysisView").classList.add("hidden");el("homeView").classList.remove("hidden")};
+document
+.querySelectorAll("[data-example]")
+.forEach(b=>
+b.onclick=
+()=>analyze(b.dataset.example)
+);
+
+el("searchButton").onclick=
+()=>analyze(el("searchInput").value);
+
+el("searchInput")
+.addEventListener(
+"keydown",
+e=>{
+if(e.key==="Enter"){
+analyze(
+el("searchInput").value
+)
+}
+}
+);
+
+el("backButton").onclick=
+()=>{
+currentAnalysisSymbol="";
+
+el("analysisView")
+.classList.add("hidden");
+
+el("homeView")
+.classList.remove("hidden")
+};
+
+
+/* ==================================================
+   完整分析
+================================================== */
 
 function buildAnalysis(d){
 var rows=d.rows||[];
-if(rows.length<60)throw Error("歷史資料不足");
 
-var m=marketOf(d);
-var v=volumeMetrics(d,rows);
-var setups=buildStrategySetups(d,m,v);
-var price=m.price;
-var change=+d.changePercent;
+if(rows.length<60){
+throw Error("歷史資料不足")
+}
+
+var m=
+marketOf(d);
+
+var v=
+volumeMetrics(d,rows);
+
+var setups=
+buildStrategySetups(d,m,v);
+
+var price=
+m.price;
+
+var change=
++d.changePercent;
 
 el("analysisResult").innerHTML=
-'<div class="hero-card">'+
-'<div class="hero-top"><div><div class="stock-title-line"><div class="hero-symbol">'+safe(d.symbol)+'</div><div class="hero-name">'+safe(d.name||"")+'</div></div>'+
-'<div class="market-pill">'+(d.market==="US"?"🇺🇸 美股":"🇹🇼 台股")+'</div></div>'+
-'<div><div class="hero-price">'+fmt(price)+'</div><div class="hero-change '+pclass(change)+'">'+pct(change)+'</div></div></div>'+
 
-'<div class="indicator-strip">'+
-[
-["MA20",m.ma20],["MA60",m.ma60],["RSI 14",m.rsi],["MACD",m.macd],["ATR",m.atr],["20日壓力",m.resistance]
-].map(x=>'<div class="indicator"><span>'+x[0]+'</span><strong>'+fmt(x[1],x[0].includes("RSI")?1:2)+'</strong></div>').join("")+
+'<div class="hero-card">'+
+
+'<div class="hero-top">'+
+
+'<div>'+
+'<div class="stock-title-line">'+
+
+'<div class="hero-symbol">'+
+safe(d.symbol)+
 '</div>'+
 
-'<div class="volume-card"><div class="volume-title">📊 成交量分析 · '+safe(v.level)+'</div>'+
+'<div class="hero-name">'+
+safe(d.name||"")+
+'</div>'+
+
+'</div>'+
+
+'<div class="market-pill">'+
+(
+d.market==="US"
+?"🇺🇸 美股"
+:"🇹🇼 台股"
+)+
+'</div>'+
+
+'</div>'+
+
+'<div>'+
+'<div class="hero-price">'+
+fmt(price)+
+'</div>'+
+
+'<div class="hero-change '+pclass(change)+'">'+
+pct(change)+
+'</div>'+
+'</div>'+
+
+'</div>'+
+
+
+/* ===== 指標 ===== */
+
+'<div class="indicator-strip">'+
+
+[
+["MA20",m.ma20],
+["MA60",m.ma60],
+["RSI 14",m.rsi],
+["MACD",m.macd],
+["ATR",m.atr],
+["20日壓力",m.resistance]
+
+].map(x=>
+
+'<div class="indicator">'+
+'<span>'+
+x[0]+
+'</span>'+
+
+'<strong>'+
+fmt(
+x[1],
+x[0].includes("RSI")
+?1
+:2
+)+
+'</strong>'+
+'</div>'
+
+).join("")+
+
+'</div>'+
+
+
+/* ===== 成交量 ===== */
+
+'<div class="volume-card">'+
+
+'<div class="volume-title">'+
+'📊 成交量分析 · '+
+safe(v.level)+
+'</div>'+
+
 '<div class="volume-grid">'+
-'<div class="volume-box"><span>量比</span><strong>'+fmt(v.ratio,2)+'x</strong></div>'+
-'<div class="volume-box"><span>目前成交量</span><strong>'+fmt(v.current,0)+'</strong></div>'+
-'<div class="volume-box"><span>20日均量</span><strong>'+fmt(v.average20,0)+'</strong></div>'+
-'</div></div></div>'+
 
-'<div id="pullbackStrategy"><div class="big-section-title">🟢 支撐回踩策略</div>'+
-strategyHTML("PULLBACK",setups.PULLBACK,"green",m)+'</div>'+
+'<div class="volume-box">'+
+'<span>量比</span>'+
+'<strong>'+
+fmt(v.ratio,2)+'x'+
+'</strong>'+
+'</div>'+
 
-'<div id="highRStrategy"><div class="big-section-title">🟣 高 R 突破策略</div>'+
-strategyHTML("HIGH_R",setups.HIGH_R,"purple",m)+'</div>'+
+'<div class="volume-box">'+
+'<span>目前成交量</span>'+
+'<strong>'+
+fmt(v.current,0)+
+'</strong>'+
+'</div>'+
 
-'<div id="surgeStrategy"><div class="big-section-title">🔥 強勢續攻策略</div>'+
-strategyHTML("SURGE",setups.SURGE,"orange",m)+'</div>'+
+'<div class="volume-box">'+
+'<span>20日均量</span>'+
+'<strong>'+
+fmt(v.average20,0)+
+'</strong>'+
+'</div>'+
+
+'</div>'+
+'</div>'+
+
+'</div>'+
+
+
+/* ==================================================
+   支撐回踩
+================================================== */
+
+'<div id="pullbackStrategy">'+
+
+'<div class="big-section-title">'+
+'🟢 支撐回踩策略'+
+'</div>'+
+
+strategyHTML(
+"PULLBACK",
+setups.PULLBACK,
+"green",
+m
+)+
+
+'</div>'+
+
+
+/* ==================================================
+   高 R 突破
+================================================== */
+
+'<div id="highRStrategy">'+
+
+'<div class="big-section-title">'+
+'🟣 高 R 突破策略'+
+'</div>'+
+
+strategyHTML(
+"HIGH_R",
+setups.HIGH_R,
+"purple",
+m
+)+
+
+'</div>'+
+
+
+/* ==================================================
+   強勢續攻
+================================================== */
+
+'<div id="surgeStrategy">'+
+
+'<div class="big-section-title">'+
+'🔥 強勢續攻策略'+
+'</div>'+
+
+strategyHTML(
+"SURGE",
+setups.SURGE,
+"orange",
+m
+)+
+
+'</div>'+
+
 
 '<div class="data-note">'+
 '策略價格與風報比為技術條件推算，用於策略觀察；推薦分數代表條件符合程度，不代表未來上漲機率。'+
 '</div>'
 }
 
-/* ===== 首頁雷達 ===== */
+
+/* ==================================================
+   首頁雷達
+================================================== */
 
 async function loadRadar(){
 try{
-var r=await fetch("/api/radar?t="+Date.now(),{cache:"no-store"});
-var d=await r.json();
-if(!r.ok||!d.ok)throw Error(d.error||"雷達取得失敗");
+
+var r=
+await fetch(
+"/api/radar?t="+Date.now(),
+{cache:"no-store"}
+);
+
+var d=
+await r.json();
+
+if(!r.ok||!d.ok){
+throw Error(
+d.error||
+"雷達取得失敗"
+)
+}
+
 radarData=d;
-el("scanCount").textContent=fmt(d.scanned,0);
-el("strategyCount").textContent=fmt((d.strategyReady||[]).length,0);
-el("radarCount").textContent=fmt((d.radar||[]).length,0);
-el("updateText").textContent="FinMind · 最後更新 "+currentTimeText()+" · 每 60 秒重新掃描";
-renderStocks("strategyGrid",d.strategyReady||[],"strategy",false);
-renderStocks("longGrid",d.longWatch||[],"long",false);
-renderStocks("radarGrid",d.radar||[],"radar",false);
+
+el("scanCount").textContent=
+fmt(d.scanned,0);
+
+el("strategyCount").textContent=
+fmt(
+(d.strategyReady||[]).length,
+0
+);
+
+el("radarCount").textContent=
+fmt(
+(d.radar||[]).length,
+0
+);
+
+el("updateText").textContent=
+"FinMind · 最後更新 "+
+currentTimeText()+
+" · 每 60 秒重新掃描";
+
+renderStocks(
+"strategyGrid",
+d.strategyReady||[],
+"strategy",
+false
+);
+
+renderStocks(
+"longGrid",
+d.longWatch||[],
+"long",
+false
+);
+
+renderStocks(
+"radarGrid",
+d.radar||[],
+"radar",
+false
+);
+
 countdownSeconds=60;
-}catch(e){el("updateText").textContent="雷達連線失敗："+e.message}
+
+}catch(e){
+
+el("updateText").textContent=
+"雷達連線失敗："+e.message
+}
 }
 
 function renderStocks(id,a,mode,showAll){
 var r=el(id);
-if(!a.length){r.innerHTML='<div class="card" style="padding:13px">目前沒有符合條件的股票</div>';return}
-var data=showAll?a:a.slice(0,6);
-r.innerHTML=data.map(s=>
-'<article class="stock-card" data-stock="'+safe(s.symbol)+'">'+
-'<div class="stock-top"><div><div class="stock-title-line"><div class="symbol">'+safe(s.symbol)+'</div><div class="stock-inline-name">'+safe(s.name||"")+'</div></div></div>'+
-'<div class="score"><strong>'+safe(s.entryScore??s.score??"--")+'</strong><span>條件分數</span></div></div>'+
-'<div class="price-row"><div class="price">'+fmt(s.price)+'</div><div class="'+pclass(s.changePercent)+'">'+pct(s.changePercent)+'</div></div>'+
-'<div class="chips"><div class="chip green">量比 '+fmt(s.volumeRatio,1)+'x</div></div>'+
-'<div class="watch-open">查看完整策略條件 →</div></article>'
-).join("");
-r.querySelectorAll("[data-stock]").forEach(x=>x.onclick=()=>analyze(x.dataset.stock))
+
+if(!a.length){
+r.innerHTML=
+'<div class="card" style="padding:13px">'+
+'目前沒有符合條件的股票'+
+'</div>';
+
+return
 }
 
-el("refreshButton").onclick=loadRadar;
+var data=
+showAll
+?a
+:a.slice(0,6);
+
+r.innerHTML=
+data.map(s=>
+
+'<article class="stock-card" data-stock="'+
+safe(s.symbol)+
+'">'+
+
+'<div class="stock-top">'+
+
+'<div>'+
+'<div class="stock-title-line">'+
+
+'<div class="symbol">'+
+safe(s.symbol)+
+'</div>'+
+
+'<div class="stock-inline-name">'+
+safe(s.name||"")+
+'</div>'+
+
+'</div>'+
+'</div>'+
+
+'<div class="score">'+
+
+'<strong>'+
+safe(
+s.entryScore??
+s.score??
+"--"
+)+
+'</strong>'+
+
+'<span>'+
+'條件分數'+
+'</span>'+
+
+'</div>'+
+'</div>'+
+
+'<div class="price-row">'+
+
+'<div class="price">'+
+fmt(s.price)+
+'</div>'+
+
+'<div class="'+
+pclass(s.changePercent)+
+'">'+
+
+pct(s.changePercent)+
+
+'</div>'+
+'</div>'+
+
+'<div class="chips">'+
+
+'<div class="chip green">'+
+'量比 '+
+fmt(s.volumeRatio,1)+
+'x'+
+'</div>'+
+
+'</div>'+
+
+'<div class="watch-open">'+
+'查看完整策略條件 →'+
+'</div>'+
+
+'</article>'
+
+).join("");
+
+r
+.querySelectorAll("[data-stock]")
+.forEach(
+x=>
+x.onclick=
+()=>analyze(x.dataset.stock)
+)
+}
+
+el("refreshButton").onclick=
+loadRadar;
+
+
+/* ==================================================
+   雷達倒數
+================================================== */
 
 setInterval(()=>{
+
 countdownSeconds--;
-if(countdownSeconds<=0){countdownSeconds=60;if(!document.hidden)loadRadar()}
-var m=Math.floor(countdownSeconds/60),s=countdownSeconds%60;
-el("countdown").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+
+if(countdownSeconds<=0){
+countdownSeconds=60;
+
+if(!document.hidden){
+loadRadar()
+}
+}
+
+var m=
+Math.floor(
+countdownSeconds/60
+);
+
+var s=
+countdownSeconds%60;
+
+el("countdown").textContent=
+String(m).padStart(2,"0")+
+":"+
+String(s).padStart(2,"0");
+
 },1000);
 
+
+/* ==================================================
+   台股 / 美股切換
+================================================== */
+
 el("twTab").onclick=()=>{
-el("twMarket").classList.remove("hidden");
-el("usMarket").classList.add("hidden");
-el("twTab").classList.add("active");
-el("usTab").classList.remove("active")
+el("twMarket")
+.classList.remove("hidden");
+
+el("usMarket")
+.classList.add("hidden");
+
+el("twTab")
+.classList.add("active");
+
+el("usTab")
+.classList.remove("active")
 };
 
 el("usTab").onclick=()=>{
-el("twMarket").classList.add("hidden");
-el("usMarket").classList.remove("hidden");
-el("twTab").classList.remove("active");
-el("usTab").classList.add("active")
+el("twMarket")
+.classList.add("hidden");
+
+el("usMarket")
+.classList.remove("hidden");
+
+el("twTab")
+.classList.remove("active");
+
+el("usTab")
+.classList.add("active")
 };
 
-el("notifyButton").onclick=async()=>{
-if(!("Notification" in window)){alert("目前瀏覽器不支援系統通知。");return}
-if(Notification.permission==="granted"){alert("高勝率策略通知已開啟。");return}
-try{await Notification.requestPermission()}catch(e){}
+
+/* ==================================================
+   通知
+================================================== */
+
+el("notifyButton").onclick=
+async()=>{
+
+if(!("Notification" in window)){
+alert(
+"目前瀏覽器不支援系統通知。"
+);
+return
+}
+
+if(Notification.permission==="granted"){
+alert(
+"高勝率策略通知已開啟。"
+);
+return
+}
+
+try{
+await Notification.requestPermission()
+}catch(e){}
 };
+
+
+/* ==================================================
+   啟動
+================================================== */
 
 loadRadar();
+
 </script>
+
 </body>
 </html>
