@@ -80,24 +80,12 @@ button{cursor:pointer}
 .chip{border:1px solid #292e2b;background:#131614;border-radius:9px;padding:5px 8px;color:#bcc1be;font-size:10px}
 .chip.green{color:var(--green)}
 
-/* 自動策略掃描 */
 .strategy-auto-card{
 border-color:rgba(69,224,173,.30);
 background:linear-gradient(180deg,rgba(69,224,173,.035),#0b0e0c 42%)
 }
-.strategy-auto-top{
-display:flex;
-justify-content:space-between;
-align-items:flex-start;
-gap:12px
-}
-.strategy-auto-name{
-margin-top:12px;
-border:1px solid #292e2b;
-background:#070908;
-border-radius:14px;
-padding:12px 13px
-}
+.strategy-auto-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.strategy-auto-name{margin-top:12px;border:1px solid #292e2b;background:#070908;border-radius:14px;padding:12px 13px}
 .strategy-auto-name.green{border-color:rgba(69,224,173,.25)}
 .strategy-auto-name.purple{border-color:rgba(174,99,255,.30)}
 .strategy-auto-name.orange{border-color:rgba(255,159,67,.30)}
@@ -106,41 +94,12 @@ padding:12px 13px
 .strategy-auto-name.purple strong{color:#c899ff}
 .strategy-auto-name.orange strong{color:var(--orange)}
 .strategy-auto-name span{display:block;margin-top:5px;color:#858b87;font-size:10px}
-.strategy-score-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:6px;
-margin-top:12px
-}
-.strategy-mini-score{
-text-align:center;
-background:#070908;
-border:1px solid #252a27;
-border-radius:11px;
-padding:9px 4px
-}
-.strategy-mini-score span{
-display:block;
-font-size:9px;
-color:#858b87
-}
-.strategy-mini-score strong{
-display:block;
-font-size:17px;
-margin-top:4px
-}
-.strategy-auto-meta{
-margin-top:11px;
-font-size:10px;
-color:#777d79;
-line-height:1.7
-}
-.strategy-open{
-margin-top:10px;
-font-size:10px;
-font-weight:900;
-color:var(--green)
-}
+.strategy-score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.strategy-mini-score{text-align:center;background:#070908;border:1px solid #252a27;border-radius:11px;padding:9px 4px}
+.strategy-mini-score span{display:block;font-size:9px;color:#858b87}
+.strategy-mini-score strong{display:block;font-size:17px;margin-top:4px}
+.strategy-auto-meta{margin-top:11px;font-size:10px;color:#777d79;line-height:1.7}
+.strategy-open{margin-top:10px;font-size:10px;font-weight:900;color:var(--green)}
 
 .back-btn{min-height:48px;border:1px solid #303532;border-radius:15px;background:#0e110f;color:#eee;font-weight:850;padding:0 15px}
 .back-btn.full{width:100%;margin-top:22px}
@@ -331,7 +290,6 @@ color:var(--green)
 </div>
 </section>
 
-<!-- 新增：自動偵測符合策略股票 -->
 <section class="section">
 <div class="section-head">
 <div>
@@ -549,8 +507,6 @@ buffer:b
 };
 }
 
-/* 自選股 */
-
 function getWatchlist(){
 try{return JSON.parse(localStorage.getItem(WATCH_KEY)||"[]")||[]}
 catch(e){return[]}
@@ -615,8 +571,6 @@ r.querySelectorAll("[data-watch-remove]").forEach(x=>{
 x.onclick=function(e){e.stopPropagation();removeFavorite(this.dataset.watchRemove)};
 });
 }
-
-/* 持倉 */
 
 function getPositions(){
 try{return JSON.parse(localStorage.getItem(POSITION_KEY)||"{}")||{}}
@@ -756,8 +710,6 @@ statBox("目前保護位",fmt(p.protectPrice),"down")+
 '</div>';
 }
 
-/* 攤平均價 */
-
 function intradayAverageSignal(){
 if(!["1m","3m","5m","10m","15m"].includes(KBAR_TF)){
 return{ready:false,score:0,reasons:["△ 均價確認請切回 1～15 分 K"]};
@@ -843,8 +795,6 @@ return'<div class="avg-plan"><div class="avg-plan-title">'+x[1]+'</div>'+
 '</div></div>';
 }
 
-/* 推薦策略 */
-
 function calculateStrategyRecommendation(m,resistance,structureState){
 var pullback=0,highR=0,surge=0;
 
@@ -926,8 +876,6 @@ return'<div class="matcher '+box+'">'+
 '<div class="matcher-level-row"><span>日 K 結構失效位</span><strong class="down">'+invalidation+'</strong></div>'+
 '</div></div>';
 }
-
-/* 回測 */
 
 function backtestIndicators(rows,index){
 var p=rows.slice(0,index+1);
@@ -1121,16 +1069,12 @@ backtestStat("最大連敗",r.maxLosingStreak+" 次")+
 '</div>';
 }
 
-/* API */
-
 async function fetchStockData(q){
 var r=await fetch("/api/stock?symbol="+encodeURIComponent(q)+"&t="+Date.now(),{cache:"no-store"});
 var d=await r.json();
 if(!r.ok||!d.ok)throw Error(d.error||"資料取得失敗");
 return d;
 }
-
-/* 分析 */
 
 async function analyze(q){
 q=String(q||"").trim();
@@ -1352,7 +1296,7 @@ conditionLine(pullbackStructure,"日 K 波段結構尚未失效","日 K 波段�
 '<div class="overview-card purple-card">'+
 overviewRow("嚴格模式",strictHighR?"條件符合":"等待確認",strictHighR?"green":"")+
 overviewRow("日 K 結構低點",fmt(structureLow),"")+
-targetBox("📍 突破觀察",fmt(resistance-atr*.25)+" ～ "+fmt(resistance+atr*.35),"purple")+
+targetBox("📍 建議入場區間",fmt(resistance-atr*.25)+" ～ "+fmt(resistance+atr*.35),"purple")+
 targetBox("💰 TP1 · 2R",fmt(bcenter+bR*2),"tp")+
 targetBox("💰 TP2 · 3R",fmt(bcenter+bR*3),"tp")+
 targetBox("🔥 TP3 · 5R",fmt(bcenter+bR*5),"tp3")+
@@ -1426,8 +1370,6 @@ setupKBarControls();
 loadKBar();
 }
 
-/* 持倉按鈕 */
-
 function bindPositionControls(){
 if(el("positionSave"))el("positionSave").onclick=createPositionFromForm;
 
@@ -1451,8 +1393,6 @@ if(el("averagePanel")&&currentMarketState){
 el("averagePanel").innerHTML=averageHTML(currentMarketState);
 }
 }
-
-/* K BAR */
 
 function isHistoricalTF(t){
 return["1d","1w","1mo","1y"].includes(t);
@@ -1771,8 +1711,6 @@ if(KBAR_TIMER)clearInterval(KBAR_TIMER);
 KBAR_TIMER=null;
 }
 
-/* 個股 30 秒更新 */
-
 function startAnalysisTracker(){
 stopAnalysisTracker();
 analysisCountdown=30;
@@ -1823,10 +1761,6 @@ d.market==="TW"&&d.isRealtime
 el("analysisLiveTime").textContent=
 "最後更新 "+currentTimeText()+" · 每 30 秒重新分析";
 }
-
-/* =========================
-   新增：自動策略股票
-========================= */
 
 function renderStrategyStocks(a){
 var r=el("strategyReadyGrid");
@@ -1936,8 +1870,6 @@ analyze(this.dataset.strategyStock);
 });
 }
 
-/* 雷達 */
-
 async function loadRadar(){
 try{
 var r=await fetch("/api/radar?t="+Date.now(),{cache:"no-store"});
@@ -1952,7 +1884,6 @@ el("longCount").textContent=fmt(d.longWatchCount,0);
 el("updateText").textContent=
 "FinMind Sponsor 即時資料 · 更新 "+currentTimeText();
 
-/* 新增策略掃描 */
 if(el("strategyReadyText")){
 el("strategyReadyText").textContent=
 "已分析 "+fmt(d.strategyScannedCount||0,0)+
@@ -1962,11 +1893,7 @@ fmt(d.strategyReadyCount||0,0)+
 }
 
 renderStrategyStocks(d.strategyReady||[]);
-
-/* 原本做多觀察 */
 renderStocks("longGrid",d.longWatch||[],true);
-
-/* 原本異動雷達 */
 renderStocks("radarGrid",d.radar||[],false);
 
 countdownSeconds=300;
@@ -2018,8 +1945,6 @@ x.onclick=function(){analyze(this.dataset.stock)};
 });
 }
 
-/* 返回 */
-
 function backHome(){
 stopAnalysisTracker();
 stopKBarTimer();
@@ -2029,8 +1954,6 @@ el("homePage").classList.remove("hidden");
 
 setTimeout(()=>{scrollTo(0,homeScroll)},10);
 }
-
-/* EVENTS */
 
 el("backTop").onclick=backHome;
 el("backBottom").onclick=backHome;
@@ -2045,8 +1968,6 @@ b.onclick=()=>analyze(b.dataset.symbol);
 });
 
 el("refreshButton").onclick=loadRadar;
-
-/* 首頁雷達倒數 */
 
 setInterval(()=>{
 countdownSeconds--;
@@ -2077,8 +1998,6 @@ currentAnalysisSymbol&&
 refreshCurrentAnalysis();
 }
 });
-
-/* START */
 
 renderWatchlist();
 loadRadar();
