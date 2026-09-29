@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>幽冥分析</title>
-<meta name="theme-color" content="#050706">
+<meta name="theme-color" content="#030504">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="幽冥分析">
@@ -12,444 +12,145 @@
 <style>
 *{box-sizing:border-box}
 :root{
---bg:#050706;
---bg2:#080b09;
---card:#0d110f;
---card2:#101512;
---border:#27302b;
---border2:#344139;
---text:#f7faf8;
---muted:#89938d;
---green:#49e6ad;
---green2:#9cf3d1;
---red:#ff6675;
---red2:#ff9ca5;
---yellow:#ffd166;
---orange:#ff9f43;
---purple:#bd7cff;
---purple2:#e3c5ff;
---blue:#70b7ff;
---cyan:#6ee7f2;
---shadow:0 16px 42px rgba(0,0,0,.28)
+--bg:#030504;--card:#0b0e0c;--border:#292e2b;--text:#f6f7f6;
+--muted:#8c918e;--green:#45e0ad;--red:#ff6976;--yellow:#ffc85a;
+--purple:#bd7cff;--orange:#ff9f43;--blue:#70b7ff
 }
-
 html{background:var(--bg);scroll-behavior:smooth}
-
 body{
-margin:0;
-background:
-radial-gradient(circle at 15% 0%,rgba(73,230,173,.10),transparent 360px),
-radial-gradient(circle at 90% 12%,rgba(112,183,255,.07),transparent 380px),
-linear-gradient(180deg,#050706,#030504 55%,#050706);
-color:var(--text);
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC",sans-serif;
+margin:0;background:radial-gradient(circle at top,rgba(43,111,84,.12),transparent 420px),var(--bg);
+color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Noto Sans TC",sans-serif;
 -webkit-font-smoothing:antialiased
 }
-
-button,input,textarea{font:inherit}
-button{cursor:pointer}
-
+button,input{font:inherit}button{cursor:pointer}
 .app{
-width:min(100%,760px);
-margin:auto;
-padding:
-max(18px,calc(env(safe-area-inset-top) + 12px))
+width:min(100%,760px);margin:auto;
+padding:max(18px,calc(env(safe-area-inset-top) + 12px))
 max(14px,calc(env(safe-area-inset-right) + 11px))
 max(80px,calc(env(safe-area-inset-bottom) + 24px))
 max(14px,calc(env(safe-area-inset-left) + 11px))
 }
-
 .header,.section-head,.back-row,.hero-top,.stock-top,.recommend-top,.backtest-head{
 display:flex;justify-content:space-between;align-items:center;gap:12px
 }
-
-.header{margin-bottom:14px}
-
-.logo{
-font-size:26px;
-font-weight:950;
-letter-spacing:-1.2px;
-background:linear-gradient(90deg,#fff,#b9c8c0);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent
+.logo{font-size:24px;font-weight:950;letter-spacing:-1px}
+.logo small{display:block;font-size:11px;font-weight:650;color:var(--muted);letter-spacing:.4px;margin-top:3px}
+.notify-btn,.refresh-btn,.more-btn,.favorite-btn,.position-save-btn,.return-recommend-btn{
+border:1px solid var(--border);background:#101411;color:#e7eae8;
+border-radius:12px;padding:10px 12px;font-size:13px;font-weight:850
 }
-.logo small{
-display:block;
-font-size:11px;
-font-weight:700;
-color:var(--muted);
--webkit-text-fill-color:var(--muted);
-letter-spacing:.5px;
-margin-top:3px
+.refresh-btn:active,.more-btn:active,.notify-btn:active,.favorite-btn:active,.position-save-btn:active,.return-recommend-btn:active{transform:scale(.98)}
+.refresh-btn:disabled{opacity:.6;cursor:not-allowed}
+.market-tabs{display:flex;gap:7px;background:#080b09;border:1px solid var(--border);padding:5px;border-radius:14px;margin-bottom:14px}
+.market-tab{flex:1;border:0;background:transparent;color:#777d79;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:900}
+.market-tab.active{background:#151a17;color:white}
+.search-card,.card,.hero-card,.strategy-card,.recommend-card,.position-card,.backtest-card{
+background:linear-gradient(180deg,#0d110f,#090c0a);
+border:1px solid var(--border);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.2)
 }
-
-.notify-btn,.refresh-btn,.more-btn,.favorite-btn,.position-save-btn,.return-recommend-btn,.strategy-quick-btn{
-border:1px solid var(--border);
-background:linear-gradient(180deg,#121814,#0c100e);
-color:#e9efeb;
-border-radius:12px;
-padding:10px 12px;
-font-size:13px;
-font-weight:850;
-box-shadow:0 5px 14px rgba(0,0,0,.15)
-}
-
-.notify-btn:active,.refresh-btn:active,.more-btn:active,.strategy-quick-btn:active{
-transform:scale(.98)
-}
-
-.market-tabs{
-display:flex;
-gap:7px;
-background:rgba(8,11,9,.85);
-border:1px solid var(--border);
-padding:5px;
-border-radius:15px;
-margin-bottom:14px;
-box-shadow:0 8px 24px rgba(0,0,0,.18)
-}
-
-.market-tab{
-flex:1;
-border:0;
-background:transparent;
-color:#737d77;
-padding:11px 6px;
-border-radius:11px;
-font-size:13px;
-font-weight:900
-}
-
-.market-tab.active{
-background:linear-gradient(180deg,#1a211d,#121713);
-color:white;
-box-shadow:0 4px 12px rgba(0,0,0,.2)
-}
-
-.search-card,.card,.hero-card,.strategy-card,.recommend-card,.position-card,.backtest-card,.ai-card,.track-card,.monster-card{
-background:linear-gradient(160deg,rgba(15,20,17,.98),rgba(8,11,9,.98));
-border:1px solid var(--border);
-border-radius:19px;
-box-shadow:var(--shadow)
-}
-
-.search-card{
-padding:14px;
-margin-bottom:14px;
-position:relative
-}
-
+.search-card{padding:14px;margin-bottom:14px}
 .search-row{display:flex;gap:8px}
-
 .search-input{
-flex:1;
-min-width:0;
-border:1px solid #303a34;
-background:#060907;
-color:white;
-border-radius:13px;
-padding:14px 12px;
-outline:none;
-font-size:16px;
-font-weight:800
+flex:1;min-width:0;border:1px solid #303632;background:#060806;color:white;
+border-radius:12px;padding:13px 12px;outline:none;font-size:16px;font-weight:800
 }
-
-.search-input:focus{
-border-color:#4d7563;
-box-shadow:0 0 0 3px rgba(73,230,173,.07)
-}
-
-.search-button{
-border:0;
-border-radius:13px;
-padding:0 19px;
-background:linear-gradient(135deg,#eff8f3,#bfe7d4);
-color:#07100b;
-font-weight:950
-}
-
-.search-suggest{
-position:absolute;
-left:14px;
-right:14px;
-top:69px;
-z-index:100;
-border:1px solid #303a34;
-background:rgba(8,11,9,.98);
-backdrop-filter:blur(18px);
-border-radius:14px;
-overflow:hidden;
-box-shadow:0 18px 45px rgba(0,0,0,.55)
-}
-
-.search-suggest-item{
-width:100%;
-border:0;
-border-bottom:1px solid #202722;
-background:transparent;
-color:white;
-text-align:left;
-padding:12px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:10px
-}
-
-.search-suggest-item:last-child{border-bottom:0}
-.search-suggest-item:active{background:#151c18}
-.suggest-symbol{font-weight:950;font-size:14px}
-.suggest-name{font-size:11px;color:#aeb7b2;margin-top:2px}
-.suggest-market{font-size:9px;color:#89928d;border:1px solid #303833;border-radius:999px;padding:4px 7px}
-
+.search-input:focus{border-color:#4c6559}
+.search-button{border:0;border-radius:12px;padding:0 18px;background:#e8eee9;color:#111;font-weight:950}
 .search-examples{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-
 .example,.history-item{
-border:1px solid #27302b;
-background:#101512;
-color:#b4bdb8;
-border-radius:999px;
-padding:6px 9px;
-font-size:11px;
-font-weight:800
+border:1px solid #252a27;background:#101310;color:#a9aeab;
+border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800
 }
-
-.search-history{
-margin-top:12px;
-padding-top:11px;
-border-top:1px solid #202722
-}
-
-.search-history-head{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px
-}
-
+.search-history{margin-top:12px;padding-top:11px;border-top:1px solid #202522}
+.search-history-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .search-history-title{font-size:11px;color:var(--muted);font-weight:900}
-.search-history-clear{border:0;background:transparent;color:#777f7a;font-size:10px;padding:4px}
+.search-history-clear{border:0;background:transparent;color:#777d79;font-size:10px;padding:4px}
 .search-history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-
-.home-entry-section{
-margin:0 0 15px;
-padding:12px;
-border:1px solid rgba(73,230,173,.24);
-border-radius:17px;
-background:
-linear-gradient(135deg,rgba(73,230,173,.08),transparent 55%),
-linear-gradient(180deg,#0d1410,#090d0b);
-box-shadow:0 12px 30px rgba(0,0,0,.20)
-}
-
-.home-entry-head{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px;
-margin:0 2px 9px
-}
-
-.home-entry-head-title{font-size:13px;font-weight:950;color:#dff9ee}
-.home-entry-head-note{font-size:9px;color:#8fb9a7;border:1px solid #2a493c;background:#0c1812;padding:4px 7px;border-radius:999px}
-.home-entry-list{display:grid;gap:7px}
-
-.home-entry-alert{
-width:100%;
-display:flex;
-align-items:center;
-gap:9px;
-padding:10px;
-min-height:48px;
-border:1px solid #2a463b;
-background:linear-gradient(90deg,#0e1a14,#0a0f0c);
-border-radius:13px;
-box-shadow:0 6px 18px rgba(0,0,0,.18);
-cursor:pointer
-}
-
-.home-entry-alert:active{transform:scale(.995);background:#111c17}
-
-.home-entry-dot{
-width:8px;
-height:8px;
-border-radius:50%;
-background:var(--green);
-box-shadow:0 0 12px rgba(73,230,173,.65);
-flex:0 0 8px
-}
-
-.home-entry-info{min-width:0;flex:1}
-.home-entry-top{display:flex;align-items:center;gap:6px;min-width:0}
-.home-entry-symbol{font-size:13px;font-weight:950;white-space:nowrap}
-.home-entry-name{font-size:11px;font-weight:800;color:#aeb9b3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.home-entry-bottom{font-size:10px;color:#8fc8af;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.home-entry-price{text-align:right;white-space:nowrap;flex:0 0 auto}
-.home-entry-price strong{display:block;font-size:15px;font-weight:950;color:#fff}
-.home-entry-price span{display:block;font-size:9px;color:#7e8a83;margin-top:2px}
-.home-entry-close{border:0;background:transparent;color:#69746e;font-size:14px;line-height:1;padding:6px 3px;flex:0 0 auto}
-
-.monster-section{
-margin:16px 0 4px;
-padding:13px;
-border-radius:19px;
-border:1px solid rgba(189,124,255,.28);
-background:
-radial-gradient(circle at top right,rgba(255,159,67,.08),transparent 45%),
-linear-gradient(150deg,rgba(189,124,255,.08),rgba(10,12,11,.95));
-box-shadow:0 15px 36px rgba(0,0,0,.22)
-}
-
-.monster-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-.monster-title{font-size:16px;font-weight:950}
-.monster-sub{font-size:10px;color:#a796b7;line-height:1.65;margin-top:4px}
-.monster-list{display:grid;gap:8px}
-
-.monster-item{
-border:1px solid #43334f;
-background:linear-gradient(135deg,#160f1d,#0b0c0b);
-border-radius:14px;
-padding:12px;
-cursor:pointer
-}
-
-.monster-top{display:flex;justify-content:space-between;gap:10px}
-.monster-symbol{font-size:16px;font-weight:950}
-.monster-name{font-size:10px;color:#b8abbf;margin-left:6px}
-.monster-score{text-align:right}
-.monster-score strong{font-size:21px;font-weight:950;background:linear-gradient(90deg,#e3c5ff,#ffba70);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.monster-score span{display:block;font-size:8px;color:#8e7c99}
-.monster-state{font-size:11px;font-weight:900;color:#e2c5ff;margin-top:6px}
-.monster-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.monster-chip{font-size:9px;font-weight:850;padding:5px 7px;border-radius:999px;border:1px solid #493653;color:#cdb6d8;background:#120d16}
-.monster-chip.hot{border-color:#654321;color:#ffc887;background:#191107}
-.monster-empty{border:1px dashed #43334f;border-radius:13px;padding:14px;font-size:10px;line-height:1.7;color:#998ba1;text-align:center}
-
-.section-head{margin:19px 1px 10px}
+.section-head{margin:18px 1px 10px}
 .section-title{font-size:15px;font-weight:950}
 .section-sub{font-size:11px;line-height:1.6;color:var(--muted)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.stat{background:linear-gradient(180deg,#0c110e,#080b09);border:1px solid var(--border);border-radius:15px;padding:12px 9px}
+.stat{background:#0a0d0b;border:1px solid var(--border);border-radius:14px;padding:12px 9px}
 .stat span{display:block;font-size:10px;color:var(--muted)}
-.stat strong{display:block;font-size:22px;margin-top:4px}
-.update-line{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#858f89;margin:8px 2px 12px}
+.stat strong{display:block;font-size:21px;margin-top:4px}
+.update-line{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#858b87;margin:8px 2px 12px}
 .stock-grid,.watch-list{display:grid;gap:9px}
-
 .stock-card{
-border:1px solid var(--border);
-background:linear-gradient(160deg,#0e1310,#080b09);
-border-radius:17px;
-padding:14px;
-cursor:pointer;
-box-shadow:0 8px 22px rgba(0,0,0,.16)
+border:1px solid var(--border);background:linear-gradient(180deg,#0d100e,#080b09);
+border-radius:16px;padding:13px;cursor:pointer
 }
-
-.stock-card:active{transform:scale(.995)}
 .stock-title-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .symbol{font-size:17px;font-weight:950}
-.stock-inline-name{font-size:12px;color:#aeb7b2;font-weight:800}
-.stock-strategy-line{font-size:11px;color:#c0c8c3;margin-top:5px;font-weight:800}
-.score{text-align:right}
-.score strong{display:block;font-size:19px}
-.score span{font-size:9px;color:var(--muted)}
+.stock-inline-name{font-size:12px;color:#aeb3b0;font-weight:800}
+.stock-strategy-line{font-size:11px;color:#b9bebc;margin-top:5px;font-weight:800}
+.score{text-align:right}.score strong{display:block;font-size:19px}.score span{font-size:9px;color:var(--muted)}
 .price-row{display:flex;align-items:baseline;gap:10px;margin-top:10px}
-.price{font-size:22px;font-weight:950}
-.up{color:var(--red)}
-.down{color:var(--green)}
-.flat{color:#b8bdb9}
+.price{font-size:21px;font-weight:950}
+.up{color:var(--red)}.down{color:var(--green)}.flat{color:#b8bdb9}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.chip{font-size:10px;font-weight:850;padding:5px 7px;border-radius:999px;border:1px solid #2a332e;color:#adb7b1}
-.chip.green{color:#a6ead3;border-color:#28503f}
-.watch-open{font-size:10px;color:#727c76;margin-top:11px}
-
+.chip{font-size:10px;font-weight:850;padding:5px 7px;border-radius:999px;border:1px solid #2a2f2c;color:#adb2af}
+.chip.green{color:#a6ead3;border-color:#25483b}
+.watch-open{font-size:10px;color:#707672;margin-top:11px}
 .watch-empty{
-border:1px dashed #29312c;
-background:#080b09;
-border-radius:15px;
-padding:16px 12px;
-color:#7b857f;
-font-size:11px;
-line-height:1.7;
-text-align:center
+border:1px dashed #282e2a;background:#080b09;border-radius:14px;padding:16px 12px;
+color:#777d79;font-size:11px;line-height:1.7;text-align:center
 }
-
-.watch-item{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px;
-border:1px solid var(--border);
-background:linear-gradient(180deg,#0d120f,#090c0a);
-padding:12px;
-border-radius:15px
-}
-
+.watch-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);background:#0b0e0c;padding:11px;border-radius:14px}
 .watch-main{min-width:0;flex:1;cursor:pointer}
 .watch-symbol{font-weight:950;font-size:14px}
 .watch-name{font-size:10px;color:var(--muted);margin-top:2px}
-.watch-price{font-size:11px;color:#b6c0ba;margin-top:5px}
+.watch-price{font-size:11px;color:#b6bbb8;margin-top:5px}
 .watch-remove{border:1px solid #4b252a;background:#1a0d0f;color:#ff8e98;border-radius:9px;padding:7px 9px;font-size:11px;font-weight:850}
-
-.loading{padding:28px 10px;text-align:center;color:#909a94;font-size:13px}
+.loading{padding:28px 10px;text-align:center;color:#909692;font-size:13px}
 .error{padding:14px;border:1px solid #4b252a;background:#1a0c0e;border-radius:14px;color:#ff9ba4;font-size:12px;line-height:1.7}
 .hidden{display:none!important}
-
 .back-row{margin-bottom:12px}
-.back-button{border:1px solid var(--border);background:#0c110e;color:#e1e6e3;padding:10px 12px;border-radius:12px;font-weight:850}
+.back-button{border:1px solid var(--border);background:#0c100d;color:#ddd;padding:9px 11px;border-radius:11px;font-weight:850}
 .analysis-refresh{font-size:11px;color:var(--muted)}
-
-.hero-card{
-padding:17px;
-margin-bottom:14px;
-background:
-radial-gradient(circle at top right,rgba(73,230,173,.07),transparent 45%),
-linear-gradient(160deg,#101612,#090c0a)
-}
-
+.hero-card{padding:16px;margin-bottom:14px}
 .hero-top{align-items:flex-start}
-.hero-symbol{font-size:27px;font-weight:950}
-.hero-name{font-size:13px;font-weight:850;color:#b2bbb6}
-.market-pill{display:inline-block;font-size:10px;color:#aeb8b2;border:1px solid #303a34;padding:5px 8px;border-radius:999px;margin-top:7px}
-.hero-price{text-align:right;font-size:32px;font-weight:950;letter-spacing:-1px}
-.hero-change{text-align:right;font-size:14px;font-weight:900;margin-top:4px}
+.hero-symbol{font-size:25px;font-weight:950}
+.hero-name{font-size:13px;font-weight:850;color:#aeb3b0}
+.market-pill{display:inline-block;font-size:10px;color:#aeb4b0;border:1px solid #303531;padding:5px 7px;border-radius:999px;margin-top:7px}
+.hero-price{text-align:right;font-size:29px;font-weight:950}
+.hero-change{text-align:right;font-size:13px;font-weight:900;margin-top:4px}
 .favorite-btn{width:100%;margin-top:14px}
 .favorite-btn.active{color:#ffe394;border-color:#5c5127;background:#18160c}
-
 .indicator-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}
-.indicator{background:#080b09;border:1px solid #242c27;border-radius:13px;padding:10px 8px}
-.indicator span{display:block;font-size:9px;color:#7d8781}
-.indicator strong{display:block;font-size:14px;margin-top:3px}
-.volume-card{margin-top:12px;border-top:1px solid #202722;padding-top:12px}
+.indicator{background:#080b09;border:1px solid #222724;border-radius:12px;padding:10px 8px}
+.indicator span{display:block;font-size:9px;color:#777d79}
+.indicator strong{display:block;font-size:13px;margin-top:3px}
+.volume-card{margin-top:12px;border-top:1px solid #202522;padding-top:12px}
 .volume-title{font-size:12px;font-weight:900}
 .volume-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.volume-box{border:1px solid #252d28;border-radius:11px;padding:8px;background:#080b09}
-.volume-box span{display:block;font-size:9px;color:#7d8781}
+.volume-box{border:1px solid #232824;border-radius:10px;padding:8px}
+.volume-box span{display:block;font-size:9px;color:#777d79}
 .volume-box strong{display:block;font-size:12px;margin-top:3px}
+.big-section-title{font-size:16px;font-weight:950;margin:20px 2px 10px}
 
-.big-section-title{font-size:17px;font-weight:950;margin:21px 2px 10px}
-.position-card{padding:16px;margin-bottom:14px}
+.position-card{padding:15px;margin-bottom:14px}
 .position-title,.backtest-title{font-size:18px;font-weight:950}
 .position-desc,.backtest-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-top:5px}
 .position-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
-.position-field{background:#080b09;border:1px solid #27302b;border-radius:13px;padding:10px}
+.position-field{background:#080b09;border:1px solid #252b27;border-radius:12px;padding:10px}
 .position-field.full{grid-column:1/-1}
-.position-field label{display:block;font-size:10px;font-weight:850;color:#929c96;margin-bottom:7px}
+.position-field label{display:block;font-size:10px;font-weight:850;color:#8b918d;margin-bottom:7px}
 .position-input{width:100%;border:0;outline:none;background:transparent;color:#fff;font-size:18px;font-weight:950;padding:0}
-.position-unit{font-size:9px;color:#68726c;margin-top:5px}
-.position-save-btn{width:100%;margin-top:10px;background:linear-gradient(180deg,#17201a,#101511)}
+.position-unit{font-size:9px;color:#656b67;margin-top:5px}
+.position-save-btn{width:100%;margin-top:10px;background:#141a16}
 .position-summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:13px}
-.position-summary{border:1px solid #27302b;background:#080b09;border-radius:13px;padding:10px}
-.position-summary span{display:block;font-size:9px;color:#7d8781}
+.position-summary{border:1px solid #252b27;background:#080b09;border-radius:12px;padding:10px}
+.position-summary span{display:block;font-size:9px;color:#777d79}
 .position-summary strong{display:block;font-size:16px;margin-top:5px}
-.position-risk{margin-top:12px;border:1px solid #292e2b;border-radius:14px;padding:12px;font-size:11px;line-height:1.75;color:#b4bdb8}
+.position-risk{margin-top:12px;border:1px solid #292e2b;border-radius:13px;padding:12px;font-size:11px;line-height:1.75;color:#b4b9b6}
 .position-risk.good{border-color:#24513f;background:#0b1712}
 .position-risk.warn{border-color:#5b4822;background:#181307}
 .position-risk.bad{border-color:#57282e;background:#190c0e}
 .position-risk-title{font-size:14px;font-weight:950;margin-bottom:5px;color:#f5f7f6}
-.add-plan{margin-top:12px;border-top:1px solid #202722;padding-top:12px}
+.add-plan{margin-top:12px;border-top:1px solid #202522;padding-top:12px}
 .add-plan-title{font-size:13px;font-weight:950}
 .add-plan-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:9px}
-.add-plan-box{border:1px solid #294760;background:#081119;border-radius:13px;padding:10px}
+.add-plan-box{border:1px solid #294760;background:#081119;border-radius:12px;padding:10px}
 .add-plan-box span{display:block;font-size:9px;color:#7f929f}
 .add-plan-box strong{display:block;font-size:17px;color:#8bc9ff;margin-top:4px}
 .add-plan-box.green{border-color:#28493c;background:#09140f}
@@ -457,74 +158,134 @@ linear-gradient(160deg,#101612,#090c0a)
 .add-plan-box.yellow{border-color:#554a24;background:#151206}
 .add-plan-box.yellow strong{color:#ffc85a}
 
+.entry-analysis{
+margin-top:15px;
+padding-top:14px;
+border-top:1px solid #202522
+}
+.entry-analysis-title{
+font-size:15px;
+font-weight:950
+}
+.entry-analysis-sub{
+font-size:11px;
+color:var(--muted);
+line-height:1.7;
+margin-top:4px
+}
+.entry-analysis-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:10px
+}
+.entry-analysis-box{
+border:1px solid #252b27;
+background:#080b09;
+border-radius:12px;
+padding:10px
+}
+.entry-analysis-box span{
+display:block;
+font-size:9px;
+color:#777d79
+}
+.entry-analysis-box strong{
+display:block;
+font-size:16px;
+margin-top:5px
+}
+.entry-status{
+margin-top:10px;
+border:1px solid #292e2b;
+background:#0b0e0c;
+border-radius:13px;
+padding:12px;
+font-size:11px;
+line-height:1.8;
+color:#b9bebb
+}
+.entry-status.good{
+border-color:#28513f;
+background:#0a1611
+}
+.entry-status.warn{
+border-color:#594a24;
+background:#161206
+}
+.entry-status.bad{
+border-color:#5a292f;
+background:#180c0e
+}
+.entry-status-title{
+font-size:14px;
+font-weight:950;
+color:#fff;
+margin-bottom:6px
+}
+.entry-road{
+margin-top:10px;
+border:1px solid #294760;
+background:#081119;
+border-radius:13px;
+padding:12px
+}
+.entry-road-title{
+font-size:13px;
+font-weight:950;
+color:#9fd2ff
+}
+.entry-road-text{
+font-size:11px;
+line-height:1.8;
+color:#aebbc5;
+margin-top:5px
+}
+
 .capital-card{
 margin-top:12px;
 border:1px solid #493c62;
 background:linear-gradient(180deg,#120d19,#0c0910);
-border-radius:14px;
+border-radius:13px;
 padding:12px
 }
-
-.capital-title{font-size:13px;font-weight:950;color:#d7b8ff}
-.capital-note{font-size:10px;color:#a99ab7;line-height:1.7;margin-top:5px}
-.entry-analysis{margin-top:15px;padding-top:14px;border-top:1px solid #202722}
-.entry-analysis-title{font-size:15px;font-weight:950}
-.entry-analysis-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px}
-.entry-analysis-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.entry-analysis-box{border:1px solid #27302b;background:#080b09;border-radius:13px;padding:10px}
-.entry-analysis-box span{display:block;font-size:9px;color:#7d8781}
-.entry-analysis-box strong{display:block;font-size:16px;margin-top:5px}
-.entry-status{margin-top:10px;border:1px solid #292e2b;background:#0b0e0c;border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb}
-.entry-status.good{border-color:#28513f;background:#0a1611}
-.entry-status.warn{border-color:#594a24;background:#161206}
-.entry-status.bad{border-color:#5a292f;background:#180c0e}
-.entry-status-title{font-size:14px;font-weight:950;color:#fff;margin-bottom:6px}
-.entry-road{margin-top:10px;border:1px solid #294760;background:#081119;border-radius:13px;padding:12px}
-.entry-road-title{font-size:13px;font-weight:950;color:#9fd2ff}
-.entry-road-text{font-size:11px;line-height:1.8;color:#aebbc5;margin-top:5px}
-
-.track-card{padding:15px;margin-bottom:14px}
-.track-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.track-title{font-size:17px;font-weight:950}
-.track-sub{font-size:10px;color:#8f9993;line-height:1.7;margin-top:4px}
-.track-status{font-size:9px;font-weight:950;padding:6px 8px;border-radius:999px;border:1px solid #2e4b3f;color:#a6ead3;background:#0c1712;white-space:nowrap}
-.track-current-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:12px}
-.track-level{border:1px solid #27302b;background:#080b09;border-radius:12px;padding:9px}
-.track-level span{display:block;font-size:9px;color:#7d8781}
-.track-level strong{display:block;font-size:14px;margin-top:4px}
-.track-timeline{margin-top:13px;border-top:1px solid #202722}
-.track-event{display:flex;gap:9px;padding:10px 0;border-bottom:1px solid #1e2420}
-.track-event-dot{width:8px;height:8px;border-radius:50%;background:#49e6ad;margin-top:5px;flex:0 0 8px}
-.track-event-dot.tp{background:#ffd166}
-.track-event-dot.sl{background:#ff6675}
-.track-event-text{font-size:11px;line-height:1.65;color:#c3cbc6}
-.track-event-time{font-size:9px;color:#747e78;margin-top:2px}
+.capital-title{
+font-size:13px;
+font-weight:950;
+color:#d7b8ff
+}
+.capital-note{
+font-size:10px;
+color:#a99ab7;
+line-height:1.7;
+margin-top:5px
+}
 
 .recommend-card{padding:15px;margin-bottom:14px;scroll-margin-top:12px}
 .recommend-top{align-items:flex-start}
-.recommend-name{font-size:21px;font-weight:950}
+.recommend-name{font-size:20px;font-weight:950}
 .recommend-score{text-align:right;min-width:72px}
-.recommend-score strong{font-size:28px;line-height:1}
+.recommend-score strong{font-size:27px;line-height:1}
 .recommend-score span{display:block;font-size:9px;color:var(--muted);margin-top:5px}
-.recommend-note{font-size:11px;color:#a5aea8;line-height:1.75;margin-top:10px}
+.recommend-note{font-size:11px;color:#a5aaa7;line-height:1.75;margin-top:10px}
 .recommend-badge{display:inline-block;margin-top:7px;border:1px solid #29483c;color:#a6ead3;background:#0d1713;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900}
 .recommend-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
-.recommend-mini{border:1px solid #272f2a;background:#080b09;border-radius:12px;padding:10px 7px;text-align:center;color:var(--text)}
+.recommend-mini{border:1px solid #272c29;background:#080b09;border-radius:11px;padding:9px 7px;text-align:center;color:var(--text)}
 .recommend-mini.best{border-color:#315c4b;background:#0d1713}
-.recommend-mini span{display:block;font-size:9px;color:#929c96}
-.recommend-mini strong{display:block;font-size:15px;margin-top:4px}
+.recommend-mini span{display:block;font-size:9px;color:#8d938f}
+.recommend-mini strong{display:block;font-size:14px;margin-top:4px}
 .strategy-jump{cursor:pointer}
 
 .backtest-card{padding:15px;margin-bottom:14px}
 .backtest-head{align-items:flex-start}
 .backtest-sub{font-size:10px}
 .backtest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}
-.backtest-item{border:1px solid #292e2b;background:#080b09;border-radius:14px;padding:11px}
+.backtest-item{border:1px solid #292e2b;background:#080b09;border-radius:13px;padding:11px}
 .backtest-item.good{border-color:#28513f;background:#0a1510}
 .backtest-item.bad{border-color:#5a292f;background:#180c0e}
 .backtest-item.sample{border-color:#594a24;background:#161206}
 .backtest-name{font-size:12px;font-weight:950}
-.backtest-rate{font-size:25px;font-weight:950;margin-top:7px}
+.backtest-rate{font-size:24px;font-weight:950;margin-top:7px}
 .backtest-label{font-size:9px;color:#777d79}
 .backtest-stats{font-size:10px;color:#aeb3b0;line-height:1.8;margin-top:9px}
 .backtest-warning,.backtest-ok{margin-top:12px;border-radius:13px;padding:12px;font-size:11px;line-height:1.75}
@@ -533,126 +294,52 @@ padding:12px
 .backtest-ok{border:1px solid #28513f;background:#0a1611;color:#a8ead4}
 .backtest-note{font-size:10px;color:#747a76;line-height:1.7;margin-top:10px}
 
-.strategy-card{padding:16px;margin-bottom:10px;scroll-margin-top:12px}
+.strategy-card{padding:15px;margin-bottom:10px;scroll-margin-top:12px}
 .strategy-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .strategy-name{font-size:18px;font-weight:950}
-.strategy-grade{font-size:10px;color:#9aa49e;margin-top:3px}
-.strategy-score{font-size:24px;font-weight:950;text-align:right}
-.strategy-score small{display:block;font-size:9px;color:#7b857f}
-
-.strategy-market-price{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px;
-margin-top:13px;
-padding:11px 12px;
-border:1px solid #35443c;
-border-radius:13px;
-background:linear-gradient(90deg,rgba(112,183,255,.08),rgba(73,230,173,.05)),#090d0b
-}
-
-.strategy-market-price span{font-size:12px;font-weight:900;color:#aab8b0}
-.strategy-market-price strong{font-size:23px;font-weight:950;color:#fff;letter-spacing:-.4px}
-.condition-row{padding:11px 0;border-top:1px solid #202722;font-size:13px;font-weight:850;line-height:1.7}
-.condition-row.good{color:#bdf2dc}
-.condition-row.bad{color:#ff8d97}
-.condition-explain{display:block;color:#858f89;font-size:11px;font-weight:500;margin:3px 0 0 20px;line-height:1.65}
+.strategy-grade{font-size:10px;color:#9aa09c;margin-top:3px}
+.strategy-score{font-size:23px;font-weight:950;text-align:right}
+.strategy-score small{display:block;font-size:9px;color:#777d79}
+.condition-row{padding:11px 0;border-top:1px solid #202522;font-size:13px;font-weight:850;line-height:1.7}
+.condition-row.good{color:#bdf2dc}.condition-row.bad{color:#ff8d97}
+.condition-explain{display:block;color:#858b87;font-size:11px;font-weight:500;margin:3px 0 0 20px;line-height:1.65}
 .strategy-levels{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
-.strategy-level{border:1px solid #252d28;background:#080b09;border-radius:14px;padding:11px}
-.strategy-level span{display:block;font-size:10px;font-weight:800;color:#858f89}
-.strategy-level strong{display:block;font-size:20px;font-weight:950;margin-top:5px}
-.level-entry{border-color:#2c5845;background:linear-gradient(145deg,#0c1812,#08100c)}
-.level-entry strong{color:#a6ead3}
-.level-stop{border-color:#5a3036;background:linear-gradient(145deg,#180d0f,#0d090a)}
-.level-stop strong{color:#ff8d97}
-.level-pressure,.level-tp{border-color:#5c4e26;background:linear-gradient(145deg,#171307,#0d0b07)}
-.level-pressure strong,.level-tp strong{color:#ffd166}
-.level-tp3{border-color:#654526;background:linear-gradient(145deg,#1a1208,#0e0b08)}
-.level-tp3 strong{color:#ffab55}
+.strategy-level{border:1px solid #252a27;background:#080b09;border-radius:13px;padding:11px}
+.strategy-level span{display:block;font-size:10px;font-weight:800;color:#7f8681}
+.strategy-level strong{display:block;font-size:19px;font-weight:950;margin-top:5px}
+.level-entry{border-color:#28493c}.level-entry strong{color:#a6ead3}
+.level-stop{border-color:#512b30}.level-stop strong{color:#ff8d97}
+.level-pressure,.level-tp{border-color:#554a24}.level-pressure strong,.level-tp strong{color:#ffc85a}
+.level-tp3{border-color:#5d4125}.level-tp3 strong{color:#ff9f43}
 .rr-text{font-size:11px!important;color:#d8bd70!important;margin-top:5px}
 .qualified-badge{margin-top:10px;padding:8px;border-radius:10px;font-size:10px;font-weight:850;color:#a9ead4;background:#0d1c16;border:1px solid #224538}
 .qualified-badge.not-qualified{color:#c3c6c4;background:#101311;border-color:#292e2b}
-
-.strategy-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
-.strategy-quick-btn{padding:10px 7px;font-size:11px;background:#0c110e}
 .return-recommend-wrap{margin:18px 0 4px}
 .return-recommend-btn{width:100%;padding:13px;background:#141a16}
-.data-note{font-size:10px;color:#727b76;line-height:1.75;margin:16px 4px}
+.data-note{font-size:10px;color:#6f7471;line-height:1.75;margin:16px 4px}
 
-.ai-card{padding:15px;margin-bottom:14px;border-color:#343f39}
-.ai-title{font-size:18px;font-weight:950}
-.ai-sub{font-size:11px;color:#8c918e;line-height:1.7;margin-top:5px}
-.ai-context{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.ai-context span{border:1px solid #29322d;background:#080b09;border-radius:999px;padding:5px 7px;font-size:9px;color:#9ca49f}
-.ai-messages{margin-top:12px;display:grid;gap:8px}
-.ai-message{padding:11px 12px;border-radius:13px;font-size:12px;line-height:1.75;white-space:pre-wrap}
-.ai-message.user{margin-left:30px;background:#172019;border:1px solid #2c4d3d}
-.ai-message.bot{margin-right:16px;background:#0a0d0b;border:1px solid #2b312d;color:#d5d9d6}
-.ai-message.loading{padding:11px 12px;text-align:left}
-.ai-row{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
-.ai-input{flex:1;min-height:48px;max-height:140px;resize:vertical;border:1px solid #303632;background:#060806;color:#fff;border-radius:13px;padding:12px;outline:none;line-height:1.5}
-.ai-send{border:0;background:#e8eee9;color:#111;border-radius:12px;padding:13px 15px;font-weight:950}
-.ai-send:disabled{opacity:.5}
-
-.toast-stack{
-position:fixed;
-z-index:9999;
-top:max(14px,calc(env(safe-area-inset-top) + 10px));
-left:50%;
-transform:translateX(-50%);
-width:min(calc(100% - 24px),420px);
-pointer-events:none
-}
-
-.entry-toast{
-pointer-events:auto;
-border:1px solid #344139;
-background:rgba(11,15,12,.97);
-backdrop-filter:blur(18px);
-border-radius:13px;
-padding:11px 12px;
-box-shadow:0 14px 34px rgba(0,0,0,.45)
-}
-
-.entry-toast-badge{font-size:9px;color:#8f9993;font-weight:900}
-.entry-toast-title{font-size:12px;font-weight:950;margin-top:3px}
-
-#analysisView{
-will-change:transform;
-touch-action:pan-y;
-transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease
-}
-
+#analysisView{will-change:transform;touch-action:pan-y;transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease}
 #analysisView.swiping-back{transition:none}
 #analysisView.swipe-return{transition:transform .22s cubic-bezier(.22,.61,.36,1),opacity .22s ease}
 
 @media(min-width:900px){
-.app{width:min(100%,1440px);padding-left:28px;padding-right:28px}
-.stock-grid{grid-template-columns:repeat(2,1fr)}
-.monster-list{grid-template-columns:repeat(2,1fr)}
+.app{
+width:min(100%,1440px);
+padding-left:28px;
+padding-right:28px;
+}
 }
 
 @media(max-width:430px){
-.app{
-padding-left:max(11px,calc(env(safe-area-inset-left) + 11px));
-padding-right:max(11px,calc(env(safe-area-inset-right) + 11px));
-padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))
-}
-.logo{font-size:23px}
-.notify-btn{font-size:11px;padding:9px}
+.app{padding-left:max(11px,calc(env(safe-area-inset-left) + 11px));padding-right:max(11px,calc(env(safe-area-inset-right) + 11px));padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))}
+.logo{font-size:22px}
 .indicator-strip{grid-template-columns:repeat(2,1fr)}
 .backtest-grid{grid-template-columns:1fr}
-.home-entry-alert{padding:9px}
-.strategy-market-price strong{font-size:22px}
 }
 </style>
 </head>
 
 <body>
-
-<div id="toastStack" class="toast-stack"></div>
-
 <div class="app">
 
 <div id="homeView">
@@ -667,20 +354,11 @@ padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))
 <button id="usTab" class="market-tab">🇺🇸 美股</button>
 </div>
 
-<div id="homeEntrySection" class="home-entry-section hidden">
-<div class="home-entry-head">
-<div class="home-entry-head-title">🎯 高品質進場提醒</div>
-<div class="home-entry-head-note">保留 30 分鐘</div>
-</div>
-<div id="homeEntryList" class="home-entry-list"></div>
-</div>
-
 <div class="search-card">
 <div class="search-row">
-<input id="searchInput" class="search-input" autocomplete="off" placeholder="輸入代號或名稱，例如 台積 / 23 / NV">
+<input id="searchInput" class="search-input" placeholder="輸入股票代號，例如 2330 / NVDA">
 <button id="searchButton" class="search-button">分析</button>
 </div>
-<div id="searchSuggest" class="search-suggest hidden"></div>
 
 <div class="search-examples">
 <button class="example" data-example="2330">2330</button>
@@ -712,19 +390,6 @@ padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))
 </div>
 
 <div id="twMarket">
-
-<div class="monster-section">
-<div class="monster-section-head">
-<div>
-<div class="monster-title">🔥 妖股追蹤</div>
-<div class="monster-sub">偵測放量、動能加速、突破整理與波動擴張，優先尋找尚未完全噴出的啟動前兆。</div>
-</div>
-<div style="font-size:9px;color:#9c87a7">每 60 秒更新</div>
-</div>
-<div id="monsterList" class="monster-list">
-<div class="monster-empty">正在掃描可能進入加速段的股票…</div>
-</div>
-</div>
 
 <div class="section-head">
 <div>
@@ -800,11 +465,6 @@ padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))
 const WATCH_KEY="yaozi_watchlist";
 const HISTORY_KEY="yaozi_search_history_v1";
 const POSITION_KEY="yaozi_positions_v46";
-const NOTIFY_COOLDOWN_KEY="yaozi_entry_notify_cooldown_v1";
-const HOME_ENTRY_KEY="yaozi_home_entry_alerts_v1";
-const STRATEGY_TRACK_KEY="yaozi_strategy_tracking_v1";
-const POSITION_SL_KEY="yaozi_position_sl_notify_v1";
-const MONSTER_NOTIFY_KEY="yaozi_monster_notify_v1";
 
 const BACKTEST_DAYS=365;
 const BACKTEST_OBSERVE_DAYS=30;
@@ -812,21 +472,19 @@ const BACKTEST_MIN_TRADES=8;
 const BACKTEST_WARNING_RATE=70;
 const BACKTEST_MAX_HOLD=20;
 
-const ENTRY_NOTIFY_COOLDOWN=30*60*1000;
-const HOME_ENTRY_LIFETIME=30*60*1000;
-
 var currentAnalysisSymbol="";
 var currentAnalysisData=null;
 var radarData=null;
 var currentMarketMetrics=null;
 var currentSetups=null;
-var currentBacktests=null;
-var analysisRefreshing=false;
-var searchTimer=null;
-var monsterStocks=[];
-var analysisRequestSeq=0;
 
-var expanded={watch:true,strategy:true,long:true,radar:true};
+var expanded={
+watch:true,
+strategy:true,
+long:true,
+radar:true
+};
+
 var countdownSeconds=60;
 
 function el(id){return document.getElementById(id)}
@@ -861,12 +519,6 @@ function currentTimeText(){
 return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})
 }
 
-function dateTimeText(t){
-return new Date(t||Date.now()).toLocaleString("zh-TW",{
-month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false
-})
-}
-
 function average(values){
 var a=values.map(Number).filter(Number.isFinite);
 return a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN
@@ -879,31 +531,6 @@ var k=2/(period+1);
 var out=a[0];
 for(var i=1;i<a.length;i++)out=a[i]*k+out*(1-k);
 return out
-}
-
-function sendSystemNotification(title,body,symbol,tag){
-if(!("Notification" in window)||Notification.permission!=="granted")return;
-try{
-var n=new Notification(title,{
-body:body,
-tag:tag||("yaozi-"+String(symbol||"")+"-"+Date.now())
-});
-n.onclick=()=>{
-try{window.focus()}catch(e){}
-if(symbol)analyze(symbol);
-try{n.close()}catch(e){}
-}
-}catch(e){}
-}
-
-function showSimpleToast(text){
-var stack=el("toastStack");
-if(!stack)return;
-var n=document.createElement("div");
-n.className="entry-toast";
-n.innerHTML='<div class="entry-toast-badge">幽冥分析</div><div class="entry-toast-title">'+safe(text)+'</div>';
-stack.prepend(n);
-setTimeout(()=>n.remove(),3000)
 }
 
 function getSearchHistory(){
@@ -926,6 +553,7 @@ function renderSearchHistory(){
 var box=el("searchHistory");
 var list=el("searchHistoryList");
 if(!box||!list)return;
+
 var h=getSearchHistory();
 
 if(!h.length){
@@ -944,101 +572,6 @@ analyze(b.dataset.history)
 }
 })
 }
-
-function localSearchCandidates(q){
-q=String(q||"").trim().toLowerCase();
-if(!q)return[];
-
-var map=new Map();
-
-function add(x){
-if(!x||!x.symbol)return;
-var key=String(x.symbol).toUpperCase();
-if(!map.has(key))map.set(key,{
-symbol:key,
-name:x.name||"",
-market:x.market||(/^\d+$/.test(key)?"TW":"US")
-})
-}
-
-getWatchlist().forEach(add);
-monsterStocks.forEach(add);
-
-if(radarData){
-["strategyReady","longWatch","radar"].forEach(k=>(radarData[k]||[]).forEach(add))
-}
-
-[
-{symbol:"2330",name:"台積電",market:"TW"},
-{symbol:"2317",name:"鴻海",market:"TW"},
-{symbol:"2454",name:"聯發科",market:"TW"},
-{symbol:"2308",name:"台達電",market:"TW"},
-{symbol:"6116",name:"彩晶",market:"TW"},
-{symbol:"NVDA",name:"NVIDIA 輝達",market:"US"},
-{symbol:"AAPL",name:"Apple 蘋果",market:"US"},
-{symbol:"TSLA",name:"Tesla 特斯拉",market:"US"},
-{symbol:"MSFT",name:"Microsoft 微軟",market:"US"},
-{symbol:"AMD",name:"AMD",market:"US"}
-].forEach(add);
-
-return[...map.values()].filter(x=>(x.symbol+" "+x.name).toLowerCase().includes(q)).slice(0,10)
-}
-
-async function searchStocks(q){
-q=String(q||"").trim();
-if(!q)return[];
-
-try{
-var r=await fetch("/api/search?q="+encodeURIComponent(q)+"&t="+Date.now(),{cache:"no-store"});
-if(r.ok){
-var d=await r.json();
-var a=d.results||d.data||[];
-if(Array.isArray(a)&&a.length)return a.slice(0,10)
-}
-}catch(e){}
-
-return localSearchCandidates(q)
-}
-
-function renderSearchSuggestions(items){
-var box=el("searchSuggest");
-if(!items.length){
-box.classList.add("hidden");
-box.innerHTML="";
-return
-}
-
-box.innerHTML=items.map(x=>`
-<button class="search-suggest-item" data-suggest="${safe(x.symbol)}">
-<div>
-<div class="suggest-symbol">${safe(x.symbol)}</div>
-<div class="suggest-name">${safe(x.name||"")}</div>
-</div>
-<div class="suggest-market">${x.market==="US"?"🇺🇸 美股":"🇹🇼 台股"}</div>
-</button>
-`).join("");
-
-box.classList.remove("hidden");
-
-box.querySelectorAll("[data-suggest]").forEach(b=>{
-b.onclick=()=>{
-var s=b.dataset.suggest;
-el("searchInput").value=s;
-box.classList.add("hidden");
-analyze(s)
-}
-})
-}
-
-el("searchInput").addEventListener("input",()=>{
-clearTimeout(searchTimer);
-var q=el("searchInput").value.trim();
-if(!q){renderSearchSuggestions([]);return}
-searchTimer=setTimeout(async()=>{
-var a=await searchStocks(q);
-if(el("searchInput").value.trim()===q)renderSearchSuggestions(a)
-},180)
-});
 
 function getWatchlist(){
 try{
@@ -1062,6 +595,7 @@ function addFavorite(d){
 if(!d||!d.symbol)return;
 var symbol=String(d.symbol).toUpperCase();
 var list=getWatchlist().filter(x=>String(x.symbol||"").toUpperCase()!==symbol);
+
 list.unshift({
 symbol,
 name:d.name||"",
@@ -1070,6 +604,7 @@ changePercent:Number.isFinite(Number(d.changePercent))?Number(d.changePercent):n
 market:d.market||"",
 addedAt:Date.now()
 });
+
 saveWatchlist(list)
 }
 
@@ -1113,11 +648,15 @@ box.innerHTML='<div class="watch-empty">目前還沒有自選股票<br>搜尋股
 return
 }
 
-if(!expanded.watch){box.innerHTML="";return}
+if(!expanded.watch){
+box.innerHTML="";
+return
+}
 
 box.innerHTML=list.map(item=>{
 var c=Number(item.changePercent);
 var p=Number.isFinite(Number(item.price))?fmt(item.price):"";
+
 return `
 <div class="watch-item">
 <div class="watch-main" data-watch-open="${safe(item.symbol)}">
@@ -1129,9 +668,15 @@ ${p?`<div class="watch-price">${p}${Number.isFinite(c)?` · <span class="${pclas
 </div>`
 }).join("");
 
-box.querySelectorAll("[data-watch-open]").forEach(x=>x.onclick=()=>analyze(x.dataset.watchOpen));
+box.querySelectorAll("[data-watch-open]").forEach(x=>{
+x.onclick=()=>analyze(x.dataset.watchOpen)
+});
+
 box.querySelectorAll("[data-watch-remove]").forEach(b=>{
-b.onclick=e=>{e.stopPropagation();removeFavorite(b.dataset.watchRemove)}
+b.onclick=e=>{
+e.stopPropagation();
+removeFavorite(b.dataset.watchRemove)
+}
 })
 }
 
@@ -1164,7 +709,9 @@ localStorage.setItem(POSITION_KEY,JSON.stringify(all))
 
 function positionShares(p,market){
 if(!p)return 0;
-if(market==="US")return Math.max(0,Number(p.lots)||0)+Math.max(0,Number(p.odd)||0);
+if(market==="US"){
+return Math.max(0,Number(p.lots)||0)+Math.max(0,Number(p.odd)||0)
+}
 return Math.max(0,Number(p.lots)||0)*1000+Math.max(0,Number(p.odd)||0)
 }
 
@@ -1175,7 +722,13 @@ var reduction=Math.max(0,Math.min(99.99,Number(position?.capitalReduction)||0));
 var remainRatio=1-reduction/100;
 
 if(!originalShares||!originalEntry||remainRatio<=0){
-return{originalShares,originalEntry,reduction,shares:originalShares,entry:originalEntry}
+return{
+originalShares,
+originalEntry,
+reduction,
+shares:originalShares,
+entry:originalEntry
+}
 }
 
 return{
@@ -1189,14 +742,23 @@ entry:originalEntry/remainRatio
 
 function historicalRSI(rows,period=14){
 if(rows.length<period+1)return 50;
-var a=rows.slice(-(period+1)),gain=0,loss=0;
+
+var a=rows.slice(-(period+1));
+var gain=0,loss=0;
+
 for(var i=1;i<a.length;i++){
 var diff=Number(a[i].close)-Number(a[i-1].close);
-if(diff>0)gain+=diff;else loss+=Math.abs(diff)
+if(diff>0)gain+=diff;
+else loss+=Math.abs(diff)
 }
-var ag=gain/period,al=loss/period;
+
+var ag=gain/period;
+var al=loss/period;
+
 if(al===0)return 100;
-return 100-(100/(1+ag/al))
+
+var rs=ag/al;
+return 100-(100/(1+rs))
 }
 
 function historicalMACD(rows){
@@ -1207,20 +769,37 @@ return ema(c.slice(-80),12)-ema(c.slice(-80),26)
 
 function historicalATR(rows,period=14){
 if(rows.length<2)return 0;
-var a=rows.slice(-(period+1)),trs=[];
+
+var a=rows.slice(-(period+1));
+var trs=[];
+
 for(var i=1;i<a.length;i++){
-var h=Number(a[i].high),l=Number(a[i].low),pc=Number(a[i-1].close);
-var tr=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));
+var h=Number(a[i].high);
+var l=Number(a[i].low);
+var pc=Number(a[i-1].close);
+
+var tr=Math.max(
+h-l,
+Math.abs(h-pc),
+Math.abs(l-pc)
+);
+
 if(Number.isFinite(tr))trs.push(tr)
 }
+
 return average(trs)||0
 }
 
 function marketOf(d){
 var rows=d.rows||[];
 var last=rows.at(-1)||{};
+
 var price=Number(d.price)||Number(last.close)||0;
-var ma20=Number(d.ma20),ma60=Number(d.ma60),rsi=Number(d.rsi),macd=Number(d.macd),atr=Number(d.atr);
+var ma20=Number(d.ma20);
+var ma60=Number(d.ma60);
+var rsi=Number(d.rsi);
+var macd=Number(d.macd);
+var atr=Number(d.atr);
 
 if(!Number.isFinite(ma20))ma20=average(rows.slice(-20).map(x=>x.close))||price;
 if(!Number.isFinite(ma60))ma60=average(rows.slice(-60).map(x=>x.close))||price;
@@ -1241,19 +820,26 @@ if(!Number.isFinite(support))support=lows.length?Math.min(...lows):ma20;
 
 var low10=lows10.length?Math.min(...lows10):support;
 
-return{price,ma20,ma60,rsi,macd,atr,resistance,support,low10,rows}
+return{
+price,ma20,ma60,rsi,macd,atr,resistance,support,low10,rows
+}
 }
 
 function volumeMetrics(d,rows){
 var last=rows.at(-1)||{};
 var current=Number(d.volume??last.volume);
 if(!Number.isFinite(current))current=0;
+
 var vols=rows.slice(-21,-1).map(x=>Number(x.volume)).filter(Number.isFinite);
 var average20=vols.length?average(vols):0;
+
 var ratio=Number(d.volumeRatio);
-if(!Number.isFinite(ratio)||ratio<=0)ratio=average20>0?current/average20:1;
+if(!Number.isFinite(ratio)||ratio<=0){
+ratio=average20>0?current/average20:1
+}
 
 var level="正常量";
+
 if(ratio>=2)level="明顯放量";
 else if(ratio>=1.5)level="放量";
 else if(ratio>=1.2)level="量能增溫";
@@ -1264,56 +850,174 @@ return{current,average20,ratio,level}
 
 function structureHealthy(m){
 var rows=m.rows||[];
+
 if(rows.length<10)return true;
+
 var c=rows.slice(-5).map(x=>Number(x.close)).filter(Number.isFinite);
+
 if(c.length<3)return true;
+
 return c.at(-1)>=c[0]*.96&&m.price>=m.ma60*.97
 }
 
 function buildStrategySetups(d,m,v){
-var price=m.price,ma20=m.ma20,ma60=m.ma60,rsi=m.rsi,macd=m.macd,atr=m.atr,resistance=m.resistance;
+var price=m.price;
+var ma20=m.ma20;
+var ma60=m.ma60;
+var rsi=m.rsi;
+var macd=m.macd;
+var atr=m.atr;
+var resistance=m.resistance;
+
 var notBroken=price>=ma60*.97;
 var structure=structureHealthy(m);
 
 var pull=[
-{title:"MA20 高於 MA60",pass:ma20>ma60,explain:"短期均線位於中期均線上方，代表主要趨勢仍偏多。"},
-{title:"價格沒有明顯跌破 MA20",pass:price>=ma20-atr*.5,explain:"允許正常波動，但價格不能明顯離開短期多頭支撐。"},
-{title:"價格沒有離 MA20 過遠",pass:price<=ma20+atr*1.3,explain:"避免價格已經拉太遠才追價，保留較合理的風報比。"},
-{title:"RSI 不低於 42",pass:rsi>=42,explain:"避免動能過弱、回踩已經演變成明顯轉弱。"},
-{title:"RSI 不高於 68",pass:rsi<=68,explain:"避免短線已經過熱，降低高位追價風險。"},
-{title:"MACD 不低於 0",pass:macd>=0,explain:"中短期動能仍維持在相對偏多區域。"},
-{title:"中期結構尚未跌破",pass:notBroken,explain:"價格仍維持在 MA60 附近之上，避免多頭結構已失效。"},
-{title:"量能沒有過度爆量",pass:v.ratio<=1.6,explain:"支撐回踩策略不希望在短線爆量急拉後追高。"}
+{
+title:"MA20 高於 MA60",
+pass:ma20>ma60,
+explain:"短期均線位於中期均線上方，代表主要趨勢仍偏多。"
+},
+{
+title:"價格沒有明顯跌破 MA20",
+pass:price>=ma20-atr*.5,
+explain:"允許正常波動，但價格不能明顯離開短期多頭支撐。"
+},
+{
+title:"價格沒有離 MA20 過遠",
+pass:price<=ma20+atr*1.3,
+explain:"避免價格已經拉太遠才追價，保留較合理的風報比。"
+},
+{
+title:"RSI 不低於 42",
+pass:rsi>=42,
+explain:"避免動能過弱、回踩已經演變成明顯轉弱。"
+},
+{
+title:"RSI 不高於 68",
+pass:rsi<=68,
+explain:"避免短線已經過熱，降低高位追價風險。"
+},
+{
+title:"MACD 不低於 0",
+pass:macd>=0,
+explain:"中短期動能仍維持在相對偏多區域。"
+},
+{
+title:"中期結構尚未跌破",
+pass:notBroken,
+explain:"價格仍維持在 MA60 附近之上，避免多頭結構已失效。"
+},
+{
+title:"量能沒有過度爆量",
+pass:v.ratio<=1.6,
+explain:"支撐回踩策略不希望在短線爆量急拉後追高。"
+}
 ];
 
 var high=[
-{title:"MA20 高於 MA60",pass:ma20>ma60,explain:"突破策略優先選擇中短期趨勢一致向上的股票。"},
-{title:"價格站在 MA20 上方",pass:price>ma20,explain:"價格仍位於短期趨勢支撐之上。"},
-{title:"MACD 大於 0",pass:macd>0,explain:"突破前需要有正向動能配合。"},
-{title:"RSI 至少 52",pass:rsi>=52,explain:"RSI 進入偏強區域，代表買方動能較明顯。"},
-{title:"RSI 不高於 72",pass:rsi<=72,explain:"避免突破前已經過度過熱。"},
-{title:"價格接近前高／壓力",pass:price>=resistance-atr*.5,explain:"高 R 突破策略需要價格靠近主要壓力，才能等待突破。"},
-{title:"量比至少 1.2 倍",pass:v.ratio>=1.2,explain:"突破需要比平常更積極的成交量支持。"},
-{title:"結構沒有破壞",pass:notBroken&&structure,explain:"短中期價格結構仍維持完整。"}
+{
+title:"MA20 高於 MA60",
+pass:ma20>ma60,
+explain:"突破策略優先選擇中短期趨勢一致向上的股票。"
+},
+{
+title:"價格站在 MA20 上方",
+pass:price>ma20,
+explain:"價格仍位於短期趨勢支撐之上。"
+},
+{
+title:"MACD 大於 0",
+pass:macd>0,
+explain:"突破前需要有正向動能配合。"
+},
+{
+title:"RSI 至少 52",
+pass:rsi>=52,
+explain:"RSI 進入偏強區域，代表買方動能較明顯。"
+},
+{
+title:"RSI 不高於 72",
+pass:rsi<=72,
+explain:"避免突破前已經過度過熱。"
+},
+{
+title:"價格接近前高／壓力",
+pass:price>=resistance-atr*.5,
+explain:"高 R 突破策略需要價格靠近主要壓力，才能等待突破。"
+},
+{
+title:"量比至少 1.2 倍",
+pass:v.ratio>=1.2,
+explain:"突破需要比平常更積極的成交量支持。"
+},
+{
+title:"結構沒有破壞",
+pass:notBroken&&structure,
+explain:"短中期價格結構仍維持完整。"
+}
 ];
 
 var surge=[
-{title:"MA20 高於 MA60",pass:ma20>ma60,explain:"主要趨勢必須保持向上。"},
-{title:"價格站在 MA20 上方",pass:price>ma20,explain:"強勢股通常會維持在短期均線上方。"},
-{title:"MACD 大於 0",pass:macd>0,explain:"正向動能仍在延續。"},
-{title:"RSI 至少 58",pass:rsi>=58,explain:"需要比一般多頭更強的動能。"},
-{title:"RSI 不高於 74",pass:rsi<=74,explain:"避免動能已經極度過熱。"},
-{title:"價格逼近或突破前高",pass:price>=resistance-atr*.25,explain:"續攻策略需要價格處於相對強勢的位置。"},
-{title:"量比至少 1.5 倍",pass:v.ratio>=1.5,explain:"續攻需要更明顯的成交量推動。"},
-{title:"多頭結構完整",pass:notBroken&&structure,explain:"避免只剩單日急拉、但原本趨勢已經轉弱。"}
+{
+title:"MA20 高於 MA60",
+pass:ma20>ma60,
+explain:"主要趨勢必須保持向上。"
+},
+{
+title:"價格站在 MA20 上方",
+pass:price>ma20,
+explain:"強勢股通常會維持在短期均線上方。"
+},
+{
+title:"MACD 大於 0",
+pass:macd>0,
+explain:"正向動能仍在延續。"
+},
+{
+title:"RSI 至少 58",
+pass:rsi>=58,
+explain:"需要比一般多頭更強的動能。"
+},
+{
+title:"RSI 不高於 74",
+pass:rsi<=74,
+explain:"避免動能已經極度過熱。"
+},
+{
+title:"價格逼近或突破前高",
+pass:price>=resistance-atr*.25,
+explain:"續攻策略需要價格處於相對強勢的位置。"
+},
+{
+title:"量比至少 1.5 倍",
+pass:v.ratio>=1.5,
+explain:"續攻需要更明顯的成交量推動。"
+},
+{
+title:"多頭結構完整",
+pass:notBroken&&structure,
+explain:"避免只剩單日急拉、但原本趨勢已經轉弱。"
+}
 ];
 
 function pack(a){
 var passed=a.filter(x=>x.pass).length;
-return{conditions:a,passed,total:a.length,score:Math.round(passed/a.length*100),qualified:passed>=7}
+
+return{
+conditions:a,
+passed,
+total:a.length,
+score:Math.round(passed/a.length*100),
+qualified:passed>=7
+}
 }
 
-return{PULLBACK:pack(pull),HIGH_R:pack(high),SURGE:pack(surge)}
+return{
+PULLBACK:pack(pull),
+HIGH_R:pack(high),
+SURGE:pack(surge)
+}
 }
 
 function bestSetup(setups){
@@ -1322,995 +1026,8 @@ var a=[
 {type:"HIGH_R",name:"高 R 突破",setup:setups.HIGH_R},
 {type:"SURGE",name:"強勢續攻",setup:setups.SURGE}
 ];
+
 a.sort((x,y)=>y.setup.score-x.setup.score||y.setup.passed-x.setup.passed);
+
 return a[0]
 }
-
-/* 修正版：所有標的統一保證進場限價不高於目前市價 */
-function strategyTargets(type,m){
-var price=Number(m.price)||0;
-var atr=Math.max(Number(m.atr)||price*.02,price*.005);
-var ma20=Number(m.ma20)||price;
-var ma60=Number(m.ma60)||price;
-var resistance=Number(m.resistance)||price;
-var support=Number(m.support)||ma20;
-var low10=Number(m.low10)||support;
-
-var entryLow,entryHigh,stop1,stop2;
-
-if(type==="PULLBACK"){
-entryLow=Math.max(ma20-atr*.25,support);
-entryHigh=Math.min(price,ma20+atr*.45);
-
-if(entryLow>price){
-entryLow=Math.max(price-atr*.25,price*.5)
-}
-
-if(entryHigh<entryLow){
-entryLow=Math.max(price-atr*.35,price*.5);
-entryHigh=price
-}
-
-stop1=Math.min(entryLow-atr*.55,support-atr*.25);
-stop2=Math.min(ma60-atr*.35,low10-atr*.3,stop1-atr*.6)
-
-}else if(type==="HIGH_R"){
-
-if(resistance>price){
-entryLow=Math.max(price-atr*.30,Math.min(resistance-atr*.12,price));
-entryHigh=price
-}else{
-entryLow=Math.max(price-atr*.25,resistance-atr*.18);
-entryHigh=price
-}
-
-if(entryLow>price){
-entryLow=Math.max(price-atr*.25,price*.5)
-}
-
-if(entryHigh<entryLow){
-entryLow=Math.max(price-atr*.30,price*.5);
-entryHigh=price
-}
-
-stop1=Math.min(entryLow-atr*.45,resistance-atr*.55);
-stop2=Math.min(ma20-atr*.35,low10-atr*.25,stop1-atr*.65)
-
-}else{
-
-entryLow=Math.max(price-atr*.28,Math.min(ma20,price));
-entryHigh=price;
-
-if(entryLow>price){
-entryLow=Math.max(price-atr*.28,price*.5)
-}
-
-if(entryHigh<entryLow){
-entryLow=Math.max(price-atr*.30,price*.5);
-entryHigh=price
-}
-
-stop1=Math.min(entryLow-atr*.60,low10-atr*.15);
-stop2=Math.min(ma20-atr*.45,low10-atr*.4,stop1-atr*.65)
-}
-
-/* 最後一道全域限制 */
-entryLow=Math.max(entryLow,price*.5);
-entryLow=Math.min(entryLow,price);
-
-entryHigh=Math.min(entryHigh,price);
-entryHigh=Math.max(entryHigh,entryLow);
-
-if(entryHigh>price)entryHigh=price;
-
-if(entryLow>entryHigh){
-entryLow=Math.max(price-Math.max(atr*.25,price*.003),price*.5);
-entryHigh=price
-}
-
-var center=(entryLow+entryHigh)/2;
-
-/* TPSL 保留並重新依修正後進場區計算 */
-if(!Number.isFinite(stop1)||stop1>=entryLow){
-stop1=entryLow-Math.max(atr*.55,price*.005)
-}
-
-if(!Number.isFinite(stop2)||stop2>=stop1){
-stop2=stop1-Math.max(atr*.70,price*.007)
-}
-
-stop1=Math.max(stop1,price*.05);
-stop2=Math.max(stop2,price*.02);
-
-if(stop1>=center){
-stop1=center-Math.max(atr*.55,price*.005)
-}
-
-if(stop2>=stop1){
-stop2=stop1-Math.max(atr*.70,price*.007)
-}
-
-var risk=Math.max(center-stop1,atr*.45,price*.005);
-var previousHigh=Math.max(resistance,center);
-
-var tp1=Math.max(previousHigh,center+risk*1.2);
-var tp2=Math.max(tp1+atr*.35,center+risk*2);
-var tp3=Math.max(tp2+atr*.45,center+risk*3);
-
-return{
-entryLow,
-entryHigh,
-center,
-stop1,
-stop2,
-previousHigh,
-risk,
-tp1,
-tp2,
-tp3
-}
-}
-
-function monsterMetrics(d,m,v){
-var rows=m.rows||[];
-var last5=rows.slice(-5);
-var last10=rows.slice(-10);
-var closes5=last5.map(x=>Number(x.close)).filter(Number.isFinite);
-var closes10=last10.map(x=>Number(x.close)).filter(Number.isFinite);
-
-var fiveReturn=closes5.length>=2?(closes5.at(-1)/closes5[0]-1)*100:0;
-var tenReturn=closes10.length>=2?(closes10.at(-1)/closes10[0]-1)*100:0;
-
-var greenCount=0,strongClose=0;
-
-last5.forEach(r=>{
-var o=Number(r.open),c=Number(r.close),h=Number(r.high),l=Number(r.low);
-if(c>o)greenCount++;
-if(Number.isFinite(h)&&Number.isFinite(l)&&h>l&&c>=l+(h-l)*.72)strongClose++
-});
-
-var atrPct=m.price?m.atr/m.price*100:0;
-var nearHigh=m.price>=m.resistance-m.atr*.7;
-var trend=m.ma20>=m.ma60*.985&&m.price>=m.ma20*.98;
-var momentum=m.macd>0&&m.rsi>=52;
-var notTooHot=m.rsi<=78;
-var volumeWarm=v.ratio>=1.25;
-var volumeHot=v.ratio>=1.6;
-var accelerating=fiveReturn>0&&fiveReturn>=tenReturn*.35;
-var priceStrength=greenCount>=3||strongClose>=3;
-
-var score=0;
-if(trend)score+=16;
-if(momentum)score+=16;
-if(nearHigh)score+=15;
-if(volumeWarm)score+=13;
-if(volumeHot)score+=7;
-if(priceStrength)score+=12;
-if(accelerating)score+=10;
-if(atrPct>=1.5)score+=6;
-if(notTooHot)score+=5;
-
-score=Math.min(100,score);
-
-var alreadyExploded=fiveReturn>=18||tenReturn>=30||m.rsi>82;
-
-var state="觀察中";
-if(alreadyExploded)state="已明顯噴出｜避免追高";
-else if(score>=85)state="🔥 啟動確認";
-else if(score>=75)state="⚡ 啟動前兆";
-else if(score>=65)state="👀 異常增溫";
-
-var atr=Math.max(m.atr,m.price*.008);
-
-/* 妖股啟動區也套用相同規則 */
-var entryLow=Math.max(m.ma20,m.price-atr*.25);
-entryLow=Math.min(entryLow,m.price);
-
-var entryHigh=m.price;
-
-if(entryLow>entryHigh){
-entryLow=Math.max(m.price-atr*.25,m.price*.5)
-}
-
-var sl1=Math.min(entryLow-atr*.7,m.ma20-atr*.35);
-var sl2=Math.min(sl1-atr*.7,m.ma60-atr*.35);
-
-var center=(entryLow+entryHigh)/2;
-var risk=Math.max(center-sl1,atr*.6);
-
-var tp1=Math.max(m.resistance,center+risk*1.4);
-var tp2=Math.max(tp1+atr*.5,center+risk*2.3);
-var tp3=Math.max(tp2+atr*.7,center+risk*3.5);
-
-return{
-score,state,alreadyExploded,
-fiveReturn,tenReturn,atrPct,greenCount,strongClose,
-entryLow,entryHigh,sl1,sl2,tp1,tp2,tp3
-}
-}
-
-function getMonsterNotify(){
-try{return JSON.parse(localStorage.getItem(MONSTER_NOTIFY_KEY)||"{}")||{}}
-catch(e){return{}}
-}
-
-function checkMonsterNotification(d,m,v,monster){
-if(!monster||monster.alreadyExploded||monster.score<85)return;
-var price=Number(m.price)||0;
-if(price<monster.entryLow||price>monster.entryHigh)return;
-
-var key=String(d.symbol).toUpperCase();
-var store=getMonsterNotify();
-
-if(store[key]&&Date.now()-store[key]<6*60*60*1000)return;
-
-store[key]=Date.now();
-localStorage.setItem(MONSTER_NOTIFY_KEY,JSON.stringify(store));
-
-sendSystemNotification(
-"🔥 幽冥分析｜妖股啟動提醒",
-String(d.symbol)+" "+(d.name||"")+"｜妖股分數 "+monster.score+"｜現價 "+fmt(price)+"｜啟動區 "+fmt(monster.entryLow)+"～"+fmt(monster.entryHigh),
-d.symbol,
-"monster-"+key
-);
-
-showSimpleToast(d.symbol+" 妖股啟動分數 "+monster.score)
-}
-
-function renderMonsterStocks(){
-var box=el("monsterList");
-if(!box)return;
-
-var list=monsterStocks
-.filter(x=>x.monster&&x.monster.score>=65)
-.sort((a,b)=>b.monster.score-a.monster.score)
-.slice(0,10);
-
-if(!list.length){
-box.innerHTML='<div class="monster-empty">目前沒有偵測到分數足夠的妖股啟動前兆。<br>系統會持續從雷達、自選與策略股票中重新掃描。</div>';
-return
-}
-
-box.innerHTML=list.map(x=>{
-var z=x.monster;
-return `
-<div class="monster-item" data-monster-open="${safe(x.symbol)}">
-<div class="monster-top">
-<div>
-<div><span class="monster-symbol">${safe(x.symbol)}</span><span class="monster-name">${safe(x.name||"")}</span></div>
-<div class="monster-state">${safe(z.state)}</div>
-</div>
-<div class="monster-score"><strong>${z.score}</strong><span>妖股分數</span></div>
-</div>
-<div class="monster-meta">
-<span class="monster-chip">現價 ${fmt(x.price)}</span>
-<span class="monster-chip hot">量比 ${fmt(x.volumeRatio,2)}x</span>
-<span class="monster-chip">5期動能 ${pct(z.fiveReturn)}</span>
-<span class="monster-chip">啟動區 ${fmt(z.entryLow)}～${fmt(z.entryHigh)}</span>
-</div>
-</div>`
-}).join("");
-
-box.querySelectorAll("[data-monster-open]").forEach(x=>x.onclick=()=>analyze(x.dataset.monsterOpen))
-}
-
-function getStrategyTracks(){
-try{
-var d=JSON.parse(localStorage.getItem(STRATEGY_TRACK_KEY)||"{}");
-return d&&typeof d==="object"?d:{}
-}catch(e){return{}}
-}
-
-function saveStrategyTracks(all){
-localStorage.setItem(STRATEGY_TRACK_KEY,JSON.stringify(all))
-}
-
-function getStockTracks(symbol){
-var all=getStrategyTracks();
-var a=all[String(symbol||"").toUpperCase()];
-return Array.isArray(a)?a:[]
-}
-
-function addTrackEvent(track,type,price,text){
-track.events=Array.isArray(track.events)?track.events:[];
-track.events.unshift({
-type:type,
-price:Number(price)||0,
-text:text,
-at:Date.now()
-});
-track.events=track.events.slice(0,80)
-}
-
-function findActiveTrack(symbol,type){
-return getStockTracks(symbol).find(x=>x&&x.strategyType===type&&!x.closedAt)
-}
-
-function createTrack(d,b,t,price){
-var all=getStrategyTracks();
-var symbol=String(d.symbol||"").toUpperCase();
-var list=Array.isArray(all[symbol])?all[symbol]:[];
-
-var existing=list.find(x=>x.strategyType===b.type&&!x.closedAt);
-if(existing)return existing;
-
-var now=Date.now();
-
-var track={
-id:symbol+"_"+b.type+"_"+now,
-symbol:symbol,
-name:d.name||"",
-market:d.market||"",
-strategyType:b.type,
-strategyName:b.name,
-createdAt:now,
-enteredAt:now,
-entryPrice:price,
-originalLevels:{
-entryLow:t.entryLow,
-entryHigh:t.entryHigh,
-sl1:t.stop1,
-sl2:t.stop2,
-tp1:t.tp1,
-tp2:t.tp2,
-tp3:t.tp3
-},
-currentLevels:{
-entryLow:t.entryLow,
-entryHigh:t.entryHigh,
-sl1:t.stop1,
-sl2:t.stop2,
-tp1:t.tp1,
-tp2:t.tp2,
-tp3:t.tp3,
-updatedAt:now
-},
-hit:{
-entry:true,
-tp1:false,
-tp2:false,
-tp3:false,
-sl1:false,
-sl2:false
-},
-events:[]
-};
-
-addTrackEvent(
-track,
-"ENTRY",
-price,
-"進入 "+b.name+" 進場區 "+fmt(t.entryLow)+"～"+fmt(t.entryHigh)+"，當時現價 "+fmt(price)
-);
-
-list.unshift(track);
-all[symbol]=list.slice(0,20);
-saveStrategyTracks(all);
-
-return track
-}
-
-function materiallyDifferent(oldValue,newValue,m){
-var o=Number(oldValue),n=Number(newValue);
-if(!Number.isFinite(o)||!Number.isFinite(n))return true;
-var threshold=Math.max(Number(m.atr||0)*.25,Number(m.price||0)*.003);
-return Math.abs(o-n)>=threshold
-}
-
-function updateStrategyTracking(d,m,setups){
-if(!d||!d.symbol||!m||!setups)return;
-
-var symbol=String(d.symbol).toUpperCase();
-var all=getStrategyTracks();
-var list=Array.isArray(all[symbol])?all[symbol]:[];
-
-if(!list.length)return;
-
-var changed=false;
-var price=Number(m.price)||0;
-
-list.forEach(track=>{
-if(!track||track.closedAt)return;
-
-var candidate=strategyTargets(track.strategyType,m);
-var old=track.currentLevels||track.originalLevels||{};
-var next={...old};
-
-["entryLow","entryHigh","tp1","tp2","tp3"].forEach(k=>{
-if(materiallyDifferent(old[k],candidate[k],m))next[k]=candidate[k]
-});
-
-if(materiallyDifferent(old.sl1,candidate.stop1,m)){
-next.sl1=Math.max(Number(old.sl1)||candidate.stop1,candidate.stop1)
-}
-
-if(materiallyDifferent(old.sl2,candidate.stop2,m)){
-next.sl2=Math.max(Number(old.sl2)||candidate.stop2,candidate.stop2)
-}
-
-next.updatedAt=Date.now();
-track.currentLevels=next;
-
-var hit=track.hit||(track.hit={
-entry:true,tp1:false,tp2:false,tp3:false,sl1:false,sl2:false
-});
-
-function hitEvent(key,label,level,type){
-if(hit[key])return;
-
-hit[key]=true;
-
-addTrackEvent(
-track,
-type,
-price,
-label+"｜現價 "+fmt(price)+"｜目標 "+fmt(level)
-);
-
-sendSystemNotification(
-"幽冥分析｜"+symbol+" "+label,
-(track.name||"")+"｜現價 "+fmt(price)+"｜"+label+" "+fmt(level),
-symbol,
-"track-"+track.id+"-"+key
-);
-
-changed=true
-}
-
-if(price<=Number(next.sl2)){
-hitEvent("sl1","觸及 SL1",next.sl1,"SL");
-hitEvent("sl2","觸及 SL2",next.sl2,"SL");
-track.closedAt=Date.now();
-track.status="SL2"
-}else if(price<=Number(next.sl1)){
-hitEvent("sl1","觸及 SL1",next.sl1,"SL");
-track.status="SL1"
-}else{
-if(price>=Number(next.tp1))hitEvent("tp1","達到 TP1",next.tp1,"TP");
-if(price>=Number(next.tp2))hitEvent("tp2","達到 TP2",next.tp2,"TP");
-
-if(price>=Number(next.tp3)){
-hitEvent("tp3","達到 TP3",next.tp3,"TP");
-track.closedAt=Date.now();
-track.status="TP3"
-}
-}
-
-changed=true
-});
-
-if(changed){
-all[symbol]=list;
-saveStrategyTracks(all)
-}
-}
-
-function strategyTrackingHTML(d){
-var list=getStockTracks(d.symbol);
-if(!list.length)return"";
-
-var track=list[0];
-var l=track.currentLevels||track.originalLevels||{};
-var events=Array.isArray(track.events)?track.events:[];
-
-return `
-<div class="big-section-title">📍 策略追蹤紀錄</div>
-<div class="track-card">
-<div class="track-head">
-<div>
-<div class="track-title">${safe(track.strategyName||"策略追蹤")}</div>
-<div class="track-sub">歷史進場事件會保留；目前策略價位會依最新技術結構重新計算。</div>
-</div>
-<div class="track-status">${track.closedAt?"本輪已完成":"追蹤中"}</div>
-</div>
-
-<div class="track-current-grid">
-<div class="track-level"><span>目前進場區</span><strong>${fmt(l.entryLow)}～${fmt(l.entryHigh)}</strong></div>
-<div class="track-level"><span>實際觸發價</span><strong>${fmt(track.entryPrice)}</strong></div>
-<div class="track-level"><span>SL1</span><strong style="color:#ff8d97">${fmt(l.sl1)}</strong></div>
-<div class="track-level"><span>SL2</span><strong style="color:#ff8d97">${fmt(l.sl2)}</strong></div>
-<div class="track-level"><span>TP1</span><strong style="color:#ffd166">${fmt(l.tp1)}</strong></div>
-<div class="track-level"><span>TP2 / TP3</span><strong style="color:#ffd166">${fmt(l.tp2)} / ${fmt(l.tp3)}</strong></div>
-</div>
-
-<div class="track-timeline">
-${events.length?events.map(e=>`
-<div class="track-event">
-<div class="track-event-dot ${e.type==="TP"?"tp":e.type==="SL"?"sl":""}"></div>
-<div>
-<div class="track-event-text">${safe(e.text)}</div>
-<div class="track-event-time">${dateTimeText(e.at)}</div>
-</div>
-</div>`).join(""):'<div style="font-size:10px;color:#777;padding-top:10px">尚無里程碑紀錄</div>'}
-</div>
-</div>`
-}
-
-function getNotifyCooldown(){
-try{return JSON.parse(localStorage.getItem(NOTIFY_COOLDOWN_KEY)||"{}")||{}}
-catch(e){return{}}
-}
-
-function canNotify(key){
-var d=getNotifyCooldown();
-return !d[key]||Date.now()-d[key]>ENTRY_NOTIFY_COOLDOWN
-}
-
-function markNotified(key){
-var d=getNotifyCooldown();
-d[key]=Date.now();
-Object.keys(d).forEach(k=>{
-if(Date.now()-d[k]>86400000)delete d[k]
-});
-localStorage.setItem(NOTIFY_COOLDOWN_KEY,JSON.stringify(d))
-}
-
-function getHomeEntryAlerts(){
-try{
-var d=JSON.parse(localStorage.getItem(HOME_ENTRY_KEY)||"[]");
-return Array.isArray(d)?d:[]
-}catch(e){return[]}
-}
-
-function cleanHomeEntryAlerts(){
-var now=Date.now();
-var list=getHomeEntryAlerts().filter(x=>x&&x.symbol&&Number(x.expiresAt)>now);
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
-return list
-}
-
-function saveHomeEntryAlerts(list){
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
-renderHomeEntryAlerts()
-}
-
-function removeHomeEntryAlert(id){
-saveHomeEntryAlerts(getHomeEntryAlerts().filter(x=>x.id!==id))
-}
-
-function renderHomeEntryAlerts(){
-var section=el("homeEntrySection"),box=el("homeEntryList");
-if(!section||!box)return;
-
-var list=cleanHomeEntryAlerts();
-
-if(!list.length){
-section.classList.add("hidden");
-box.innerHTML="";
-return
-}
-
-section.classList.remove("hidden");
-
-list.sort((a,b)=>Number(b.createdAt)-Number(a.createdAt));
-
-box.innerHTML=list.map(x=>`
-<div class="home-entry-alert" data-entry-open="${safe(x.symbol)}">
-<div class="home-entry-dot"></div>
-<div class="home-entry-info">
-<div class="home-entry-top">
-<span class="home-entry-symbol">${safe(x.symbol)}</span>
-<span class="home-entry-name">${safe(x.name||"")}</span>
-</div>
-<div class="home-entry-bottom">${safe(x.strategyName||"策略進場區")}｜${fmt(x.entryLow)}～${fmt(x.entryHigh)}</div>
-</div>
-<div class="home-entry-price">
-<strong>${fmt(x.price)}</strong>
-<span>目前市價</span>
-</div>
-<button class="home-entry-close" data-entry-close="${safe(x.id)}">✕</button>
-</div>
-`).join("");
-
-box.querySelectorAll("[data-entry-open]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.entryOpen)
-});
-
-box.querySelectorAll("[data-entry-close]").forEach(x=>{
-x.onclick=e=>{
-e.stopPropagation();
-removeHomeEntryAlert(x.dataset.entryClose)
-}
-})
-}
-
-function addHomeEntryAlert(d,b,t,price){
-var now=Date.now();
-var symbol=String(d.symbol||"").toUpperCase();
-var id=symbol+"_"+b.type;
-var list=cleanHomeEntryAlerts();
-var existing=list.find(x=>x.id===id);
-
-if(existing){
-existing.name=d.name||existing.name||"";
-existing.price=price;
-existing.entryLow=t.entryLow;
-existing.entryHigh=t.entryHigh;
-existing.strategyName=b.name;
-
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
-renderHomeEntryAlerts();
-return false
-}
-
-list.unshift({
-id,
-symbol,
-name:d.name||"",
-market:d.market||"",
-type:b.type,
-strategyName:b.name,
-price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh,
-createdAt:now,
-expiresAt:now+HOME_ENTRY_LIFETIME
-});
-
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
-renderHomeEntryAlerts();
-
-return true
-}
-
-function checkEntryNotification(d,m,setups){
-if(!d||!d.symbol||!m||!setups)return;
-
-var b=bestSetup(setups);
-
-/* 未完整符合策略，不產生正式進場提醒 */
-if(!b.setup.qualified)return;
-
-var t=strategyTargets(b.type,m);
-var price=Number(m.price)||Number(d.price)||0;
-
-if(!price||price<t.entryLow||price>t.entryHigh)return;
-
-var key=String(d.symbol).toUpperCase()+"_"+b.type;
-var active=findActiveTrack(d.symbol,b.type);
-
-if(!active){
-createTrack(d,b,t,price)
-}
-
-var existing=getHomeEntryAlerts().find(
-x=>x.id===key&&Number(x.expiresAt)>Date.now()
-);
-
-if(existing){
-addHomeEntryAlert(d,b,t,price);
-return
-}
-
-if(!canNotify(key))return;
-
-markNotified(key);
-addHomeEntryAlert(d,b,t,price);
-
-sendSystemNotification(
-"🎯 幽冥分析｜進入高品質進場區",
-String(d.symbol)+" "+(d.name||"")+"｜"+b.name+" "+b.setup.score+"分｜現價 "+fmt(price)+"｜進場 "+fmt(t.entryLow)+"～"+fmt(t.entryHigh),
-d.symbol,
-"entry-"+key
-)
-}
-
-function getPositionSLState(){
-try{
-return JSON.parse(localStorage.getItem(POSITION_SL_KEY)||"{}")||{}
-}catch(e){
-return{}
-}
-}
-
-function checkPositionSLNotification(d,m,setups){
-var p=getPosition(d.symbol);
-if(!p)return;
-
-var adj=adjustedPosition(p,d.market);
-if(!adj.entry||!adj.shares)return;
-
-var b=bestSetup(setups);
-var t=strategyTargets(b.type,m);
-var price=Number(m.price)||0;
-var symbol=String(d.symbol).toUpperCase();
-var state=getPositionSLState();
-var item=state[symbol]||{sl1:false,sl2:false};
-
-if(price<=t.stop2&&!item.sl2){
-item.sl1=true;
-item.sl2=true;
-
-sendSystemNotification(
-"🔴 幽冥分析｜"+symbol+" 持倉觸及 SL2",
-(d.name||"")+"｜現價 "+fmt(price)+"｜策略 "+b.name+"｜SL2 "+fmt(t.stop2),
-symbol,
-"position-sl2-"+symbol
-);
-
-showSimpleToast(symbol+" 持倉已觸及策略 SL2")
-
-}else if(price<=t.stop1&&!item.sl1){
-
-item.sl1=true;
-
-sendSystemNotification(
-"🛑 幽冥分析｜"+symbol+" 持倉觸及 SL1",
-(d.name||"")+"｜現價 "+fmt(price)+"｜策略 "+b.name+"｜SL1 "+fmt(t.stop1),
-symbol,
-"position-sl1-"+symbol
-);
-
-showSimpleToast(symbol+" 持倉已觸及策略 SL1")
-}
-
-if(price>t.stop1+m.atr*.25){
-item.sl1=false;
-item.sl2=false
-}
-
-state[symbol]=item;
-localStorage.setItem(POSITION_SL_KEY,JSON.stringify(state))
-}
-
-/*
-從這裡開始：
-你原本的「持倉 UI、回測、推薦、策略卡、AI、雷達、自選、通知」
-全部照原本檔案保留。
-
-唯一必須再改的個股請求區如下。
-*/
-
-async function fetchStockData(symbol){
-var r=await fetch(
-"/api/stock?symbol="+encodeURIComponent(symbol)+"&t="+Date.now(),
-{cache:"no-store"}
-);
-
-var d=await r.json();
-
-if(!r.ok||!d.ok){
-throw Error(d.error||"股票資料取得失敗")
-}
-
-return d
-}
-
-async function analyze(symbol){
-symbol=String(symbol||"").trim().toUpperCase();
-
-if(!symbol)return;
-
-var requestId=++analysisRequestSeq;
-
-saveSearchHistory(symbol);
-
-el("searchSuggest").classList.add("hidden");
-el("homeView").classList.add("hidden");
-
-var view=el("analysisView");
-
-view.classList.remove(
-"hidden",
-"swiping-back",
-"swipe-return"
-);
-
-view.style.transform="";
-view.style.opacity="";
-
-el("analysisResult").innerHTML=
-'<div class="loading">正在分析 '+safe(symbol)+'…</div>';
-
-currentAnalysisSymbol=symbol;
-currentAnalysisData=null;
-
-window.scrollTo({
-top:0,
-behavior:"smooth"
-});
-
-try{
-
-var d=await fetchStockData(symbol);
-
-if(requestId!==analysisRequestSeq)return;
-
-if(
-String(currentAnalysisSymbol||"").trim().toUpperCase()
-!==symbol
-)return;
-
-var returnedSymbol=
-String(d.symbol||symbol).trim().toUpperCase();
-
-if(returnedSymbol!==symbol)return;
-
-currentAnalysisData=d;
-
-buildAnalysis(d,symbol)
-
-}catch(e){
-
-if(requestId!==analysisRequestSeq)return;
-
-if(
-String(currentAnalysisSymbol||"").trim().toUpperCase()
-!==symbol
-)return;
-
-el("analysisResult").innerHTML=
-'<div class="error">'+safe(e.message)+'</div>'
-}
-}
-
-async function refreshCurrentAnalysis(){
-if(
-!currentAnalysisSymbol||
-document.hidden||
-analysisRefreshing
-)return;
-
-analysisRefreshing=true;
-
-var symbol=
-String(currentAnalysisSymbol).trim().toUpperCase();
-
-var requestId=analysisRequestSeq;
-
-try{
-
-var d=await fetchStockData(symbol);
-
-if(requestId!==analysisRequestSeq)return;
-
-if(
-String(currentAnalysisSymbol||"").trim().toUpperCase()
-!==symbol
-)return;
-
-var returnedSymbol=
-String(d.symbol||symbol).trim().toUpperCase();
-
-if(returnedSymbol!==symbol)return;
-
-currentAnalysisData=d;
-
-buildAnalysis(d,symbol);
-
-var r=el("analysisRefresh");
-
-if(r){
-r.textContent=
-"剛剛更新 · "+
-currentTimeText()+
-" · 每 30 秒"
-}
-
-}catch(e){
-
-if(
-requestId===analysisRequestSeq&&
-String(currentAnalysisSymbol||"").trim().toUpperCase()===symbol
-){
-var r=el("analysisRefresh");
-
-if(r){
-r.textContent="更新失敗 · 30 秒後重試"
-}
-}
-
-}finally{
-
-analysisRefreshing=false
-
-}
-}
-
-/*
-你的原本 buildAnalysis() 內容保持完全一樣，
-只把函式第一行：
-
-function buildAnalysis(d){
-
-改成下面這個：
-*/
-
-function buildAnalysis(d,expectedSymbol){
-
-var dataSymbol=
-String(d?.symbol||"").trim().toUpperCase();
-
-var expected=
-String(
-expectedSymbol||
-currentAnalysisSymbol||
-""
-).trim().toUpperCase();
-
-if(
-expected&&
-dataSymbol&&
-dataSymbol!==expected
-){
-return
-}
-
-if(
-expected&&
-String(currentAnalysisSymbol||"").trim().toUpperCase()
-!==expected
-){
-return
-}
-
-/*
-==========================================================
-把你原本 buildAnalysis() 從：
-
-var rows=d.rows||[];
-
-開始到：
-
-updateFavoriteButton()
-
-為止的內容原封不動放在這裡。
-==========================================================
-*/
-
-}
-
-/*
-返回首頁改成這個，
-避免上一檔股票延遲回傳後覆蓋畫面。
-*/
-
-function goBackHome(){
-
-analysisRequestSeq++;
-
-currentAnalysisSymbol="";
-currentAnalysisData=null;
-
-var view=el("analysisView");
-
-view.classList.remove(
-"swiping-back",
-"swipe-return"
-);
-
-view.style.transform="";
-view.style.opacity="";
-
-view.classList.add("hidden");
-
-el("homeView").classList.remove("hidden");
-
-renderHomeEntryAlerts();
-renderWatchlist();
-renderMonsterStocks();
-
-window.scrollTo({
-top:0,
-behavior:"auto"
-})
-}
-
-/*
-==========================================================
-以下初始化與你原本完全相同。
-==========================================================
-*/
-
-renderSearchHistory();
-renderWatchlist();
-renderHomeEntryAlerts();
-renderMonsterStocks();
-syncMoreButtons();
-loadRadar();
-refreshWatchlistPrices();
-
-</script>
-
-</body>
-</html>
