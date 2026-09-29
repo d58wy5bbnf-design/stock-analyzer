@@ -83,6 +83,114 @@ border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800
 .search-history-clear{border:0;background:transparent;color:#777d79;font-size:10px;padding:4px}
 .search-history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 
+/* 首頁進場提醒 */
+.home-entry-section{
+margin:0 0 14px
+}
+.home-entry-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:0 2px 8px
+}
+.home-entry-head-title{
+font-size:12px;
+font-weight:950;
+color:#d9e7df
+}
+.home-entry-head-note{
+font-size:9px;
+color:#6f7772
+}
+.home-entry-list{
+display:grid;
+gap:6px
+}
+.home-entry-alert{
+width:100%;
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 9px;
+min-height:42px;
+border:1px solid #29483c;
+background:linear-gradient(90deg,#0c1712,#090d0b);
+border-radius:11px;
+box-shadow:0 5px 16px rgba(0,0,0,.18);
+cursor:pointer
+}
+.home-entry-alert:active{
+transform:scale(.995);
+background:#101a15
+}
+.home-entry-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:var(--green);
+box-shadow:0 0 9px rgba(69,224,173,.55);
+flex:0 0 7px
+}
+.home-entry-info{
+min-width:0;
+flex:1
+}
+.home-entry-top{
+display:flex;
+align-items:center;
+gap:5px;
+min-width:0
+}
+.home-entry-symbol{
+font-size:12px;
+font-weight:950;
+white-space:nowrap
+}
+.home-entry-name{
+font-size:10px;
+font-weight:800;
+color:#aeb6b1;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+.home-entry-bottom{
+font-size:9px;
+color:#85aa9a;
+font-weight:750;
+margin-top:2px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+.home-entry-price{
+text-align:right;
+white-space:nowrap;
+flex:0 0 auto
+}
+.home-entry-price strong{
+display:block;
+font-size:12px;
+font-weight:950;
+color:#fff
+}
+.home-entry-price span{
+display:block;
+font-size:8px;
+color:#69726c;
+margin-top:2px
+}
+.home-entry-close{
+border:0;
+background:transparent;
+color:#69726c;
+font-size:14px;
+line-height:1;
+padding:6px 3px;
+flex:0 0 auto
+}
+
 .section-head{margin:18px 1px 10px}
 .section-title{font-size:15px;font-weight:950}
 .section-sub{font-size:11px;line-height:1.6;color:var(--muted)}
@@ -256,7 +364,6 @@ border-radius:14px;padding:12px
 .return-recommend-btn{width:100%;padding:13px;background:#141a16}
 .data-note{font-size:10px;color:#6f7471;line-height:1.75;margin:16px 4px}
 
-/* AI 即時詢問 */
 .ai-card{padding:15px;margin-bottom:14px;border-color:#343c38}
 .ai-title{font-size:18px;font-weight:950}
 .ai-sub{font-size:11px;color:#8c918e;line-height:1.7;margin-top:5px}
@@ -275,26 +382,25 @@ background:#060806;color:#fff;border-radius:13px;padding:12px;outline:none;line-
 .ai-send{border:0;background:#e8eee9;color:#111;border-radius:12px;padding:13px 15px;font-weight:950}
 .ai-send:disabled{opacity:.5}
 
-/* 質感通知 */
+/* 小型一般提示 */
 .toast-stack{
-position:fixed;z-index:9999;top:max(14px,calc(env(safe-area-inset-top) + 10px));
-left:50%;transform:translateX(-50%);width:min(calc(100% - 24px),520px);
-display:grid;gap:9px;pointer-events:none
+position:fixed;z-index:9999;
+top:max(14px,calc(env(safe-area-inset-top) + 10px));
+left:50%;transform:translateX(-50%);
+width:min(calc(100% - 24px),420px);
+pointer-events:none
 }
 .entry-toast{
-pointer-events:auto;border:1px solid rgba(69,224,173,.35);
-background:linear-gradient(135deg,rgba(13,28,21,.97),rgba(8,12,10,.98));
-backdrop-filter:blur(22px);border-radius:17px;padding:13px;
-box-shadow:0 18px 60px rgba(0,0,0,.58),0 0 30px rgba(69,224,173,.06);
-animation:toastIn .3s cubic-bezier(.2,.8,.2,1)
+pointer-events:auto;
+border:1px solid #303632;
+background:rgba(11,14,12,.97);
+backdrop-filter:blur(18px);
+border-radius:12px;
+padding:10px 12px;
+box-shadow:0 12px 30px rgba(0,0,0,.4)
 }
-.entry-toast-top{display:flex;justify-content:space-between;gap:10px}
-.entry-toast-badge{font-size:9px;font-weight:950;color:#9ef0d1;letter-spacing:.4px}
-.entry-toast-close{border:0;background:transparent;color:#77807a;padding:0 2px}
-.entry-toast-title{font-size:15px;font-weight:950;margin-top:4px}
-.entry-toast-text{font-size:11px;color:#aeb8b1;line-height:1.7;margin-top:5px}
-.entry-toast-price{color:#fff;font-weight:950}
-@keyframes toastIn{from{opacity:0;transform:translateY(-18px) scale(.97)}to{opacity:1;transform:none}}
+.entry-toast-badge{font-size:9px;color:#8f9792;font-weight:900}
+.entry-toast-title{font-size:12px;font-weight:950;margin-top:3px}
 
 #analysisView{will-change:transform;touch-action:pan-y;transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease}
 #analysisView.swiping-back{transition:none}
@@ -310,6 +416,8 @@ animation:toastIn .3s cubic-bezier(.2,.8,.2,1)
 .logo{font-size:22px}
 .indicator-strip{grid-template-columns:repeat(2,1fr)}
 .backtest-grid{grid-template-columns:1fr}
+.home-entry-alert{padding:8px}
+.home-entry-strategy{max-width:110px}
 }
 </style>
 </head>
@@ -330,6 +438,14 @@ animation:toastIn .3s cubic-bezier(.2,.8,.2,1)
 <div class="market-tabs">
 <button id="twTab" class="market-tab active">🇹🇼 台股</button>
 <button id="usTab" class="market-tab">🇺🇸 美股</button>
+</div>
+
+<div id="homeEntrySection" class="home-entry-section hidden">
+<div class="home-entry-head">
+<div class="home-entry-head-title">🎯 進場區提醒</div>
+<div class="home-entry-head-note">符合後保留 1 小時</div>
+</div>
+<div id="homeEntryList" class="home-entry-list"></div>
 </div>
 
 <div class="search-card">
@@ -446,6 +562,7 @@ const WATCH_KEY="yaozi_watchlist";
 const HISTORY_KEY="yaozi_search_history_v1";
 const POSITION_KEY="yaozi_positions_v46";
 const NOTIFY_COOLDOWN_KEY="yaozi_entry_notify_cooldown_v1";
+const HOME_ENTRY_KEY="yaozi_home_entry_alerts_v1";
 
 const BACKTEST_DAYS=365;
 const BACKTEST_OBSERVE_DAYS=30;
@@ -454,6 +571,7 @@ const BACKTEST_WARNING_RATE=70;
 const BACKTEST_MAX_HOLD=20;
 
 const ENTRY_NOTIFY_COOLDOWN=30*60*1000;
+const HOME_ENTRY_LIFETIME=60*60*1000;
 
 var currentAnalysisSymbol="";
 var currentAnalysisData=null;
@@ -1790,7 +1908,13 @@ ask()
 })
 }
 
-/* 進場區通知 */
+/* =========================
+   首頁進場區通知
+   只在首頁顯示
+   一支股票一排
+   保留一小時
+========================= */
+
 function getNotifyCooldown(){
 try{return JSON.parse(localStorage.getItem(NOTIFY_COOLDOWN_KEY)||"{}")||{}}
 catch(e){return{}}
@@ -1812,36 +1936,131 @@ if(Date.now()-d[k]>86400000)delete d[k]
 localStorage.setItem(NOTIFY_COOLDOWN_KEY,JSON.stringify(d))
 }
 
-function showEntryToast(d,b,t){
-var stack=el("toastStack");
-var node=document.createElement("div");
-node.className="entry-toast";
+function getHomeEntryAlerts(){
+try{
+var d=JSON.parse(localStorage.getItem(HOME_ENTRY_KEY)||"[]");
+if(!Array.isArray(d))return[];
+return d
+}catch(e){
+return[]
+}
+}
 
-node.innerHTML=`
-<div class="entry-toast-top">
-<div class="entry-toast-badge">幽冥分析 · 進場區提醒</div>
-<button class="entry-toast-close">✕</button>
+function saveHomeEntryAlerts(list){
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+renderHomeEntryAlerts()
+}
+
+function cleanHomeEntryAlerts(){
+var now=Date.now();
+var list=getHomeEntryAlerts().filter(x=>{
+return x&&x.symbol&&Number(x.expiresAt)>now
+});
+
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+return list
+}
+
+function removeHomeEntryAlert(id){
+var list=getHomeEntryAlerts().filter(x=>x.id!==id);
+saveHomeEntryAlerts(list)
+}
+
+function renderHomeEntryAlerts(){
+var section=el("homeEntrySection");
+var box=el("homeEntryList");
+if(!section||!box)return;
+
+var list=cleanHomeEntryAlerts();
+
+if(!list.length){
+section.classList.add("hidden");
+box.innerHTML="";
+return
+}
+
+section.classList.remove("hidden");
+
+list.sort((a,b)=>Number(b.createdAt)-Number(a.createdAt));
+
+box.innerHTML=list.map(x=>`
+<div class="home-entry-alert" data-entry-open="${safe(x.symbol)}" data-entry-id="${safe(x.id)}">
+
+<div class="home-entry-dot"></div>
+
+<div class="home-entry-info">
+<div class="home-entry-top">
+<span class="home-entry-symbol">${safe(x.symbol)}</span>
+<span class="home-entry-name">${safe(x.name||"")}</span>
 </div>
-<div class="entry-toast-title">${safe(d.symbol)} ${safe(d.name||"")}</div>
-<div class="entry-toast-text">
-<span class="entry-toast-price">現價 ${fmt(d.price)}</span><br>
-${safe(b.name)}｜已進入觀察區 ${fmt(t.entryLow)} ～ ${fmt(t.entryHigh)}<br>
-點擊通知直接查看完整分析
-</div>`;
+<div class="home-entry-bottom">
+${safe(x.strategyName||"策略進場區")}｜進場 ${fmt(x.entryLow)}～${fmt(x.entryHigh)}
+</div>
+</div>
 
-stack.prepend(node);
+<div class="home-entry-price">
+<strong>${fmt(x.price)}</strong>
+<span>現價</span>
+</div>
 
-node.querySelector(".entry-toast-close").onclick=e=>{
-e.stopPropagation();
-node.remove()
-};
+<button class="home-entry-close" data-entry-close="${safe(x.id)}">✕</button>
 
+</div>
+`).join("");
+
+box.querySelectorAll("[data-entry-open]").forEach(node=>{
 node.onclick=()=>{
-node.remove();
-analyze(d.symbol)
-};
+analyze(node.dataset.entryOpen)
+}
+});
 
-setTimeout(()=>node.remove(),10000)
+box.querySelectorAll("[data-entry-close]").forEach(button=>{
+button.onclick=e=>{
+e.stopPropagation();
+removeHomeEntryAlert(button.dataset.entryClose)
+}
+})
+}
+
+function addHomeEntryAlert(d,b,t,price){
+var now=Date.now();
+var symbol=String(d.symbol||"").toUpperCase();
+var id=symbol+"_"+b.type;
+
+var list=cleanHomeEntryAlerts();
+
+/* 同一股票同一策略在顯示中的一小時內只更新資料，不重複新增 */
+var existing=list.find(x=>x.id===id);
+
+if(existing){
+existing.name=d.name||existing.name||"";
+existing.price=price;
+existing.entryLow=t.entryLow;
+existing.entryHigh=t.entryHigh;
+existing.strategyName=b.name;
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+renderHomeEntryAlerts();
+return false
+}
+
+list.unshift({
+id,
+symbol,
+name:d.name||"",
+market:d.market||"",
+type:b.type,
+strategyName:b.name,
+price,
+entryLow:t.entryLow,
+entryHigh:t.entryHigh,
+createdAt:now,
+expiresAt:now+HOME_ENTRY_LIFETIME
+});
+
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+renderHomeEntryAlerts();
+
+return true
 }
 
 function checkEntryNotification(d,m,setups){
@@ -1854,31 +2073,21 @@ var price=Number(m.price)||Number(d.price)||0;
 if(!price||price<t.entryLow||price>t.entryHigh)return;
 
 var key=String(d.symbol).toUpperCase()+"_"+b.type;
+
+/* 如果首頁已經有這一則，就只更新價格，不重複新增 */
+var existing=getHomeEntryAlerts().find(x=>{
+return x.id===key&&Number(x.expiresAt)>Date.now()
+});
+
+if(existing){
+addHomeEntryAlert(d,b,t,price);
+return
+}
+
 if(!canNotify(key))return;
 
 markNotified(key);
-
-var noticeData={
-symbol:d.symbol,
-name:d.name||"",
-price,
-market:d.market
-};
-
-showEntryToast(noticeData,b,t);
-
-if("Notification" in window&&Notification.permission==="granted"){
-try{
-var n=new Notification("幽冥分析｜"+d.symbol+" 進入觀察進場區",{
-body:(d.name||"")+"｜"+b.name+"｜現價 "+fmt(price)+"｜區間 "+fmt(t.entryLow)+"～"+fmt(t.entryHigh)
-});
-n.onclick=()=>{
-window.focus();
-analyze(d.symbol);
-n.close()
-}
-}catch(e){}
-}
+addHomeEntryAlert(d,b,t,price)
 }
 
 /* 個股資料 */
@@ -1956,7 +2165,10 @@ currentBacktests=backtests;
 
 d.price=m.price;
 
-checkEntryNotification(d,m,setups);
+/*
+個股頁不跳進場通知。
+首頁的自選與市場雷達會負責偵測。
+*/
 
 var price=m.price;
 var change=Number(d.changePercent);
@@ -2061,6 +2273,7 @@ view.style.opacity="";
 view.classList.add("hidden");
 
 el("homeView").classList.remove("hidden");
+renderHomeEntryAlerts();
 renderWatchlist();
 window.scrollTo({top:0,behavior:"auto"})
 }
@@ -2329,21 +2542,16 @@ el("twTab").classList.remove("active");
 el("usTab").classList.add("active")
 };
 
-el("notifyButton").onclick=async()=>{
-if(!("Notification" in window)){
-showSimpleToast("此瀏覽器不支援系統通知");
-return
-}
+el("notifyButton").onclick=()=>{
+renderHomeEntryAlerts();
 
-if(Notification.permission==="granted"){
-showSimpleToast("進場區通知已開啟");
-return
-}
+var list=cleanHomeEntryAlerts();
 
-try{
-var p=await Notification.requestPermission();
-if(p==="granted")showSimpleToast("進場區通知已開啟")
-}catch(e){}
+if(list.length){
+showSimpleToast("目前有 "+list.length+" 檔股票進入策略觀察區")
+}else{
+showSimpleToast("目前沒有新的進場區提醒")
+}
 };
 
 function showSimpleToast(text){
@@ -2352,7 +2560,7 @@ var n=document.createElement("div");
 n.className="entry-toast";
 n.innerHTML='<div class="entry-toast-badge">幽冥分析</div><div class="entry-toast-title">'+safe(text)+'</div>';
 stack.prepend(n);
-setTimeout(()=>n.remove(),3500)
+setTimeout(()=>n.remove(),2500)
 }
 
 el("backButton").onclick=goBackHome;
@@ -2375,7 +2583,12 @@ var s=countdownSeconds%60;
 el("countdown").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")
 },1000);
 
-/* 修正：個股頁真的每 30 秒抓一次最新資料 */
+/* 每分鐘清理超過 1 小時的首頁進場提醒 */
+setInterval(()=>{
+renderHomeEntryAlerts()
+},60000);
+
+/* 個股頁每 30 秒抓一次最新資料 */
 setInterval(()=>{
 if(currentAnalysisSymbol&&!document.hidden){
 refreshCurrentAnalysis()
@@ -2385,8 +2598,11 @@ refreshCurrentAnalysis()
 /* 回到前景立即補更新 */
 document.addEventListener("visibilitychange",()=>{
 if(!document.hidden){
-if(currentAnalysisSymbol)refreshCurrentAnalysis();
-else{
+renderHomeEntryAlerts();
+
+if(currentAnalysisSymbol){
+refreshCurrentAnalysis()
+}else{
 loadRadar();
 refreshWatchlistPrices()
 }
@@ -2395,6 +2611,7 @@ refreshWatchlistPrices()
 
 renderSearchHistory();
 renderWatchlist();
+renderHomeEntryAlerts();
 syncMoreButtons();
 loadRadar();
 refreshWatchlistPrices();
