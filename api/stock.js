@@ -485,20 +485,91 @@ async function getUSPrice(
    SNAPSHOT
 ========================= */
 
+function pickSnapshotPrice(item) {
+  if (!item) {
+    return 0;
+  }
+
+  /*
+    不同 FinMind Snapshot 版本可能使用不同欄位名稱。
+    依序尋找目前成交價。
+  */
+
+  const candidates = [
+    item.price,
+    item.close,
+    item.last_price,
+    item.lastPrice,
+    item.last_trade_price,
+    item.lastTradePrice,
+    item.trade_price,
+    item.tradePrice,
+    item.Close,
+    item.Price
+  ];
+
+  for (const value of candidates) {
+    const n = Number(value);
+
+    if (
+      Number.isFinite(n) &&
+      n > 0
+    ) {
+      return n;
+    }
+  }
+
+  return 0;
+}
+
+function pickSnapshotNumber(
+  item,
+  keys
+) {
+  if (!item) {
+    return 0;
+  }
+
+  for (const key of keys) {
+    const n =
+      Number(item[key]);
+
+    if (
+      Number.isFinite(n) &&
+      n > 0
+    ) {
+      return n;
+    }
+  }
+
+  return 0;
+}
+
 async function getTaiwanSnapshot(
   symbol,
   token
 ) {
   try {
+    /*
+      加上時間參數，
+      再搭配 no-store，
+      避免任何中間快取重複回傳舊 Snapshot。
+    */
+
+    const url =
+      `${SNAPSHOT_URL}?_t=${Date.now()}`;
+
     const response =
       await fetch(
-        SNAPSHOT_URL,
+        url,
         {
           headers: {
             Authorization:
               `Bearer ${token}`,
             Accept:
-              "application/json"
+              "application/json",
+            "Cache-Control":
+              "no-cache"
           },
           cache:
             "no-store"
@@ -509,82 +580,184 @@ async function getTaiwanSnapshot(
       await response.json();
 
     if (!response.ok) {
+      console.error(
+        "FinMind snapshot HTTP error:",
+        response.status,
+        json
+      );
+
       return null;
     }
 
-    const list =
-      Array.isArray(json.data)
-        ? json.data
-        : [];
+    /*
+      相容：
+      data: []
+      data: { data: [] }
+      snapshot: []
+      result: []
+    */
+
+    let list = [];
+
+    if (
+      Array.isArray(
+        json?.data
+      )
+    ) {
+      list =
+        json.data;
+    } else if (
+      Array.isArray(
+        json?.data?.data
+      )
+    ) {
+      list =
+        json.data.data;
+    } else if (
+      Array.isArray(
+        json?.snapshot
+      )
+    ) {
+      list =
+        json.snapshot;
+    } else if (
+      Array.isArray(
+        json?.result
+      )
+    ) {
+      list =
+        json.result;
+    }
+
+    const target =
+      String(symbol);
 
     const item =
       list.find(
         x =>
           String(
-            x.stock_id ||
-            x.symbol ||
-            x.code ||
+            x.stock_id ??
+            x.stockId ??
+            x.symbol ??
+            x.code ??
+            x.ticker ??
             ""
-          ) ===
-          String(symbol)
+          ) === target
       );
 
     if (!item) {
+      console.log(
+        "Snapshot 找不到股票:",
+        symbol
+      );
+
       return null;
     }
 
     const price =
-      num(
-        item.price ??
-        item.close ??
-        item.last_price ??
-        item.lastPrice
+      pickSnapshotPrice(
+        item
       );
 
     if (!(price > 0)) {
+      console.log(
+        "Snapshot 有股票但沒有有效成交價:",
+        symbol,
+        item
+      );
+
       return null;
     }
 
+    const open =
+      pickSnapshotNumber(
+        item,
+        [
+          "open",
+          "open_price",
+          "openPrice",
+          "Open"
+        ]
+      );
+
+    const high =
+      pickSnapshotNumber(
+        item,
+        [
+          "high",
+          "high_price",
+          "highPrice",
+          "max",
+          "High"
+        ]
+      );
+
+    const low =
+      pickSnapshotNumber(
+        item,
+        [
+          "low",
+          "low_price",
+          "lowPrice",
+          "min",
+          "Low"
+        ]
+      );
+
+    const volume =
+      pickSnapshotNumber(
+        item,
+        [
+          "total_volume",
+          "totalVolume",
+          "volume",
+          "Trading_Volume",
+          "trade_volume",
+          "tradeVolume"
+        ]
+      );
+
+    const volumeRatio =
+      num(
+        item.volume_ratio ??
+        item.volumeRatio
+      );
+
+    const changePercent =
+      num(
+        item.change_rate ??
+        item.change_percent ??
+        item.changePercent ??
+        item.changeRate
+      );
+
+    const time =
+      item.time ??
+      item.timestamp ??
+      item.datetime ??
+      item.date ??
+      item.trade_time ??
+      item.tradeTime ??
+      null;
+
     return {
       price,
-      open:
-        num(
-          item.open ??
-          item.open_price
-        ),
-      high:
-        num(
-          item.high ??
-          item.high_price
-        ),
-      low:
-        num(
-          item.low ??
-          item.low_price
-        ),
-      volume:
-        num(
-          item.total_volume ??
-          item.volume ??
-          item.Trading_Volume
-        ),
-      volumeRatio:
-        num(
-          item.volume_ratio
-        ),
-      changePercent:
-        num(
-          item.change_rate ??
-          item.change_percent ??
-          item.changePercent
-        ),
-      time:
-        item.time ||
-        item.timestamp ||
-        item.date ||
-        null
+      open,
+      high,
+      low,
+      volume,
+      volumeRatio,
+      changePercent,
+      time,
+      raw: item
     };
+
   } catch (e) {
+    console.error(
+      "Taiwan snapshot error:",
+      e
+    );
+
     return null;
   }
 }
@@ -694,7 +867,8 @@ function currentVolumeAnalysis(
     const minutes =
       getTaipeiMinutes();
 
-    const start = 9 * 60;
+    const start =
+      9 * 60;
     const end =
       13 * 60 + 30;
 
@@ -1152,13 +1326,6 @@ function strategyState(
       atr * 2;
   }
 
-  /*
-    支撐回踩：
-    趨勢仍向上，
-    回到 MA20 / 支撐區，
-    成交量不可失控爆量下殺。
-  */
-
   const pullback =
     price > ma60 &&
     ma20 > ma60 &&
@@ -1175,12 +1342,6 @@ function strategyState(
     structureValid &&
     volumeRatio <= 2.2;
 
-  /*
-    高 R：
-    嚴格突破。
-    TP1 = 2R。
-  */
-
   const highR =
     price > ma20 &&
     ma20 > ma60 &&
@@ -1194,12 +1355,6 @@ function strategyState(
     above <= 2.5 &&
     structureValid &&
     volumeRatio >= 1.2;
-
-  /*
-    強勢續攻：
-    趨勢＋突破＋放量。
-    TP1 = 1.5R。
-  */
 
   const surge =
     price > ma20 &&
@@ -1355,12 +1510,6 @@ function simulateTrade(
     const high =
       num(bar.high);
 
-    /*
-      保守：
-      同棒碰 SL + TP
-      先視為 SL。
-    */
-
     if (low <= stop) {
       return {
         win: tp1,
@@ -1417,12 +1566,6 @@ function simulateTrade(
       };
     }
   }
-
-  /*
-    20 根後仍未 TP1，
-    以最後收盤 R 判斷，
-    但不算 TP1 勝利。
-  */
 
   const last =
     future[
@@ -1651,12 +1794,6 @@ function backtest365(rows) {
     SURGE: []
   };
 
-  /*
-    需要至少 100 根暖機。
-    最後留未來 20 根，
-    避免沒有足夠追蹤區間。
-  */
-
   const first =
     Math.max(
       100,
@@ -1673,11 +1810,6 @@ function backtest365(rows) {
     i < last;
     i++
   ) {
-    /*
-      只使用當天及以前資料，
-      不偷看未來。
-    */
-
     const history =
       rows.slice(0, i + 1);
 
@@ -1851,14 +1983,6 @@ function diagnoseBacktest(
     }
   }
 
-  /*
-    這裡只診斷，
-    不讓系統因單一股票
-    自動亂改核心參數。
-
-    避免過度擬合。
-  */
-
   let recommendation =
     "維持目前參數";
 
@@ -1984,6 +2108,25 @@ export default async function handler(
   res
 ) {
   try {
+    /*
+      先禁止 Vercel / CDN / Browser 快取。
+    */
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0"
+    );
+
+    res.setHeader(
+      "Pragma",
+      "no-cache"
+    );
+
+    res.setHeader(
+      "Expires",
+      "0"
+    );
+
     if (
       req.method !== "GET"
     ) {
@@ -2199,12 +2342,76 @@ export default async function handler(
     const dailyClose =
       num(latest.close);
 
-    const previousClose =
+    /*
+      判斷最新日 K 是否就是今天。
+
+      若 FinMind TaiwanStockPrice
+      已經包含今天盤中的日 K，
+      previousClose 應該使用上一根。
+
+      若最新一根還是前一交易日，
+      則它本身就是 previousClose。
+    */
+
+    const taipeiToday =
+      new Intl.DateTimeFormat(
+        "en-CA",
+        {
+          timeZone:
+            "Asia/Taipei",
+          year:
+            "numeric",
+          month:
+            "2-digit",
+          day:
+            "2-digit"
+        }
+      )
+        .format(
+          new Date()
+        )
+        .replaceAll(
+          "/",
+          "-"
+        );
+
+    const latestDate =
+      String(
+        latest?.date ||
+        ""
+      ).slice(0, 10);
+
+    const latestIsToday =
+      market === "TW" &&
+      latestDate ===
+        taipeiToday;
+
+    let previousClose;
+
+    if (
+      market === "TW" &&
+      latestIsToday &&
       previous
-        ? num(
-            previous.close
-          )
-        : dailyClose;
+    ) {
+      previousClose =
+        num(
+          previous.close
+        );
+    } else {
+      previousClose =
+        dailyClose;
+    }
+
+    /*
+      即時價格：
+
+      台股優先使用 Snapshot。
+      Snapshot 不可用時，
+      才退回最新日 K close。
+
+      美股目前仍使用 FinMind
+      最新可取得日行情。
+    */
 
     let livePrice =
       dailyClose;
@@ -2218,14 +2425,20 @@ export default async function handler(
         : "FinMind 美股最新日行情";
 
     let liveTime =
+      latest?.date ||
       null;
 
     if (
       market === "TW" &&
-      snapshot?.price > 0
+      snapshot &&
+      num(
+        snapshot.price
+      ) > 0
     ) {
       livePrice =
-        snapshot.price;
+        num(
+          snapshot.price
+        );
 
       isRealtime = true;
 
@@ -2236,6 +2449,29 @@ export default async function handler(
         snapshot.time ||
         new Date()
           .toISOString();
+    }
+
+    /*
+      如果 Snapshot 沒拿到，
+      但 TaiwanStockPrice 最新 K
+      已經是今天，
+      則至少標示為今日最新行情。
+    */
+
+    if (
+      market === "TW" &&
+      !isRealtime &&
+      latestIsToday &&
+      dailyClose > 0
+    ) {
+      livePrice =
+        dailyClose;
+
+      liveSource =
+        "FinMind 台股今日最新行情";
+
+      liveTime =
+        latest.date;
     }
 
     const change =
@@ -2428,10 +2664,19 @@ export default async function handler(
         BACKTEST_DAYS
     };
 
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate"
-    );
+    /*
+      ★ 關鍵修正：
+
+      原本：
+        price: dailyClose
+
+      現在：
+        price: livePrice
+
+      所以前端原本使用 d.price
+      的地方不用全部重寫，
+      會直接取得最新 livePrice。
+    */
 
     return res
       .status(200)
@@ -2466,10 +2711,28 @@ export default async function handler(
             ? "TWD"
             : "USD",
 
+        /*
+          ★ 前端主要讀取的 price
+          現在直接使用即時價。
+        */
+
         price:
-          dailyClose,
+          livePrice,
+
+        /*
+          同時保留 livePrice，
+          方便未來前端直接判斷。
+        */
 
         livePrice,
+
+        /*
+          保留原本最新日 K 收盤，
+          避免需要日線資料時
+          被即時價格取代。
+        */
+
+        dailyClose,
 
         previousClose,
 
@@ -2489,6 +2752,33 @@ export default async function handler(
         liveSource,
         isRealtime,
 
+        /*
+          方便你直接檢查
+          到底有沒有拿到 Snapshot。
+        */
+
+        realtimeDebug: {
+          snapshotAvailable:
+            !!snapshot,
+
+          snapshotPrice:
+            snapshot?.price ||
+            null,
+
+          returnedPrice:
+            livePrice,
+
+          dailyClose,
+
+          latestIsToday,
+
+          source:
+            liveSource,
+
+          time:
+            liveTime
+        },
+
         volumeAnalysis,
 
         strategies,
@@ -2507,7 +2797,11 @@ export default async function handler(
 
         notice:
           market === "TW"
-            ? "台股盤中每次重新取得資料時，會依最新價格與時間標準化成交量重新分析；365 個交易日回測不使用未來資料。"
+            ? (
+                isRealtime
+                  ? "目前價格使用 FinMind 台股即時 Snapshot；前端每次重新取得 /api/stock 時會重新抓取即時價格與成交量。"
+                  : "目前沒有取得有效 Snapshot，價格暫時使用 FinMind 最新日行情。"
+              )
             : "美股目前使用 FinMind 最新可取得日行情與日成交量；365 個交易日回測不使用未來資料。"
       });
 
@@ -2519,7 +2813,7 @@ export default async function handler(
 
     res.setHeader(
       "Cache-Control",
-      "no-store"
+      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0"
     );
 
     return res
