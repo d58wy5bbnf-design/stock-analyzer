@@ -43,7 +43,7 @@ border-radius:12px;padding:10px 12px;font-size:13px;font-weight:850
 .market-tab{flex:1;border:0;background:transparent;color:#777d79;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:900}
 .market-tab.active{background:#151a17;color:white}
 
-.search-card,.card,.hero-card,.strategy-card,.recommend-card,.position-card,.backtest-card,.ai-card{
+.search-card,.card,.hero-card,.strategy-card,.recommend-card,.position-card,.backtest-card,.ai-card,.tracking-card{
 background:linear-gradient(180deg,#0d110f,#090c0a);
 border:1px solid var(--border);border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.2)
 }
@@ -84,112 +84,30 @@ border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800
 .search-history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 
 /* 首頁進場提醒 */
-.home-entry-section{
-margin:0 0 14px
-}
-.home-entry-head{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px;
-margin:0 2px 8px
-}
-.home-entry-head-title{
-font-size:12px;
-font-weight:950;
-color:#d9e7df
-}
-.home-entry-head-note{
-font-size:9px;
-color:#6f7772
-}
-.home-entry-list{
-display:grid;
-gap:6px
-}
+.home-entry-section{margin:0 0 14px}
+.home-entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px}
+.home-entry-head-title{font-size:12px;font-weight:950;color:#d9e7df}
+.home-entry-head-note{font-size:9px;color:#6f7772}
+.home-entry-list{display:grid;gap:6px}
 .home-entry-alert{
-width:100%;
-display:flex;
-align-items:center;
-gap:8px;
-padding:8px 9px;
-min-height:42px;
-border:1px solid #29483c;
-background:linear-gradient(90deg,#0c1712,#090d0b);
-border-radius:11px;
-box-shadow:0 5px 16px rgba(0,0,0,.18);
-cursor:pointer
+width:100%;display:flex;align-items:center;gap:8px;padding:8px 9px;min-height:42px;
+border:1px solid #29483c;background:linear-gradient(90deg,#0c1712,#090d0b);
+border-radius:11px;box-shadow:0 5px 16px rgba(0,0,0,.18);cursor:pointer
 }
-.home-entry-alert:active{
-transform:scale(.995);
-background:#101a15
-}
+.home-entry-alert:active{transform:scale(.995);background:#101a15}
 .home-entry-dot{
-width:7px;
-height:7px;
-border-radius:50%;
-background:var(--green);
-box-shadow:0 0 9px rgba(69,224,173,.55);
-flex:0 0 7px
+width:7px;height:7px;border-radius:50%;background:var(--green);
+box-shadow:0 0 9px rgba(69,224,173,.55);flex:0 0 7px
 }
-.home-entry-info{
-min-width:0;
-flex:1
-}
-.home-entry-top{
-display:flex;
-align-items:center;
-gap:5px;
-min-width:0
-}
-.home-entry-symbol{
-font-size:12px;
-font-weight:950;
-white-space:nowrap
-}
-.home-entry-name{
-font-size:10px;
-font-weight:800;
-color:#aeb6b1;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis
-}
-.home-entry-bottom{
-font-size:9px;
-color:#85aa9a;
-font-weight:750;
-margin-top:2px;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis
-}
-.home-entry-price{
-text-align:right;
-white-space:nowrap;
-flex:0 0 auto
-}
-.home-entry-price strong{
-display:block;
-font-size:12px;
-font-weight:950;
-color:#fff
-}
-.home-entry-price span{
-display:block;
-font-size:8px;
-color:#69726c;
-margin-top:2px
-}
-.home-entry-close{
-border:0;
-background:transparent;
-color:#69726c;
-font-size:14px;
-line-height:1;
-padding:6px 3px;
-flex:0 0 auto
-}
+.home-entry-info{min-width:0;flex:1}
+.home-entry-top{display:flex;align-items:center;gap:5px;min-width:0}
+.home-entry-symbol{font-size:12px;font-weight:950;white-space:nowrap}
+.home-entry-name{font-size:10px;font-weight:800;color:#aeb6b1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-entry-bottom{font-size:9px;color:#85aa9a;font-weight:750;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-entry-price{text-align:right;white-space:nowrap;flex:0 0 auto}
+.home-entry-price strong{display:block;font-size:12px;font-weight:950;color:#fff}
+.home-entry-price span{display:block;font-size:8px;color:#69726c;margin-top:2px}
+.home-entry-close{border:0;background:transparent;color:#69726c;font-size:14px;line-height:1;padding:6px 3px;flex:0 0 auto}
 
 .section-head{margin:18px 1px 10px}
 .section-title{font-size:15px;font-weight:950}
@@ -360,6 +278,53 @@ border-radius:14px;padding:12px
 .rr-text{font-size:11px!important;color:#d8bd70!important;margin-top:5px}
 .qualified-badge{margin-top:10px;padding:8px;border-radius:10px;font-size:10px;font-weight:850;color:#a9ead4;background:#0d1c16;border:1px solid #224538}
 .qualified-badge.not-qualified{color:#c3c6c4;background:#101311;border-color:#292e2b}
+
+/* 策略內直接顯示目前市價 */
+.strategy-target-title{
+display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap
+}
+.strategy-live-price{
+border:1px solid #315246;background:#0b1712;color:#baf1dc;
+border-radius:999px;padding:6px 9px;font-size:11px;font-weight:950
+}
+.strategy-live-price span{color:#7f9f91;font-size:9px;margin-right:4px}
+
+/* 策略底部快捷返回 */
+.strategy-nav{
+display:grid;grid-template-columns:1fr 1fr;gap:8px;
+margin-top:13px;padding-top:13px;border-top:1px solid #202522
+}
+.strategy-nav-btn{
+border:1px solid #303632;background:#101411;color:#e8ebe9;
+border-radius:11px;padding:10px 8px;font-size:11px;font-weight:900
+}
+
+/* 策略追蹤紀錄 */
+.tracking-card{padding:15px;margin-bottom:14px}
+.tracking-title{font-size:18px;font-weight:950}
+.tracking-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-top:5px}
+.tracking-current{
+margin-top:12px;border:1px solid #29483c;background:#0b1511;
+border-radius:13px;padding:11px
+}
+.tracking-current-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tracking-current-name{font-size:13px;font-weight:950}
+.tracking-status{font-size:9px;font-weight:900;border:1px solid #315246;color:#a6ead3;border-radius:999px;padding:5px 7px}
+.tracking-levels{font-size:10px;color:#9ea7a1;line-height:1.8;margin-top:7px}
+.tracking-list{display:grid;gap:7px;margin-top:11px}
+.tracking-event{
+display:flex;gap:9px;align-items:flex-start;border:1px solid #252b27;background:#080b09;
+border-radius:11px;padding:9px
+}
+.tracking-event-dot{width:7px;height:7px;border-radius:50%;background:#7e8983;margin-top:5px;flex:0 0 7px}
+.tracking-event.good .tracking-event-dot{background:var(--green)}
+.tracking-event.bad .tracking-event-dot{background:var(--red)}
+.tracking-event.warn .tracking-event-dot{background:var(--yellow)}
+.tracking-event-main{min-width:0;flex:1}
+.tracking-event-title{font-size:11px;font-weight:900}
+.tracking-event-time{font-size:9px;color:#6e7671;margin-top:3px}
+.tracking-empty{font-size:11px;color:#777d79;line-height:1.7;margin-top:10px}
+
 .return-recommend-wrap{margin:18px 0 4px}
 .return-recommend-btn{width:100%;padding:13px;background:#141a16}
 .data-note{font-size:10px;color:#6f7471;line-height:1.75;margin:16px 4px}
@@ -391,12 +356,8 @@ width:min(calc(100% - 24px),420px);
 pointer-events:none
 }
 .entry-toast{
-pointer-events:auto;
-border:1px solid #303632;
-background:rgba(11,14,12,.97);
-backdrop-filter:blur(18px);
-border-radius:12px;
-padding:10px 12px;
+pointer-events:auto;border:1px solid #303632;background:rgba(11,14,12,.97);
+backdrop-filter:blur(18px);border-radius:12px;padding:10px 12px;
 box-shadow:0 12px 30px rgba(0,0,0,.4)
 }
 .entry-toast-badge{font-size:9px;color:#8f9792;font-weight:900}
@@ -417,7 +378,7 @@ box-shadow:0 12px 30px rgba(0,0,0,.4)
 .indicator-strip{grid-template-columns:repeat(2,1fr)}
 .backtest-grid{grid-template-columns:1fr}
 .home-entry-alert{padding:8px}
-.home-entry-strategy{max-width:110px}
+.strategy-live-price{width:100%;text-align:center}
 }
 </style>
 </head>
@@ -564,6 +525,9 @@ const POSITION_KEY="yaozi_positions_v46";
 const NOTIFY_COOLDOWN_KEY="yaozi_entry_notify_cooldown_v1";
 const HOME_ENTRY_KEY="yaozi_home_entry_alerts_v1";
 
+const STRATEGY_TRACK_KEY="yaozi_strategy_tracking_v1";
+const HOLDING_SL_STATE_KEY="yaozi_holding_sl_state_v1";
+
 const BACKTEST_DAYS=365;
 const BACKTEST_OBSERVE_DAYS=30;
 const BACKTEST_MIN_TRADES=8;
@@ -617,6 +581,13 @@ function currentTimeText(){
 return new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})
 }
 
+function dateTimeText(ts){
+var d=new Date(Number(ts)||Date.now());
+return d.toLocaleString("zh-TW",{
+month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false
+})
+}
+
 function average(values){
 var a=values.map(Number).filter(Number.isFinite);
 return a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN
@@ -630,6 +601,58 @@ var out=a[0];
 for(var i=1;i<a.length;i++)out=a[i]*k+out*(1-k);
 return out
 }
+
+/* =========================
+   手機 / 瀏覽器通知
+========================= */
+
+function systemNotification(title,body,symbol){
+if(!("Notification" in window))return;
+
+if(Notification.permission!=="granted")return;
+
+try{
+var n=new Notification(title,{
+body:body,
+tag:"yaozi_"+String(symbol||"")+"_"+Date.now(),
+renotify:true
+});
+
+n.onclick=()=>{
+try{window.focus()}catch(e){}
+if(symbol)analyze(symbol);
+try{n.close()}catch(e){}
+}
+}catch(e){}
+}
+
+async function requestNotificationPermission(){
+if(!("Notification" in window)){
+showSimpleToast("此瀏覽器不支援通知");
+return
+}
+
+if(Notification.permission==="granted"){
+showSimpleToast("手機通知已開啟");
+return
+}
+
+try{
+var p=await Notification.requestPermission();
+
+if(p==="granted"){
+showSimpleToast("手機通知已開啟")
+}else{
+showSimpleToast("通知權限尚未開啟")
+}
+}catch(e){
+showSimpleToast("無法開啟通知權限")
+}
+}
+
+/* =========================
+   搜尋紀錄
+========================= */
 
 function getSearchHistory(){
 try{
@@ -779,7 +802,10 @@ if(el("searchInput").value.trim()===q)renderSearchSuggestions(a)
 },180)
 });
 
-/* 自選 */
+/* =========================
+   自選
+========================= */
+
 function getWatchlist(){
 try{
 var d=JSON.parse(localStorage.getItem(WATCH_KEY)||"[]");
@@ -884,35 +910,10 @@ removeFavorite(b.dataset.watchRemove)
 })
 }
 
-async function refreshWatchlistPrices(){
-var list=getWatchlist();
-if(!list.length)return;
+/* =========================
+   持倉
+========================= */
 
-var changed=false;
-
-for(var i=0;i<list.length;i++){
-try{
-var d=await fetchStockData(list[i].symbol);
-var m=marketOf(d);
-list[i].price=m.price;
-list[i].name=d.name||list[i].name;
-list[i].market=d.market||list[i].market;
-if(Number.isFinite(Number(d.changePercent)))list[i].changePercent=Number(d.changePercent);
-changed=true;
-
-var v=volumeMetrics(d,d.rows||[]);
-var setups=buildStrategySetups(d,m,v);
-checkEntryNotification(d,m,setups)
-}catch(e){}
-}
-
-if(changed){
-localStorage.setItem(WATCH_KEY,JSON.stringify(list));
-renderWatchlist()
-}
-}
-
-/* 持倉 + 減資 */
 function getPositions(){
 try{
 var d=JSON.parse(localStorage.getItem(POSITION_KEY)||"{}");
@@ -983,7 +984,10 @@ a.sort((x,y)=>y.setup.score-x.setup.score||y.setup.passed-x.setup.passed);
 return a[0]
 }
 
-/* 技術計算 */
+/* =========================
+   技術計算
+========================= */
+
 function historicalRSI(rows,period=14){
 if(rows.length<period+1)return 50;
 var a=rows.slice(-(period+1));
@@ -1174,7 +1178,343 @@ var tp3=Math.max(tp2+atr*.45,center+risk*3);
 return{entryLow,entryHigh,center,stop1,stop2,previousHigh,risk,tp1,tp2,tp3}
 }
 
-/* 回測原邏輯 */
+/* =========================
+   策略追蹤紀錄
+========================= */
+
+function getStrategyTracking(){
+try{
+var d=JSON.parse(localStorage.getItem(STRATEGY_TRACK_KEY)||"{}");
+return d&&typeof d==="object"?d:{}
+}catch(e){return{}}
+}
+
+function saveStrategyTracking(d){
+localStorage.setItem(STRATEGY_TRACK_KEY,JSON.stringify(d))
+}
+
+function getTracking(symbol){
+return getStrategyTracking()[String(symbol||"").toUpperCase()]||null
+}
+
+function pushTrackingEvent(symbol,event){
+symbol=String(symbol||"").toUpperCase();
+if(!symbol)return;
+
+var all=getStrategyTracking();
+var item=all[symbol];
+
+if(!item){
+item={
+symbol,
+name:"",
+strategyType:"",
+strategyName:"",
+status:"追蹤中",
+events:[],
+createdAt:Date.now(),
+updatedAt:Date.now()
+}
+}
+
+if(!Array.isArray(item.events))item.events=[];
+
+item.events.unshift({
+type:event.type||"INFO",
+title:event.title||"",
+price:Number(event.price)||0,
+time:Date.now()
+});
+
+item.events=item.events.slice(0,60);
+item.updatedAt=Date.now();
+
+all[symbol]=item;
+saveStrategyTracking(all)
+}
+
+function createOrUpdateStrategyTracking(d,b,t,price,entered){
+var symbol=String(d.symbol||"").toUpperCase();
+if(!symbol)return;
+
+var all=getStrategyTracking();
+var old=all[symbol];
+
+if(!old){
+old={
+symbol,
+name:d.name||"",
+market:d.market||"",
+strategyType:b.type,
+strategyName:b.name,
+status:"追蹤中",
+entered:false,
+events:[],
+triggered:{},
+createdAt:Date.now(),
+updatedAt:Date.now()
+}
+}
+
+old.name=d.name||old.name||"";
+old.market=d.market||old.market||"";
+old.strategyType=b.type;
+old.strategyName=b.name;
+old.currentPrice=price;
+
+/* 進場、TP、SL 都依最新技術結構動態更新 */
+old.entryLow=t.entryLow;
+old.entryHigh=t.entryHigh;
+old.stop1=t.stop1;
+old.stop2=t.stop2;
+old.tp1=t.tp1;
+old.tp2=t.tp2;
+old.tp3=t.tp3;
+old.updatedAt=Date.now();
+
+if(!old.triggered)old.triggered={};
+if(!Array.isArray(old.events))old.events=[];
+
+if(entered&&!old.entered){
+old.entered=true;
+old.status="已進場觀察";
+old.entryTriggeredAt=Date.now();
+old.entryTriggeredPrice=price;
+
+old.events.unshift({
+type:"ENTRY",
+title:"🎯 進入 "+b.name+" 進場區｜"+fmt(t.entryLow)+"～"+fmt(t.entryHigh),
+price,
+time:Date.now()
+})
+}
+
+old.events=old.events.slice(0,60);
+all[symbol]=old;
+saveStrategyTracking(all)
+}
+
+function checkStrategyTracking(d,m,setups){
+if(!d||!d.symbol||!m||!setups)return;
+
+var symbol=String(d.symbol).toUpperCase();
+var all=getStrategyTracking();
+var track=all[symbol];
+
+if(!track||!track.entered)return;
+
+var type=track.strategyType;
+if(!setups[type])type=bestSetup(setups).type;
+
+var names={PULLBACK:"支撐回踩",HIGH_R:"高 R 突破",SURGE:"強勢續攻"};
+var t=strategyTargets(type,m);
+var price=Number(m.price)||Number(d.price)||0;
+
+if(!price)return;
+
+track.strategyType=type;
+track.strategyName=names[type]||track.strategyName;
+track.currentPrice=price;
+
+/* 動態調整策略價位 */
+track.entryLow=t.entryLow;
+track.entryHigh=t.entryHigh;
+track.stop1=t.stop1;
+track.stop2=t.stop2;
+track.tp1=t.tp1;
+track.tp2=t.tp2;
+track.tp3=t.tp3;
+track.updatedAt=Date.now();
+
+if(!track.triggered)track.triggered={};
+if(!Array.isArray(track.events))track.events=[];
+
+function trigger(key,title,status,kind){
+if(track.triggered[key])return;
+
+track.triggered[key]=Date.now();
+track.status=status;
+
+track.events.unshift({
+type:kind,
+title,
+price,
+time:Date.now()
+});
+
+systemNotification(
+"幽冥分析｜"+symbol+" "+key,
+(d.name||"")+"｜現價 "+fmt(price)+"｜"+title,
+symbol
+)
+}
+
+/* 先判斷較深的 SL */
+if(price<=t.stop2){
+trigger("SL2","🔴 觸及 SL2｜結構失效 "+fmt(t.stop2),"SL2","SL")
+}else if(price<=t.stop1){
+trigger("SL1","🛑 觸及 SL1｜第一停損 "+fmt(t.stop1),"SL1","SL")
+}else{
+/* 價格重新站回停損線上方後，未來新的策略循環仍可再次提醒 */
+if(price>t.stop1)delete track.triggered.SL1;
+if(price>t.stop2)delete track.triggered.SL2
+}
+
+/* TP 由高到低判斷 */
+if(price>=t.tp3){
+trigger("TP3","🔥 達到 TP3 "+fmt(t.tp3),"TP3","TP")
+}else if(price>=t.tp2){
+trigger("TP2","💰 達到 TP2 "+fmt(t.tp2),"TP2","TP")
+}else if(price>=t.tp1){
+trigger("TP1","💰 達到 TP1 "+fmt(t.tp1),"TP1","TP")
+}
+
+track.events=track.events.slice(0,60);
+all[symbol]=track;
+saveStrategyTracking(all)
+}
+
+function trackingHTML(d,m,setups){
+var x=getTracking(d.symbol);
+
+if(!x||!x.entered){
+return `
+<div class="big-section-title">🕘 策略追蹤紀錄</div>
+<div class="tracking-card">
+<div class="tracking-title">這檔股票的策略紀錄</div>
+<div class="tracking-sub">當系統偵測這檔股票進入策略進場區後，會開始記錄進場、TP1～TP3、SL1／SL2，策略價位會隨最新技術結構動態更新。</div>
+<div class="tracking-empty">目前還沒有這檔股票的進場追蹤紀錄。</div>
+</div>`
+}
+
+var events=Array.isArray(x.events)?x.events:[];
+
+return `
+<div class="big-section-title">🕘 策略追蹤紀錄</div>
+<div class="tracking-card">
+
+<div class="tracking-title">這檔股票的策略紀錄</div>
+<div class="tracking-sub">保留實際觸發時間；目前策略的進場、TP、SL 會依最新價格與技術結構動態更新。</div>
+
+<div class="tracking-current">
+<div class="tracking-current-head">
+<div class="tracking-current-name">${safe(x.strategyName||"策略追蹤")}</div>
+<div class="tracking-status">${safe(x.status||"追蹤中")}</div>
+</div>
+
+<div class="tracking-levels">
+目前市價：${fmt(m.price)}<br>
+最新進場：${fmt(x.entryLow)} ～ ${fmt(x.entryHigh)}<br>
+SL1：${fmt(x.stop1)}｜SL2：${fmt(x.stop2)}<br>
+TP1：${fmt(x.tp1)}｜TP2：${fmt(x.tp2)}｜TP3：${fmt(x.tp3)}
+</div>
+</div>
+
+${events.length?`
+<div class="tracking-list">
+${events.map(e=>{
+var cls=e.type==="TP"||e.type==="ENTRY"?"good":e.type==="SL"?"bad":"warn";
+return `
+<div class="tracking-event ${cls}">
+<div class="tracking-event-dot"></div>
+<div class="tracking-event-main">
+<div class="tracking-event-title">${safe(e.title)}${Number(e.price)?`｜當時市價 ${fmt(e.price)}`:""}</div>
+<div class="tracking-event-time">${dateTimeText(e.time)}</div>
+</div>
+</div>`
+}).join("")}
+</div>
+`:`<div class="tracking-empty">目前沒有事件紀錄。</div>`}
+
+</div>`
+}
+
+/* =========================
+   我的持倉 SL 通知
+========================= */
+
+function getHoldingSLState(){
+try{
+var d=JSON.parse(localStorage.getItem(HOLDING_SL_STATE_KEY)||"{}");
+return d&&typeof d==="object"?d:{}
+}catch(e){return{}}
+}
+
+function saveHoldingSLState(d){
+localStorage.setItem(HOLDING_SL_STATE_KEY,JSON.stringify(d))
+}
+
+function checkHoldingSLNotification(d,m,setups){
+if(!d||!d.symbol||!m||!setups)return;
+
+var symbol=String(d.symbol).toUpperCase();
+var p=getPosition(symbol);
+
+if(!p)return;
+
+var adj=adjustedPosition(p,d.market);
+if(!adj.entry||!adj.shares)return;
+
+var b=bestSetup(setups);
+var t=strategyTargets(b.type,m);
+var price=Number(m.price)||Number(d.price)||0;
+
+if(!price)return;
+
+var all=getHoldingSLState();
+var state=all[symbol]||{
+sl1:false,
+sl2:false
+};
+
+if(price<=t.stop2&&!state.sl2){
+state.sl2=true;
+state.sl1=true;
+
+var title="🔴 "+symbol+" 我的持倉觸及 SL2";
+var body=(d.name||"")+"｜成本 "+fmt(adj.entry)+"｜現價 "+fmt(price)+"｜SL2 "+fmt(t.stop2);
+
+systemNotification(title,body,symbol);
+showSimpleToast(symbol+" 持倉已觸及 SL2｜現價 "+fmt(price));
+
+pushTrackingEvent(symbol,{
+type:"SL",
+title:"🔴 我的持倉觸及 SL2｜成本 "+fmt(adj.entry)+"｜SL2 "+fmt(t.stop2),
+price
+})
+}else if(price<=t.stop1&&!state.sl1){
+state.sl1=true;
+
+var title1="🛑 "+symbol+" 我的持倉觸及 SL1";
+var body1=(d.name||"")+"｜成本 "+fmt(adj.entry)+"｜現價 "+fmt(price)+"｜SL1 "+fmt(t.stop1);
+
+systemNotification(title1,body1,symbol);
+showSimpleToast(symbol+" 持倉已觸及 SL1｜現價 "+fmt(price));
+
+pushTrackingEvent(symbol,{
+type:"SL",
+title:"🛑 我的持倉觸及 SL1｜成本 "+fmt(adj.entry)+"｜SL1 "+fmt(t.stop1),
+price
+})
+}
+
+/* 重新站回風險線上方後，未來再次跌破可重新提醒 */
+if(price>t.stop1)state.sl1=false;
+if(price>t.stop2)state.sl2=false;
+
+state.updatedAt=Date.now();
+state.stop1=t.stop1;
+state.stop2=t.stop2;
+state.price=price;
+
+all[symbol]=state;
+saveHoldingSLState(all)
+}
+
+/* =========================
+   回測原邏輯
+========================= */
+
 function historicalMetrics(rows,index){
 var history=rows.slice(Math.max(0,index-119),index+1);
 var current=history.at(-1)||{};
@@ -1473,6 +1813,14 @@ var t=el("strategyRecommendation");
 if(t)t.scrollIntoView({behavior:"smooth",block:"start"})
 }
 
+function scrollAnalysisTop(){
+window.scrollTo({top:0,behavior:"smooth"})
+}
+
+/* =========================
+   持倉分析
+========================= */
+
 function buildEntryStatusAnalysis(entry,shares,price,m,b,t,addPrice,secondAdd,a25,a50){
 if(!entry||!shares||!price)return"";
 
@@ -1618,7 +1966,7 @@ return `
 <div class="position-card">
 
 <div class="position-title">設定我的入場</div>
-<div class="position-desc">輸入你的實際平均入場價、持有數量與減資比例。資料只儲存在這台裝置。</div>
+<div class="position-desc">輸入你的實際平均入場價、持有數量與減資比例。資料只儲存在這台裝置。設定後系統會同步監控目前策略 SL1／SL2。</div>
 
 <div class="position-form">
 
@@ -1732,11 +2080,19 @@ return
 }
 
 savePosition(currentAnalysisData.symbol,{entry,lots,odd,capitalReduction});
+
+var states=getHoldingSLState();
+delete states[String(currentAnalysisData.symbol).toUpperCase()];
+saveHoldingSLState(states);
+
 buildAnalysis(currentAnalysisData)
 }
 }
 
-/* 策略卡 */
+/* =========================
+   策略卡
+========================= */
+
 function strategyHTML(type,setup,m){
 var names={PULLBACK:"支撐回踩",HIGH_R:"高 R 突破",SURGE:"強勢續攻"};
 var emojis={PULLBACK:"🟢",HIGH_R:"🟣",SURGE:"🔥"};
@@ -1750,21 +2106,62 @@ return reward<=0||risk<=0?"--":(reward/risk).toFixed(2)+"R"
 
 return `
 <div class="strategy-card">
+
 <div class="strategy-head">
-<div><div class="strategy-name">${emojis[type]} ${names[type]}</div><div class="strategy-grade">${grade}</div></div>
+<div>
+<div class="strategy-name">${emojis[type]} ${names[type]}</div>
+<div class="strategy-grade">${grade}</div>
+</div>
 <div class="strategy-score">${setup.score}<small>${setup.passed}/${setup.total} 條</small></div>
 </div>
 
 <div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">
+
+<div class="strategy-target-title">
 <div class="section-title">🎯 策略目標規劃</div>
+<div class="strategy-live-price"><span>目前市價</span>${fmt(m.price)}</div>
+</div>
+
 <div class="strategy-levels">
-<div class="strategy-level level-entry" style="grid-column:1/-1"><span>👀 觀察入場區間</span><strong>${fmt(t.entryLow)} ～ ${fmt(t.entryHigh)}</strong></div>
-<div class="strategy-level level-stop"><span>🛑 SL1｜第一停損</span><strong>${fmt(t.stop1)}</strong></div>
-<div class="strategy-level level-stop"><span>🛡 SL2｜第二停損</span><strong>${fmt(t.stop2)}</strong></div>
-<div class="strategy-level level-pressure" style="grid-column:1/-1"><span>🏔 前高／壓力</span><strong>${fmt(t.previousHigh)}</strong></div>
-<div class="strategy-level level-tp"><span>💰 TP1</span><strong>${fmt(t.tp1)}</strong><span class="rr-text">${rr(t.tp1,t.stop1)}</span></div>
-<div class="strategy-level level-tp"><span>💰 TP2</span><strong>${fmt(t.tp2)}</strong><span class="rr-text">${rr(t.tp2,t.stop1)}</span></div>
-<div class="strategy-level level-tp3" style="grid-column:1/-1"><span>🔥 TP3</span><strong>${fmt(t.tp3)}</strong><span class="rr-text">${rr(t.tp3,t.stop1)}</span></div>
+
+<div class="strategy-level level-entry" style="grid-column:1/-1">
+<span>👀 觀察入場區間</span>
+<strong>${fmt(t.entryLow)} ～ ${fmt(t.entryHigh)}</strong>
+</div>
+
+<div class="strategy-level level-stop">
+<span>🛑 SL1｜第一停損</span>
+<strong>${fmt(t.stop1)}</strong>
+</div>
+
+<div class="strategy-level level-stop">
+<span>🛡 SL2｜第二停損</span>
+<strong>${fmt(t.stop2)}</strong>
+</div>
+
+<div class="strategy-level level-pressure" style="grid-column:1/-1">
+<span>🏔 前高／壓力</span>
+<strong>${fmt(t.previousHigh)}</strong>
+</div>
+
+<div class="strategy-level level-tp">
+<span>💰 TP1</span>
+<strong>${fmt(t.tp1)}</strong>
+<span class="rr-text">${rr(t.tp1,t.stop1)}</span>
+</div>
+
+<div class="strategy-level level-tp">
+<span>💰 TP2</span>
+<strong>${fmt(t.tp2)}</strong>
+<span class="rr-text">${rr(t.tp2,t.stop1)}</span>
+</div>
+
+<div class="strategy-level level-tp3" style="grid-column:1/-1">
+<span>🔥 TP3</span>
+<strong>${fmt(t.tp3)}</strong>
+<span class="rr-text">${rr(t.tp3,t.stop1)}</span>
+</div>
+
 </div>
 </div>
 
@@ -1779,11 +2176,32 @@ ${x.pass?"✓":"✕"} ${i+1}. ${safe(x.title)}
 </div>`).join("")}
 </div>
 
-<div class="qualified-badge ${setup.qualified?"":"not-qualified"}">${setup.qualified?"✓ 目前技術條件符合此策略":"目前尚未完整符合此策略"}</div>
+<div class="qualified-badge ${setup.qualified?"":"not-qualified"}">
+${setup.qualified?"✓ 目前技術條件符合此策略":"目前尚未完整符合此策略"}
+</div>
+
+<div class="strategy-nav">
+<button type="button" class="strategy-nav-btn" data-strategy-top="1">↑ 返回最上層</button>
+<button type="button" class="strategy-nav-btn" data-strategy-home="1">⌂ 返回首頁</button>
+</div>
+
 </div>`
 }
 
-/* AI 即時詢問 */
+function bindStrategyNav(){
+document.querySelectorAll("[data-strategy-top]").forEach(b=>{
+b.onclick=scrollAnalysisTop
+});
+
+document.querySelectorAll("[data-strategy-home]").forEach(b=>{
+b.onclick=goBackHome
+})
+}
+
+/* =========================
+   AI 即時詢問
+========================= */
+
 function aiHTML(){
 return `
 <div class="big-section-title">💬 即時詢問分析</div>
@@ -1910,9 +2328,6 @@ ask()
 
 /* =========================
    首頁進場區通知
-   只在首頁顯示
-   一支股票一排
-   保留一小時
 ========================= */
 
 function getNotifyCooldown(){
@@ -1973,6 +2388,13 @@ if(!section||!box)return;
 
 var list=cleanHomeEntryAlerts();
 
+/* 只在首頁顯示 */
+if(el("homeView").classList.contains("hidden")){
+section.classList.add("hidden");
+box.innerHTML="";
+return
+}
+
 if(!list.length){
 section.classList.add("hidden");
 box.innerHTML="";
@@ -2029,19 +2451,8 @@ var id=symbol+"_"+b.type;
 
 var list=cleanHomeEntryAlerts();
 
-/* 同一股票同一策略在顯示中的一小時內只更新資料，不重複新增 */
-var existing=list.find(x=>x.id===id);
-
-if(existing){
-existing.name=d.name||existing.name||"";
-existing.price=price;
-existing.entryLow=t.entryLow;
-existing.entryHigh=t.entryHigh;
-existing.strategyName=b.name;
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
-renderHomeEntryAlerts();
-return false
-}
+/* 一支股票首頁只留一排 */
+list=list.filter(x=>String(x.symbol||"").toUpperCase()!==symbol);
 
 list.unshift({
 id,
@@ -2057,7 +2468,7 @@ createdAt:now,
 expiresAt:now+HOME_ENTRY_LIFETIME
 });
 
-localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list.slice(0,30)));
 renderHomeEntryAlerts();
 
 return true
@@ -2070,27 +2481,52 @@ var b=bestSetup(setups);
 var t=strategyTargets(b.type,m);
 var price=Number(m.price)||Number(d.price)||0;
 
-if(!price||price<t.entryLow||price>t.entryHigh)return;
+if(!price)return;
 
+var inside=price>=t.entryLow&&price<=t.entryHigh;
 var key=String(d.symbol).toUpperCase()+"_"+b.type;
 
-/* 如果首頁已經有這一則，就只更新價格，不重複新增 */
+/* 持續更新追蹤中的動態 TP / SL */
+checkStrategyTracking(d,m,setups);
+checkHoldingSLNotification(d,m,setups);
+
+if(!inside)return;
+
 var existing=getHomeEntryAlerts().find(x=>{
-return x.id===key&&Number(x.expiresAt)>Date.now()
+return String(x.symbol||"").toUpperCase()===String(d.symbol||"").toUpperCase()&&Number(x.expiresAt)>Date.now()
 });
 
 if(existing){
-addHomeEntryAlert(d,b,t,price);
+existing.price=price;
+existing.entryLow=t.entryLow;
+existing.entryHigh=t.entryHigh;
+existing.strategyName=b.name;
+
+var list=getHomeEntryAlerts().map(x=>x.id===existing.id?existing:x);
+localStorage.setItem(HOME_ENTRY_KEY,JSON.stringify(list));
+renderHomeEntryAlerts();
+
+createOrUpdateStrategyTracking(d,b,t,price,true);
 return
 }
 
 if(!canNotify(key))return;
 
 markNotified(key);
-addHomeEntryAlert(d,b,t,price)
+addHomeEntryAlert(d,b,t,price);
+createOrUpdateStrategyTracking(d,b,t,price,true);
+
+systemNotification(
+"🎯 "+d.symbol+" 進入策略進場區",
+(d.name||"")+"｜"+b.name+"｜現價 "+fmt(price)+"｜進場 "+fmt(t.entryLow)+"～"+fmt(t.entryHigh),
+d.symbol
+)
 }
 
-/* 個股資料 */
+/* =========================
+   個股資料
+========================= */
+
 async function fetchStockData(symbol){
 var r=await fetch("/api/stock?symbol="+encodeURIComponent(symbol)+"&t="+Date.now(),{cache:"no-store"});
 var d=await r.json();
@@ -2105,6 +2541,7 @@ if(!symbol)return;
 saveSearchHistory(symbol);
 el("searchSuggest").classList.add("hidden");
 el("homeView").classList.add("hidden");
+renderHomeEntryAlerts();
 
 var view=el("analysisView");
 view.classList.remove("hidden","swiping-back","swipe-return");
@@ -2165,10 +2602,9 @@ currentBacktests=backtests;
 
 d.price=m.price;
 
-/*
-個股頁不跳進場通知。
-首頁的自選與市場雷達會負責偵測。
-*/
+/* 個股頁也持續檢查已存在的 TP / SL 與我的持倉 SL */
+checkStrategyTracking(d,m,setups);
+checkHoldingSLNotification(d,m,setups);
 
 var price=m.price;
 var change=Number(d.changePercent);
@@ -2216,6 +2652,8 @@ ${[
 
 ${buildPositionAnalysis(d,m,setups)}
 
+${trackingHTML(d,m,setups)}
+
 ${aiHTML()}
 
 ${recommendationHTML(setups)}
@@ -2244,12 +2682,15 @@ ${strategyHTML("SURGE",setups.SURGE,m)}
 <div class="data-note">
 365 天回測使用 API 實際提供的歷史 K 線。
 策略會先觀察至少一個月，滿 30 天後才依勝率與樣本數判斷是否在頁面顯示修正警告。
-不會跳出回測警告視窗。
+進場區、TP、SL 會依最新價格與技術結構重新計算。
+已觸發的進場、TP、SL 事件會保留在策略追蹤紀錄。
+我的持倉若觸及目前策略 SL1／SL2，系統會另外發出持倉風險提醒。
 減資調整、策略回測、推薦分數、AI 即時詢問、持倉與加碼分析均為技術條件統計與風險試算，不代表未來報酬。
 </div>
 `;
 
 bindStrategyJumps();
+bindStrategyNav();
 bindPositionControls();
 bindAI();
 
@@ -2262,7 +2703,10 @@ if(rb)rb.onclick=returnToRecommendation;
 updateFavoriteButton()
 }
 
-/* 返回 */
+/* =========================
+   返回
+========================= */
+
 function goBackHome(){
 currentAnalysisSymbol="";
 
@@ -2345,7 +2789,10 @@ view.addEventListener("touchend",finish,{passive:true});
 view.addEventListener("touchcancel",finish,{passive:true})
 })();
 
-/* 雷達 */
+/* =========================
+   雷達
+========================= */
+
 async function loadRadar(){
 try{
 var r=await fetch("/api/radar?t="+Date.now(),{cache:"no-store"});
@@ -2394,6 +2841,63 @@ var v=volumeMetrics(stock,stock.rows||[]);
 var setups=buildStrategySetups(stock,m,v);
 checkEntryNotification(stock,m,setups)
 }catch(e){}
+}
+}
+
+/* 持倉即使沒有加入自選，也會在首頁更新週期檢查 SL */
+async function refreshPositionMonitoring(){
+var positions=getPositions();
+var symbols=Object.keys(positions);
+
+if(!symbols.length)return;
+
+for(var i=0;i<symbols.length;i++){
+try{
+var symbol=symbols[i];
+var p=positions[symbol];
+
+if(!p||(!Number(p.entry)))continue;
+
+var stock=await fetchStockData(symbol);
+var m=marketOf(stock);
+var v=volumeMetrics(stock,stock.rows||[]);
+var setups=buildStrategySetups(stock,m,v);
+
+checkStrategyTracking(stock,m,setups);
+checkHoldingSLNotification(stock,m,setups)
+}catch(e){}
+}
+}
+
+async function refreshWatchlistPrices(){
+var list=getWatchlist();
+if(!list.length)return;
+
+var changed=false;
+
+for(var i=0;i<list.length;i++){
+try{
+var d=await fetchStockData(list[i].symbol);
+var m=marketOf(d);
+
+list[i].price=m.price;
+list[i].name=d.name||list[i].name;
+list[i].market=d.market||list[i].market;
+
+if(Number.isFinite(Number(d.changePercent)))list[i].changePercent=Number(d.changePercent);
+
+changed=true;
+
+var v=volumeMetrics(d,d.rows||[]);
+var setups=buildStrategySetups(d,m,v);
+
+checkEntryNotification(d,m,setups)
+}catch(e){}
+}
+
+if(changed){
+localStorage.setItem(WATCH_KEY,JSON.stringify(list));
+renderWatchlist()
 }
 }
 
@@ -2454,7 +2958,10 @@ wb.textContent=expanded.watch?"全部收起":"全部打開"
 }
 }
 
-/* 控制 */
+/* =========================
+   控制
+========================= */
+
 document.querySelectorAll("[data-example]").forEach(b=>{
 b.onclick=()=>{
 el("searchInput").value=b.dataset.example;
@@ -2519,7 +3026,8 @@ el("updateText").textContent="正在重新掃描市場…";
 
 try{
 await loadRadar();
-await refreshWatchlistPrices()
+await refreshWatchlistPrices();
+await refreshPositionMonitoring()
 }catch(e){
 el("updateText").textContent="重新掃描失敗："+e.message
 }finally{
@@ -2542,28 +3050,44 @@ el("twTab").classList.remove("active");
 el("usTab").classList.add("active")
 };
 
-el("notifyButton").onclick=()=>{
+/* 點通知按鈕：
+   第一次要求手機通知權限
+   已允許時顯示目前提醒數量 */
+el("notifyButton").onclick=async()=>{
+if("Notification" in window&&Notification.permission!=="granted"){
+await requestNotificationPermission();
+return
+}
+
 renderHomeEntryAlerts();
 
 var list=cleanHomeEntryAlerts();
 
 if(list.length){
-showSimpleToast("目前有 "+list.length+" 檔股票進入策略觀察區")
+showSimpleToast("手機通知已開啟｜目前有 "+list.length+" 檔進場提醒")
 }else{
-showSimpleToast("目前沒有新的進場區提醒")
+showSimpleToast("手機通知已開啟｜目前沒有新的進場區提醒")
 }
 };
 
 function showSimpleToast(text){
 var stack=el("toastStack");
+if(!stack)return;
+
 var n=document.createElement("div");
 n.className="entry-toast";
 n.innerHTML='<div class="entry-toast-badge">幽冥分析</div><div class="entry-toast-title">'+safe(text)+'</div>';
+
 stack.prepend(n);
+
 setTimeout(()=>n.remove(),2500)
 }
 
 el("backButton").onclick=goBackHome;
+
+/* =========================
+   定時更新
+========================= */
 
 /* 首頁雷達 60 秒 */
 setInterval(()=>{
@@ -2571,9 +3095,11 @@ countdownSeconds--;
 
 if(countdownSeconds<=0){
 countdownSeconds=60;
+
 if(!document.hidden){
 loadRadar();
-refreshWatchlistPrices()
+refreshWatchlistPrices();
+refreshPositionMonitoring()
 }
 }
 
@@ -2604,17 +3130,24 @@ if(currentAnalysisSymbol){
 refreshCurrentAnalysis()
 }else{
 loadRadar();
-refreshWatchlistPrices()
+refreshWatchlistPrices();
+refreshPositionMonitoring()
 }
 }
 });
+
+/* =========================
+   啟動
+========================= */
 
 renderSearchHistory();
 renderWatchlist();
 renderHomeEntryAlerts();
 syncMoreButtons();
+
 loadRadar();
 refreshWatchlistPrices();
+refreshPositionMonitoring();
 </script>
 
 </body>
