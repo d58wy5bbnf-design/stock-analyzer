@@ -220,6 +220,63 @@ color:#777d79;font-size:11px;line-height:1.7;text-align:center
 .strategy-level{border:1px solid #242925;background:#080b09;border-radius:13px;padding:11px}
 .strategy-level span{display:block;font-size:10px;font-weight:800;color:#7f8681}
 .strategy-level strong{display:block;font-size:19px;font-weight:950;margin-top:5px}
+
+/* 現價顯示：只新增這個樣式，其餘策略樣式不動 */
+.level-current{
+grid-column:1/-1;
+border-color:#344139;
+background:linear-gradient(135deg,#111713,#090d0b);
+padding:13px 14px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:14px;
+position:relative;
+overflow:hidden
+}
+.level-current:before{
+content:"";
+position:absolute;
+left:0;
+top:0;
+bottom:0;
+width:3px;
+background:var(--green)
+}
+.level-current-info{min-width:0}
+.level-current-label{
+display:flex!important;
+align-items:center;
+gap:6px;
+font-size:10px!important;
+font-weight:950!important;
+letter-spacing:.45px;
+color:#9ba59f!important
+}
+.level-current-dot{
+width:6px;
+height:6px;
+border-radius:50%;
+background:var(--green);
+box-shadow:0 0 10px rgba(69,224,173,.55);
+flex:0 0 auto
+}
+.level-current-sub{
+display:block;
+font-size:9px;
+color:#626b66;
+font-weight:700;
+margin-top:4px
+}
+.level-current strong{
+font-size:25px;
+line-height:1;
+margin:0;
+color:#f7faf8;
+letter-spacing:-.5px;
+white-space:nowrap
+}
+
 .level-entry{border-color:#28493c}.level-entry strong{color:#a6ead3}
 .level-stop{border-color:#512b30}.level-stop strong{color:#ff8d97}
 .level-pressure,.level-tp{border-color:#554a24}.level-pressure strong,.level-tp strong{color:#ffc85a}
@@ -1553,6 +1610,17 @@ var targetBlock=`
 <div class="section-title">🎯 策略目標規劃</div>
 
 <div class="strategy-levels">
+
+<div class="strategy-level level-current">
+<div class="level-current-info">
+<span class="level-current-label">
+<i class="level-current-dot"></i>
+CURRENT PRICE｜現在的價格
+</span>
+<small class="level-current-sub">目前市場價格</small>
+</div>
+<strong>${fmt(m.price)}</strong>
+</div>
 
 <div class="strategy-level level-entry" style="grid-column:1/-1">
 <span>👀 觀察入場區間</span>
