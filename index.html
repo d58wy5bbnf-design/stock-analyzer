@@ -158,21 +158,14 @@ color:#777d79;font-size:11px;line-height:1.7;text-align:center
 .add-plan-box.yellow{border-color:#554a24;background:#151206}
 .add-plan-box.yellow strong{color:#ffc85a}
 
-.entry-analysis{
-margin-top:15px;
-padding-top:14px;
-border-top:1px solid #202522
-}
+.entry-analysis{margin-top:15px;padding-top:14px;border-top:1px solid #202522}
 .entry-analysis-title{font-size:15px;font-weight:950}
 .entry-analysis-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px}
 .entry-analysis-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
 .entry-analysis-box{border:1px solid #252b27;background:#080b09;border-radius:12px;padding:10px}
 .entry-analysis-box span{display:block;font-size:9px;color:#777d79}
 .entry-analysis-box strong{display:block;font-size:16px;margin-top:5px}
-.entry-status{
-margin-top:10px;border:1px solid #292e2b;background:#0b0e0c;
-border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb
-}
+.entry-status{margin-top:10px;border:1px solid #292e2b;background:#0b0e0c;border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb}
 .entry-status.good{border-color:#28513f;background:#0a1611}
 .entry-status.warn{border-color:#594a24;background:#161206}
 .entry-status.bad{border-color:#5a292f;background:#180c0e}
@@ -245,7 +238,6 @@ border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb
 @media(min-width:900px){
 .app{width:min(100%,1440px);padding-left:28px;padding-right:28px}
 }
-
 @media(max-width:430px){
 .app{padding-left:max(11px,calc(env(safe-area-inset-left) + 11px));padding-right:max(11px,calc(env(safe-area-inset-right) + 11px));padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))}
 .logo{font-size:22px}
@@ -327,28 +319,19 @@ border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb
 </div>
 
 <div class="section-head">
-<div>
-<div class="section-title">🎯 自動偵測符合策略股票</div>
-<div class="section-sub">母版本策略掃描結果</div>
-</div>
+<div><div class="section-title">🎯 自動偵測符合策略股票</div><div class="section-sub">母版本策略掃描結果</div></div>
 <button class="more-btn" data-more="strategy">全部收起</button>
 </div>
 <div id="strategyGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div>
-<div class="section-title">🟢 做多觀察</div>
-<div class="section-sub">趨勢與位置較適合持續觀察</div>
-</div>
+<div><div class="section-title">🟢 做多觀察</div><div class="section-sub">趨勢與位置較適合持續觀察</div></div>
 <button class="more-btn" data-more="long">全部收起</button>
 </div>
 <div id="longGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div>
-<div class="section-title">⚡ 市場異動雷達</div>
-<div class="section-sub">價格與成交量異動</div>
-</div>
+<div><div class="section-title">⚡ 市場異動雷達</div><div class="section-sub">價格與成交量異動</div></div>
 <button class="more-btn" data-more="radar">全部收起</button>
 </div>
 <div id="radarGrid" class="stock-grid"></div>
@@ -357,10 +340,7 @@ border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb
 
 <div id="usMarket" class="hidden">
 <div class="section-head">
-<div>
-<div class="section-title">🇺🇸 美股最近分析</div>
-<div class="section-sub">搜尋過的美股會顯示在這裡</div>
-</div>
+<div><div class="section-title">🇺🇸 美股最近分析</div><div class="section-sub">搜尋過的美股會顯示在這裡</div></div>
 </div>
 <div id="usRecentGrid" class="stock-grid"></div>
 </div>
@@ -394,13 +374,7 @@ var radarData=null;
 var currentMarketMetrics=null;
 var currentSetups=null;
 
-var expanded={
-watch:true,
-strategy:true,
-long:true,
-radar:true
-};
-
+var expanded={watch:true,strategy:true,long:true,radar:true};
 var countdownSeconds=60;
 
 function el(id){return document.getElementById(id)}
@@ -469,7 +443,6 @@ function renderSearchHistory(){
 var box=el("searchHistory");
 var list=el("searchHistoryList");
 if(!box||!list)return;
-
 var h=getSearchHistory();
 
 if(!h.length){
@@ -641,11 +614,13 @@ function historicalRSI(rows,period=14){
 if(rows.length<period+1)return 50;
 var a=rows.slice(-(period+1));
 var gain=0,loss=0;
+
 for(var i=1;i<a.length;i++){
 var diff=Number(a[i].close)-Number(a[i-1].close);
 if(diff>0)gain+=diff;
 else loss+=Math.abs(diff)
 }
+
 var ag=gain/period;
 var al=loss/period;
 if(al===0)return 100;
@@ -663,11 +638,13 @@ function historicalATR(rows,period=14){
 if(rows.length<2)return 0;
 var a=rows.slice(-(period+1));
 var trs=[];
+
 for(var i=1;i<a.length;i++){
 var h=Number(a[i].high),l=Number(a[i].low),pc=Number(a[i-1].close);
 var tr=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));
 if(Number.isFinite(tr))trs.push(tr)
 }
+
 return average(trs)||0
 }
 
@@ -727,8 +704,10 @@ return{current,average20,ratio,level}
 function structureHealthy(m){
 var rows=m.rows||[];
 if(rows.length<10)return true;
+
 var c=rows.slice(-5).map(x=>Number(x.close)).filter(Number.isFinite);
 if(c.length<3)return true;
+
 return c.at(-1)>=c[0]*.96&&m.price>=m.ma60*.97
 }
 
@@ -778,15 +757,6 @@ return{conditions:a,passed,total:a.length,score:Math.round(passed/a.length*100),
 return{PULLBACK:pack(pull),HIGH_R:pack(high),SURGE:pack(surge)}
 }
 
-/*
-==================================================
-唯一修改區域：
-修正「目前市價低於系統建議進場價」問題。
-
-原本所有策略、TP、SL、回測與頁面功能都保留。
-只把策略進場區間限制在目前市價以下或等於目前市價。
-==================================================
-*/
 function strategyTargets(type,m){
 var price=Number(m.price)||0;
 var atr=Math.max(Number(m.atr)||price*.02,price*.005);
@@ -802,9 +772,7 @@ if(type==="PULLBACK"){
 entryLow=Math.max(ma20-atr*.25,support);
 entryHigh=Math.min(price+atr*.15,ma20+atr*.45);
 
-if(entryHigh<entryLow){
-entryHigh=entryLow+atr*.25
-}
+if(entryHigh<entryLow)entryHigh=entryLow+atr*.25;
 
 stop1=Math.min(entryLow-atr*.55,support-atr*.25);
 stop2=Math.min(ma60-atr*.35,low10-atr*.3,stop1-atr*.6)
@@ -814,9 +782,7 @@ stop2=Math.min(ma60-atr*.35,low10-atr*.3,stop1-atr*.6)
 entryLow=Math.max(resistance-atr*.12,price-atr*.1);
 entryHigh=Math.max(resistance+atr*.18,price+atr*.1);
 
-if(entryHigh<entryLow){
-entryHigh=entryLow+atr*.3
-}
+if(entryHigh<entryLow)entryHigh=entryLow+atr*.3;
 
 stop1=Math.min(resistance-atr*.55,entryLow-atr*.45);
 stop2=Math.min(ma20-atr*.35,low10-atr*.25,stop1-atr*.65)
@@ -826,51 +792,49 @@ stop2=Math.min(ma20-atr*.35,low10-atr*.25,stop1-atr*.65)
 entryLow=Math.max(price-atr*.18,ma20);
 entryHigh=price+atr*.28;
 
-if(entryHigh<entryLow){
-entryHigh=entryLow+atr*.3
-}
+if(entryHigh<entryLow)entryHigh=entryLow+atr*.3;
 
 stop1=Math.min(price-atr*.9,low10-atr*.15);
 stop2=Math.min(ma20-atr*.45,low10-atr*.4,stop1-atr*.65)
 }
 
-entryLow=Math.max(entryLow,price*.5);
+/* 修正現價／進場價：進場區不得高於目前市價 */
+var rawEntryLow=entryLow;
 
-/*
-關鍵修正：
-任何股票的「觀察入場區間」都不能高於目前市價。
-不去動原本策略成立條件，也不去刪 TP / SL。
-*/
 if(price>0){
-
+if(rawEntryLow>price){
+entryLow=Math.max(price-atr*.25,price*.5);
+entryHigh=price
+}else{
 entryHigh=Math.min(entryHigh,price);
-entryLow=Math.min(entryLow,entryHigh);
-
-if(entryLow<=0){
-entryLow=Math.max(price-atr*.5,price*.5)
+entryLow=Math.min(entryLow,entryHigh)
 }
 
-if(entryLow>price){
-entryLow=price
+if(!Number.isFinite(entryLow)||entryLow<=0){
+entryLow=Math.max(price-atr*.25,price*.5)
 }
 
-if(entryHigh>price){
+if(!Number.isFinite(entryHigh)||entryHigh<=0){
 entryHigh=price
 }
 
-if(entryHigh<entryLow){
-entryHigh=entryLow
-}
+entryLow=Math.max(entryLow,price*.5);
+entryHigh=Math.min(entryHigh,price);
 
+if(entryLow>entryHigh){
+entryLow=Math.max(price-atr*.25,price*.5);
+entryHigh=price
+}
 }
 
 var center=(entryLow+entryHigh)/2;
 
-if(stop1>=center){
+/* SL1、SL2 永遠保留在進場區下方 */
+if(!Number.isFinite(stop1)||stop1>=center){
 stop1=center-atr*.8
 }
 
-if(stop2>=stop1){
+if(!Number.isFinite(stop2)||stop2>=stop1){
 stop2=stop1-atr*.7
 }
 
@@ -1307,34 +1271,23 @@ var statusText="";
 if(price>=entry&&trendBull&&aboveMA20&&aboveMA60){
 statusClass="good";
 statusTitle="🟢 目前在成本之上，多頭結構仍完整";
-statusText=
-"目前股價高於你的平均進場價，同時 MA20 高於 MA60，價格也維持在主要均線之上。"+
-"目前不屬於攤平狀態；若要增加部位，比較接近順勢加碼，仍應等待回踩或策略訊號確認。";
+statusText="目前股價高於你的平均進場價，同時 MA20 高於 MA60，價格也維持在主要均線之上。目前不屬於攤平狀態；若要增加部位，比較接近順勢加碼，仍應等待回踩或策略訊號確認。";
 }else if(price>=entry){
 statusClass="warn";
 statusTitle="🟡 目前仍在成本之上，但結構需要觀察";
-statusText=
-"目前股價仍高於你的平均進場價，但短中期均線結構沒有同時維持在最強狀態。"+
-"目前重點不是降低均價，而是觀察 MA20、MA60 與 SL1 是否守住。";
+statusText="目前股價仍高於你的平均進場價，但短中期均線結構沒有同時維持在最強狀態。目前重點不是降低均價，而是觀察 MA20、MA60 與 SL1 是否守住。";
 }else if(price<entry&&aboveSL1&&trendBull&&aboveMA60){
 statusClass=b.setup.score>=75?"good":"warn";
-statusTitle=b.setup.score>=75
-?"🟢 目前低於成本，但多頭結構尚未失效"
-:"🟡 目前套牢，結構尚在但策略強度普通";
-statusText=
-"目前股價低於你的平均成本，但仍高於 SL1，且 MA20 仍高於 MA60。"+
-"原本多頭結構尚未明顯失效。若考慮降低均價，應以系統計算的第一、第二加碼觀察價分批評估，而不是單純因為套牢就補倉。";
+statusTitle=b.setup.score>=75?"🟢 目前低於成本，但多頭結構尚未失效":"🟡 目前套牢，結構尚在但策略強度普通";
+statusText="目前股價低於你的平均成本，但仍高於 SL1，且 MA20 仍高於 MA60。原本多頭結構尚未明顯失效。若考慮降低均價，應以系統計算的第一、第二加碼觀察價分批評估，而不是單純因為套牢就補倉。";
 }else if(price<entry&&aboveSL2){
 statusClass="warn";
 statusTitle="🟡 已接近風險區，暫停積極攤平";
-statusText=
-"目前價格已低於成本，且接近或跌破第一停損區。雖然尚未跌破 SL2，但結構風險已提高。"+
-"此區應優先觀察是否重新站回支撐與 MA20，而不是繼續快速增加部位。";
+statusText="目前價格已低於成本，且接近或跌破第一停損區。雖然尚未跌破 SL2，但結構風險已提高。此區應優先觀察是否重新站回支撐與 MA20，而不是繼續快速增加部位。";
 }else{
 statusClass="bad";
 statusTitle="🔴 已進入結構失效區，不適合繼續攤平";
-statusText=
-"目前價格已接近或跌破第二停損／結構失效區。此時再買雖然能降低帳面均價，但同時會增加弱勢部位與總風險。";
+statusText="目前價格已接近或跌破第二停損／結構失效區。此時再買雖然能降低帳面均價，但同時會增加弱勢部位與總風險。";
 }
 
 var road=[];
@@ -1351,67 +1304,20 @@ var roadText=road.length
 
 return `
 <div class="entry-analysis">
-
 <div class="entry-analysis-title">📊 我的進場現況分析</div>
-
-<div class="entry-analysis-sub">
-依照你的實際平均進場價、目前股價、均線、策略與停損結構即時計算。
-</div>
+<div class="entry-analysis-sub">依照你的實際平均進場價、目前股價、均線、策略與停損結構即時計算。</div>
 
 <div class="entry-analysis-grid">
-
-<div class="entry-analysis-box">
-<span>我的進場均價</span>
-<strong>${fmt(entry)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>目前股價</span>
-<strong>${fmt(price)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>距離我的成本</span>
-<strong class="${pclass(costDiff)}">${pct(costDiff)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>${price<entry?"回本需要上漲":"高於成本"}</span>
-<strong class="${price<entry?"up":"down"}">
-${price<entry?fmt(Math.max(0,recoverPct),2)+"%":fmt(Math.max(0,costDiff),2)+"%"}
-</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>目前最佳策略</span>
-<strong>${safe(b.name)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>策略符合度</span>
-<strong>${b.setup.score} 分</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>MA20</span>
-<strong class="${aboveMA20?"down":"up"}">${fmt(m.ma20)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>MA60</span>
-<strong class="${aboveMA60?"down":"up"}">${fmt(m.ma60)}</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>距離 SL1</span>
-<strong class="${aboveSL1?"down":"up"}">${fmt(distanceSL1,2)}%</strong>
-</div>
-
-<div class="entry-analysis-box">
-<span>距離 SL2</span>
-<strong class="${aboveSL2?"down":"up"}">${fmt(distanceSL2,2)}%</strong>
-</div>
-
+<div class="entry-analysis-box"><span>我的進場均價</span><strong>${fmt(entry)}</strong></div>
+<div class="entry-analysis-box"><span>目前股價</span><strong>${fmt(price)}</strong></div>
+<div class="entry-analysis-box"><span>距離我的成本</span><strong class="${pclass(costDiff)}">${pct(costDiff)}</strong></div>
+<div class="entry-analysis-box"><span>${price<entry?"回本需要上漲":"高於成本"}</span><strong class="${price<entry?"up":"down"}">${price<entry?fmt(Math.max(0,recoverPct),2)+"%":fmt(Math.max(0,costDiff),2)+"%"}</strong></div>
+<div class="entry-analysis-box"><span>目前最佳策略</span><strong>${safe(b.name)}</strong></div>
+<div class="entry-analysis-box"><span>策略符合度</span><strong>${b.setup.score} 分</strong></div>
+<div class="entry-analysis-box"><span>MA20</span><strong class="${aboveMA20?"down":"up"}">${fmt(m.ma20)}</strong></div>
+<div class="entry-analysis-box"><span>MA60</span><strong class="${aboveMA60?"down":"up"}">${fmt(m.ma60)}</strong></div>
+<div class="entry-analysis-box"><span>距離 SL1</span><strong class="${aboveSL1?"down":"up"}">${fmt(distanceSL1,2)}%</strong></div>
+<div class="entry-analysis-box"><span>距離 SL2</span><strong class="${aboveSL2?"down":"up"}">${fmt(distanceSL2,2)}%</strong></div>
 </div>
 
 <div class="entry-status ${statusClass}">
@@ -1467,12 +1373,8 @@ var t=strategyTargets(b.type,m);
 
 var riskLine=t.stop1;
 var deepRisk=t.stop2;
-var addPrice=t.entryLow;
-var secondAdd=Math.max(deepRisk,Math.min(m.ma20,t.entryHigh));
-
-/* 加碼觀察價同樣不能高於現價 */
-addPrice=Math.min(addPrice,price);
-secondAdd=Math.min(secondAdd,price);
+var addPrice=Math.min(t.entryLow,price);
+var secondAdd=Math.min(Math.max(deepRisk,Math.min(m.ma20,t.entryHigh)),price);
 
 var structureGood=m.ma20>m.ma60&&price>=m.ma60*.97;
 var setupStrong=b.setup.score>=75;
@@ -1527,11 +1429,7 @@ return `
 <div class="position-card">
 
 <div class="position-title">設定我的入場</div>
-
-<div class="position-desc">
-輸入你的實際平均入場價、張數與零股。
-資料只儲存在這台裝置。
-</div>
+<div class="position-desc">輸入你的實際平均入場價、張數與零股。資料只儲存在這台裝置。</div>
 
 <div class="position-form">
 
@@ -1557,43 +1455,16 @@ return `
 
 ${entry&&shares?`
 <div class="position-summary-grid">
-
-<div class="position-summary">
-<span>總持有數量</span>
-<strong>${st(shares)}</strong>
-</div>
-
-<div class="position-summary">
-<span>我的平均成本</span>
-<strong>${fmt(entry)}</strong>
-</div>
-
-<div class="position-summary">
-<span>目前股價</span>
-<strong>${fmt(price)}</strong>
-</div>
-
-<div class="position-summary">
-<span>目前損益</span>
-<strong class="${pclass(pnl)}">${pnl>=0?"+":""}${fmt(pnl,0)}</strong>
-</div>
-
-<div class="position-summary">
-<span>報酬率</span>
-<strong class="${pclass(pnlPct)}">${pct(pnlPct)}</strong>
-</div>
-
-<div class="position-summary">
-<span>目前最佳策略</span>
-<strong>${safe(b.name)} ${b.setup.score}分</strong>
-</div>
-
+<div class="position-summary"><span>總持有數量</span><strong>${st(shares)}</strong></div>
+<div class="position-summary"><span>我的平均成本</span><strong>${fmt(entry)}</strong></div>
+<div class="position-summary"><span>目前股價</span><strong>${fmt(price)}</strong></div>
+<div class="position-summary"><span>目前損益</span><strong class="${pclass(pnl)}">${pnl>=0?"+":""}${fmt(pnl,0)}</strong></div>
+<div class="position-summary"><span>報酬率</span><strong class="${pclass(pnlPct)}">${pct(pnlPct)}</strong></div>
+<div class="position-summary"><span>目前最佳策略</span><strong>${safe(b.name)} ${b.setup.score}分</strong></div>
 </div>`:""}
 
 <div class="position-risk ${riskClass}">
-<div class="position-risk-title">
-${riskClass==="good"?"🟢 加碼條件尚可":riskClass==="bad"?"🔴 目前不宜攤平":"🟡 等待更好條件"}
-</div>
+<div class="position-risk-title">${riskClass==="good"?"🟢 加碼條件尚可":riskClass==="bad"?"🔴 目前不宜攤平":"🟡 等待更好條件"}</div>
 ${safe(decision)}
 </div>
 
@@ -1603,51 +1474,17 @@ ${entry&&shares?`
 <div class="add-plan-title">📍 可以再加買的位置</div>
 
 <div class="add-plan-grid">
-
-<div class="add-plan-box green">
-<span>第一加碼觀察價</span>
-<strong>${fmt(addPrice)}</strong>
-</div>
-
-<div class="add-plan-box">
-<span>第二加碼觀察價</span>
-<strong>${fmt(secondAdd)}</strong>
-</div>
-
-<div class="add-plan-box yellow">
-<span>SL1｜停止攤平</span>
-<strong>${fmt(riskLine)}</strong>
-</div>
-
-<div class="add-plan-box yellow">
-<span>SL2｜結構失效</span>
-<strong>${fmt(deepRisk)}</strong>
-</div>
-
+<div class="add-plan-box green"><span>第一加碼觀察價</span><strong>${fmt(addPrice)}</strong></div>
+<div class="add-plan-box"><span>第二加碼觀察價</span><strong>${fmt(secondAdd)}</strong></div>
+<div class="add-plan-box yellow"><span>SL1｜停止攤平</span><strong>${fmt(riskLine)}</strong></div>
+<div class="add-plan-box yellow"><span>SL2｜結構失效</span><strong>${fmt(deepRisk)}</strong></div>
 </div>
 
 <div class="position-summary-grid">
-
-<div class="position-summary">
-<span>第一批參考數量｜25%</span>
-<strong>${st(a25)}</strong>
-</div>
-
-<div class="position-summary">
-<span>第一批買後新均價</span>
-<strong>${avg25!==null?fmt(avg25):"--"}</strong>
-</div>
-
-<div class="position-summary">
-<span>第二批參考數量｜50%</span>
-<strong>${st(a50)}</strong>
-</div>
-
-<div class="position-summary">
-<span>第二批買後新均價</span>
-<strong>${avg50!==null?fmt(avg50):"--"}</strong>
-</div>
-
+<div class="position-summary"><span>第一批參考數量｜25%</span><strong>${st(a25)}</strong></div>
+<div class="position-summary"><span>第一批買後新均價</span><strong>${avg25!==null?fmt(avg25):"--"}</strong></div>
+<div class="position-summary"><span>第二批參考數量｜50%</span><strong>${st(a50)}</strong></div>
+<div class="position-summary"><span>第二批買後新均價</span><strong>${avg50!==null?fmt(avg50):"--"}</strong></div>
 </div>
 
 ${buildEntryStatusAnalysis(entry,shares,price,m,b,t,addPrice,secondAdd,a25,a50)}
@@ -1688,6 +1525,7 @@ buildAnalysis(currentAnalysisData)
 }
 }
 
+/* SL1 / SL2 / TP1 / TP2 / TP3 永遠顯示 */
 function strategyHTML(type,setup,m){
 var names={
 PULLBACK:"支撐回踩",
@@ -1710,7 +1548,7 @@ var risk=t.center-stop;
 return reward<=0||risk<=0?"--":(reward/risk).toFixed(2)+"R"
 }
 
-var targetBlock=setup.qualified?`
+var targetBlock=`
 <div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">
 <div class="section-title">🎯 策略目標規劃</div>
 
@@ -1722,12 +1560,12 @@ var targetBlock=setup.qualified?`
 </div>
 
 <div class="strategy-level level-stop">
-<span>🛑 SL1｜第一停損</span>
+<span>🛑 SL1｜第一止損</span>
 <strong>${fmt(t.stop1)}</strong>
 </div>
 
 <div class="strategy-level level-stop">
-<span>🛡 SL2｜第二停損</span>
+<span>🛡 SL2｜第二止損</span>
 <strong>${fmt(t.stop2)}</strong>
 </div>
 
@@ -1754,13 +1592,6 @@ var targetBlock=setup.qualified?`
 <span class="rr-text">${rr(t.tp3,t.stop1)}</span>
 </div>
 
-</div>
-</div>
-`:`
-<div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">
-<div class="section-title">🎯 策略目標規劃</div>
-<div class="section-sub" style="margin-top:8px">
-尚未形成有效策略訊號，暫不顯示入場、停損與停利目標。
 </div>
 </div>
 `;
