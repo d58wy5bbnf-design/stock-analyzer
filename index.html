@@ -287,6 +287,78 @@ white-space:nowrap
 .return-recommend-btn{width:100%;padding:13px;background:#141a16}
 .data-note{font-size:10px;color:#6f7471;line-height:1.75;margin:16px 4px}
 
+/* 新增：首頁回踩通知 */
+.entry-alert-box{
+margin:0 0 14px;
+border:1px solid #28513f;
+background:linear-gradient(135deg,#0d1a14,#09100c);
+border-radius:16px;
+padding:13px;
+box-shadow:0 10px 30px rgba(0,0,0,.2)
+}
+.entry-alert-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px
+}
+.entry-alert-title{
+font-size:14px;
+font-weight:950;
+color:#bdf2dc
+}
+.entry-alert-time{
+font-size:9px;
+color:#748079
+}
+.entry-alert-list{
+display:grid;
+gap:7px;
+margin-top:10px
+}
+.entry-alert-item{
+border:1px solid #25483b;
+background:#09140f;
+border-radius:12px;
+padding:10px;
+cursor:pointer
+}
+.entry-alert-symbol{
+font-size:14px;
+font-weight:950
+}
+.entry-alert-detail{
+font-size:10px;
+color:#a8b3ad;
+line-height:1.7;
+margin-top:4px
+}
+
+/* 新增：每個策略底部返回按鈕 */
+.strategy-bottom-nav{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:14px;
+padding-top:14px;
+border-top:1px solid #202522
+}
+.strategy-nav-btn{
+border:1px solid #303632;
+background:linear-gradient(180deg,#121713,#0b0f0c);
+color:#e7ebe8;
+border-radius:12px;
+padding:12px 8px;
+font-size:12px;
+font-weight:900
+}
+.strategy-nav-btn:active{transform:scale(.98)}
+.strategy-nav-btn.home{
+border-color:#28513f;
+color:#bdf2dc;
+background:#0b1712
+}
+
 #analysisView{will-change:transform;touch-action:pan-y;transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease}
 #analysisView.swiping-back{transition:none}
 #analysisView.swipe-return{transition:transform .22s cubic-bezier(.22,.61,.36,1),opacity .22s ease}
@@ -342,6 +414,15 @@ white-space:nowrap
 </div>
 </div>
 
+<!-- 新增：符合策略並回踩進入觀察入場區間時顯示 -->
+<div id="entryAlertBox" class="entry-alert-box hidden">
+<div class="entry-alert-head">
+<div class="entry-alert-title">🔔 回踩進入觀察入場區間</div>
+<div id="entryAlertTime" class="entry-alert-time"></div>
+</div>
+<div id="entryAlertList" class="entry-alert-list"></div>
+</div>
+
 <div id="watchSection">
 <div class="section-head">
 <div>
@@ -371,7 +452,7 @@ white-space:nowrap
 
 <div class="update-line">
 <span id="updateText">正在掃描市場…</span>
-<span id="countdown">01:00</span>
+<span id="countdown">15:00</span>
 </div>
 
 <div class="section-head">
@@ -418,9 +499,9 @@ const WATCH_KEY="yaozi_watchlist";
 const HISTORY_KEY="yaozi_search_history_v1";
 const POSITION_KEY="yaozi_positions_v46";
 
-/* 新增：進場通知紀錄，避免同一個訊號每 60 秒重複通知 */
-const ENTRY_NOTIFY_KEY="yaozi_entry_notifications_v1";
-const ENTRY_NOTIFY_COOLDOWN=6*60*60*1000;
+/* 新增：回踩通知紀錄 */
+const ENTRY_NOTIFY_KEY="yaozi_entry_notify_v1";
+const RADAR_REFRESH_SECONDS=15*60;
 
 const BACKTEST_DAYS=365;
 const BACKTEST_OBSERVE_DAYS=30;
@@ -435,7 +516,7 @@ var currentMarketMetrics=null;
 var currentSetups=null;
 
 var expanded={watch:true,strategy:true,long:true,radar:true};
-var countdownSeconds=60;
+var countdownSeconds=RADAR_REFRESH_SECONDS;
 
 function el(id){return document.getElementById(id)}
 
@@ -481,178 +562,6 @@ var k=2/(period+1);
 var out=a[0];
 for(var i=1;i<a.length;i++)out=a[i]*k+out*(1-k);
 return out
-}
-
-/* 新增：取得已發送過的進場通知 */
-function getEntryNotifyHistory(){
-try{
-var d=JSON.parse(localStorage.getItem(ENTRY_NOTIFY_KEY)||"{}");
-return d&&typeof d==="object"?d:{}
-}catch(e){
-return{}
-}
-}
-
-/* 新增：記錄已發送的進場通知 */
-function saveEntryNotifyHistory(d){
-try{
-localStorage.setItem(ENTRY_NOTIFY_KEY,JSON.stringify(d))
-}catch(e){}
-}
-
-/* 新增：策略名稱 */
-function entryNotifyStrategyName(type){
-if(type==="PULLBACK")return"支撐回踩";
-if(type==="HIGH_R")return"高 R 突破";
-if(type==="SURGE")return"強勢續攻";
-return type
-}
-
-/* 新增：真正送出系統通知 */
-function sendEntryNotification(d,type,t,setup){
-if(!("Notification" in window))return;
-if(Notification.permission!=="granted")return;
-
-var symbol=String(d.symbol||"").toUpperCase();
-var name=String(d.name||"").trim();
-var price=Number(d.price);
-var strategyName=entryNotifyStrategyName(type);
-
-var title="🎯 "+symbol+(name?" "+name:"")+" 進入觀察入場區";
-
-var body=
-strategyName+
-"｜目前 "+fmt(price)+
-"\n觀察區間 "+fmt(t.entryLow)+" ～ "+fmt(t.entryHigh)+
-"\n策略符合度 "+setup.score+" 分";
-
-try{
-var n=new Notification(title,{
-body:body,
-tag:"entry-"+symbol+"-"+type,
-renotify:false
-});
-
-n.onclick=function(){
-try{window.focus()}catch(e){}
-analyze(symbol);
-try{n.close()}catch(e){}
-}
-}catch(e){}
-}
-
-/* 新增：檢查單一股票是否符合策略且進入觀察入場區 */
-async function checkEntryNotification(stock){
-if(!stock||!stock.symbol)return;
-
-if(!("Notification" in window))return;
-if(Notification.permission!=="granted")return;
-
-var symbol=String(stock.symbol||"").trim().toUpperCase();
-if(!symbol)return;
-
-try{
-var d=await fetchStockData(symbol);
-
-var rows=d.rows||[];
-if(rows.length<60)return;
-
-var m=marketOf(d);
-var v=volumeMetrics(d,rows);
-var setups=buildStrategySetups(d,m,v);
-
-var types=["PULLBACK","HIGH_R","SURGE"];
-var history=getEntryNotifyHistory();
-var now=Date.now();
-
-for(var i=0;i<types.length;i++){
-var type=types[i];
-var setup=setups[type];
-
-if(!setup||!setup.qualified)continue;
-
-var t=strategyTargets(type,m);
-var price=Number(m.price);
-
-if(!Number.isFinite(price)||price<=0)continue;
-if(!Number.isFinite(t.entryLow)||!Number.isFinite(t.entryHigh))continue;
-
-var inEntryZone=price>=t.entryLow&&price<=t.entryHigh;
-
-var key=symbol+"_"+type;
-var old=history[key];
-
-if(!inEntryZone){
-if(old&&old.inside){
-history[key]={
-inside:false,
-lastNotified:Number(old.lastNotified)||0
-}
-}
-continue
-}
-
-/*
-只有「從區間外進入區間」才通知。
-如果同一訊號曾通知過，至少間隔 6 小時才可再次通知。
-*/
-var lastNotified=old?Number(old.lastNotified)||0:0;
-var wasInside=old?!!old.inside:false;
-var cooldownPassed=now-lastNotified>=ENTRY_NOTIFY_COOLDOWN;
-
-if(!wasInside&&cooldownPassed){
-sendEntryNotification(d,type,t,setup);
-
-history[key]={
-inside:true,
-lastNotified:now,
-price:price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh
-}
-}else{
-history[key]={
-inside:true,
-lastNotified:lastNotified,
-price:price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh
-}
-}
-}
-
-saveEntryNotifyHistory(history)
-
-}catch(e){}
-}
-
-/* 新增：首頁雷達掃描完成後，自動檢查符合策略股票 */
-async function checkRadarEntryNotifications(d){
-if(!d)return;
-if(!("Notification" in window))return;
-if(Notification.permission!=="granted")return;
-
-var source=d.strategyReady||[];
-if(!Array.isArray(source)||!source.length)return;
-
-var seen={};
-var list=[];
-
-for(var i=0;i<source.length;i++){
-var s=source[i];
-var symbol=String(s&&s.symbol||"").trim().toUpperCase();
-
-if(!symbol||seen[symbol])continue;
-
-seen[symbol]=true;
-list.push(s)
-}
-
-/* 分批檢查，避免同時大量呼叫股票 API */
-for(var j=0;j<list.length;j+=4){
-var batch=list.slice(j,j+4);
-await Promise.all(batch.map(checkEntryNotification))
-}
 }
 
 function getSearchHistory(){
@@ -1089,6 +998,159 @@ tp3
 }
 }
 
+/* 新增：讀取回踩通知紀錄 */
+function getEntryNotifyState(){
+try{
+var d=JSON.parse(localStorage.getItem(ENTRY_NOTIFY_KEY)||"{}");
+return d&&typeof d==="object"?d:{}
+}catch(e){
+return{}
+}
+}
+
+function saveEntryNotifyState(d){
+try{
+localStorage.setItem(ENTRY_NOTIFY_KEY,JSON.stringify(d))
+}catch(e){}
+}
+
+/* 新增：首頁通知卡 */
+function renderEntryAlerts(alerts){
+var box=el("entryAlertBox");
+var list=el("entryAlertList");
+var time=el("entryAlertTime");
+
+if(!box||!list)return;
+
+if(!Array.isArray(alerts)||!alerts.length){
+box.classList.add("hidden");
+list.innerHTML="";
+return
+}
+
+box.classList.remove("hidden");
+
+if(time){
+time.textContent="偵測時間 "+currentTimeText()
+}
+
+list.innerHTML=alerts.map(x=>`
+<div class="entry-alert-item" data-entry-alert="${safe(x.symbol)}">
+<div class="entry-alert-symbol">🎯 ${safe(x.symbol)} ${safe(x.name||"")}</div>
+<div class="entry-alert-detail">
+${safe(x.strategyName)}｜目前價格 ${fmt(x.price)}<br>
+已回踩進入觀察入場區間 ${fmt(x.entryLow)} ～ ${fmt(x.entryHigh)}
+</div>
+</div>
+`).join("");
+
+list.querySelectorAll("[data-entry-alert]").forEach(x=>{
+x.onclick=()=>analyze(x.dataset.entryAlert)
+})
+}
+
+/* 新增：真正偵測「符合策略＋股價進入觀察入場區間」 */
+async function checkEntryNotifications(stocks){
+if(!Array.isArray(stocks)||!stocks.length){
+renderEntryAlerts([]);
+return
+}
+
+var alerts=[];
+var state=getEntryNotifyState();
+var now=Date.now();
+
+var names={
+PULLBACK:"支撐回踩",
+HIGH_R:"高 R 突破",
+SURGE:"強勢續攻"
+};
+
+var list=stocks.slice(0,30);
+
+for(var i=0;i<list.length;i++){
+var item=list[i];
+var symbol=String(item&&item.symbol||"").trim().toUpperCase();
+if(!symbol)continue;
+
+try{
+var d=await fetchStockData(symbol);
+var rows=d.rows||[];
+
+if(rows.length<60)continue;
+
+var m=marketOf(d);
+var v=volumeMetrics(d,rows);
+var setups=buildStrategySetups(d,m,v);
+
+var types=["PULLBACK","HIGH_R","SURGE"];
+
+for(var j=0;j<types.length;j++){
+var type=types[j];
+var setup=setups[type];
+
+if(!setup||!setup.qualified)continue;
+
+var t=strategyTargets(type,m);
+var price=Number(m.price);
+
+if(!Number.isFinite(price)||price<=0)continue;
+
+var inEntryZone=price>=Number(t.entryLow)&&price<=Number(t.entryHigh);
+
+var key=symbol+"_"+type;
+var old=state[key]||{};
+var wasInside=!!old.inside;
+
+if(inEntryZone){
+alerts.push({
+symbol,
+name:d.name||item.name||"",
+strategy:type,
+strategyName:names[type],
+price,
+entryLow:t.entryLow,
+entryHigh:t.entryHigh
+});
+
+/* 只有「剛進入」區間時跳一次系統通知 */
+if(!wasInside){
+if("Notification" in window&&Notification.permission==="granted"){
+try{
+new Notification("🎯 "+symbol+" 回踩進入觀察入場區間",{
+body:(d.name||"")+"｜"+names[type]+"｜現價 "+fmt(price)+"｜入場 "+fmt(t.entryLow)+" ～ "+fmt(t.entryHigh),
+tag:"yaozi-entry-"+key
+})
+}catch(e){}
+}
+}
+
+state[key]={
+inside:true,
+price,
+entryLow:t.entryLow,
+entryHigh:t.entryHigh,
+updatedAt:now
+}
+
+}else{
+state[key]={
+inside:false,
+price,
+entryLow:t.entryLow,
+entryHigh:t.entryHigh,
+updatedAt:now
+}
+}
+}
+
+}catch(e){}
+}
+
+saveEntryNotifyState(state);
+renderEntryAlerts(alerts)
+}
+
 function historicalMetrics(rows,index){
 var history=rows.slice(Math.max(0,index-119),index+1);
 var current=history.at(-1)||{};
@@ -1471,6 +1533,25 @@ if(t)t.scrollIntoView({behavior:"smooth",block:"start"})
 function returnToRecommendation(){
 var t=el("strategyRecommendation");
 if(t)t.scrollIntoView({behavior:"smooth",block:"start"})
+}
+
+/* 新增：策略底部返回最上層 */
+function returnAnalysisTop(){
+var view=el("analysisView");
+if(view){
+window.scrollTo({top:0,behavior:"smooth"})
+}
+}
+
+/* 新增：綁定每套策略下面的返回按鈕 */
+function bindStrategyBottomNav(){
+document.querySelectorAll("[data-strategy-top]").forEach(b=>{
+b.onclick=returnAnalysisTop
+});
+
+document.querySelectorAll("[data-strategy-home]").forEach(b=>{
+b.onclick=goBackHome
+})
 }
 
 function buildEntryStatusAnalysis(entry,shares,price,m,b,t,addPrice,secondAdd,a25,a50){
@@ -1873,6 +1954,11 @@ ${x.pass?"✓":"✕"} ${i+1}. ${safe(x.title)}
 ${setup.qualified?"✓ 目前技術條件符合此策略":"目前尚未完整符合此策略"}
 </div>
 
+<div class="strategy-bottom-nav">
+<button type="button" class="strategy-nav-btn" data-strategy-top>↑ 返回最上層</button>
+<button type="button" class="strategy-nav-btn home" data-strategy-home>⌂ 返回首頁</button>
+</div>
+
 </div>`
 }
 
@@ -2016,6 +2102,7 @@ ${strategyHTML("SURGE",setups.SURGE,m)}
 
 bindStrategyJumps();
 bindPositionControls();
+bindStrategyBottomNav();
 
 var f=el("favoriteButton");
 if(f)f.onclick=toggleFavorite;
@@ -2136,17 +2223,17 @@ el("scanCount").textContent=fmt(d.scanned,0);
 el("strategyCount").textContent=fmt((d.strategyReady||[]).length,0);
 el("radarCount").textContent=fmt((d.radar||[]).length,0);
 
-el("updateText").textContent="FinMind · 最後更新 "+currentTimeText()+" · 每 60 秒重新掃描";
+el("updateText").textContent="FinMind · 最後更新 "+currentTimeText()+" · 每 15 分鐘重新掃描";
 
 renderStocks("strategyGrid",d.strategyReady||[],expanded.strategy);
 renderStocks("longGrid",d.longWatch||[],expanded.long);
 renderStocks("radarGrid",d.radar||[],expanded.radar);
 
 syncMoreButtons();
-countdownSeconds=60;
+countdownSeconds=RADAR_REFRESH_SECONDS;
 
-/* 新增：每次首頁掃描完成後檢查是否回踩進入策略觀察入場區 */
-checkRadarEntryNotifications(d);
+/* 新增：每次首頁雷達刷新後，偵測符合策略且回踩進入觀察入場區間 */
+checkEntryNotifications(d.strategyReady||[]);
 
 }catch(e){
 el("updateText").textContent="雷達連線失敗："+e.message
@@ -2306,30 +2393,30 @@ return
 }
 
 if(Notification.permission==="granted"){
-alert("高勝率策略通知已開啟。\n當符合策略的股票回踩進入觀察入場區間時，系統會自動通知你。");
+alert("高勝率策略通知已開啟。符合策略且股價回踩進入觀察入場區間時會通知。");
 return
 }
 
 try{
 var p=await Notification.requestPermission();
-
 if(p==="granted"){
-alert("高勝率策略通知已開啟。\n當符合策略的股票回踩進入觀察入場區間時，系統會自動通知你。");
-
-/* 開啟權限後立刻重新掃描一次 */
-if(radarData)checkRadarEntryNotifications(radarData)
+alert("高勝率策略通知已開啟。符合策略且股價回踩進入觀察入場區間時會通知。")
 }
 }catch(e){}
 };
 
 el("backButton").onclick=goBackHome;
 
+/* 首頁每 15 分鐘自動重新掃描 */
 setInterval(()=>{
 countdownSeconds--;
 
 if(countdownSeconds<=0){
-countdownSeconds=60;
-if(!document.hidden)loadRadar()
+countdownSeconds=RADAR_REFRESH_SECONDS;
+
+if(!document.hidden){
+loadRadar()
+}
 }
 
 var m=Math.floor(countdownSeconds/60);
