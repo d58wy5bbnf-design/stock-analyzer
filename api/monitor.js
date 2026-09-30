@@ -141,9 +141,20 @@ async function removeDevice(deviceId) {
    ========================================================= */
 
 function configurePush() {
-  const publicKey = process.env.VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT;
+  const publicKey =
+    String(
+      process.env.VAPID_PUBLIC_KEY || ""
+    ).trim();
+
+  const privateKey =
+    String(
+      process.env.VAPID_PRIVATE_KEY || ""
+    ).trim();
+
+  let subject =
+    String(
+      process.env.VAPID_SUBJECT || ""
+    ).trim();
 
   if (!publicKey) {
     throw new Error("缺少 VAPID_PUBLIC_KEY");
@@ -155,6 +166,22 @@ function configurePush() {
 
   if (!subject) {
     throw new Error("缺少 VAPID_SUBJECT");
+  }
+
+  /*
+    web-push 規定 VAPID subject 必須是：
+    mailto:xxx@example.com
+    或合法 https:// URL
+
+    如果 Vercel 裡只有 Email，
+    這裡自動補 mailto:
+  */
+
+  if (
+    !subject.toLowerCase().startsWith("mailto:") &&
+    !/^https?:\/\//i.test(subject)
+  ) {
+    subject = `mailto:${subject}`;
   }
 
   webpush.setVapidDetails(
@@ -199,9 +226,11 @@ function isMarketMonitoringTime() {
 
   const now = hour * 60 + minute;
 
-  // 08:55 ～ 13:40
-  return now >= 8 * 60 + 55 &&
-         now <= 13 * 60 + 40;
+  // 台股監控時間 08:55 ～ 13:40
+  return (
+    now >= 8 * 60 + 55 &&
+    now <= 13 * 60 + 40
+  );
 }
 
 /* =========================================================
@@ -216,10 +245,12 @@ function num(v) {
 function avg(arr) {
   if (!arr.length) return 0;
 
-  return arr.reduce(
-    (sum, x) => sum + num(x),
-    0
-  ) / arr.length;
+  return (
+    arr.reduce(
+      (sum, x) => sum + num(x),
+      0
+    ) / arr.length
+  );
 }
 
 function sma(values, period) {
@@ -259,8 +290,11 @@ function rsi(values, period = 14) {
       num(values[i]) -
       num(values[i - 1]);
 
-    if (diff > 0) gains += diff;
-    else losses += Math.abs(diff);
+    if (diff > 0) {
+      gains += diff;
+    } else {
+      losses += Math.abs(diff);
+    }
   }
 
   const avgGain = gains / period;
@@ -398,8 +432,6 @@ function findSwingHighs(rows, lookback = 3) {
 
 /* =========================================================
    SMC Demand / Bullish OB
-   不製造假的 ATR 支撐
-   找不到真實結構就回傳 null
    ========================================================= */
 
 function findBullishOrderBlocks(
@@ -426,7 +458,6 @@ function findBullishOrderBlocks(
     const high = num(candle.high);
     const low = num(candle.low);
 
-    // OB 候選：下跌 K
     if (!(close < open)) continue;
 
     const next1 = rows[i + 1];
@@ -435,18 +466,22 @@ function findBullishOrderBlocks(
     const n1Close = num(next1.close);
     const n2Close = num(next2.close);
 
-    // 後面需要明顯 displacement
     const displacement =
       Math.max(n1Close, n2Close) - high;
 
-    if (displacement <= Math.max(A * 0.35, high * 0.004)) {
+    if (
+      displacement <=
+      Math.max(
+        A * 0.35,
+        high * 0.004
+      )
+    ) {
       continue;
     }
 
     const zoneLow = low;
     const zoneHigh = Math.max(open, close);
 
-    // 已經被有效跌破的 OB 不算
     let invalidated = false;
 
     for (
@@ -472,14 +507,19 @@ function findBullishOrderBlocks(
     let score = 3;
 
     const move =
-      displacement / Math.max(A, 0.0001);
+      displacement /
+      Math.max(A, 0.0001);
 
     score += Math.min(3, move);
 
-    const age = rows.length - 1 - i;
+    const age =
+      rows.length - 1 - i;
 
-    if (age <= 20) score += 1;
-    else if (age <= 45) score += 0.5;
+    if (age <= 20) {
+      score += 1;
+    } else if (age <= 45) {
+      score += 0.5;
+    }
 
     zones.push({
       type: "Bullish OB",
@@ -522,7 +562,8 @@ function findBullishFVG(
 
     if (rightLow <= leftHigh) continue;
 
-    const gap = rightLow - leftHigh;
+    const gap =
+      rightLow - leftHigh;
 
     if (
       gap <
@@ -564,10 +605,13 @@ function findBullishFVG(
       low: zoneLow,
       high: zoneHigh,
       index: i,
-      score: 3 + Math.min(
-        2,
-        gap / Math.max(A, 0.0001)
-      )
+      score:
+        3 +
+        Math.min(
+          2,
+          gap /
+          Math.max(A, 0.0001)
+        )
     });
   }
 
@@ -602,9 +646,12 @@ function findBullishSweeps(
 
     if (!previous.length) continue;
 
-    const previousLow = Math.min(
-      ...previous.map(x => num(x.low))
-    );
+    const previousLow =
+      Math.min(
+        ...previous.map(
+          x => num(x.low)
+        )
+      );
 
     const row = rows[i];
 
@@ -612,7 +659,6 @@ function findBullishSweeps(
     const close = num(row.close);
     const open = num(row.open);
 
-    // 掃低點後收回
     if (
       low < previousLow &&
       close > previousLow &&
@@ -658,7 +704,6 @@ function findBullishSweeps(
 
 /* =========================================================
    BOS / Breaker support
-   壓力突破後轉支撐
    ========================================================= */
 
 function findBreakerSupports(
@@ -666,7 +711,8 @@ function findBreakerSupports(
   currentPrice,
   A
 ) {
-  const highs = findSwingHighs(rows, 3);
+  const highs =
+    findSwingHighs(rows, 3);
 
   const zones = [];
 
@@ -695,7 +741,6 @@ function findBreakerSupports(
 
     if (breakIndex < 0) continue;
 
-    // 突破後如果又明顯跌回去，角色互換失效
     let failed = false;
 
     for (
@@ -737,7 +782,7 @@ function findBreakerSupports(
 }
 
 /* =========================================================
-   找最佳真實支撐
+   最佳真實支撐
    ========================================================= */
 
 function findBestSupport(
@@ -779,12 +824,17 @@ function findBestSupport(
         return false;
       }
 
-      if (zone.low <= 0 || zone.high <= 0) {
+      if (
+        zone.low <= 0 ||
+        zone.high <= 0
+      ) {
         return false;
       }
 
-      // 支撐不能離目前價格太誇張
-      return zone.low <= price * 1.02;
+      return (
+        zone.low <=
+        price * 1.02
+      );
     })
     .map(zone => {
       const distance =
@@ -795,7 +845,10 @@ function findBestSupport(
 
       const distanceATR =
         distance /
-        Math.max(A, price * 0.005);
+        Math.max(
+          A,
+          price * 0.005
+        );
 
       const proximityScore =
         Math.max(
@@ -821,7 +874,6 @@ function findBestSupport(
 
 /* =========================================================
    上方 Liquidity / TP
-   不用固定 R 倍數硬造 TP
    ========================================================= */
 
 function findLiquidityTargets(
@@ -829,17 +881,19 @@ function findLiquidityTargets(
   price,
   A
 ) {
-  const highs = findSwingHighs(rows, 2);
+  const highs =
+    findSwingHighs(rows, 2);
 
   const levels = highs
     .map(x => x.price)
-    .filter(x =>
-      x >
-      price +
-      Math.max(
-        A * 0.15,
-        price * 0.002
-      )
+    .filter(
+      x =>
+        x >
+        price +
+        Math.max(
+          A * 0.15,
+          price * 0.002
+        )
     )
     .sort((a, b) => a - b);
 
@@ -887,7 +941,11 @@ function institutionalBias(institutional) {
   let total = 0;
 
   for (const value of candidates) {
-    if (Number.isFinite(Number(value))) {
+    if (
+      Number.isFinite(
+        Number(value)
+      )
+    ) {
       total += Number(value);
     }
   }
@@ -917,23 +975,24 @@ function institutionalBias(institutional) {
    ========================================================= */
 
 function analyzeStock(data) {
-  const rows = Array.isArray(data.rows)
-    ? data.rows
-        .map(x => ({
-          open: num(x.open),
-          high: num(x.high),
-          low: num(x.low),
-          close: num(x.close),
-          volume: num(x.volume)
-        }))
-        .filter(
-          x =>
-            x.open > 0 &&
-            x.high > 0 &&
-            x.low > 0 &&
-            x.close > 0
-        )
-    : [];
+  const rows =
+    Array.isArray(data.rows)
+      ? data.rows
+          .map(x => ({
+            open: num(x.open),
+            high: num(x.high),
+            low: num(x.low),
+            close: num(x.close),
+            volume: num(x.volume)
+          }))
+          .filter(
+            x =>
+              x.open > 0 &&
+              x.high > 0 &&
+              x.low > 0 &&
+              x.close > 0
+          )
+      : [];
 
   if (rows.length < 60) {
     return {
@@ -944,7 +1003,11 @@ function analyzeStock(data) {
 
   const price =
     num(data.price) ||
-    num(rows[rows.length - 1].close);
+    num(
+      rows[
+        rows.length - 1
+      ].close
+    );
 
   if (!price) {
     return {
@@ -953,14 +1016,20 @@ function analyzeStock(data) {
     };
   }
 
-  const closes = rows.map(x => x.close);
+  const closes =
+    rows.map(x => x.close);
 
-  const volumes = rows.map(x => x.volume);
+  const volumes =
+    rows.map(x => x.volume);
 
-  const MA20 = sma(closes, 20);
-  const MA60 = sma(closes, 60);
+  const MA20 =
+    sma(closes, 20);
 
-  const A = atr(rows, 14);
+  const MA60 =
+    sma(closes, 60);
+
+  const A =
+    atr(rows, 14);
 
   if (!A) {
     return {
@@ -969,49 +1038,59 @@ function analyzeStock(data) {
     };
   }
 
-  const RSI = rsi(closes, 14);
+  const RSI =
+    rsi(closes, 14);
 
-  const EMA12 = ema(
-    closes.slice(-80),
-    12
-  );
+  const EMA12 =
+    ema(
+      closes.slice(-80),
+      12
+    );
 
-  const EMA26 = ema(
-    closes.slice(-80),
-    26
-  );
+  const EMA26 =
+    ema(
+      closes.slice(-80),
+      26
+    );
 
-  const support20 = Math.min(
-    ...rows
-      .slice(-20)
-      .map(x => x.low)
-  );
+  const support20 =
+    Math.min(
+      ...rows
+        .slice(-20)
+        .map(x => x.low)
+    );
 
-  const resistance20 = Math.max(
-    ...rows
-      .slice(-20)
-      .map(x => x.high)
-  );
+  const resistance20 =
+    Math.max(
+      ...rows
+        .slice(-20)
+        .map(x => x.high)
+    );
 
-  const high60 = Math.max(
-    ...rows
-      .slice(-60)
-      .map(x => x.high)
-  );
+  const high60 =
+    Math.max(
+      ...rows
+        .slice(-60)
+        .map(x => x.high)
+    );
 
   const currentVolume =
     num(data.volume) ||
-    volumes[volumes.length - 1];
+    volumes[
+      volumes.length - 1
+    ];
 
-  const avgVolume20 = avg(
-    volumes
-      .slice(-21, -1)
-      .filter(x => x > 0)
-  );
+  const avgVolume20 =
+    avg(
+      volumes
+        .slice(-21, -1)
+        .filter(x => x > 0)
+    );
 
   const volumeRatio =
     avgVolume20 > 0
-      ? currentVolume / avgVolume20
+      ? currentVolume /
+        avgVolume20
       : 0;
 
   const conditions = [
@@ -1021,12 +1100,16 @@ function analyzeStock(data) {
     },
     {
       name: "股價守 MA60",
-      pass: price >= MA60 * 0.985
+      pass:
+        price >=
+        MA60 * 0.985
     },
     {
       name: "距 MA20 不過遠",
       pass:
-        Math.abs(price - MA20) <=
+        Math.abs(
+          price - MA20
+        ) <=
         A * 2.2
     },
     {
@@ -1064,9 +1147,10 @@ function analyzeStock(data) {
   ];
 
   const passed =
-    conditions.filter(x => x.pass).length;
+    conditions.filter(
+      x => x.pass
+    ).length;
 
-  // 只有正式策略成立才可能推播
   if (passed < 7) {
     return {
       eligible: false,
@@ -1077,13 +1161,13 @@ function analyzeStock(data) {
     };
   }
 
-  const support = findBestSupport(
-    rows,
-    price,
-    A
-  );
+  const support =
+    findBestSupport(
+      rows,
+      price,
+      A
+    );
 
-  // 沒有真實 SMC 結構，不硬造支撐
   if (!support) {
     return {
       eligible: false,
@@ -1093,12 +1177,6 @@ function analyzeStock(data) {
         "沒有有效 SMC 支撐結構"
     };
   }
-
-  /*
-    好的進場訊號：
-    價格必須真的靠近支撐。
-    避免只是 7/8 但已經離進場區很遠。
-  */
 
   const allowedDistance =
     Math.max(
@@ -1113,11 +1191,13 @@ function analyzeStock(data) {
 
   const belowInvalidation =
     price <
-    support.low - A * 0.15;
+    support.low -
+    A * 0.15;
 
   const nearEntry =
     !belowInvalidation &&
-    distanceAbove <= allowedDistance;
+    distanceAbove <=
+    allowedDistance;
 
   if (!nearEntry) {
     return {
@@ -1130,14 +1210,16 @@ function analyzeStock(data) {
     };
   }
 
-  const entryLow = support.low;
+  const entryLow =
+    support.low;
 
   const entryHigh =
     Math.max(
       support.high,
       Math.min(
         price,
-        support.high + A * 0.2
+        support.high +
+        A * 0.2
       )
     );
 
@@ -1155,11 +1237,6 @@ function analyzeStock(data) {
       A
     );
 
-  /*
-    至少要有一個真實上方流動性目標，
-    不用 ATR 倍數硬生 TP。
-  */
-
   if (!targets.length) {
     return {
       eligible: false,
@@ -1176,25 +1253,23 @@ function analyzeStock(data) {
       data.institutional
     );
 
-  /*
-    量能太差時即使碰支撐也先不推。
-    8 條裡量能本來就是條件之一，
-    這裡再避免極端低量誤報。
-  */
-
   if (volumeRatio < 0.8) {
     return {
       eligible: false,
       passed,
       conditions,
-      reason:
-        "量能不足"
+      reason: "量能不足"
     };
   }
 
-  const tp1 = targets[0] || null;
-  const tp2 = targets[1] || null;
-  const tp3 = targets[2] || null;
+  const tp1 =
+    targets[0] || null;
+
+  const tp2 =
+    targets[1] || null;
+
+  const tp3 =
+    targets[2] || null;
 
   const risk =
     price - stopLoss;
@@ -1203,10 +1278,6 @@ function analyzeStock(data) {
     tp1
       ? tp1 - price
       : 0;
-
-  /*
-    第一目標至少要有合理空間。
-  */
 
   if (
     risk <= 0 ||
@@ -1225,7 +1296,11 @@ function analyzeStock(data) {
   return {
     eligible: true,
 
-    symbol: String(data.symbol || ""),
+    symbol:
+      String(
+        data.symbol || ""
+      ),
+
     name:
       data.name ||
       data.symbol ||
@@ -1262,14 +1337,18 @@ function analyzeStock(data) {
 
 function getOrigin(req) {
   const forwarded =
-    req.headers["x-forwarded-host"];
+    req.headers[
+      "x-forwarded-host"
+    ];
 
   const host =
     forwarded ||
     req.headers.host;
 
   const protoHeader =
-    req.headers["x-forwarded-proto"];
+    req.headers[
+      "x-forwarded-proto"
+    ];
 
   const proto =
     protoHeader ||
@@ -1285,21 +1364,26 @@ async function fetchStock(
   const controller =
     new AbortController();
 
-  const timer = setTimeout(
-    () => controller.abort(),
-    22000
-  );
+  const timer =
+    setTimeout(
+      () =>
+        controller.abort(),
+      22000
+    );
 
   try {
-    const response = await fetch(
-      `${origin}/api/stock?symbol=${encodeURIComponent(symbol)}`,
-      {
-        headers: {
-          "Cache-Control": "no-cache"
-        },
-        signal: controller.signal
-      }
-    );
+    const response =
+      await fetch(
+        `${origin}/api/stock?symbol=${encodeURIComponent(symbol)}`,
+        {
+          headers: {
+            "Cache-Control":
+              "no-cache"
+          },
+          signal:
+            controller.signal
+        }
+      );
 
     if (!response.ok) {
       throw new Error(
@@ -1307,9 +1391,13 @@ async function fetchStock(
       );
     }
 
-    const json = await response.json();
+    const json =
+      await response.json();
 
-    if (!json || json.ok === false) {
+    if (
+      !json ||
+      json.ok === false
+    ) {
       throw new Error(
         json?.error ||
         `stock ${symbol} failed`
@@ -1331,15 +1419,20 @@ async function mapLimit(
   limit,
   worker
 ) {
-  const result = new Array(items.length);
+  const result =
+    new Array(items.length);
 
   let cursor = 0;
 
   async function runner() {
     while (true) {
-      const index = cursor++;
+      const index =
+        cursor++;
 
-      if (index >= items.length) {
+      if (
+        index >=
+        items.length
+      ) {
         break;
       }
 
@@ -1362,10 +1455,11 @@ async function mapLimit(
   await Promise.all(
     Array.from(
       {
-        length: Math.min(
-          limit,
-          items.length
-        )
+        length:
+          Math.min(
+            limit,
+            items.length
+          )
       },
       () => runner()
     )
@@ -1379,16 +1473,21 @@ async function mapLimit(
    ========================================================= */
 
 function normalizeSymbols(symbols) {
-  const list = Array.isArray(symbols)
-    ? symbols
-    : [];
+  const list =
+    Array.isArray(symbols)
+      ? symbols
+      : [];
 
   return [
     ...new Set(
       list
-        .map(x => String(x).trim())
-        .filter(x =>
-          /^\d{4,6}$/.test(x)
+        .map(
+          x =>
+            String(x).trim()
+        )
+        .filter(
+          x =>
+            /^\d{4,6}$/.test(x)
         )
     )
   ];
@@ -1400,11 +1499,6 @@ function symbolsForDevice(device) {
       device?.symbols
     );
 
-  /*
-    跟目前網站雷達邏輯一致：
-    預設清單 + 使用者自選。
-  */
-
   return [
     ...new Set([
       ...DEFAULT_SYMBOLS,
@@ -1415,7 +1509,6 @@ function symbolsForDevice(device) {
 
 /* =========================================================
    Dedupe
-   同一個 setup 不要每分鐘一直通知
    ========================================================= */
 
 function setupFingerprint(
@@ -1461,18 +1554,15 @@ async function acquireNotificationLock(
   const key =
     `swing:push:sent:${deviceId}:${safeFingerprint}`;
 
-  /*
-    同一結構 6 小時內只通知一次
-  */
-
-  const result = await redis([
-    "SET",
-    key,
-    "1",
-    "NX",
-    "EX",
-    "21600"
-  ]);
+  const result =
+    await redis([
+      "SET",
+      key,
+      "1",
+      "NX",
+      "EX",
+      "21600"
+    ]);
 
   return result === "OK";
 }
@@ -1528,7 +1618,8 @@ function buildPayload(
   return JSON.stringify({
     title,
 
-    body: parts.join("｜"),
+    body:
+      parts.join("｜"),
 
     tag:
       `entry-${stock.symbol}`,
@@ -1599,10 +1690,6 @@ async function sendPush(
       error?.statusCode ||
       error?.status;
 
-    /*
-      Push subscription 已失效
-    */
-
     if (
       status === 404 ||
       status === 410
@@ -1624,319 +1711,315 @@ function authorized(req) {
   const secret =
     process.env.CRON_SECRET;
 
-  /*
-    有設定 CRON_SECRET 就一定驗證。
-  */
-
   if (!secret) return false;
 
   const auth =
     req.headers.authorization ||
     "";
 
-  return auth ===
-    `Bearer ${secret}`;
+  return (
+    auth ===
+    `Bearer ${secret}`
+  );
 }
 
 /* =========================================================
    Main handler
    ========================================================= */
 
-module.exports = async function handler(
-  req,
-  res
-) {
-  if (req.method !== "GET") {
-    res.setHeader(
-      "Allow",
-      "GET"
-    );
+module.exports =
+  async function handler(
+    req,
+    res
+  ) {
+    if (req.method !== "GET") {
+      res.setHeader(
+        "Allow",
+        "GET"
+      );
 
-    return send(
-      res,
-      405,
-      {
-        ok: false,
-        error:
-          "Method Not Allowed"
-      }
-    );
-  }
-
-  if (!authorized(req)) {
-    return send(
-      res,
-      401,
-      {
-        ok: false,
-        error:
-          "Unauthorized"
-      }
-    );
-  }
-
-  try {
-    configurePush();
-
-    /*
-      cron 可以全天每分鐘打，
-      但非台股監控時段直接結束，
-      不浪費 FinMind 額度。
-    */
-
-    if (!isMarketMonitoringTime()) {
       return send(
         res,
-        200,
+        405,
         {
-          ok: true,
-          skipped: true,
-          reason:
-            "目前非台股監控時段",
-          marketWindow:
-            "Asia/Taipei 08:55-13:40"
+          ok: false,
+          error:
+            "Method Not Allowed"
         }
       );
     }
 
-    const deviceIds =
-      await getDeviceIds();
-
-    if (!deviceIds.length) {
+    if (!authorized(req)) {
       return send(
         res,
-        200,
+        401,
         {
-          ok: true,
-          skipped: true,
-          reason:
-            "目前沒有 Push 訂閱裝置"
+          ok: false,
+          error:
+            "Unauthorized"
         }
       );
     }
 
-    const devicesRaw =
-      await mapLimit(
-        deviceIds,
-        5,
-        async deviceId => ({
-          deviceId,
-          device:
-            await getDevice(
-              deviceId
-            )
-        })
-      );
-
-    const devices =
-      devicesRaw.filter(
-        x =>
-          x &&
-          !x.error &&
-          x.device &&
-          x.device.subscription
-      );
-
-    if (!devices.length) {
-      return send(
-        res,
-        200,
-        {
-          ok: true,
-          skipped: true,
-          reason:
-            "沒有有效 Push subscription"
-        }
-      );
-    }
-
-    /*
-      先把所有裝置要看的股票合併，
-      同一股票只抓一次。
-    */
-
-    const allSymbols = [
-      ...new Set(
-        devices.flatMap(
-          x =>
-            symbolsForDevice(
-              x.device
-            )
-        )
-      )
-    ];
-
-    const origin =
-      getOrigin(req);
-
-    const stockResults =
-      await mapLimit(
-        allSymbols,
-        3,
-        async symbol => {
-          const data =
-            await fetchStock(
-              origin,
-              symbol
-            );
-
-          const analysis =
-            analyzeStock(data);
-
-          return {
-            symbol,
-            data,
-            analysis
-          };
-        }
-      );
-
-    const stockMap =
-      new Map();
-
-    for (
-      let i = 0;
-      i < allSymbols.length;
-      i++
-    ) {
-      const result =
-        stockResults[i];
+    try {
+      configurePush();
 
       if (
-        result &&
-        !result.error
+        !isMarketMonitoringTime()
       ) {
-        stockMap.set(
-          allSymbols[i],
-          result
+        return send(
+          res,
+          200,
+          {
+            ok: true,
+            skipped: true,
+            reason:
+              "目前非台股監控時段",
+            marketWindow:
+              "Asia/Taipei 08:55-13:40"
+          }
         );
       }
-    }
 
-    let eligibleCount = 0;
-    let pushSent = 0;
-    let duplicateCount = 0;
-    let pushErrors = 0;
+      const deviceIds =
+        await getDeviceIds();
 
-    const signals = [];
+      if (!deviceIds.length) {
+        return send(
+          res,
+          200,
+          {
+            ok: true,
+            skipped: true,
+            reason:
+              "目前沒有 Push 訂閱裝置"
+          }
+        );
+      }
 
-    /*
-      每個裝置只收到自己的監控股票
-    */
-
-    for (const item of devices) {
-      const symbols =
-        symbolsForDevice(
-          item.device
+      const devicesRaw =
+        await mapLimit(
+          deviceIds,
+          5,
+          async deviceId => ({
+            deviceId,
+            device:
+              await getDevice(
+                deviceId
+              )
+          })
         );
 
-      for (const symbol of symbols) {
-        const stock =
-          stockMap.get(symbol);
+      const devices =
+        devicesRaw.filter(
+          x =>
+            x &&
+            !x.error &&
+            x.device &&
+            x.device.subscription
+        );
 
-        if (!stock) continue;
+      if (!devices.length) {
+        return send(
+          res,
+          200,
+          {
+            ok: true,
+            skipped: true,
+            reason:
+              "沒有有效 Push subscription"
+          }
+        );
+      }
+
+      const allSymbols = [
+        ...new Set(
+          devices.flatMap(
+            x =>
+              symbolsForDevice(
+                x.device
+              )
+          )
+        )
+      ];
+
+      const origin =
+        getOrigin(req);
+
+      const stockResults =
+        await mapLimit(
+          allSymbols,
+          3,
+          async symbol => {
+            const data =
+              await fetchStock(
+                origin,
+                symbol
+              );
+
+            const analysis =
+              analyzeStock(data);
+
+            return {
+              symbol,
+              data,
+              analysis
+            };
+          }
+        );
+
+      const stockMap =
+        new Map();
+
+      for (
+        let i = 0;
+        i < allSymbols.length;
+        i++
+      ) {
+        const result =
+          stockResults[i];
 
         if (
-          !stock.analysis?.eligible
+          result &&
+          !result.error
         ) {
-          continue;
+          stockMap.set(
+            allSymbols[i],
+            result
+          );
         }
+      }
 
-        eligibleCount++;
+      let eligibleCount = 0;
+      let pushSent = 0;
+      let duplicateCount = 0;
+      let pushErrors = 0;
 
-        signals.push({
-          symbol,
-          name:
-            stock.analysis.name,
-          passed:
-            stock.analysis.passed,
-          support:
-            stock.analysis.support.type,
-          price:
-            stock.analysis.price
-        });
+      const signals = [];
 
-        try {
-          const result =
-            await sendPush(
-              item.deviceId,
-              item.device,
-              {
-                ...stock.data,
-                symbol
-              },
-              stock.analysis
-            );
+      for (
+        const item of devices
+      ) {
+        const symbols =
+          symbolsForDevice(
+            item.device
+          );
 
-          if (result.ok) {
-            pushSent++;
-          } else if (
-            result.duplicate
+        for (
+          const symbol of symbols
+        ) {
+          const stock =
+            stockMap.get(symbol);
+
+          if (!stock) continue;
+
+          if (
+            !stock.analysis?.eligible
           ) {
-            duplicateCount++;
+            continue;
           }
-        } catch (error) {
-          pushErrors++;
+
+          eligibleCount++;
+
+          signals.push({
+            symbol,
+            name:
+              stock.analysis.name,
+            passed:
+              stock.analysis.passed,
+            support:
+              stock.analysis.support.type,
+            price:
+              stock.analysis.price
+          });
+
+          try {
+            const result =
+              await sendPush(
+                item.deviceId,
+                item.device,
+                {
+                  ...stock.data,
+                  symbol
+                },
+                stock.analysis
+              );
+
+            if (result.ok) {
+              pushSent++;
+            } else if (
+              result.duplicate
+            ) {
+              duplicateCount++;
+            }
+          } catch (error) {
+            pushErrors++;
+
+            console.error(
+              `push ${symbol} error:`,
+              error?.message ||
+              error
+            );
+          }
         }
       }
+
+      const failedStocks =
+        stockResults
+          .map(
+            (x, i) =>
+              x?.error
+                ? {
+                    symbol:
+                      allSymbols[i],
+                    error:
+                      x.error
+                  }
+                : null
+          )
+          .filter(Boolean);
+
+      return send(
+        res,
+        200,
+        {
+          ok: true,
+
+          monitoredDevices:
+            devices.length,
+
+          monitoredSymbols:
+            allSymbols.length,
+
+          eligibleSignals:
+            eligibleCount,
+
+          pushSent,
+
+          duplicateCount,
+
+          pushErrors,
+
+          failedStocks,
+
+          signals
+        }
+      );
+    } catch (error) {
+      console.error(
+        "monitor error:",
+        error
+      );
+
+      return send(
+        res,
+        500,
+        {
+          ok: false,
+          error:
+            error?.message ||
+            "Monitor failed"
+        }
+      );
     }
-
-    const failedStocks =
-      stockResults
-        .map(
-          (x, i) =>
-            x?.error
-              ? {
-                  symbol:
-                    allSymbols[i],
-                  error:
-                    x.error
-                }
-              : null
-        )
-        .filter(Boolean);
-
-    return send(
-      res,
-      200,
-      {
-        ok: true,
-
-        monitoredDevices:
-          devices.length,
-
-        monitoredSymbols:
-          allSymbols.length,
-
-        eligibleSignals:
-          eligibleCount,
-
-        pushSent,
-
-        duplicateCount,
-
-        pushErrors,
-
-        failedStocks,
-
-        signals
-      }
-    );
-  } catch (error) {
-    console.error(
-      "monitor error:",
-      error
-    );
-
-    return send(
-      res,
-      500,
-      {
-        ok: false,
-        error:
-          error?.message ||
-          "Monitor failed"
-      }
-    );
-  }
-};
+  };
