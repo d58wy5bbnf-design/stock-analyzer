@@ -518,6 +518,28 @@ maximumFractionDigits:d
 :
 '--';
 
+
+/* 沒有有效壓力時，不顯示 0.00 */
+
+const pressureFmt=n=>{
+
+if(
+n===null ||
+n===undefined ||
+n==='' ||
+!Number.isFinite(+n) ||
++n<=0
+){
+
+return '上方暫無有效壓力';
+
+}
+
+return fmt(n);
+
+};
+
+
 const esc=s=>
 String(s??'')
 .replaceAll('&','&amp;')
@@ -1853,11 +1875,18 @@ Number.isFinite(+a.support2High)
 </span>
 
 <strong>
-${fmt(a.breakout)}
+${pressureFmt(a.breakout)}
 </strong>
 
 <small>
-上方最近 Buy-side Liquidity / Bearish OB / Supply 結構
+${
+Number.isFinite(+a.breakout) &&
++a.breakout>0
+?
+'上方最近 Buy-side Liquidity / Bearish OB / Supply 結構'
+:
+'目前股價上方尚未找到有效的 SMC 壓力結構'
+}
 </small>
 
 </div>
@@ -1869,8 +1898,19 @@ ${fmt(a.breakout)}
 </span>
 
 <strong>
-${fmt(a.pressure1)}
+${pressureFmt(a.pressure1)}
 </strong>
+
+<small>
+${
+Number.isFinite(+a.pressure1) &&
++a.pressure1>0
+?
+'最近一層有效 SMC 壓力'
+:
+'目前上方沒有可辨識的有效壓力'
+}
+</small>
 
 </div>
 
@@ -1881,8 +1921,19 @@ ${fmt(a.pressure1)}
 </span>
 
 <strong>
-${fmt(a.pressure2)}
+${pressureFmt(a.pressure2)}
 </strong>
+
+<small>
+${
+Number.isFinite(+a.pressure2) &&
++a.pressure2>0
+?
+'第一壓力突破後的下一層 SMC 壓力'
+:
+'目前沒有第二層有效壓力'
+}
+</small>
 
 </div>
 
@@ -3001,9 +3052,6 @@ catch{}
 
 /* =========================================================
    開啟 Push
-   修正版：
-   舊 subscription 一律取消，
-   使用目前 VAPID Public Key 重新建立
 ========================================================= */
 
 async function enablePush(){
@@ -3034,11 +3082,6 @@ throw Error(
 
 }
 
-
-/*
-  取得通知權限
-*/
-
 const permission=
 await Notification
 .requestPermission();
@@ -3053,42 +3096,16 @@ throw Error(
 
 }
 
-
-/*
-  取得 Service Worker
-*/
-
 const registration=
 await getSWRegistration();
 
-
-/*
-  從後端取得目前正在使用的
-  VAPID PUBLIC KEY
-*/
-
 const publicKey=
 await getPushPublicKey();
-
-
-/*
-  取得舊訂閱
-*/
 
 const oldSubscription=
 await registration
 .pushManager
 .getSubscription();
-
-
-/*
-  關鍵修正：
-  舊 subscription 是使用之前的 VAPID Key 建立，
-  Apple Push 會回：
-  VapidPkHashMismatch
-
-  因此直接取消舊 subscription。
-*/
 
 if(oldSubscription){
 
@@ -3114,12 +3131,6 @@ e
 }
 
 }
-
-
-/*
-  使用目前 Vercel 的 VAPID PUBLIC KEY
-  建立全新的 Apple Web Push Subscription
-*/
 
 let subscription;
 
@@ -3154,11 +3165,6 @@ throw Error(
 
 }
 
-
-/*
-  確認真的取得新 subscription
-*/
-
 if(
 !subscription ||
 !subscription.endpoint
@@ -3170,20 +3176,9 @@ throw Error(
 
 }
 
-
-/*
-  將新的 subscription
-  寫入 Redis
-*/
-
 await savePushSubscription(
 subscription
 );
-
-
-/*
-  更新畫面
-*/
 
 $('notify')
 .classList
@@ -3191,12 +3186,10 @@ $('notify')
 
 $('notify').textContent='🔔';
 
-
 console.log(
 'Push 已重新訂閱成功',
 subscription.endpoint
 );
-
 
 return true;
 
