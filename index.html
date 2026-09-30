@@ -1,3 +1,5 @@
+📋 一鍵複製全部程式碼
+按上面的按鈕後，直接貼到 GitHub 的 index.html。
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -158,21 +160,90 @@ color:#777d79;font-size:11px;line-height:1.7;text-align:center
 .add-plan-box.yellow{border-color:#554a24;background:#151206}
 .add-plan-box.yellow strong{color:#ffc85a}
 
-.entry-analysis{margin-top:15px;padding-top:14px;border-top:1px solid #202522}
-.entry-analysis-title{font-size:15px;font-weight:950}
-.entry-analysis-sub{font-size:11px;color:var(--muted);line-height:1.7;margin-top:4px}
-.entry-analysis-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.entry-analysis-box{border:1px solid #252b27;background:#080b09;border-radius:12px;padding:10px}
-.entry-analysis-box span{display:block;font-size:9px;color:#777d79}
-.entry-analysis-box strong{display:block;font-size:16px;margin-top:5px}
-.entry-status{margin-top:10px;border:1px solid #292e2b;background:#0b0e0c;border-radius:13px;padding:12px;font-size:11px;line-height:1.8;color:#b9bebb}
-.entry-status.good{border-color:#28513f;background:#0a1611}
-.entry-status.warn{border-color:#594a24;background:#161206}
-.entry-status.bad{border-color:#5a292f;background:#180c0e}
-.entry-status-title{font-size:14px;font-weight:950;color:#fff;margin-bottom:6px}
-.entry-road{margin-top:10px;border:1px solid #294760;background:#081119;border-radius:13px;padding:12px}
-.entry-road-title{font-size:13px;font-weight:950;color:#9fd2ff}
-.entry-road-text{font-size:11px;line-height:1.8;color:#aebbc5;margin-top:5px}
+/* 新增：我的進場現況分析 */
+.entry-analysis{
+margin-top:15px;
+padding-top:14px;
+border-top:1px solid #202522
+}
+.entry-analysis-title{
+font-size:15px;
+font-weight:950
+}
+.entry-analysis-sub{
+font-size:11px;
+color:var(--muted);
+line-height:1.7;
+margin-top:4px
+}
+.entry-analysis-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:10px
+}
+.entry-analysis-box{
+border:1px solid #252b27;
+background:#080b09;
+border-radius:12px;
+padding:10px
+}
+.entry-analysis-box span{
+display:block;
+font-size:9px;
+color:#777d79
+}
+.entry-analysis-box strong{
+display:block;
+font-size:16px;
+margin-top:5px
+}
+.entry-status{
+margin-top:10px;
+border:1px solid #292e2b;
+background:#0b0e0c;
+border-radius:13px;
+padding:12px;
+font-size:11px;
+line-height:1.8;
+color:#b9bebb
+}
+.entry-status.good{
+border-color:#28513f;
+background:#0a1611
+}
+.entry-status.warn{
+border-color:#594a24;
+background:#161206
+}
+.entry-status.bad{
+border-color:#5a292f;
+background:#180c0e
+}
+.entry-status-title{
+font-size:14px;
+font-weight:950;
+color:#fff;
+margin-bottom:6px
+}
+.entry-road{
+margin-top:10px;
+border:1px solid #294760;
+background:#081119;
+border-radius:13px;
+padding:12px
+}
+.entry-road-title{
+font-size:13px;
+font-weight:950;
+color:#9fd2ff
+}
+.entry-road-text{
+font-size:11px;
+line-height:1.8;
+color:#aebbc5;
+margin-top:5px
+}
 
 .recommend-card{padding:15px;margin-bottom:14px;scroll-margin-top:12px}
 .recommend-top{align-items:flex-start}
@@ -220,62 +291,6 @@ color:#777d79;font-size:11px;line-height:1.7;text-align:center
 .strategy-level{border:1px solid #242925;background:#080b09;border-radius:13px;padding:11px}
 .strategy-level span{display:block;font-size:10px;font-weight:800;color:#7f8681}
 .strategy-level strong{display:block;font-size:19px;font-weight:950;margin-top:5px}
-
-.level-current{
-grid-column:1/-1;
-border-color:#344139;
-background:linear-gradient(135deg,#111713,#090d0b);
-padding:13px 14px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:14px;
-position:relative;
-overflow:hidden
-}
-.level-current:before{
-content:"";
-position:absolute;
-left:0;
-top:0;
-bottom:0;
-width:3px;
-background:var(--green)
-}
-.level-current-info{min-width:0}
-.level-current-label{
-display:flex!important;
-align-items:center;
-gap:6px;
-font-size:10px!important;
-font-weight:950!important;
-letter-spacing:.45px;
-color:#9ba59f!important
-}
-.level-current-dot{
-width:6px;
-height:6px;
-border-radius:50%;
-background:var(--green);
-box-shadow:0 0 10px rgba(69,224,173,.55);
-flex:0 0 auto
-}
-.level-current-sub{
-display:block;
-font-size:9px;
-color:#626b66;
-font-weight:700;
-margin-top:4px
-}
-.level-current strong{
-font-size:25px;
-line-height:1;
-margin:0;
-color:#f7faf8;
-letter-spacing:-.5px;
-white-space:nowrap
-}
-
 .level-entry{border-color:#28493c}.level-entry strong{color:#a6ead3}
 .level-stop{border-color:#512b30}.level-stop strong{color:#ff8d97}
 .level-pressure,.level-tp{border-color:#554a24}.level-pressure strong,.level-tp strong{color:#ffc85a}
@@ -287,85 +302,18 @@ white-space:nowrap
 .return-recommend-btn{width:100%;padding:13px;background:#141a16}
 .data-note{font-size:10px;color:#6f7471;line-height:1.75;margin:16px 4px}
 
-/* 新增：首頁回踩通知 */
-.entry-alert-box{
-margin:0 0 14px;
-border:1px solid #28513f;
-background:linear-gradient(135deg,#0d1a14,#09100c);
-border-radius:16px;
-padding:13px;
-box-shadow:0 10px 30px rgba(0,0,0,.2)
-}
-.entry-alert-head{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:10px
-}
-.entry-alert-title{
-font-size:14px;
-font-weight:950;
-color:#bdf2dc
-}
-.entry-alert-time{
-font-size:9px;
-color:#748079
-}
-.entry-alert-list{
-display:grid;
-gap:7px;
-margin-top:10px
-}
-.entry-alert-item{
-border:1px solid #25483b;
-background:#09140f;
-border-radius:12px;
-padding:10px;
-cursor:pointer
-}
-.entry-alert-symbol{
-font-size:14px;
-font-weight:950
-}
-.entry-alert-detail{
-font-size:10px;
-color:#a8b3ad;
-line-height:1.7;
-margin-top:4px
-}
-
-/* 新增：每個策略底部返回按鈕 */
-.strategy-bottom-nav{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px;
-margin-top:14px;
-padding-top:14px;
-border-top:1px solid #202522
-}
-.strategy-nav-btn{
-border:1px solid #303632;
-background:linear-gradient(180deg,#121713,#0b0f0c);
-color:#e7ebe8;
-border-radius:12px;
-padding:12px 8px;
-font-size:12px;
-font-weight:900
-}
-.strategy-nav-btn:active{transform:scale(.98)}
-.strategy-nav-btn.home{
-border-color:#28513f;
-color:#bdf2dc;
-background:#0b1712
-}
-
 #analysisView{will-change:transform;touch-action:pan-y;transition:transform .24s cubic-bezier(.22,.61,.36,1),opacity .24s ease}
 #analysisView.swiping-back{transition:none}
 #analysisView.swipe-return{transition:transform .22s cubic-bezier(.22,.61,.36,1),opacity .22s ease}
 
 @media(min-width:900px){
-.app{width:min(100%,1440px);padding-left:28px;padding-right:28px}
+.app{
+width:min(100%,1440px);
+padding-left:28px;
+padding-right:28px;
 }
+}
+
 @media(max-width:430px){
 .app{padding-left:max(11px,calc(env(safe-area-inset-left) + 11px));padding-right:max(11px,calc(env(safe-area-inset-right) + 11px));padding-top:max(22px,calc(env(safe-area-inset-top) + 14px))}
 .logo{font-size:22px}
@@ -414,15 +362,6 @@ background:#0b1712
 </div>
 </div>
 
-<!-- 新增：符合策略並回踩進入觀察入場區間時顯示 -->
-<div id="entryAlertBox" class="entry-alert-box hidden">
-<div class="entry-alert-head">
-<div class="entry-alert-title">🔔 回踩進入觀察入場區間</div>
-<div id="entryAlertTime" class="entry-alert-time"></div>
-</div>
-<div id="entryAlertList" class="entry-alert-list"></div>
-</div>
-
 <div id="watchSection">
 <div class="section-head">
 <div>
@@ -452,23 +391,32 @@ background:#0b1712
 
 <div class="update-line">
 <span id="updateText">正在掃描市場…</span>
-<span id="countdown">15:00</span>
+<span id="countdown">01:00</span>
 </div>
 
 <div class="section-head">
-<div><div class="section-title">🎯 自動偵測符合策略股票</div><div class="section-sub">母版本策略掃描結果</div></div>
+<div>
+<div class="section-title">🎯 自動偵測符合策略股票</div>
+<div class="section-sub">母版本策略掃描結果</div>
+</div>
 <button class="more-btn" data-more="strategy">全部收起</button>
 </div>
 <div id="strategyGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div><div class="section-title">🟢 做多觀察</div><div class="section-sub">趨勢與位置較適合持續觀察</div></div>
+<div>
+<div class="section-title">🟢 做多觀察</div>
+<div class="section-sub">趨勢與位置較適合持續觀察</div>
+</div>
 <button class="more-btn" data-more="long">全部收起</button>
 </div>
 <div id="longGrid" class="stock-grid"></div>
 
 <div class="section-head">
-<div><div class="section-title">⚡ 市場異動雷達</div><div class="section-sub">價格與成交量異動</div></div>
+<div>
+<div class="section-title">⚡ 市場異動雷達</div>
+<div class="section-sub">價格與成交量異動</div>
+</div>
 <button class="more-btn" data-more="radar">全部收起</button>
 </div>
 <div id="radarGrid" class="stock-grid"></div>
@@ -477,7 +425,10 @@ background:#0b1712
 
 <div id="usMarket" class="hidden">
 <div class="section-head">
-<div><div class="section-title">🇺🇸 美股最近分析</div><div class="section-sub">搜尋過的美股會顯示在這裡</div></div>
+<div>
+<div class="section-title">🇺🇸 美股最近分析</div>
+<div class="section-sub">搜尋過的美股會顯示在這裡</div>
+</div>
 </div>
 <div id="usRecentGrid" class="stock-grid"></div>
 </div>
@@ -499,10 +450,6 @@ const WATCH_KEY="yaozi_watchlist";
 const HISTORY_KEY="yaozi_search_history_v1";
 const POSITION_KEY="yaozi_positions_v46";
 
-/* 新增：回踩通知紀錄 */
-const ENTRY_NOTIFY_KEY="yaozi_entry_notify_v1";
-const RADAR_REFRESH_SECONDS=15*60;
-
 const BACKTEST_DAYS=365;
 const BACKTEST_OBSERVE_DAYS=30;
 const BACKTEST_MIN_TRADES=8;
@@ -515,8 +462,14 @@ var radarData=null;
 var currentMarketMetrics=null;
 var currentSetups=null;
 
-var expanded={watch:true,strategy:true,long:true,radar:true};
-var countdownSeconds=RADAR_REFRESH_SECONDS;
+var expanded={
+watch:true,
+strategy:true,
+long:true,
+radar:true
+};
+
+var countdownSeconds=60;
 
 function el(id){return document.getElementById(id)}
 
@@ -584,6 +537,7 @@ function renderSearchHistory(){
 var box=el("searchHistory");
 var list=el("searchHistoryList");
 if(!box||!list)return;
+
 var h=getSearchHistory();
 
 if(!h.length){
@@ -755,13 +709,11 @@ function historicalRSI(rows,period=14){
 if(rows.length<period+1)return 50;
 var a=rows.slice(-(period+1));
 var gain=0,loss=0;
-
 for(var i=1;i<a.length;i++){
 var diff=Number(a[i].close)-Number(a[i-1].close);
 if(diff>0)gain+=diff;
 else loss+=Math.abs(diff)
 }
-
 var ag=gain/period;
 var al=loss/period;
 if(al===0)return 100;
@@ -779,13 +731,11 @@ function historicalATR(rows,period=14){
 if(rows.length<2)return 0;
 var a=rows.slice(-(period+1));
 var trs=[];
-
 for(var i=1;i<a.length;i++){
 var h=Number(a[i].high),l=Number(a[i].low),pc=Number(a[i-1].close);
 var tr=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));
 if(Number.isFinite(tr))trs.push(tr)
 }
-
 return average(trs)||0
 }
 
@@ -845,10 +795,8 @@ return{current,average20,ratio,level}
 function structureHealthy(m){
 var rows=m.rows||[];
 if(rows.length<10)return true;
-
 var c=rows.slice(-5).map(x=>Number(x.close)).filter(Number.isFinite);
 if(c.length<3)return true;
-
 return c.at(-1)>=c[0]*.96&&m.price>=m.ma60*.97
 }
 
@@ -912,243 +860,37 @@ var entryLow,entryHigh,stop1,stop2;
 if(type==="PULLBACK"){
 entryLow=Math.max(ma20-atr*.25,support);
 entryHigh=Math.min(price+atr*.15,ma20+atr*.45);
-
 if(entryHigh<entryLow)entryHigh=entryLow+atr*.25;
-
 stop1=Math.min(entryLow-atr*.55,support-atr*.25);
 stop2=Math.min(ma60-atr*.35,low10-atr*.3,stop1-atr*.6)
-
 }else if(type==="HIGH_R"){
-
 entryLow=Math.max(resistance-atr*.12,price-atr*.1);
 entryHigh=Math.max(resistance+atr*.18,price+atr*.1);
-
 if(entryHigh<entryLow)entryHigh=entryLow+atr*.3;
-
 stop1=Math.min(resistance-atr*.55,entryLow-atr*.45);
 stop2=Math.min(ma20-atr*.35,low10-atr*.25,stop1-atr*.65)
-
 }else{
-
 entryLow=Math.max(price-atr*.18,ma20);
 entryHigh=price+atr*.28;
-
 if(entryHigh<entryLow)entryHigh=entryLow+atr*.3;
-
 stop1=Math.min(price-atr*.9,low10-atr*.15);
 stop2=Math.min(ma20-atr*.45,low10-atr*.4,stop1-atr*.65)
 }
 
-var rawEntryLow=entryLow;
-
-if(price>0){
-if(rawEntryLow>price){
-entryLow=Math.max(price-atr*.25,price*.5);
-entryHigh=price
-}else{
-entryHigh=Math.min(entryHigh,price);
-entryLow=Math.min(entryLow,entryHigh)
-}
-
-if(!Number.isFinite(entryLow)||entryLow<=0){
-entryLow=Math.max(price-atr*.25,price*.5)
-}
-
-if(!Number.isFinite(entryHigh)||entryHigh<=0){
-entryHigh=price
-}
-
 entryLow=Math.max(entryLow,price*.5);
-entryHigh=Math.min(entryHigh,price);
-
-if(entryLow>entryHigh){
-entryLow=Math.max(price-atr*.25,price*.5);
-entryHigh=price
-}
-}
+entryHigh=Math.max(entryHigh,entryLow);
 
 var center=(entryLow+entryHigh)/2;
-
-if(!Number.isFinite(stop1)||stop1>=center){
-stop1=center-atr*.8
-}
-
-if(!Number.isFinite(stop2)||stop2>=stop1){
-stop2=stop1-atr*.7
-}
+if(stop1>=center)stop1=center-atr*.8;
+if(stop2>=stop1)stop2=stop1-atr*.7;
 
 var risk=Math.max(center-stop1,atr*.45);
 var previousHigh=Math.max(resistance,center);
-
 var tp1=Math.max(previousHigh,center+risk*1.2);
 var tp2=Math.max(tp1+atr*.35,center+risk*2);
 var tp3=Math.max(tp2+atr*.45,center+risk*3);
 
-return{
-entryLow,
-entryHigh,
-center,
-stop1,
-stop2,
-previousHigh,
-risk,
-tp1,
-tp2,
-tp3
-}
-}
-
-/* 新增：讀取回踩通知紀錄 */
-function getEntryNotifyState(){
-try{
-var d=JSON.parse(localStorage.getItem(ENTRY_NOTIFY_KEY)||"{}");
-return d&&typeof d==="object"?d:{}
-}catch(e){
-return{}
-}
-}
-
-function saveEntryNotifyState(d){
-try{
-localStorage.setItem(ENTRY_NOTIFY_KEY,JSON.stringify(d))
-}catch(e){}
-}
-
-/* 新增：首頁通知卡 */
-function renderEntryAlerts(alerts){
-var box=el("entryAlertBox");
-var list=el("entryAlertList");
-var time=el("entryAlertTime");
-
-if(!box||!list)return;
-
-if(!Array.isArray(alerts)||!alerts.length){
-box.classList.add("hidden");
-list.innerHTML="";
-return
-}
-
-box.classList.remove("hidden");
-
-if(time){
-time.textContent="偵測時間 "+currentTimeText()
-}
-
-list.innerHTML=alerts.map(x=>`
-<div class="entry-alert-item" data-entry-alert="${safe(x.symbol)}">
-<div class="entry-alert-symbol">🎯 ${safe(x.symbol)} ${safe(x.name||"")}</div>
-<div class="entry-alert-detail">
-${safe(x.strategyName)}｜目前價格 ${fmt(x.price)}<br>
-已回踩進入觀察入場區間 ${fmt(x.entryLow)} ～ ${fmt(x.entryHigh)}
-</div>
-</div>
-`).join("");
-
-list.querySelectorAll("[data-entry-alert]").forEach(x=>{
-x.onclick=()=>analyze(x.dataset.entryAlert)
-})
-}
-
-/* 新增：真正偵測「符合策略＋股價進入觀察入場區間」 */
-async function checkEntryNotifications(stocks){
-if(!Array.isArray(stocks)||!stocks.length){
-renderEntryAlerts([]);
-return
-}
-
-var alerts=[];
-var state=getEntryNotifyState();
-var now=Date.now();
-
-var names={
-PULLBACK:"支撐回踩",
-HIGH_R:"高 R 突破",
-SURGE:"強勢續攻"
-};
-
-var list=stocks.slice(0,30);
-
-for(var i=0;i<list.length;i++){
-var item=list[i];
-var symbol=String(item&&item.symbol||"").trim().toUpperCase();
-if(!symbol)continue;
-
-try{
-var d=await fetchStockData(symbol);
-var rows=d.rows||[];
-
-if(rows.length<60)continue;
-
-var m=marketOf(d);
-var v=volumeMetrics(d,rows);
-var setups=buildStrategySetups(d,m,v);
-
-var types=["PULLBACK","HIGH_R","SURGE"];
-
-for(var j=0;j<types.length;j++){
-var type=types[j];
-var setup=setups[type];
-
-if(!setup||!setup.qualified)continue;
-
-var t=strategyTargets(type,m);
-var price=Number(m.price);
-
-if(!Number.isFinite(price)||price<=0)continue;
-
-var inEntryZone=price>=Number(t.entryLow)&&price<=Number(t.entryHigh);
-
-var key=symbol+"_"+type;
-var old=state[key]||{};
-var wasInside=!!old.inside;
-
-if(inEntryZone){
-alerts.push({
-symbol,
-name:d.name||item.name||"",
-strategy:type,
-strategyName:names[type],
-price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh
-});
-
-/* 只有「剛進入」區間時跳一次系統通知 */
-if(!wasInside){
-if("Notification" in window&&Notification.permission==="granted"){
-try{
-new Notification("🎯 "+symbol+" 回踩進入觀察入場區間",{
-body:(d.name||"")+"｜"+names[type]+"｜現價 "+fmt(price)+"｜入場 "+fmt(t.entryLow)+" ～ "+fmt(t.entryHigh),
-tag:"yaozi-entry-"+key
-})
-}catch(e){}
-}
-}
-
-state[key]={
-inside:true,
-price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh,
-updatedAt:now
-}
-
-}else{
-state[key]={
-inside:false,
-price,
-entryLow:t.entryLow,
-entryHigh:t.entryHigh,
-updatedAt:now
-}
-}
-}
-
-}catch(e){}
-}
-
-saveEntryNotifyState(state);
-renderEntryAlerts(alerts)
+return{entryLow,entryHigh,center,stop1,stop2,previousHigh,risk,tp1,tp2,tp3}
 }
 
 function historicalMetrics(rows,index){
@@ -1535,25 +1277,7 @@ var t=el("strategyRecommendation");
 if(t)t.scrollIntoView({behavior:"smooth",block:"start"})
 }
 
-/* 新增：策略底部返回最上層 */
-function returnAnalysisTop(){
-var view=el("analysisView");
-if(view){
-window.scrollTo({top:0,behavior:"smooth"})
-}
-}
-
-/* 新增：綁定每套策略下面的返回按鈕 */
-function bindStrategyBottomNav(){
-document.querySelectorAll("[data-strategy-top]").forEach(b=>{
-b.onclick=returnAnalysisTop
-});
-
-document.querySelectorAll("[data-strategy-home]").forEach(b=>{
-b.onclick=goBackHome
-})
-}
-
+/* 新增：依照實際進場價分析目前持倉狀態 */
 function buildEntryStatusAnalysis(entry,shares,price,m,b,t,addPrice,secondAdd,a25,a50){
 if(!entry||!shares||!price)return"";
 
@@ -1582,23 +1306,34 @@ var statusText="";
 if(price>=entry&&trendBull&&aboveMA20&&aboveMA60){
 statusClass="good";
 statusTitle="🟢 目前在成本之上，多頭結構仍完整";
-statusText="目前股價高於你的平均進場價，同時 MA20 高於 MA60，價格也維持在主要均線之上。目前不屬於攤平狀態；若要增加部位，比較接近順勢加碼，仍應等待回踩或策略訊號確認。";
+statusText=
+"目前股價高於你的平均進場價，同時 MA20 高於 MA60，價格也維持在主要均線之上。"+
+"目前不屬於攤平狀態；若要增加部位，比較接近順勢加碼，仍應等待回踩或策略訊號確認。";
 }else if(price>=entry){
 statusClass="warn";
 statusTitle="🟡 目前仍在成本之上，但結構需要觀察";
-statusText="目前股價仍高於你的平均進場價，但短中期均線結構沒有同時維持在最強狀態。目前重點不是降低均價，而是觀察 MA20、MA60 與 SL1 是否守住。";
+statusText=
+"目前股價仍高於你的平均進場價，但短中期均線結構沒有同時維持在最強狀態。"+
+"目前重點不是降低均價，而是觀察 MA20、MA60 與 SL1 是否守住。";
 }else if(price<entry&&aboveSL1&&trendBull&&aboveMA60){
 statusClass=b.setup.score>=75?"good":"warn";
-statusTitle=b.setup.score>=75?"🟢 目前低於成本，但多頭結構尚未失效":"🟡 目前套牢，結構尚在但策略強度普通";
-statusText="目前股價低於你的平均成本，但仍高於 SL1，且 MA20 仍高於 MA60。原本多頭結構尚未明顯失效。若考慮降低均價，應以系統計算的第一、第二加碼觀察價分批評估，而不是單純因為套牢就補倉。";
+statusTitle=b.setup.score>=75
+?"🟢 目前低於成本，但多頭結構尚未失效"
+:"🟡 目前套牢，結構尚在但策略強度普通";
+statusText=
+"目前股價低於你的平均成本，但仍高於 SL1，且 MA20 仍高於 MA60。"+
+"原本多頭結構尚未明顯失效。若考慮降低均價，應以系統計算的第一、第二加碼觀察價分批評估，而不是單純因為套牢就補倉。";
 }else if(price<entry&&aboveSL2){
 statusClass="warn";
 statusTitle="🟡 已接近風險區，暫停積極攤平";
-statusText="目前價格已低於成本，且接近或跌破第一停損區。雖然尚未跌破 SL2，但結構風險已提高。此區應優先觀察是否重新站回支撐與 MA20，而不是繼續快速增加部位。";
+statusText=
+"目前價格已低於成本，且接近或跌破第一停損區。雖然尚未跌破 SL2，但結構風險已提高。"+
+"此區應優先觀察是否重新站回支撐與 MA20，而不是繼續快速增加部位。";
 }else{
 statusClass="bad";
 statusTitle="🔴 已進入結構失效區，不適合繼續攤平";
-statusText="目前價格已接近或跌破第二停損／結構失效區。此時再買雖然能降低帳面均價，但同時會增加弱勢部位與總風險。";
+statusText=
+"目前價格已接近或跌破第二停損／結構失效區。此時再買雖然能降低帳面均價，但同時會增加弱勢部位與總風險。";
 }
 
 var road=[];
@@ -1615,20 +1350,69 @@ var roadText=road.length
 
 return `
 <div class="entry-analysis">
-<div class="entry-analysis-title">📊 我的進場現況分析</div>
-<div class="entry-analysis-sub">依照你的實際平均進場價、目前股價、均線、策略與停損結構即時計算。</div>
+
+<div class="entry-analysis-title">
+📊 我的進場現況分析
+</div>
+
+<div class="entry-analysis-sub">
+依照你的實際平均進場價、目前股價、均線、策略與停損結構即時計算。
+</div>
 
 <div class="entry-analysis-grid">
-<div class="entry-analysis-box"><span>我的進場均價</span><strong>${fmt(entry)}</strong></div>
-<div class="entry-analysis-box"><span>目前股價</span><strong>${fmt(price)}</strong></div>
-<div class="entry-analysis-box"><span>距離我的成本</span><strong class="${pclass(costDiff)}">${pct(costDiff)}</strong></div>
-<div class="entry-analysis-box"><span>${price<entry?"回本需要上漲":"高於成本"}</span><strong class="${price<entry?"up":"down"}">${price<entry?fmt(Math.max(0,recoverPct),2)+"%":fmt(Math.max(0,costDiff),2)+"%"}</strong></div>
-<div class="entry-analysis-box"><span>目前最佳策略</span><strong>${safe(b.name)}</strong></div>
-<div class="entry-analysis-box"><span>策略符合度</span><strong>${b.setup.score} 分</strong></div>
-<div class="entry-analysis-box"><span>MA20</span><strong class="${aboveMA20?"down":"up"}">${fmt(m.ma20)}</strong></div>
-<div class="entry-analysis-box"><span>MA60</span><strong class="${aboveMA60?"down":"up"}">${fmt(m.ma60)}</strong></div>
-<div class="entry-analysis-box"><span>距離 SL1</span><strong class="${aboveSL1?"down":"up"}">${fmt(distanceSL1,2)}%</strong></div>
-<div class="entry-analysis-box"><span>距離 SL2</span><strong class="${aboveSL2?"down":"up"}">${fmt(distanceSL2,2)}%</strong></div>
+
+<div class="entry-analysis-box">
+<span>我的進場均價</span>
+<strong>${fmt(entry)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>目前股價</span>
+<strong>${fmt(price)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>距離我的成本</span>
+<strong class="${pclass(costDiff)}">${pct(costDiff)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>${price<entry?"回本需要上漲":"高於成本"}</span>
+<strong class="${price<entry?"up":"down"}">
+${price<entry?fmt(Math.max(0,recoverPct),2)+"%":fmt(Math.max(0,costDiff),2)+"%"}
+</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>目前最佳策略</span>
+<strong>${safe(b.name)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>策略符合度</span>
+<strong>${b.setup.score} 分</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>MA20</span>
+<strong class="${aboveMA20?"down":"up"}">${fmt(m.ma20)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>MA60</span>
+<strong class="${aboveMA60?"down":"up"}">${fmt(m.ma60)}</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>距離 SL1</span>
+<strong class="${aboveSL1?"down":"up"}">${fmt(distanceSL1,2)}%</strong>
+</div>
+
+<div class="entry-analysis-box">
+<span>距離 SL2</span>
+<strong class="${aboveSL2?"down":"up"}">${fmt(distanceSL2,2)}%</strong>
+</div>
+
 </div>
 
 <div class="entry-status ${statusClass}">
@@ -1684,8 +1468,8 @@ var t=strategyTargets(b.type,m);
 
 var riskLine=t.stop1;
 var deepRisk=t.stop2;
-var addPrice=Math.min(t.entryLow,price);
-var secondAdd=Math.min(Math.max(deepRisk,Math.min(m.ma20,t.entryHigh)),price);
+var addPrice=t.entryLow;
+var secondAdd=Math.max(deepRisk,Math.min(m.ma20,t.entryHigh));
 
 var structureGood=m.ma20>m.ma60&&price>=m.ma60*.97;
 var setupStrong=b.setup.score>=75;
@@ -1740,7 +1524,11 @@ return `
 <div class="position-card">
 
 <div class="position-title">設定我的入場</div>
-<div class="position-desc">輸入你的實際平均入場價、張數與零股。資料只儲存在這台裝置。</div>
+
+<div class="position-desc">
+輸入你的實際平均入場價、張數與零股。
+資料只儲存在這台裝置。
+</div>
 
 <div class="position-form">
 
@@ -1766,16 +1554,43 @@ return `
 
 ${entry&&shares?`
 <div class="position-summary-grid">
-<div class="position-summary"><span>總持有數量</span><strong>${st(shares)}</strong></div>
-<div class="position-summary"><span>我的平均成本</span><strong>${fmt(entry)}</strong></div>
-<div class="position-summary"><span>目前股價</span><strong>${fmt(price)}</strong></div>
-<div class="position-summary"><span>目前損益</span><strong class="${pclass(pnl)}">${pnl>=0?"+":""}${fmt(pnl,0)}</strong></div>
-<div class="position-summary"><span>報酬率</span><strong class="${pclass(pnlPct)}">${pct(pnlPct)}</strong></div>
-<div class="position-summary"><span>目前最佳策略</span><strong>${safe(b.name)} ${b.setup.score}分</strong></div>
+
+<div class="position-summary">
+<span>總持有數量</span>
+<strong>${st(shares)}</strong>
+</div>
+
+<div class="position-summary">
+<span>我的平均成本</span>
+<strong>${fmt(entry)}</strong>
+</div>
+
+<div class="position-summary">
+<span>目前股價</span>
+<strong>${fmt(price)}</strong>
+</div>
+
+<div class="position-summary">
+<span>目前損益</span>
+<strong class="${pclass(pnl)}">${pnl>=0?"+":""}${fmt(pnl,0)}</strong>
+</div>
+
+<div class="position-summary">
+<span>報酬率</span>
+<strong class="${pclass(pnlPct)}">${pct(pnlPct)}</strong>
+</div>
+
+<div class="position-summary">
+<span>目前最佳策略</span>
+<strong>${safe(b.name)} ${b.setup.score}分</strong>
+</div>
+
 </div>`:""}
 
 <div class="position-risk ${riskClass}">
-<div class="position-risk-title">${riskClass==="good"?"🟢 加碼條件尚可":riskClass==="bad"?"🔴 目前不宜攤平":"🟡 等待更好條件"}</div>
+<div class="position-risk-title">
+${riskClass==="good"?"🟢 加碼條件尚可":riskClass==="bad"?"🔴 目前不宜攤平":"🟡 等待更好條件"}
+</div>
 ${safe(decision)}
 </div>
 
@@ -1785,17 +1600,51 @@ ${entry&&shares?`
 <div class="add-plan-title">📍 可以再加買的位置</div>
 
 <div class="add-plan-grid">
-<div class="add-plan-box green"><span>第一加碼觀察價</span><strong>${fmt(addPrice)}</strong></div>
-<div class="add-plan-box"><span>第二加碼觀察價</span><strong>${fmt(secondAdd)}</strong></div>
-<div class="add-plan-box yellow"><span>SL1｜停止攤平</span><strong>${fmt(riskLine)}</strong></div>
-<div class="add-plan-box yellow"><span>SL2｜結構失效</span><strong>${fmt(deepRisk)}</strong></div>
+
+<div class="add-plan-box green">
+<span>第一加碼觀察價</span>
+<strong>${fmt(addPrice)}</strong>
+</div>
+
+<div class="add-plan-box">
+<span>第二加碼觀察價</span>
+<strong>${fmt(secondAdd)}</strong>
+</div>
+
+<div class="add-plan-box yellow">
+<span>SL1｜停止攤平</span>
+<strong>${fmt(riskLine)}</strong>
+</div>
+
+<div class="add-plan-box yellow">
+<span>SL2｜結構失效</span>
+<strong>${fmt(deepRisk)}</strong>
+</div>
+
 </div>
 
 <div class="position-summary-grid">
-<div class="position-summary"><span>第一批參考數量｜25%</span><strong>${st(a25)}</strong></div>
-<div class="position-summary"><span>第一批買後新均價</span><strong>${avg25!==null?fmt(avg25):"--"}</strong></div>
-<div class="position-summary"><span>第二批參考數量｜50%</span><strong>${st(a50)}</strong></div>
-<div class="position-summary"><span>第二批買後新均價</span><strong>${avg50!==null?fmt(avg50):"--"}</strong></div>
+
+<div class="position-summary">
+<span>第一批參考數量｜25%</span>
+<strong>${st(a25)}</strong>
+</div>
+
+<div class="position-summary">
+<span>第一批買後新均價</span>
+<strong>${avg25!==null?fmt(avg25):"--"}</strong>
+</div>
+
+<div class="position-summary">
+<span>第二批參考數量｜50%</span>
+<strong>${st(a50)}</strong>
+</div>
+
+<div class="position-summary">
+<span>第二批買後新均價</span>
+<strong>${avg50!==null?fmt(avg50):"--"}</strong>
+</div>
+
 </div>
 
 ${buildEntryStatusAnalysis(entry,shares,price,m,b,t,addPrice,secondAdd,a25,a50)}
@@ -1858,22 +1707,25 @@ var risk=t.center-stop;
 return reward<=0||risk<=0?"--":(reward/risk).toFixed(2)+"R"
 }
 
-var targetBlock=`
+return `
+<div class="strategy-card">
+
+<div class="strategy-head">
+<div>
+<div class="strategy-name">${emojis[type]} ${names[type]}</div>
+<div class="strategy-grade">${grade}</div>
+</div>
+
+<div class="strategy-score">
+${setup.score}
+<small>${setup.passed}/${setup.total} 條</small>
+</div>
+</div>
+
 <div style="margin-top:14px;border-top:1px solid #202522;padding-top:13px">
 <div class="section-title">🎯 策略目標規劃</div>
 
 <div class="strategy-levels">
-
-<div class="strategy-level level-current">
-<div class="level-current-info">
-<span class="level-current-label">
-<i class="level-current-dot"></i>
-CURRENT PRICE｜現在的價格
-</span>
-<small class="level-current-sub">目前市場價格</small>
-</div>
-<strong>${fmt(m.price)}</strong>
-</div>
 
 <div class="strategy-level level-entry" style="grid-column:1/-1">
 <span>👀 觀察入場區間</span>
@@ -1881,12 +1733,12 @@ CURRENT PRICE｜現在的價格
 </div>
 
 <div class="strategy-level level-stop">
-<span>🛑 SL1｜第一止損</span>
+<span>🛑 SL1｜第一停損</span>
 <strong>${fmt(t.stop1)}</strong>
 </div>
 
 <div class="strategy-level level-stop">
-<span>🛡 SL2｜第二止損</span>
+<span>🛡 SL2｜第二停損</span>
 <strong>${fmt(t.stop2)}</strong>
 </div>
 
@@ -1915,24 +1767,6 @@ CURRENT PRICE｜現在的價格
 
 </div>
 </div>
-`;
-
-return `
-<div class="strategy-card">
-
-<div class="strategy-head">
-<div>
-<div class="strategy-name">${emojis[type]} ${names[type]}</div>
-<div class="strategy-grade">${grade}</div>
-</div>
-
-<div class="strategy-score">
-${setup.score}
-<small>${setup.passed}/${setup.total} 條</small>
-</div>
-</div>
-
-${targetBlock}
 
 <div style="margin-top:18px;border-top:1px solid #202522;padding-top:14px">
 <div class="section-title">📋 ${names[type]}策略條件</div>
@@ -1952,11 +1786,6 @@ ${x.pass?"✓":"✕"} ${i+1}. ${safe(x.title)}
 
 <div class="qualified-badge ${setup.qualified?"":"not-qualified"}">
 ${setup.qualified?"✓ 目前技術條件符合此策略":"目前尚未完整符合此策略"}
-</div>
-
-<div class="strategy-bottom-nav">
-<button type="button" class="strategy-nav-btn" data-strategy-top>↑ 返回最上層</button>
-<button type="button" class="strategy-nav-btn home" data-strategy-home>⌂ 返回首頁</button>
 </div>
 
 </div>`
@@ -2102,7 +1931,6 @@ ${strategyHTML("SURGE",setups.SURGE,m)}
 
 bindStrategyJumps();
 bindPositionControls();
-bindStrategyBottomNav();
 
 var f=el("favoriteButton");
 if(f)f.onclick=toggleFavorite;
@@ -2210,6 +2038,112 @@ view.addEventListener("touchend",finish,{passive:true});
 view.addEventListener("touchcancel",finish,{passive:true})
 })();
 
+function getEntryNotifyState(){
+try{
+return JSON.parse(localStorage.getItem("yaozi_entry_notify_state_v3")||"{}")||{}
+}catch(e){
+return{}
+}
+}
+
+function saveEntryNotifyState(x){
+try{
+localStorage.setItem("yaozi_entry_notify_state_v3",JSON.stringify(x||{}))
+}catch(e){}
+}
+
+function pullbackZoneFromRadarItem(s){
+var low=Number(s.entryLow??s.entry_low??s.observationLow??s.observation_low);
+var high=Number(s.entryHigh??s.entry_high??s.observationHigh??s.observation_high);
+
+if(Number.isFinite(low)&&Number.isFinite(high)&&low>0&&high>0){
+if(high<low){var z=low;low=high;high=z}
+return{low:low,high:high}
+}
+
+var price=Number(s.price);
+var ma20=Number(s.ma20);
+var support=Number(s.support);
+var atr=Number(s.atr);
+
+if(Number.isFinite(price)&&price>0&&Number.isFinite(ma20)&&ma20>0&&Number.isFinite(atr)&&atr>0){
+if(!Number.isFinite(support)||support<=0)support=ma20;
+low=Math.max(ma20-atr*.25,support);
+high=Math.min(price+atr*.15,ma20+atr*.45);
+if(high<low)high=low+atr*.25;
+if(low>price)low=price;
+if(high>price)high=price;
+if(high<low)low=high;
+return{low:low,high:high}
+}
+
+return null
+}
+
+function isPullbackRadarItem(s){
+var name=String(s.strategy||s.strategyName||s.type||"").toUpperCase();
+return name.includes("回踩")||name.includes("PULLBACK")
+}
+
+function sendEntryNotification(title,body,key){
+if(!("Notification" in window)||Notification.permission!=="granted")return;
+var state=getEntryNotifyState();
+var now=Date.now();
+var last=Number(state[key]||0);
+if(now-last<30*60*1000)return;
+try{
+new Notification(title,{body:body,tag:key,renotify:false});
+state[key]=now;
+saveEntryNotifyState(state)
+}catch(e){}
+}
+
+function checkRadarEntryNotifications(d){
+var formal=Array.isArray(d.strategyReady)?d.strategyReady:[];
+var radar=Array.isArray(d.radar)?d.radar:[];
+var all=[...formal,...radar];
+var seen={};
+
+all.forEach(s=>{
+var symbol=String(s.symbol||"").toUpperCase();
+if(!symbol||seen[symbol])return;
+seen[symbol]=1;
+if(!isPullbackRadarItem(s))return;
+
+var score=Number(s.entryScore??s.score);
+var price=Number(s.price);
+var zone=pullbackZoneFromRadarItem(s);
+if(!Number.isFinite(price)||price<=0)return;
+if(!zone||!Number.isFinite(zone.low)||!Number.isFinite(zone.high))return;
+
+var inZone=price>=zone.low&&price<=zone.high;
+var formalItem=formal.find(x=>String(x.symbol||"").toUpperCase()===symbol);
+
+var passed=Number(s.passed??s.conditionPassed??s.conditionsPassed);
+var total=Number(s.total??s.conditionTotal??s.conditionsTotal);
+if(!Number.isFinite(passed)){
+if(Number.isFinite(score))passed=Math.round(score/100*8);
+else passed=0
+}
+if(!Number.isFinite(total)||total<=0)total=8;
+
+var formalQualified=passed>=7||score>=88||!!formalItem;
+if(formalQualified){
+var body=(s.name?String(s.name)+" ":"")+"支撐回踩策略已成立，目前符合 "+passed+"/"+total+" 條件。";
+if(inZone)body+="目前已進入回踩觀察區 "+fmt(zone.low)+"～"+fmt(zone.high)+"，現價 "+fmt(price)+"。";
+sendEntryNotification("🟢 "+symbol+" 回踩正式訊號",body,"pullback_formal_"+symbol);
+return
+}
+
+var nearQualified=passed===6||(score>=75&&score<88);
+if(nearQualified&&inZone){
+var body2=(s.name?String(s.name)+" ":"")+"目前符合 "+passed+"/"+total+" 條件，且已進入回踩觀察區 "+fmt(zone.low)+"～"+fmt(zone.high)+"，現價 "+fmt(price)+"。這是接近形成預警，尚非正式策略成立。";
+sendEntryNotification("🟡 "+symbol+" 回踩接近形成",body2,"pullback_near_"+symbol);
+return
+}
+})
+}
+
 async function loadRadar(){
 try{
 var r=await fetch("/api/radar?t="+Date.now(),{cache:"no-store"});
@@ -2218,22 +2152,20 @@ var d=await r.json();
 if(!r.ok||!d.ok)throw Error(d.error||"雷達取得失敗");
 
 radarData=d;
+checkRadarEntryNotifications(d);
 
 el("scanCount").textContent=fmt(d.scanned,0);
 el("strategyCount").textContent=fmt((d.strategyReady||[]).length,0);
 el("radarCount").textContent=fmt((d.radar||[]).length,0);
 
-el("updateText").textContent="FinMind · 最後更新 "+currentTimeText()+" · 每 15 分鐘重新掃描";
+el("updateText").textContent="FinMind · 最後更新 "+currentTimeText()+" · 每 60 秒重新掃描";
 
 renderStocks("strategyGrid",d.strategyReady||[],expanded.strategy);
 renderStocks("longGrid",d.longWatch||[],expanded.long);
 renderStocks("radarGrid",d.radar||[],expanded.radar);
 
 syncMoreButtons();
-countdownSeconds=RADAR_REFRESH_SECONDS;
-
-/* 新增：每次首頁雷達刷新後，偵測符合策略且回踩進入觀察入場區間 */
-checkEntryNotifications(d.strategyReady||[]);
+countdownSeconds=60
 
 }catch(e){
 el("updateText").textContent="雷達連線失敗："+e.message
@@ -2393,30 +2325,24 @@ return
 }
 
 if(Notification.permission==="granted"){
-alert("高勝率策略通知已開啟。符合策略且股價回踩進入觀察入場區間時會通知。");
+alert("高勝率策略通知已開啟。");
 return
 }
 
 try{
 var p=await Notification.requestPermission();
-if(p==="granted"){
-alert("高勝率策略通知已開啟。符合策略且股價回踩進入觀察入場區間時會通知。")
-}
+if(p==="granted")alert("高勝率策略通知已開啟。")
 }catch(e){}
 };
 
 el("backButton").onclick=goBackHome;
 
-/* 首頁每 15 分鐘自動重新掃描 */
 setInterval(()=>{
 countdownSeconds--;
 
 if(countdownSeconds<=0){
-countdownSeconds=RADAR_REFRESH_SECONDS;
-
-if(!document.hidden){
-loadRadar()
-}
+countdownSeconds=60;
+if(!document.hidden)loadRadar()
 }
 
 var m=Math.floor(countdownSeconds/60);
