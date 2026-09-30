@@ -11,500 +11,3530 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f6f7f9;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.app{width:100%;max-width:760px;margin:0 auto;padding-top:calc(env(safe-area-inset-top,0px) + 22px);padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px))}
-.top{display:flex;justify-content:space-between;align-items:center;gap:14px;min-height:62px;margin:0 0 22px}
-.brand{font-size:25px;font-weight:900}
-.brand small{display:block;color:#7c8795;font-size:11px;font-weight:600;margin-top:2px}
-.icon{border:1px solid #e0e4e9;background:#fff;border-radius:13px;padding:10px 12px}
-.search{display:flex;gap:8px;position:relative}
-.search-box{flex:1;min-width:0;position:relative}
-.search input{width:100%;border:1px solid #dfe4e9;background:#fff;border-radius:14px;padding:14px;font-size:16px;outline:none}
-.search input:focus{border-color:#1769e0;box-shadow:0 0 0 3px rgba(23,105,224,.08)}
-.primary{border:0;background:#1769e0;color:#fff;border-radius:14px;padding:0 18px;font-weight:800}
-.suggestions{position:absolute;left:0;right:0;top:calc(100% + 7px);z-index:100;background:#fff;border:1px solid #dfe4e9;border-radius:15px;box-shadow:0 12px 32px rgba(24,34,45,.14);overflow:hidden;max-height:360px;overflow-y:auto}
-.suggestion{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;border:0;border-bottom:1px solid #eef1f3;background:#fff;padding:13px 14px;text-align:left;color:#17202a}
-.suggestion:last-child{border-bottom:0}
-.suggestion:active{background:#f4f7fa}
-.suggestion-main{font-weight:850;font-size:15px}
-.suggestion-code{font-size:12px;color:#7d8793;margin-top:3px}
-.suggestion-market{font-size:11px;color:#7d8793;white-space:nowrap}
-.history-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 7px;font-size:11px;font-weight:800;color:#7d8793}
-.history-clear{border:0;background:transparent;color:#1769e0;font-size:11px;font-weight:700;padding:4px}
-.tabs{display:flex;gap:8px;margin:14px 0 18px;overflow-x:auto}
-.tab{border:1px solid #dfe4e9;background:#fff;border-radius:999px;padding:9px 13px;font-weight:700;color:#687382;white-space:nowrap}
-.tab.on{background:#17202a;color:#fff;border-color:#17202a}
-.muted{color:#7d8793}
-.empty,.card{background:#fff;border:1px solid #e4e8ec;border-radius:18px;box-shadow:0 4px 18px rgba(24,34,45,.04)}
-.empty{padding:18px;color:#7d8793;line-height:1.55}
-.stock-card{padding:15px;margin-bottom:9px;cursor:pointer}
-.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.symbol{font-size:17px;font-weight:900}
-.name{font-size:12px;color:#7d8793;margin-top:3px}
-.price{text-align:right;font-size:19px;font-weight:900}
-.change{font-size:12px;font-weight:800;margin-top:3px}
-.up{color:#d73a49}.down{color:#159447}
-.status{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:800;margin-top:10px}
-.green{background:#e9f8ef;color:#148244}
-.yellow{background:#fff5d8;color:#a06a00}
-.gray{background:#f0f2f4;color:#6f7882}
-.score{font-size:11px;color:#65717d;margin-top:9px}
-.hero{padding:18px}
-.hero-price{font-size:34px;font-weight:950;margin-top:8px}
-.live{font-size:11px;color:#697581;margin-top:5px}
-.strategy{padding:17px;margin-top:12px}
-.strategy-head{display:flex;justify-content:space-between;align-items:center}
-.strategy-title{font-size:20px;font-weight:950}
-.bigscore{font-size:25px;font-weight:950}
-.section-title{font-size:16px;font-weight:900;margin-top:19px;margin-bottom:8px}
-.levels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.level{padding:13px;border-radius:13px;background:#f7f8fa;border:1px solid #e7eaee}
-.level.full{grid-column:1/-1}
-.level span{display:block;font-size:10px;color:#7c8793}
-.level strong{display:block;font-size:17px;margin-top:4px}
-.level small{display:block;font-size:10px;line-height:1.45;color:#7c8793;margin-top:5px}
-.entry{background:#edf5ff;border-color:#cfe1fa}
-.sl{background:#fff0f0;border-color:#f4d0d0}
-.tp{background:#eef9f1;border-color:#d0ebd8}
-.support{background:#ecfaf7;border-color:#cbece5}
-.breakout{background:#eef5ff;border-color:#cfe1fa}
-.pressure{background:#fff5ed;border-color:#f2dccb}
-.chip{margin-top:12px;padding:14px;border:1px solid #e7eaee;border-radius:14px;background:#fafbfc}
-.chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.chip-item{padding:10px;background:#fff;border:1px solid #eceff2;border-radius:11px}
-.chip-item span{display:block;font-size:10px;color:#7c8793}
-.chip-item strong{display:block;font-size:15px;margin-top:3px}
-.conditions{margin-top:15px;border-top:1px solid #edf0f2;padding-top:8px}
-.cond{padding:10px 0;border-bottom:1px solid #f0f2f4;font-size:13px}
-.ok{color:#16864a}.no{color:#c44848}
-.cond small{display:block;color:#7c8793;margin:4px 0 0 19px;line-height:1.4}
-.fav{width:100%;border:1px solid #dfe4e9;background:#fff;border-radius:12px;padding:11px;font-weight:800;margin-top:13px}
-.back{margin-bottom:12px}.hidden{display:none!important}
-.note{font-size:11px;line-height:1.55;color:#7c8793;margin-top:20px}
-.loader{padding:28px;text-align:center}
-.pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:#19a15f;margin-right:5px}
-@media(max-width:480px){.hero-price{font-size:31px}}
+
+.app{
+width:100%;
+max-width:760px;
+margin:0 auto;
+padding-top:calc(env(safe-area-inset-top,0px) + 22px);
+padding-right:max(16px,env(safe-area-inset-right,0px));
+padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));
+padding-left:max(16px,env(safe-area-inset-left,0px));
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:14px;
+min-height:62px;
+margin:0 0 22px
+}
+
+.brand{
+font-size:25px;
+font-weight:900
+}
+
+.brand small{
+display:block;
+color:#7c8795;
+font-size:11px;
+font-weight:600;
+margin-top:2px
+}
+
+.icon{
+border:1px solid #e0e4e9;
+background:#fff;
+border-radius:13px;
+padding:10px 12px
+}
+
+.search{
+display:flex;
+gap:8px;
+position:relative
+}
+
+.search-box{
+flex:1;
+min-width:0;
+position:relative
+}
+
+.search input{
+width:100%;
+border:1px solid #dfe4e9;
+background:#fff;
+border-radius:14px;
+padding:14px;
+font-size:16px;
+outline:none
+}
+
+.search input:focus{
+border-color:#1769e0;
+box-shadow:0 0 0 3px rgba(23,105,224,.08)
+}
+
+.primary{
+border:0;
+background:#1769e0;
+color:#fff;
+border-radius:14px;
+padding:0 18px;
+font-weight:800
+}
+
+.suggestions{
+position:absolute;
+left:0;
+right:0;
+top:calc(100% + 7px);
+z-index:100;
+background:#fff;
+border:1px solid #dfe4e9;
+border-radius:15px;
+box-shadow:0 12px 32px rgba(24,34,45,.14);
+overflow:hidden;
+max-height:360px;
+overflow-y:auto
+}
+
+.suggestion{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+width:100%;
+border:0;
+border-bottom:1px solid #eef1f3;
+background:#fff;
+padding:13px 14px;
+text-align:left;
+color:#17202a
+}
+
+.suggestion:last-child{
+border-bottom:0
+}
+
+.suggestion:active{
+background:#f4f7fa
+}
+
+.suggestion-main{
+font-weight:850;
+font-size:15px
+}
+
+.suggestion-code{
+font-size:12px;
+color:#7d8793;
+margin-top:3px
+}
+
+.suggestion-market{
+font-size:11px;
+color:#7d8793;
+white-space:nowrap
+}
+
+.history-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 14px 7px;
+font-size:11px;
+font-weight:800;
+color:#7d8793
+}
+
+.history-clear{
+border:0;
+background:transparent;
+color:#1769e0;
+font-size:11px;
+font-weight:700;
+padding:4px
+}
+
+.tabs{
+display:flex;
+gap:8px;
+margin:14px 0 18px;
+overflow-x:auto
+}
+
+.tab{
+border:1px solid #dfe4e9;
+background:#fff;
+border-radius:999px;
+padding:9px 13px;
+font-weight:700;
+color:#687382;
+white-space:nowrap
+}
+
+.tab.on{
+background:#17202a;
+color:#fff;
+border-color:#17202a
+}
+
+.muted{
+color:#7d8793
+}
+
+.empty,.card{
+background:#fff;
+border:1px solid #e4e8ec;
+border-radius:18px;
+box-shadow:0 4px 18px rgba(24,34,45,.04)
+}
+
+.empty{
+padding:18px;
+color:#7d8793;
+line-height:1.55
+}
+
+.stock-card{
+padding:15px;
+margin-bottom:9px;
+cursor:pointer
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+gap:12px;
+align-items:flex-start
+}
+
+.symbol{
+font-size:17px;
+font-weight:900
+}
+
+.name{
+font-size:12px;
+color:#7d8793;
+margin-top:3px
+}
+
+.price{
+text-align:right;
+font-size:19px;
+font-weight:900
+}
+
+.change{
+font-size:12px;
+font-weight:800;
+margin-top:3px
+}
+
+.up{color:#d73a49}
+.down{color:#159447}
+
+.status{
+display:inline-flex;
+align-items:center;
+gap:5px;
+border-radius:999px;
+padding:6px 9px;
+font-size:11px;
+font-weight:800;
+margin-top:10px
+}
+
+.green{
+background:#e9f8ef;
+color:#148244
+}
+
+.yellow{
+background:#fff5d8;
+color:#a06a00
+}
+
+.gray{
+background:#f0f2f4;
+color:#6f7882
+}
+
+.score{
+font-size:11px;
+color:#65717d;
+margin-top:9px
+}
+
+.hero{
+padding:18px
+}
+
+.hero-price{
+font-size:34px;
+font-weight:950;
+margin-top:8px
+}
+
+.live{
+font-size:11px;
+color:#697581;
+margin-top:5px
+}
+
+.strategy{
+padding:17px;
+margin-top:12px
+}
+
+.strategy-head{
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+.strategy-title{
+font-size:20px;
+font-weight:950
+}
+
+.bigscore{
+font-size:25px;
+font-weight:950
+}
+
+.section-title{
+font-size:16px;
+font-weight:900;
+margin-top:19px;
+margin-bottom:8px
+}
+
+.levels{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:12px
+}
+
+.level{
+padding:13px;
+border-radius:13px;
+background:#f7f8fa;
+border:1px solid #e7eaee
+}
+
+.level.full{
+grid-column:1/-1
+}
+
+.level span{
+display:block;
+font-size:10px;
+color:#7c8793
+}
+
+.level strong{
+display:block;
+font-size:17px;
+margin-top:4px
+}
+
+.level small{
+display:block;
+font-size:10px;
+line-height:1.45;
+color:#7c8793;
+margin-top:5px
+}
+
+.entry{
+background:#edf5ff;
+border-color:#cfe1fa
+}
+
+.sl{
+background:#fff0f0;
+border-color:#f4d0d0
+}
+
+.tp{
+background:#eef9f1;
+border-color:#d0ebd8
+}
+
+.support{
+background:#ecfaf7;
+border-color:#cbece5
+}
+
+.breakout{
+background:#eef5ff;
+border-color:#cfe1fa
+}
+
+.pressure{
+background:#fff5ed;
+border-color:#f2dccb
+}
+
+.chip{
+margin-top:12px;
+padding:14px;
+border:1px solid #e7eaee;
+border-radius:14px;
+background:#fafbfc
+}
+
+.chip-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:10px
+}
+
+.chip-item{
+padding:10px;
+background:#fff;
+border:1px solid #eceff2;
+border-radius:11px
+}
+
+.chip-item span{
+display:block;
+font-size:10px;
+color:#7c8793
+}
+
+.chip-item strong{
+display:block;
+font-size:15px;
+margin-top:3px
+}
+
+.conditions{
+margin-top:15px;
+border-top:1px solid #edf0f2;
+padding-top:8px
+}
+
+.cond{
+padding:10px 0;
+border-bottom:1px solid #f0f2f4;
+font-size:13px
+}
+
+.ok{color:#16864a}
+.no{color:#c44848}
+
+.cond small{
+display:block;
+color:#7c8793;
+margin:4px 0 0 19px;
+line-height:1.4
+}
+
+.fav{
+width:100%;
+border:1px solid #dfe4e9;
+background:#fff;
+border-radius:12px;
+padding:11px;
+font-weight:800;
+margin-top:13px
+}
+
+.back{
+margin-bottom:12px
+}
+
+.hidden{
+display:none!important
+}
+
+.note{
+font-size:11px;
+line-height:1.55;
+color:#7c8793;
+margin-top:20px
+}
+
+.loader{
+padding:28px;
+text-align:center
+}
+
+.pulse{
+display:inline-block;
+width:7px;
+height:7px;
+border-radius:50%;
+background:#19a15f;
+margin-right:5px
+}
+
+@media(max-width:480px){
+.hero-price{font-size:31px}
+}
 </style>
 </head>
 
 <body>
+
 <div class="app">
+
 <header class="top">
-<div class="brand">波段分析<small>台股即時策略</small></div>
+<div class="brand">
+波段分析
+<small>台股即時策略</small>
+</div>
+
 <button id="notify" class="icon">🔔</button>
 </header>
 
+
 <main id="home">
+
 <div class="search">
+
 <div class="search-box">
-<input id="q" inputmode="search" autocomplete="off" placeholder="輸入代號或名稱，例如 2330、台積、聯發">
+
+<input
+id="q"
+inputmode="search"
+autocomplete="off"
+placeholder="輸入代號或名稱，例如 2330、台積、聯發"
+>
+
 <div id="suggestions" class="suggestions hidden"></div>
-</div>
-<button id="go" class="primary">分析</button>
+
 </div>
 
-<div class="tabs">
-<button class="tab on" data-tab="signal">策略成立</button>
-<button class="tab" data-tab="near">接近形成</button>
-<button class="tab" data-tab="watch">我的自選</button>
+<button id="go" class="primary">分析</button>
+
 </div>
+
+
+<div class="tabs">
+
+<button class="tab on" data-tab="signal">
+策略成立
+</button>
+
+<button class="tab" data-tab="near">
+接近形成
+</button>
+
+<button class="tab" data-tab="watch">
+我的自選
+</button>
+
+</div>
+
 
 <div id="homeList"></div>
 
+
 <div class="note">
-8 條條件負責篩選波段狀態；實際支撐、進場、停損、突破、壓力與 TP 採用 SMC 市場結構分析，
-並結合成交量與法人籌碼確認。
+8 條條件負責篩選波段狀態；實際支撐、進場、停損、突破、壓力與 TP 採用 SMC 市場結構分析，並結合成交量與法人籌碼確認。
 </div>
+
 </main>
+
 
 <main id="detail" class="hidden">
-<button id="back" class="icon back">← 返回</button>
+
+<button id="back" class="icon back">
+← 返回
+</button>
+
 <div id="detailBody"></div>
+
 </main>
+
 </div>
 
+
 <script>
+
 const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
-const DEFAULT=['2330','2317','2454','2308','2382','3231','2881','2882','2891','2886','2603','2615'];
 
-let tab='signal',cache={},current='',detailTimer=null,radarTimer=null,searchTimer=null,selectedSearchSymbol='';
+const DEFAULT=[
+'2330',
+'2317',
+'2454',
+'2308',
+'2382',
+'3231',
+'2881',
+'2882',
+'2891',
+'2886',
+'2603',
+'2615'
+];
+
+let tab='signal';
+let cache={};
+let current='';
+let detailTimer=null;
+let radarTimer=null;
+let searchTimer=null;
+let selectedSearchSymbol='';
+
 const $=id=>document.getElementById(id);
-const fmt=(n,d=2)=>Number.isFinite(+n)?(+n).toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d}):'--';
-const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
-const sma=(a,n)=>avg(a.slice(-n));
+
+const fmt=(n,d=2)=>
+Number.isFinite(+n)
+?
+(+n).toLocaleString(
+'zh-TW',
+{
+minimumFractionDigits:d,
+maximumFractionDigits:d
+}
+)
+:
+'--';
+
+const esc=s=>
+String(s??'')
+.replaceAll('&','&amp;')
+.replaceAll('<','&lt;')
+.replaceAll('>','&gt;')
+.replaceAll('"','&quot;');
+
+const avg=a=>
+a.length
+?
+a.reduce((x,y)=>x+y,0)/a.length
+:
+0;
+
+const sma=(a,n)=>
+avg(a.slice(-n));
+
 
 function ema(a,n){
- if(!a.length)return 0;
- let e=a[0],k=2/(n+1);
- for(let i=1;i<a.length;i++)e=a[i]*k+e*(1-k);
- return e;
+
+if(!a.length)return 0;
+
+let e=a[0];
+
+const k=2/(n+1);
+
+for(let i=1;i<a.length;i++){
+
+e=
+a[i]*k+
+e*(1-k);
+
 }
+
+return e;
+
+}
+
+
 function rsi(a,n=14){
- if(a.length<=n)return 50;
- let g=0,l=0;
- for(let i=a.length-n;i<a.length;i++){const d=a[i]-a[i-1];if(d>0)g+=d;else l-=d;}
- if(l===0)return 100;
- return 100-100/(1+(g/n)/(l/n));
+
+if(a.length<=n)return 50;
+
+let g=0;
+let l=0;
+
+for(
+let i=a.length-n;
+i<a.length;
+i++
+){
+
+const d=
+a[i]-a[i-1];
+
+if(d>0){
+g+=d;
+}else{
+l-=d;
 }
+
+}
+
+if(l===0)return 100;
+
+return 100-
+100/
+(
+1+
+(g/n)/(l/n)
+);
+
+}
+
+
 function atr(rows,n=14){
- let v=[];
- for(let i=Math.max(1,rows.length-n);i<rows.length;i++){
-  const x=rows[i],p=rows[i-1].close;
-  v.push(Math.max(x.high-x.low,Math.abs(x.high-p),Math.abs(x.low-p)));
- }
- return avg(v);
+
+const v=[];
+
+for(
+let i=Math.max(1,rows.length-n);
+i<rows.length;
+i++
+){
+
+const x=rows[i];
+const p=rows[i-1].close;
+
+v.push(
+Math.max(
+x.high-x.low,
+Math.abs(x.high-p),
+Math.abs(x.low-p)
+)
+);
+
 }
-const watch=()=>{try{const x=JSON.parse(localStorage.getItem(WATCH_KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
-const saveWatch=a=>localStorage.setItem(WATCH_KEY,JSON.stringify([...new Set(a)]));
-const searchHistory=()=>{try{const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
+
+return avg(v);
+
+}
+
+
+const watch=()=>{
+
+try{
+
+const x=
+JSON.parse(
+localStorage.getItem(WATCH_KEY)||'[]'
+);
+
+return Array.isArray(x)
+?
+x
+:
+[];
+
+}catch{
+
+return [];
+
+}
+
+};
+
+
+const saveWatch=a=>
+localStorage.setItem(
+WATCH_KEY,
+JSON.stringify(
+[...new Set(a)]
+)
+);
+
+
+const searchHistory=()=>{
+
+try{
+
+const x=
+JSON.parse(
+localStorage.getItem(HISTORY_KEY)||'[]'
+);
+
+return Array.isArray(x)
+?
+x
+:
+[];
+
+}catch{
+
+return [];
+
+}
+
+};
+
+
 function saveSearchHistory(a){
- if(!a?.symbol)return;
- let h=searchHistory().filter(x=>x.symbol!==a.symbol);
- h.unshift({symbol:String(a.symbol),name:String(a.name||''),time:Date.now()});
- localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,10)));
+
+if(!a?.symbol)return;
+
+let h=
+searchHistory()
+.filter(
+x=>x.symbol!==a.symbol
+);
+
+h.unshift({
+
+symbol:
+String(a.symbol),
+
+name:
+String(a.name||''),
+
+time:
+Date.now()
+
+});
+
+localStorage.setItem(
+HISTORY_KEY,
+JSON.stringify(
+h.slice(0,10)
+)
+);
+
 }
+
+
 async function getStock(symbol){
- const r=await fetch('/api/stock?symbol='+encodeURIComponent(symbol)+'&t='+Date.now(),{cache:'no-store'});
- let d;try{d=await r.json()}catch{throw Error('股票資料格式錯誤')}
- if(!r.ok||!d.ok)throw Error(d.error||'資料取得失敗');
- return d;
+
+const r=
+await fetch(
+'/api/stock?symbol='+
+encodeURIComponent(symbol)+
+'&t='+
+Date.now(),
+{
+cache:'no-store'
+}
+);
+
+let d;
+
+try{
+
+d=
+await r.json();
+
+}catch{
+
+throw Error(
+'股票資料格式錯誤'
+);
+
 }
 
-/* SMC 結構辨識 */
-function swings(rows,left=2,right=2){
- const lows=[],highs=[];
- for(let i=left;i<rows.length-right;i++){
-  let lo=true,hi=true;
-  for(let j=1;j<=left;j++){if(rows[i].low>rows[i-j].low)lo=false;if(rows[i].high<rows[i-j].high)hi=false}
-  for(let j=1;j<=right;j++){if(rows[i].low>rows[i+j].low)lo=false;if(rows[i].high<rows[i+j].high)hi=false}
-  if(lo)lows.push({i,value:rows[i].low,row:rows[i]});
-  if(hi)highs.push({i,value:rows[i].high,row:rows[i]});
- }
- return {lows,highs};
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+'資料取得失敗'
+);
+
 }
-function zoneValid(zone,rows,bullish=true){
- const after=rows.slice(zone.i+1);
- if(bullish)return !after.some(x=>x.close<zone.low);
- return !after.some(x=>x.close>zone.high);
+
+return d;
+
 }
-function smcAnalysis(rows,price,A,inst){
- const recent=rows.slice(-140),S=swings(recent,2,2);
- const volBase=avg(recent.slice(-21,-1).map(x=>x.volume));
- const supports=[],pressures=[];
 
- /* Bullish / Bearish Order Blocks */
- for(let i=2;i<recent.length-2;i++){
-  const x=recent[i],n1=recent[i+1],n2=recent[i+2];
-  const displacementUp=n2.close>x.high+Math.max(A*.35,price*.004);
-  const displacementDown=n2.close<x.low-Math.max(A*.35,price*.004);
-  if(x.close<x.open&&displacementUp){
-   const z={type:'Bullish OB',i,low:x.low,high:Math.max(x.open,x.close),score:5};
-   if(zoneValid(z,recent,true)&&z.low<price)supports.push(z);
-  }
-  if(x.close>x.open&&displacementDown){
-   const z={type:'Bearish OB',i,low:Math.min(x.open,x.close),high:x.high,score:5};
-   if(zoneValid(z,recent,false)&&z.high>price)pressures.push(z);
-  }
- }
 
- /* Fair Value Gap */
- for(let i=1;i<recent.length-1;i++){
-  const a=recent[i-1],c=recent[i+1];
-  if(c.low>a.high){
-   const z={type:'Bullish FVG',i,low:a.high,high:c.low,score:3.5};
-   if(zoneValid(z,recent,true)&&z.low<price)supports.push(z);
-  }
-  if(c.high<a.low){
-   const z={type:'Bearish FVG',i,low:c.high,high:a.low,score:3.5};
-   if(zoneValid(z,recent,false)&&z.high>price)pressures.push(z);
-  }
- }
+/* =========================
+   SMC Swing
+========================= */
 
- /* Swing liquidity / BOS / Breaker */
- for(const h of S.highs){
-  const later=recent.slice(h.i+1);
-  const broken=later.some(x=>x.close>h.value+Math.max(A*.12,h.value*.0025));
-  if(broken&&h.value<price){
-   supports.push({type:'BOS / Breaker',i:h.i,low:h.value-A*.15,high:h.value+A*.15,score:6});
-  }else if(h.value>price){
-   pressures.push({type:'Buy-side Liquidity',i:h.i,low:h.value-A*.08,high:h.value+A*.08,score:4.5});
-  }
- }
- for(const l of S.lows){
-  if(l.value<price)supports.push({type:'Sell-side Liquidity / Demand',i:l.i,low:l.value-A*.10,high:l.value+A*.12,score:3.8});
- }
+function swings(
+rows,
+left=2,
+right=2
+){
 
- /* Liquidity sweep */
- for(let i=3;i<recent.length;i++){
-  const prevLow=Math.min(...recent.slice(Math.max(0,i-8),i).map(x=>x.low));
-  const prevHigh=Math.max(...recent.slice(Math.max(0,i-8),i).map(x=>x.high));
-  const x=recent[i];
-  if(x.low<prevLow&&x.close>prevLow){
-   supports.push({type:'Liquidity Sweep',i,low:x.low,high:prevLow,score:5.5});
-  }
-  if(x.high>prevHigh&&x.close<prevHigh){
-   pressures.push({type:'Liquidity Sweep',i,low:prevHigh,high:x.high,score:5.5});
-  }
- }
+const lows=[];
+const highs=[];
 
- /* 成交量確認 */
- for(const z of [...supports,...pressures]){
-  const r=recent[z.i];
-  if(r&&volBase>0&&r.volume>=volBase*1.35)z.score+=1.5;
-  const dist=Math.abs(price-(z.low+z.high)/2)/price;
-  z.score-=dist*12;
- }
+for(
+let i=left;
+i<rows.length-right;
+i++
+){
 
- /* 法人籌碼確認，不直接製造價位，只調整結構可信度 */
- const chip=inst||{};
- const chip5=Number(chip.total5||0);
- if(chip5>0)supports.forEach(z=>z.score+=.7);
- if(chip5<0)pressures.forEach(z=>z.score+=.7);
- if(Number(chip.foreign5||0)>0)supports.forEach(z=>z.score+=.3);
- if(Number(chip.trust5||0)>0)supports.forEach(z=>z.score+=.3);
+let lo=true;
+let hi=true;
 
- const validS=supports.filter(z=>z.high<=price*1.012).sort((a,b)=>{
-  const da=(price-a.high)/price,db=(price-b.high)/price;
-  return (db-da)*5+(b.score-a.score);
- });
- const validP=pressures.filter(z=>z.low>price*1.001).sort((a,b)=>a.low-b.low);
+for(
+let j=1;
+j<=left;
+j++
+){
 
- /* 第一支撐優先最近有效 SMC zone，避免舊支撐離現價過遠 */
- const nearS=validS.filter(z=>(price-z.high)/price<=.10);
- let s1=nearS.sort((a,b)=>{
-  const da=(price-a.high)/price,db=(price-b.high)/price;
-  return (b.score-db*30)-(a.score-da*30);
- })[0]||validS[0];
-
- if(!s1)s1={type:'近期結構',low:price-A*1.4,high:price-A*.8,score:0};
-
- let s2=validS.filter(z=>z.high<s1.low-Math.max(A*.25,price*.003))
- .sort((a,b)=>b.high-a.high)[0];
- if(!s2)s2={type:'深層 Demand',low:s1.low-A*1.5,high:s1.low-A*.7,score:0};
-
- let p1=validP[0];
- if(!p1)p1={type:'下一層流動性',low:price+Math.max(A*1.1,price*.018),high:price+Math.max(A*1.35,price*.022)};
- let p2=validP.find(z=>z.low>p1.high+Math.max(A*.2,price*.002));
- if(!p2)p2={type:'上方 Supply',low:p1.high+Math.max(A*1.1,price*.02),high:p1.high+Math.max(A*1.4,price*.026)};
- let p3=validP.find(z=>z.low>p2.high+Math.max(A*.2,price*.002));
- if(!p3)p3={type:'主要 Buy-side Liquidity',low:p2.high+Math.max(A*1.2,price*.022),high:p2.high+Math.max(A*1.55,price*.03)};
-
- const entryLow=Math.max(0,s1.low);
- const entryHigh=Math.min(price,s1.high);
- let sl=s1.low-Math.max(A*.45,price*.006);
- if(sl>=entryLow)sl=entryLow-Math.max(A*.35,price*.005);
-
- return {
-  support1:s1,support2:s2,
-  breakout:p1.low,
-  pressure1:p1,pressure2:p2,
-  entryLow,entryHigh,sl,
-  tp1:p1.low,tp2:p2.low,tp3:p3.low,
-  chipBias:chip5>0?'偏多':chip5<0?'偏空':'中性'
- };
+if(
+rows[i].low>
+rows[i-j].low
+){
+lo=false;
 }
+
+if(
+rows[i].high<
+rows[i-j].high
+){
+hi=false;
+}
+
+}
+
+for(
+let j=1;
+j<=right;
+j++
+){
+
+if(
+rows[i].low>
+rows[i+j].low
+){
+lo=false;
+}
+
+if(
+rows[i].high<
+rows[i+j].high
+){
+hi=false;
+}
+
+}
+
+if(lo){
+
+lows.push({
+
+i,
+
+value:
+rows[i].low,
+
+row:
+rows[i]
+
+});
+
+}
+
+if(hi){
+
+highs.push({
+
+i,
+
+value:
+rows[i].high,
+
+row:
+rows[i]
+
+});
+
+}
+
+}
+
+return {
+lows,
+highs
+};
+
+}
+
+
+function zoneValid(
+zone,
+rows,
+bullish=true
+){
+
+const after=
+rows.slice(
+zone.i+1
+);
+
+if(bullish){
+
+return !after.some(
+x=>x.close<zone.low
+);
+
+}
+
+return !after.some(
+x=>x.close>zone.high
+);
+
+}
+
+
+/* =========================
+   SMC 主分析
+========================= */
+
+function smcAnalysis(
+rows,
+price,
+A,
+inst
+){
+
+const recent=
+rows.slice(-140);
+
+const S=
+swings(
+recent,
+2,
+2
+);
+
+const volBase=
+avg(
+recent
+.slice(-21,-1)
+.map(x=>x.volume)
+);
+
+const supports=[];
+const pressures=[];
+
+
+/* Bullish / Bearish OB */
+
+for(
+let i=2;
+i<recent.length-2;
+i++
+){
+
+const x=recent[i];
+const n2=recent[i+2];
+
+const displacementUp=
+n2.close>
+x.high+
+Math.max(
+A*.35,
+price*.004
+);
+
+const displacementDown=
+n2.close<
+x.low-
+Math.max(
+A*.35,
+price*.004
+);
+
+
+if(
+x.close<x.open &&
+displacementUp
+){
+
+const z={
+
+type:
+'Bullish OB',
+
+i,
+
+low:
+x.low,
+
+high:
+Math.max(
+x.open,
+x.close
+),
+
+score:5
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+true
+) &&
+z.low<price
+){
+
+supports.push(z);
+
+}
+
+}
+
+
+if(
+x.close>x.open &&
+displacementDown
+){
+
+const z={
+
+type:
+'Bearish OB',
+
+i,
+
+low:
+Math.min(
+x.open,
+x.close
+),
+
+high:
+x.high,
+
+score:5
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+false
+) &&
+z.high>price
+){
+
+pressures.push(z);
+
+}
+
+}
+
+}
+
+
+/* FVG */
+
+for(
+let i=1;
+i<recent.length-1;
+i++
+){
+
+const a=
+recent[i-1];
+
+const c=
+recent[i+1];
+
+
+if(
+c.low>a.high
+){
+
+const z={
+
+type:
+'Bullish FVG',
+
+i,
+
+low:
+a.high,
+
+high:
+c.low,
+
+score:3.5
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+true
+) &&
+z.low<price
+){
+
+supports.push(z);
+
+}
+
+}
+
+
+if(
+c.high<a.low
+){
+
+const z={
+
+type:
+'Bearish FVG',
+
+i,
+
+low:
+c.high,
+
+high:
+a.low,
+
+score:3.5
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+false
+) &&
+z.high>price
+){
+
+pressures.push(z);
+
+}
+
+}
+
+}
+
+
+/* BOS / Breaker */
+
+for(
+const h
+of S.highs
+){
+
+const later=
+recent.slice(
+h.i+1
+);
+
+const broken=
+later.some(
+x=>
+x.close>
+h.value+
+Math.max(
+A*.12,
+h.value*.0025
+)
+);
+
+
+if(
+broken &&
+h.value<price
+){
+
+supports.push({
+
+type:
+'BOS / Breaker',
+
+i:
+h.i,
+
+low:
+h.value-A*.15,
+
+high:
+h.value+A*.15,
+
+score:6
+
+});
+
+}
+
+else if(
+h.value>price
+){
+
+pressures.push({
+
+type:
+'Buy-side Liquidity',
+
+i:
+h.i,
+
+low:
+h.value-A*.08,
+
+high:
+h.value+A*.08,
+
+score:4.5
+
+});
+
+}
+
+}
+
+
+for(
+const l
+of S.lows
+){
+
+if(
+l.value<price
+){
+
+supports.push({
+
+type:
+'Sell-side Liquidity / Demand',
+
+i:
+l.i,
+
+low:
+l.value-A*.10,
+
+high:
+l.value+A*.12,
+
+score:3.8
+
+});
+
+}
+
+}
+
+
+/* Liquidity Sweep */
+
+for(
+let i=3;
+i<recent.length;
+i++
+){
+
+const prevLow=
+Math.min(
+...recent
+.slice(
+Math.max(0,i-8),
+i
+)
+.map(x=>x.low)
+);
+
+const prevHigh=
+Math.max(
+...recent
+.slice(
+Math.max(0,i-8),
+i
+)
+.map(x=>x.high)
+);
+
+const x=
+recent[i];
+
+
+if(
+x.low<prevLow &&
+x.close>prevLow
+){
+
+supports.push({
+
+type:
+'Liquidity Sweep',
+
+i,
+
+low:
+x.low,
+
+high:
+prevLow,
+
+score:5.5
+
+});
+
+}
+
+
+if(
+x.high>prevHigh &&
+x.close<prevHigh
+){
+
+pressures.push({
+
+type:
+'Liquidity Sweep',
+
+i,
+
+low:
+prevHigh,
+
+high:
+x.high,
+
+score:5.5
+
+});
+
+}
+
+}
+
+
+/* 成交量確認 */
+
+for(
+const z
+of [
+...supports,
+...pressures
+]
+){
+
+const r=
+recent[z.i];
+
+if(
+r &&
+volBase>0 &&
+r.volume>=volBase*1.35
+){
+
+z.score+=1.5;
+
+}
+
+const dist=
+Math.abs(
+price-
+(z.low+z.high)/2
+)
+/price;
+
+z.score-=
+dist*12;
+
+}
+
+
+/* 法人籌碼確認 */
+
+const chip=
+inst||{};
+
+const chip5=
+Number(
+chip.total5||0
+);
+
+if(
+chip5>0
+){
+
+supports.forEach(
+z=>z.score+=.7
+);
+
+}
+
+if(
+chip5<0
+){
+
+pressures.forEach(
+z=>z.score+=.7
+);
+
+}
+
+if(
+Number(
+chip.foreign5||0
+)>0
+){
+
+supports.forEach(
+z=>z.score+=.3
+);
+
+}
+
+if(
+Number(
+chip.trust5||0
+)>0
+){
+
+supports.forEach(
+z=>z.score+=.3
+);
+
+}
+
+
+/* 有效支撐 */
+
+const validS=
+supports
+
+.filter(
+z=>
+z.high<=
+price*1.012
+)
+
+.sort(
+(a,b)=>{
+
+const da=
+(price-a.high)/price;
+
+const db=
+(price-b.high)/price;
+
+return (
+(db-da)*5+
+(b.score-a.score)
+);
+
+}
+);
+
+
+/* 有效壓力 */
+
+const validP=
+pressures
+
+.filter(
+z=>
+z.low>
+price*1.001
+)
+
+.sort(
+(a,b)=>
+a.low-b.low
+);
+
+
+/* 第一支撐 */
+
+const nearS=
+validS.filter(
+z=>
+(price-z.high)/price<=.10
+);
+
+let s1=
+nearS.sort(
+(a,b)=>{
+
+const da=
+(price-a.high)/price;
+
+const db=
+(price-b.high)/price;
+
+return (
+b.score-db*30
+)-
+(
+a.score-da*30
+);
+
+}
+)[0]
+||
+validS[0];
+
+
+if(!s1){
+
+s1={
+
+type:
+'近期結構',
+
+low:
+price-A*1.4,
+
+high:
+price-A*.8,
+
+score:0
+
+};
+
+}
+
+
+/* 第二支撐 */
+
+let s2=
+validS
+
+.filter(
+z=>
+z.high<
+s1.low-
+Math.max(
+A*.25,
+price*.003
+)
+)
+
+.sort(
+(a,b)=>
+b.high-a.high
+)[0];
+
+
+if(!s2){
+
+s2={
+
+type:
+'深層 Demand',
+
+low:
+s1.low-A*1.5,
+
+high:
+s1.low-A*.7,
+
+score:0
+
+};
+
+}
+
+
+/* 壓力 1 */
+
+let p1=
+validP[0];
+
+if(!p1){
+
+p1={
+
+type:
+'下一層流動性',
+
+low:
+price+
+Math.max(
+A*1.1,
+price*.018
+),
+
+high:
+price+
+Math.max(
+A*1.35,
+price*.022
+)
+
+};
+
+}
+
+
+/* 壓力 2 */
+
+let p2=
+validP.find(
+z=>
+z.low>
+p1.high+
+Math.max(
+A*.2,
+price*.002
+)
+);
+
+
+if(!p2){
+
+p2={
+
+type:
+'上方 Supply',
+
+low:
+p1.high+
+Math.max(
+A*1.1,
+price*.02
+),
+
+high:
+p1.high+
+Math.max(
+A*1.4,
+price*.026
+)
+
+};
+
+}
+
+
+/* TP3 */
+
+let p3=
+validP.find(
+z=>
+z.low>
+p2.high+
+Math.max(
+A*.2,
+price*.002
+)
+);
+
+
+if(!p3){
+
+p3={
+
+type:
+'主要 Buy-side Liquidity',
+
+low:
+p2.high+
+Math.max(
+A*1.2,
+price*.022
+),
+
+high:
+p2.high+
+Math.max(
+A*1.55,
+price*.03
+)
+
+};
+
+}
+
+
+/* 進場 */
+
+const entryLow=
+Math.max(
+0,
+s1.low
+);
+
+const entryHigh=
+Math.min(
+price,
+s1.high
+);
+
+
+/* 停損 */
+
+let sl=
+s1.low-
+Math.max(
+A*.45,
+price*.006
+);
+
+
+if(
+sl>=entryLow
+){
+
+sl=
+entryLow-
+Math.max(
+A*.35,
+price*.005
+);
+
+}
+
+
+return {
+
+support1:s1,
+
+support2:s2,
+
+breakout:
+p1.low,
+
+pressure1:p1,
+
+pressure2:p2,
+
+entryLow,
+
+entryHigh,
+
+sl,
+
+tp1:
+p1.low,
+
+tp2:
+p2.low,
+
+tp3:
+p3.low,
+
+chipBias:
+chip5>0
+?
+'偏多'
+:
+chip5<0
+?
+'偏空'
+:
+'中性'
+
+};
+
+}
+
+
+/* =========================
+   8 條策略
+========================= */
 
 function analyzeData(d){
- if(!Array.isArray(d.rows)||d.rows.length<60)throw Error('歷史資料不足，無法分析');
- const rows=d.rows.map(x=>({date:x.date||'',open:+x.open,high:+x.high,low:+x.low,close:+x.close,volume:+x.volume||0}))
- .filter(x=>Number.isFinite(x.close)&&x.close>0);
- if(rows.length<60)throw Error('有效 K 線不足');
 
- const c=rows.map(x=>x.close);
- let p=+d.price;if(!Number.isFinite(p)||p<=0)p=rows.at(-1).close;
- const m20=sma(c,20),m60=sma(c,60);
- const A=Math.max(atr(rows),p*.006),R=rsi(c);
- const macd=ema(c.slice(-100),12)-ema(c.slice(-100),26);
- const r20=rows.slice(-20),r60=rows.slice(-60);
- const support=Math.min(...r20.map(x=>x.low));
- const res=Math.max(...r20.map(x=>x.high));
- const high60=Math.max(...r60.map(x=>x.high));
- const vol=rows.at(-1).volume;
- const volAvg=avg(rows.slice(-21,-1).map(x=>x.volume));
- const vr=volAvg?vol/volAvg:0;
+if(
+!Array.isArray(d.rows) ||
+d.rows.length<60
+){
 
- const cond=[
-  ['MA20 高於 MA60',m20>m60,'中期趨勢維持多頭排列'],
-  ['現價守在 MA60 上方',p>=m60*.985,'避免在中期結構已轉弱時進場'],
-  ['價格沒有過度遠離 MA20',Math.abs(p-m20)<=A*2.2,'避免追在短線過熱的位置'],
-  ['近期支撐仍有效',p>=support*.99,'價格尚未明顯跌破 20 日支撐'],
-  ['RSI 位於健康區',R>=45&&R<=72,'動能足夠，同時避免過熱'],
-  ['MACD 動能未明顯轉空',macd>=-A*.05,'短線動能沒有明顯惡化'],
-  ['成交量正常或偏強',vr>=.8,'量能至少接近 20 日正常水準'],
-  ['上方仍有波段空間',Math.max(res,high60)>p*1.025,'上方目標空間足以規劃波段']
- ];
- const passed=cond.filter(x=>x[1]).length;
- const smc=smcAnalysis(rows,p,A,d.institutional);
+throw Error(
+'歷史資料不足，無法分析'
+);
 
- return {
-  ...d,price:p,conditions:cond,passed,score:Math.round(passed/8*100),
-  qualified:passed>=7,near:passed===6,A,vr,R,
-  support1Low:smc.support1.low,support1High:smc.support1.high,
-  support2Low:smc.support2.low,support2High:smc.support2.high,
-  support1Type:smc.support1.type,support2Type:smc.support2.type,
-  entryLow:smc.entryLow,entryHigh:smc.entryHigh,sl:smc.sl,
-  breakout:smc.breakout,
-  pressure1:smc.pressure1.low,pressure2:smc.pressure2.low,
-  tp1:smc.tp1,tp2:smc.tp2,tp3:smc.tp3,
-  pressure1Type:smc.pressure1.type,pressure2Type:smc.pressure2.type,
-  chipBias:smc.chipBias
- };
 }
 
-function statusOf(a){return a.qualified?['策略成立','green']:a.near?['接近形成','yellow']:['等待','gray']}
+
+const rows=
+d.rows
+
+.map(
+x=>({
+
+date:
+x.date||'',
+
+open:+x.open,
+
+high:+x.high,
+
+low:+x.low,
+
+close:+x.close,
+
+volume:+x.volume||0
+
+})
+)
+
+.filter(
+x=>
+Number.isFinite(
+x.close
+) &&
+x.close>0
+);
+
+
+if(
+rows.length<60
+){
+
+throw Error(
+'有效 K 線不足'
+);
+
+}
+
+
+const c=
+rows.map(
+x=>x.close
+);
+
+
+let p=
++d.price;
+
+
+if(
+!Number.isFinite(p) ||
+p<=0
+){
+
+p=
+rows.at(-1).close;
+
+}
+
+
+const m20=
+sma(c,20);
+
+const m60=
+sma(c,60);
+
+const A=
+Math.max(
+atr(rows),
+p*.006
+);
+
+const R=
+rsi(c);
+
+const macd=
+ema(
+c.slice(-100),
+12
+)
+-
+ema(
+c.slice(-100),
+26
+);
+
+
+const r20=
+rows.slice(-20);
+
+const r60=
+rows.slice(-60);
+
+
+const support=
+Math.min(
+...r20.map(
+x=>x.low
+)
+);
+
+const res=
+Math.max(
+...r20.map(
+x=>x.high
+)
+);
+
+const high60=
+Math.max(
+...r60.map(
+x=>x.high
+)
+);
+
+
+const vol=
+rows.at(-1).volume;
+
+const volAvg=
+avg(
+rows
+.slice(-21,-1)
+.map(
+x=>x.volume
+)
+);
+
+const vr=
+volAvg
+?
+vol/volAvg
+:
+0;
+
+
+const cond=[
+
+[
+'MA20 高於 MA60',
+m20>m60,
+'中期趨勢維持多頭排列'
+],
+
+[
+'現價守在 MA60 上方',
+p>=m60*.985,
+'避免在中期結構已轉弱時進場'
+],
+
+[
+'價格沒有過度遠離 MA20',
+Math.abs(p-m20)<=A*2.2,
+'避免追在短線過熱的位置'
+],
+
+[
+'近期支撐仍有效',
+p>=support*.99,
+'價格尚未明顯跌破 20 日支撐'
+],
+
+[
+'RSI 位於健康區',
+R>=45&&R<=72,
+'動能足夠，同時避免過熱'
+],
+
+[
+'MACD 動能未明顯轉空',
+macd>=-A*.05,
+'短線動能沒有明顯惡化'
+],
+
+[
+'成交量正常或偏強',
+vr>=.8,
+'量能至少接近 20 日正常水準'
+],
+
+[
+'上方仍有波段空間',
+Math.max(
+res,
+high60
+)>p*1.025,
+'上方目標空間足以規劃波段'
+]
+
+];
+
+
+const passed=
+cond.filter(
+x=>x[1]
+).length;
+
+
+const smc=
+smcAnalysis(
+rows,
+p,
+A,
+d.institutional
+);
+
+
+return {
+
+...d,
+
+price:p,
+
+conditions:
+cond,
+
+passed,
+
+score:
+Math.round(
+passed/8*100
+),
+
+qualified:
+passed>=7,
+
+near:
+passed===6,
+
+A,
+
+vr,
+
+R,
+
+support1Low:
+smc.support1.low,
+
+support1High:
+smc.support1.high,
+
+support2Low:
+smc.support2.low,
+
+support2High:
+smc.support2.high,
+
+support1Type:
+smc.support1.type,
+
+support2Type:
+smc.support2.type,
+
+entryLow:
+smc.entryLow,
+
+entryHigh:
+smc.entryHigh,
+
+sl:
+smc.sl,
+
+breakout:
+smc.breakout,
+
+pressure1:
+smc.pressure1.low,
+
+pressure2:
+smc.pressure2.low,
+
+tp1:
+smc.tp1,
+
+tp2:
+smc.tp2,
+
+tp3:
+smc.tp3,
+
+pressure1Type:
+smc.pressure1.type,
+
+pressure2Type:
+smc.pressure2.type,
+
+chipBias:
+smc.chipBias
+
+};
+
+}
+
+
+function statusOf(a){
+
+return a.qualified
+?
+[
+'策略成立',
+'green'
+]
+:
+a.near
+?
+[
+'接近形成',
+'yellow'
+]
+:
+[
+'等待',
+'gray'
+];
+
+}
+
 
 function renderCard(a){
- const [label,cls]=statusOf(a);
- const cp=Number(a.changePercent||0);
- return `<div class="card stock-card" data-symbol="${esc(a.symbol)}">
- <div class="row"><div><div class="symbol">${esc(a.symbol)}</div><div class="name">${esc(a.name||'')}</div></div>
- <div><div class="price">${fmt(a.price)}</div><div class="change ${cp>=0?'up':'down'}">${cp>=0?'+':''}${fmt(cp)}%</div></div></div>
- <div class="status ${cls}">${label}</div><div class="score">${a.passed}/8 · ${a.score}%</div></div>`;
+
+const [
+label,
+cls
+]=
+statusOf(a);
+
+
+const cp=
+Number(
+a.changePercent||0
+);
+
+
+return `
+<div
+class="card stock-card"
+data-symbol="${esc(a.symbol)}"
+>
+
+<div class="row">
+
+<div>
+
+<div class="symbol">
+${esc(a.symbol)}
+</div>
+
+<div class="name">
+${esc(a.name||'')}
+</div>
+
+</div>
+
+
+<div>
+
+<div class="price">
+${fmt(a.price)}
+</div>
+
+<div class="change ${cp>=0?'up':'down'}">
+${cp>=0?'+':''}${fmt(cp)}%
+</div>
+
+</div>
+
+</div>
+
+
+<div class="status ${cls}">
+${label}
+</div>
+
+<div class="score">
+${a.passed}/8 · ${a.score}%
+</div>
+
+</div>
+`;
+
 }
+
 
 function renderHome(){
- let list=Object.values(cache);
- if(tab==='signal')list=list.filter(x=>x.qualified);
- if(tab==='near')list=list.filter(x=>x.near);
- if(tab==='watch'){const w=watch();list=list.filter(x=>w.includes(x.symbol))}
- $('homeList').innerHTML=list.length?list.map(renderCard).join(''):`<div class="empty">目前沒有符合這個分類的股票。</div>`;
- document.querySelectorAll('.stock-card').forEach(x=>x.onclick=()=>openStock(x.dataset.symbol));
+
+let list=
+Object.values(
+cache
+);
+
+
+if(
+tab==='signal'
+){
+
+list=
+list.filter(
+x=>x.qualified
+);
+
 }
+
+
+if(
+tab==='near'
+){
+
+list=
+list.filter(
+x=>x.near
+);
+
+}
+
+
+if(
+tab==='watch'
+){
+
+const w=
+watch();
+
+list=
+list.filter(
+x=>
+w.includes(
+x.symbol
+)
+);
+
+}
+
+
+$('homeList').innerHTML=
+list.length
+?
+list.map(
+renderCard
+).join('')
+:
+`
+<div class="empty">
+目前沒有符合這個分類的股票。
+</div>
+`;
+
+
+document
+.querySelectorAll(
+'.stock-card'
+)
+.forEach(
+x=>
+x.onclick=
+()=>{
+
+hideSuggestions();
+
+openStock(
+x.dataset.symbol
+);
+
+}
+);
+
+}
+
+
+/* =========================
+   法人
+========================= */
 
 function chipHTML(i){
- if(!i)return `<div class="chip"><b>法人籌碼</b><div class="muted">目前沒有法人資料</div></div>`;
- const sign=n=>(+n)>0?'+':'';
- return `<div class="chip"><b>法人籌碼</b>
- <div class="chip-grid">
- <div class="chip-item"><span>外資近 5 日</span><strong>${sign(i.foreign5)}${fmt(i.foreign5,0)}</strong></div>
- <div class="chip-item"><span>投信近 5 日</span><strong>${sign(i.trust5)}${fmt(i.trust5,0)}</strong></div>
- <div class="chip-item"><span>自營商近 5 日</span><strong>${sign(i.dealer5)}${fmt(i.dealer5,0)}</strong></div>
- <div class="chip-item"><span>三大法人近 5 日</span><strong>${sign(i.total5)}${fmt(i.total5,0)}</strong></div>
- </div></div>`;
+
+if(!i){
+
+return `
+<div class="chip">
+<b>法人籌碼</b>
+<div class="muted">
+目前沒有法人資料
+</div>
+</div>
+`;
+
 }
+
+
+const sign=n=>
+(+n)>0
+?
+'+'
+:
+'';
+
+
+return `
+<div class="chip">
+
+<b>法人籌碼</b>
+
+<div class="chip-grid">
+
+<div class="chip-item">
+<span>外資近 5 日</span>
+<strong>
+${sign(i.foreign5)}${fmt(i.foreign5,0)}
+</strong>
+</div>
+
+<div class="chip-item">
+<span>投信近 5 日</span>
+<strong>
+${sign(i.trust5)}${fmt(i.trust5,0)}
+</strong>
+</div>
+
+<div class="chip-item">
+<span>自營商近 5 日</span>
+<strong>
+${sign(i.dealer5)}${fmt(i.dealer5,0)}
+</strong>
+</div>
+
+<div class="chip-item">
+<span>三大法人近 5 日</span>
+<strong>
+${sign(i.total5)}${fmt(i.total5,0)}
+</strong>
+</div>
+
+</div>
+
+</div>
+`;
+
+}
+
+
+/* =========================
+   個股頁
+========================= */
 
 function renderDetail(a){
- const [label,cls]=statusOf(a),w=watch(),has=w.includes(a.symbol);
- const showPlan=a.passed>=6;
- $('detailBody').innerHTML=`
- <div class="card hero"><div class="symbol">${esc(a.symbol)}　${esc(a.name||'')}</div>
- <div class="hero-price">${fmt(a.price)}</div>
- <div class="change ${(+a.changePercent||0)>=0?'up':'down'}">${(+a.changePercent||0)>=0?'+':''}${fmt(a.changePercent)}%</div>
- <div class="live"><span class="pulse"></span>${a.realtime?'即時報價':'最新報價'} · ${esc(a.updatedAt||'')}</div></div>
 
- <div class="card strategy">
- <div class="strategy-head"><div><div class="strategy-title">${label}</div><div class="status ${cls}">${a.passed}/8 條件</div></div><div class="bigscore">${a.score}%</div></div>
+const [
+label,
+cls
+]=
+statusOf(a);
 
- <div class="section-title">支撐觀察</div>
- <div class="levels">
- <div class="level support"><span>第一支撐｜${esc(a.support1Type)}</span><strong>${fmt(a.support1Low)}～${fmt(a.support1High)}</strong><small>SMC 最近有效 Demand / OB / Breaker / Liquidity 結構</small></div>
- <div class="level support"><span>第二支撐｜${esc(a.support2Type)}</span><strong>${fmt(a.support2Low)}～${fmt(a.support2High)}</strong><small>第一結構失效後的下一層 SMC 支撐</small></div>
- </div>
 
- <div class="section-title">突破與壓力</div>
- <div class="levels">
- <div class="level breakout full"><span>關鍵突破／壓力區</span><strong>${fmt(a.breakout)}</strong><small>上方最近 Buy-side Liquidity / Bearish OB / Supply 結構</small></div>
- <div class="level pressure"><span>第一壓力｜${esc(a.pressure1Type)}</span><strong>${fmt(a.pressure1)}</strong></div>
- <div class="level pressure"><span>第二壓力｜${esc(a.pressure2Type)}</span><strong>${fmt(a.pressure2)}</strong></div>
- </div>
+const w=
+watch();
 
- ${showPlan?`<div class="section-title">交易規劃</div><div class="levels">
- <div class="level entry full"><span>SMC 觀察進場區</span><strong>${fmt(a.entryLow)}～${fmt(a.entryHigh)}</strong><small>以有效 Demand / Bullish OB / Breaker 回踩區規劃，不追價</small></div>
- <div class="level sl"><span>結構停損 SL</span><strong>${fmt(a.sl)}</strong><small>放在 SMC 結構失效點下方</small></div>
- <div class="level tp"><span>TP1</span><strong>${fmt(a.tp1)}</strong><small>最近上方流動性／供給</small></div>
- <div class="level tp"><span>TP2</span><strong>${fmt(a.tp2)}</strong><small>下一層 Supply / Bearish OB</small></div>
- <div class="level tp"><span>TP3</span><strong>${fmt(a.tp3)}</strong><small>更高層級 Buy-side Liquidity</small></div>
- </div>`:''}
+const has=
+w.includes(
+a.symbol
+);
 
- ${chipHTML(a.institutional)}
 
- <div class="section-title">策略條件</div><div class="conditions">
- ${a.conditions.map(x=>`<div class="cond ${x[1]?'ok':'no'}">${x[1]?'✓':'✕'} ${esc(x[0])}<small>${esc(x[2])}</small></div>`).join('')}
- </div>
+const showPlan=
+a.passed>=6;
 
- <button id="fav" class="fav">${has?'移除自選':'加入自選'}</button>
- <div class="note">內部價位分析以 SMC 為核心，成交量用來確認 displacement、BOS、Sweep 與 Order Block 品質；法人籌碼作為方向與結構可信度加權。原本 8 條條件保留作為股票篩選器。</div>
- </div>`;
 
- $('fav').onclick=()=>{
-  let x=watch();
-  x=has?x.filter(s=>s!==a.symbol):[...x,a.symbol];
-  saveWatch(x);renderDetail(a);renderHome();
- };
+$('detailBody').innerHTML=`
+
+<div class="card hero">
+
+<div class="symbol">
+${esc(a.symbol)}　${esc(a.name||'')}
+</div>
+
+<div class="hero-price">
+${fmt(a.price)}
+</div>
+
+<div class="change ${(+a.changePercent||0)>=0?'up':'down'}">
+${(+a.changePercent||0)>=0?'+':''}${fmt(a.changePercent)}%
+</div>
+
+<div class="live">
+<span class="pulse"></span>
+${a.realtime?'即時報價':'最新報價'} · ${esc(a.updatedAt||'')}
+</div>
+
+</div>
+
+
+<div class="card strategy">
+
+<div class="strategy-head">
+
+<div>
+
+<div class="strategy-title">
+${label}
+</div>
+
+<div class="status ${cls}">
+${a.passed}/8 條件
+</div>
+
+</div>
+
+<div class="bigscore">
+${a.score}%
+</div>
+
+</div>
+
+
+<div class="section-title">
+支撐觀察
+</div>
+
+
+<div class="levels">
+
+<div class="level support">
+
+<span>
+第一支撐｜${esc(a.support1Type)}
+</span>
+
+<strong>
+${fmt(a.support1Low)}～${fmt(a.support1High)}
+</strong>
+
+<small>
+SMC 最近有效 Demand / OB / Breaker / Liquidity 結構
+</small>
+
+</div>
+
+
+<div class="level support">
+
+<span>
+第二支撐｜${esc(a.support2Type)}
+</span>
+
+<strong>
+${fmt(a.support2Low)}～${fmt(a.support2High)}
+</strong>
+
+<small>
+第一結構失效後的下一層 SMC 支撐
+</small>
+
+</div>
+
+</div>
+
+
+<div class="section-title">
+突破與壓力
+</div>
+
+
+<div class="levels">
+
+<div class="level breakout full">
+
+<span>
+關鍵突破／壓力區
+</span>
+
+<strong>
+${fmt(a.breakout)}
+</strong>
+
+<small>
+上方最近 Buy-side Liquidity / Bearish OB / Supply 結構
+</small>
+
+</div>
+
+
+<div class="level pressure">
+
+<span>
+第一壓力｜${esc(a.pressure1Type)}
+</span>
+
+<strong>
+${fmt(a.pressure1)}
+</strong>
+
+</div>
+
+
+<div class="level pressure">
+
+<span>
+第二壓力｜${esc(a.pressure2Type)}
+</span>
+
+<strong>
+${fmt(a.pressure2)}
+</strong>
+
+</div>
+
+</div>
+
+
+${showPlan?`
+
+<div class="section-title">
+交易規劃
+</div>
+
+
+<div class="levels">
+
+<div class="level entry full">
+
+<span>
+SMC 觀察進場區
+</span>
+
+<strong>
+${fmt(a.entryLow)}～${fmt(a.entryHigh)}
+</strong>
+
+<small>
+以有效 Demand / Bullish OB / Breaker 回踩區規劃，不追價
+</small>
+
+</div>
+
+
+<div class="level sl">
+
+<span>
+結構停損 SL
+</span>
+
+<strong>
+${fmt(a.sl)}
+</strong>
+
+<small>
+放在 SMC 結構失效點下方
+</small>
+
+</div>
+
+
+<div class="level tp">
+
+<span>
+TP1
+</span>
+
+<strong>
+${fmt(a.tp1)}
+</strong>
+
+<small>
+最近上方流動性／供給
+</small>
+
+</div>
+
+
+<div class="level tp">
+
+<span>
+TP2
+</span>
+
+<strong>
+${fmt(a.tp2)}
+</strong>
+
+<small>
+下一層 Supply / Bearish OB
+</small>
+
+</div>
+
+
+<div class="level tp">
+
+<span>
+TP3
+</span>
+
+<strong>
+${fmt(a.tp3)}
+</strong>
+
+<small>
+更高層級 Buy-side Liquidity
+</small>
+
+</div>
+
+</div>
+
+`:''}
+
+
+${chipHTML(
+a.institutional
+)}
+
+
+<div class="section-title">
+策略條件
+</div>
+
+
+<div class="conditions">
+
+${a.conditions.map(
+x=>`
+<div class="cond ${x[1]?'ok':'no'}">
+${x[1]?'✓':'✕'} ${esc(x[0])}
+<small>${esc(x[2])}</small>
+</div>
+`
+).join('')}
+
+</div>
+
+
+<button id="fav" class="fav">
+${has?'移除自選':'加入自選'}
+</button>
+
+
+<div class="note">
+內部價位分析以 SMC 為核心，成交量用來確認 displacement、BOS、Sweep 與 Order Block 品質；法人籌碼作為方向與結構可信度加權。原本 8 條條件保留作為股票篩選器。
+</div>
+
+</div>
+`;
+
+
+$('fav').onclick=
+()=>{
+
+let x=
+watch();
+
+x=
+has
+?
+x.filter(
+s=>s!==a.symbol
+)
+:
+[
+...x,
+a.symbol
+];
+
+saveWatch(x);
+
+renderDetail(a);
+
+renderHome();
+
+};
+
 }
+
+
+/* =========================
+   開啟個股
+========================= */
 
 async function openStock(symbol){
- current=String(symbol).trim();
- $('home').classList.add('hidden');$('detail').classList.remove('hidden');
- $('detailBody').innerHTML='<div class="card loader">分析中...</div>';
- try{
-  const d=await getStock(current),a=analyzeData(d);
-  cache[current]=a;saveSearchHistory(a);renderDetail(a);
- }catch(e){$('detailBody').innerHTML=`<div class="empty">${esc(e.message)}</div>`}
- clearInterval(detailTimer);
- detailTimer=setInterval(refreshDetail,20000);
+
+hideSuggestions();
+
+current=
+String(symbol)
+.trim();
+
+
+$('home')
+.classList
+.add('hidden');
+
+
+$('detail')
+.classList
+.remove('hidden');
+
+
+$('detailBody').innerHTML=
+`
+<div class="card loader">
+分析中...
+</div>
+`;
+
+
+try{
+
+const d=
+await getStock(
+current
+);
+
+const a=
+analyzeData(d);
+
+
+cache[current]=a;
+
+
+saveSearchHistory(a);
+
+
+renderDetail(a);
+
 }
+catch(e){
+
+$('detailBody').innerHTML=
+`
+<div class="empty">
+${esc(e.message)}
+</div>
+`;
+
+}
+
+
+clearInterval(
+detailTimer
+);
+
+
+detailTimer=
+setInterval(
+refreshDetail,
+20000
+);
+
+}
+
+
 async function refreshDetail(){
- if(!current)return;
- try{const a=analyzeData(await getStock(current));cache[current]=a;renderDetail(a)}catch{}
+
+if(!current)return;
+
+
+try{
+
+const a=
+analyzeData(
+await getStock(
+current
+)
+);
+
+
+cache[current]=a;
+
+
+renderDetail(a);
+
 }
+catch{}
+
+}
+
+
+/* =========================
+   雷達
+========================= */
 
 async function radar(){
- const symbols=[...new Set([...DEFAULT,...watch()])];
- for(const s of symbols){
-  try{cache[s]=analyzeData(await getStock(s))}catch{}
- }
- renderHome();
+
+const symbols=
+[
+...new Set(
+[
+...DEFAULT,
+...watch()
+]
+)
+];
+
+
+for(
+const s
+of symbols
+){
+
+try{
+
+cache[s]=
+analyzeData(
+await getStock(s)
+);
+
 }
+catch{}
+
+}
+
+
+renderHome();
+
+}
+
+
+/* =========================
+   搜尋下拉控制
+========================= */
+
+function hideSuggestions(){
+
+$('suggestions')
+.classList
+.add('hidden');
+
+}
+
+
+/* =========================
+   搜尋歷史
+
+   只有點搜尋框時才呼叫
+========================= */
 
 function renderSearchHistory(){
- const h=searchHistory(),box=$('suggestions');
- if(!h.length){box.classList.add('hidden');return}
- box.innerHTML=`<div class="history-head"><span>最近搜尋</span><button class="history-clear" id="clearHistory">清除</button></div>`+
- h.map(x=>`<button class="suggestion" data-symbol="${esc(x.symbol)}"><div><div class="suggestion-main">${esc(x.name||x.symbol)}</div><div class="suggestion-code">${esc(x.symbol)}</div></div><div class="suggestion-market">最近搜尋</div></button>`).join('');
- box.classList.remove('hidden');
- $('clearHistory').onclick=e=>{e.stopPropagation();localStorage.removeItem(HISTORY_KEY);box.classList.add('hidden')};
- box.querySelectorAll('.suggestion').forEach(x=>x.onclick=()=>{box.classList.add('hidden');openStock(x.dataset.symbol)});
+
+const h=
+searchHistory();
+
+const box=
+$('suggestions');
+
+
+if(
+!h.length
+){
+
+box.classList.add(
+'hidden'
+);
+
+return;
+
 }
+
+
+box.innerHTML=
+
+`
+<div class="history-head">
+
+<span>
+最近搜尋
+</span>
+
+<button
+class="history-clear"
+id="clearHistory"
+>
+清除
+</button>
+
+</div>
+`
+
++
+
+h.map(
+x=>`
+
+<button
+class="suggestion"
+data-symbol="${esc(x.symbol)}"
+>
+
+<div>
+
+<div class="suggestion-main">
+${esc(x.name||x.symbol)}
+</div>
+
+<div class="suggestion-code">
+${esc(x.symbol)}
+</div>
+
+</div>
+
+<div class="suggestion-market">
+最近搜尋
+</div>
+
+</button>
+
+`
+).join('');
+
+
+box.classList.remove(
+'hidden'
+);
+
+
+$('clearHistory').onclick=
+e=>{
+
+e.stopPropagation();
+
+localStorage.removeItem(
+HISTORY_KEY
+);
+
+hideSuggestions();
+
+};
+
+
+box
+.querySelectorAll(
+'.suggestion'
+)
+.forEach(
+x=>
+x.onclick=
+e=>{
+
+e.stopPropagation();
+
+hideSuggestions();
+
+openStock(
+x.dataset.symbol
+);
+
+}
+);
+
+}
+
+
+/* =========================
+   API 搜尋
+========================= */
 
 async function searchStocks(q){
- const r=await fetch('/api/search?q='+encodeURIComponent(q)+'&t='+Date.now(),{cache:'no-store'});
- const d=await r.json();
- if(!r.ok||!d.ok)throw Error(d.error||'搜尋失敗');
- return d.items||[];
+
+const r=
+await fetch(
+'/api/search?q='+
+encodeURIComponent(q)+
+'&t='+
+Date.now(),
+{
+cache:'no-store'
 }
-async function showSuggestions(q){
- const box=$('suggestions');
- if(!q.trim()){renderSearchHistory();return}
- try{
-  const items=await searchStocks(q);
-  if(!items.length){box.innerHTML='<div class="empty">找不到符合的股票</div>';box.classList.remove('hidden');return}
-  box.innerHTML=items.map(x=>`<button class="suggestion" data-symbol="${esc(x.symbol)}"><div><div class="suggestion-main">${esc(x.name||x.symbol)}</div><div class="suggestion-code">${esc(x.symbol)}</div></div><div class="suggestion-market">${esc(x.market||'')}</div></button>`).join('');
-  box.classList.remove('hidden');
-  box.querySelectorAll('.suggestion').forEach(x=>x.onclick=()=>{selectedSearchSymbol=x.dataset.symbol;$('q').value=x.dataset.symbol;box.classList.add('hidden');openStock(x.dataset.symbol)});
- }catch{box.classList.add('hidden')}
-}
-async function submitSearch(){
- const q=$('q').value.trim();if(!q)return;
- if(selectedSearchSymbol){openStock(selectedSearchSymbol);return}
- if(/^\d{4,6}$/.test(q)){openStock(q);return}
- try{
-  const x=await searchStocks(q);
-  if(x[0])openStock(x[0].symbol);else alert('找不到股票');
- }catch(e){alert(e.message)}
+);
+
+
+const d=
+await r.json();
+
+
+if(
+!r.ok ||
+!d.ok
+){
+
+throw Error(
+d.error||
+'搜尋失敗'
+);
+
 }
 
-$('q').addEventListener('input',e=>{selectedSearchSymbol='';clearTimeout(searchTimer);searchTimer=setTimeout(()=>showSuggestions(e.target.value),180)});
-$('q').addEventListener('focus',()=>{if(!$('q').value.trim())renderSearchHistory()});
-$('q').addEventListener('keydown',e=>{if(e.key==='Enter')submitSearch()});
-$('go').onclick=submitSearch;
-$('back').onclick=()=>{current='';clearInterval(detailTimer);$('detail').classList.add('hidden');$('home').classList.remove('hidden');renderHome()};
-document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>{tab=x.dataset.tab;document.querySelectorAll('.tab').forEach(y=>y.classList.toggle('on',y===x));renderHome()});
-$('notify').onclick=async()=>{if(!('Notification'in window))return alert('此瀏覽器不支援通知');const p=await Notification.requestPermission();alert(p==='granted'?'通知已開啟':'通知未開啟')};
+
+return d.items||[];
+
+}
+
+
+/* =========================
+   搜尋候選
+========================= */
+
+async function showSuggestions(q){
+
+const box=
+$('suggestions');
+
+
+if(
+!q.trim()
+){
+
+/*
+  空白時只有在搜尋框仍有焦點
+  才顯示歷史。
+*/
+
+if(
+document.activeElement===
+$('q')
+){
+
+renderSearchHistory();
+
+}
+else{
+
+hideSuggestions();
+
+}
+
+return;
+
+}
+
+
+try{
+
+const items=
+await searchStocks(q);
+
+
+if(
+!items.length
+){
+
+box.innerHTML=
+`
+<div class="empty">
+找不到符合的股票
+</div>
+`;
+
+box.classList.remove(
+'hidden'
+);
+
+return;
+
+}
+
+
+box.innerHTML=
+items.map(
+x=>`
+
+<button
+class="suggestion"
+data-symbol="${esc(x.symbol)}"
+>
+
+<div>
+
+<div class="suggestion-main">
+${esc(x.name||x.symbol)}
+</div>
+
+<div class="suggestion-code">
+${esc(x.symbol)}
+</div>
+
+</div>
+
+<div class="suggestion-market">
+${esc(x.market||'')}
+</div>
+
+</button>
+
+`
+).join('');
+
+
+box.classList.remove(
+'hidden'
+);
+
+
+box
+.querySelectorAll(
+'.suggestion'
+)
+.forEach(
+x=>
+x.onclick=
+e=>{
+
+e.stopPropagation();
+
+selectedSearchSymbol=
+x.dataset.symbol;
+
+
+$('q').value=
+x.dataset.symbol;
+
+
+hideSuggestions();
+
+
+openStock(
+x.dataset.symbol
+);
+
+}
+);
+
+}
+catch{
+
+hideSuggestions();
+
+}
+
+}
+
+
+/* =========================
+   執行搜尋
+========================= */
+
+async function submitSearch(){
+
+hideSuggestions();
+
+
+const q=
+$('q')
+.value
+.trim();
+
+
+if(!q)return;
+
+
+if(
+selectedSearchSymbol
+){
+
+openStock(
+selectedSearchSymbol
+);
+
+return;
+
+}
+
+
+if(
+/^\d{4,6}$/.test(q)
+){
+
+openStock(q);
+
+return;
+
+}
+
+
+try{
+
+const x=
+await searchStocks(q);
+
+
+if(x[0]){
+
+openStock(
+x[0].symbol
+);
+
+}
+else{
+
+alert(
+'找不到股票'
+);
+
+}
+
+}
+catch(e){
+
+alert(
+e.message
+);
+
+}
+
+}
+
+
+/* =========================
+   搜尋框事件
+========================= */
+
+$('q')
+.addEventListener(
+'input',
+e=>{
+
+selectedSearchSymbol='';
+
+clearTimeout(
+searchTimer
+);
+
+
+searchTimer=
+setTimeout(
+()=>{
+
+showSuggestions(
+e.target.value
+);
+
+},
+180
+);
+
+}
+);
+
+
+/*
+  只有使用者真的點進搜尋框，
+  才顯示最近搜尋。
+*/
+
+$('q')
+.addEventListener(
+'focus',
+()=>{
+
+if(
+!$('q')
+.value
+.trim()
+){
+
+renderSearchHistory();
+
+}
+else{
+
+showSuggestions(
+$('q').value
+);
+
+}
+
+}
+);
+
+
+/*
+  Enter 搜尋時先收起。
+*/
+
+$('q')
+.addEventListener(
+'keydown',
+e=>{
+
+if(
+e.key==='Enter'
+){
+
+hideSuggestions();
+
+$('q').blur();
+
+submitSearch();
+
+}
+
+}
+);
+
+
+/*
+  分析按鈕
+*/
+
+$('go').onclick=
+e=>{
+
+e.stopPropagation();
+
+hideSuggestions();
+
+$('q').blur();
+
+submitSearch();
+
+};
+
+
+/*
+  點擊搜尋區以外任何地方，
+  歷史／候選結果立即收起。
+*/
+
+document.addEventListener(
+'click',
+e=>{
+
+const searchArea=
+document.querySelector(
+'.search'
+);
+
+
+if(
+searchArea &&
+!searchArea.contains(
+e.target
+)
+){
+
+hideSuggestions();
+
+}
+
+}
+);
+
+
+/*
+  頁面切到背景也收起。
+*/
+
+document.addEventListener(
+'visibilitychange',
+()=>{
+
+if(
+document.hidden
+){
+
+hideSuggestions();
+
+}
+
+}
+);
+
+
+/* =========================
+   返回
+========================= */
+
+$('back').onclick=
+()=>{
+
+current='';
+
+
+clearInterval(
+detailTimer
+);
+
+
+hideSuggestions();
+
+
+$('detail')
+.classList
+.add('hidden');
+
+
+$('home')
+.classList
+.remove('hidden');
+
+
+renderHome();
+
+};
+
+
+/* =========================
+   Tabs
+========================= */
+
+document
+.querySelectorAll(
+'.tab'
+)
+.forEach(
+x=>
+x.onclick=
+()=>{
+
+hideSuggestions();
+
+
+tab=
+x.dataset.tab;
+
+
+document
+.querySelectorAll(
+'.tab'
+)
+.forEach(
+y=>
+y.classList.toggle(
+'on',
+y===x
+)
+);
+
+
+renderHome();
+
+}
+);
+
+
+/* =========================
+   通知
+========================= */
+
+$('notify').onclick=
+async()=>{
+
+hideSuggestions();
+
+
+if(
+!(
+'Notification'
+in window
+)
+){
+
+return alert(
+'此瀏覽器不支援通知'
+);
+
+}
+
+
+const p=
+await Notification
+.requestPermission();
+
+
+alert(
+p==='granted'
+?
+'通知已開啟'
+:
+'通知未開啟'
+);
+
+};
+
+
+/* =========================
+   啟動
+
+   注意：
+   啟動時不呼叫 renderSearchHistory()
+   所以首頁預設一定是收起的。
+========================= */
+
+hideSuggestions();
 
 radar();
-radarTimer=setInterval(radar,60000);
+
+radarTimer=
+setInterval(
+radar,
+60000
+);
+
 </script>
+
 </body>
 </html>
