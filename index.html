@@ -561,7 +561,8 @@ class="suggestions hidden"
 
 <div class="note">
 8 條條件負責篩選波段狀態；進場、支撐、突破、壓力與 TP / SL
-則改用價格結構、爆量 K、均線共振、ATR 與法人籌碼綜合分析。
+則使用價格結構、爆量 K、均線共振、ATR 與法人籌碼綜合分析。
+有效突破壓力後，原壓力會轉為新的回踩支撐，並重新尋找上方壓力。
 </div>
 
 </main>
@@ -580,13 +581,10 @@ class="suggestions hidden"
 
 <script>
 
-const WATCH_KEY =
-'swing_tw_watch_v1';
+const WATCH_KEY='swing_tw_watch_v1';
+const HISTORY_KEY='swing_tw_search_history_v1';
 
-const HISTORY_KEY =
-'swing_tw_search_history_v1';
-
-const DEFAULT = [
+const DEFAULT=[
 '2330','2317','2454','2308',
 '2382','3231','2881','2882',
 '2891','2886','2603','2615'
@@ -600,11 +598,9 @@ let radarTimer=null;
 let searchTimer=null;
 let selectedSearchSymbol='';
 
-const $ =
-id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
 
-const fmt =
-(n,d=2)=>
+const fmt=(n,d=2)=>
 Number.isFinite(+n)
 ?
 (+n).toLocaleString(
@@ -617,8 +613,7 @@ maximumFractionDigits:d
 :
 '--';
 
-const esc =
-s=>
+const esc=s=>
 String(s??'')
 .replaceAll('&','&amp;')
 .replaceAll('<','&lt;')
@@ -647,8 +642,7 @@ return [];
 
 };
 
-const saveWatch =
-a=>
+const saveWatch=a=>
 localStorage.setItem(
 WATCH_KEY,
 JSON.stringify([...new Set(a)])
@@ -819,10 +813,7 @@ return avg(values);
    結構工具
 ========================================================= */
 
-function clusterLevels(
-values,
-tolerance
-){
+function clusterLevels(values,tolerance){
 
 let sorted=
 values
@@ -840,9 +831,7 @@ let found=null;
 for(const g of groups){
 
 if(
-Math.abs(
-value-g.value
-)
+Math.abs(value-g.value)
 <=tolerance
 ){
 
@@ -856,10 +845,7 @@ break;
 if(found){
 
 found.values.push(value);
-
-found.value=
-avg(found.values);
-
+found.value=avg(found.values);
 found.hits++;
 
 }else{
@@ -875,6 +861,82 @@ hits:1
 }
 
 return groups;
+
+}
+
+
+/*
+  判斷某一個舊壓力是否已經成為有效突破。
+
+  不使用「現價只高一點」就算突破，
+  而是需要至少一種比較有意義的確認：
+
+  1. 今日價格站上壓力 + ATR 緩衝，
+     且今日量能有確認。
+
+  或
+
+  2. 最近已完成的 K 棒收盤站上壓力，
+     代表不是單純盤中刺穿。
+
+  或
+
+  3. 最近兩根 K 棒都能維持在壓力附近上方。
+*/
+
+function breakoutConfirmed(
+level,
+rows,
+price,
+A,
+volumeBase
+){
+
+if(
+!Number.isFinite(level)||
+level<=0
+)return false;
+
+const threshold=
+Math.max(
+A*.18,
+level*.003
+);
+
+const latest=
+rows.at(-1);
+
+const prev=
+rows.at(-2);
+
+const prev2=
+rows.at(-3);
+
+const priceAbove=
+price>=level+threshold;
+
+const volumeConfirmed=
+volumeBase>0 &&
+latest &&
+latest.volume>=volumeBase*1.12;
+
+const closeConfirmed=
+prev &&
+prev.close>=level+threshold*.45;
+
+const twoBarHold=
+prev &&
+prev2 &&
+prev.close>=level &&
+prev2.close>=level;
+
+return (
+(priceAbove&&volumeConfirmed)
+||
+closeConfirmed
+||
+twoBarHold
+);
 
 }
 
@@ -897,13 +959,13 @@ recent
 .map(x=>x.volume)
 );
 
-let supportCandidates=[];
-let pressureCandidates=[];
+let rawSupport=[];
+let rawPressure=[];
 
 
-/*
-  Swing High / Swing Low
-*/
+/* =========================
+   Swing High / Swing Low
+========================= */
 
 for(
 let i=2;
@@ -927,7 +989,7 @@ x.high>=recent[i+2].high;
 
 if(swingLow){
 
-supportCandidates.push(
+rawSupport.push(
 x.low,
 x.close
 );
@@ -936,7 +998,7 @@ x.close
 
 if(swingHigh){
 
-pressureCandidates.push(
+rawPressure.push(
 x.high,
 x.close
 );
@@ -946,9 +1008,9 @@ x.close
 }
 
 
-/*
-  爆量 K
-*/
+/* =========================
+   爆量 K
+========================= */
 
 const volumeKs=
 recent
@@ -961,28 +1023,28 @@ x.volume>=volumeBase*1.55
 
 for(const x of volumeKs){
 
-supportCandidates.push(
+rawSupport.push(
 x.low,
 x.close
 );
 
-pressureCandidates.push(
+rawPressure.push(
 x.high
 );
 
 }
 
 
-/*
-  均線也視為結構候選
-*/
+/* =========================
+   均線結構
+========================= */
 
-supportCandidates.push(
+rawSupport.push(
 m20,
 m60
 );
 
-pressureCandidates.push(
+rawPressure.push(
 m20,
 m60
 );
@@ -994,42 +1056,78 @@ A*.38,
 price*.006
 );
 
-const supports=
+
+const allSupport=
 clusterLevels(
-supportCandidates,
+rawSupport,
 tolerance
-)
-.filter(
-x=>x.value<price*1.008
-)
-.sort(
-(a,b)=>
-b.value-a.value
 );
 
-const pressures=
+
+const allPressure=
 clusterLevels(
-pressureCandidates,
+rawPressure,
 tolerance
-)
+);
+
+
+/* =========================
+   找出已被有效突破的舊壓力
+========================= */
+
+const brokenPressures=
+allPressure
 .filter(
-x=>x.value>price*1.003
+x=>
+x.value<price &&
+breakoutConfirmed(
+x.value,
+recent,
+price,
+A,
+volumeBase
+)
 )
 .sort(
-(a,b)=>
-a.value-b.value
+(a,b)=>b.value-a.value
 );
 
 
 /*
-  支撐優先考慮：
-  靠近現價 + 被碰過多次
+  已突破壓力轉為新支撐。
+
+  越靠近目前價格的已突破壓力，
+  優先作為回踩支撐。
 */
+
+const flippedSupport=
+brokenPressures[0]
+?brokenPressures[0].value
+:null;
+
+
+/* =========================
+   原生支撐
+========================= */
+
+const nativeSupports=
+allSupport
+.filter(
+x=>
+x.value<
+price*1.008
+)
+.sort(
+(a,b)=>b.value-a.value
+);
+
 
 function supportScore(x){
 
 const distance=
-Math.abs(price-x.value)/price;
+Math.abs(
+price-x.value
+)/price;
 
 return (
 x.hits*2
@@ -1039,16 +1137,30 @@ distance*35
 
 }
 
+
 const supportPool=
-supports
-.slice(0,8)
+nativeSupports
+.slice(0,10)
 .sort(
 (a,b)=>
-supportScore(b)-supportScore(a)
+supportScore(b)-
+supportScore(a)
 );
 
 
+/*
+  第一支撐：
+
+  有確認突破時，
+  優先使用「原壓力轉支撐」。
+
+  沒有確認突破時，
+  使用原本最有效的支撐。
+*/
+
 let support1=
+flippedSupport
+||
 supportPool[0]?.value
 ||
 Math.min(
@@ -1056,6 +1168,10 @@ m20,
 price-A
 );
 
+
+/*
+  第二支撐不能跟第一支撐太靠近。
+*/
 
 let support2=
 supportPool
@@ -1065,33 +1181,112 @@ x.value<
 support1-
 tolerance*.7
 )
-?.value
-||
+?.value;
+
+
+if(!support2){
+
+const lowerBroken=
+brokenPressures
+.find(
+x=>
+x.value<
+support1-
+tolerance*.7
+);
+
+if(lowerBroken){
+support2=lowerBroken.value;
+}
+
+}
+
+
+if(!support2){
+
+support2=
 Math.min(
 m60,
 support1-A
 );
 
+}
 
-/*
-  關鍵突破：
-  找離現價最近的上方真實結構
-*/
 
-let breakout=
-pressures[0]?.value
-||
+/* =========================
+   未突破的上方壓力
+========================= */
+
+const activePressures=
+allPressure
+.filter(
+x=>
+x.value>
+price+
 Math.max(
-...rows.slice(-20).map(x=>x.high)
+A*.10,
+price*.002
+)
+)
+.sort(
+(a,b)=>a.value-b.value
 );
 
 
 /*
-  第一、第二壓力
+  如果某壓力已經被確認突破，
+  它不再繼續顯示成上方壓力。
+
+  系統會自動往上找下一個結構。
 */
 
+let breakout=
+activePressures[0]?.value;
+
+
+/*
+  歷史結構不足時，
+  用近期高點與 ATR 建立下一個觀察區，
+  避免突破後仍把舊壓力留在畫面上。
+*/
+
+if(!breakout){
+
+const recentHigh=
+Math.max(
+...rows
+.slice(-60)
+.map(x=>x.high)
+);
+
+if(
+recentHigh>
+price+
+Math.max(
+A*.3,
+price*.006
+)
+){
+
+breakout=recentHigh;
+
+}else{
+
+breakout=
+price+
+Math.max(
+A*1.15,
+price*.018
+);
+
+}
+
+}
+
+
 let pressure1=
-pressures.find(
+activePressures
+.find(
 x=>
 x.value>
 breakout+
@@ -1113,7 +1308,8 @@ price*.025
 
 
 let pressure2=
-pressures.find(
+activePressures
+.find(
 x=>
 x.value>
 pressure1+
@@ -1134,9 +1330,9 @@ price*.035
 }
 
 
-/*
-  爆量 K 支撐
-*/
+/* =========================
+   爆量 K 支撐
+========================= */
 
 let volumeSupport=null;
 
@@ -1152,9 +1348,7 @@ if(
 x.close<price*1.01
 ){
 
-volumeSupport=
-x.close;
-
+volumeSupport=x.close;
 break;
 
 }
@@ -1162,15 +1356,34 @@ break;
 }
 
 
+/* =========================
+   突破狀態
+========================= */
+
+const breakoutActive=
+Boolean(flippedSupport);
+
+
 return {
 
 support1,
 support2,
+
 breakout,
 pressure1,
 pressure2,
+
 volumeSupport,
-volumeKs:volumeKs.length
+volumeKs:volumeKs.length,
+
+breakoutActive,
+
+flippedSupport,
+
+brokenPressure:
+flippedSupport,
+
+tolerance
 
 };
 
@@ -1184,7 +1397,7 @@ volumeKs:volumeKs.length
 function analyzeData(d){
 
 if(
-!Array.isArray(d.rows) ||
+!Array.isArray(d.rows)||
 d.rows.length<60
 ){
 throw Error(
@@ -1217,7 +1430,10 @@ rows.map(x=>x.close);
 
 let p=+d.price;
 
-if(!Number.isFinite(p)||p<=0){
+if(
+!Number.isFinite(p)||
+p<=0
+){
 p=rows.at(-1).close;
 }
 
@@ -1277,9 +1493,10 @@ vol/volAvg
 0;
 
 
-/*
-  原本 8 條策略完全保留
-*/
+/* =========================
+   原本 8 條策略
+   完全保留
+========================= */
 
 const cond=[
 
@@ -1348,9 +1565,9 @@ const near=
 passed===6;
 
 
-/*
-  新結構分析
-*/
+/* =========================
+   動態結構分析
+========================= */
 
 const structure=
 structureAnalysis(
@@ -1362,9 +1579,9 @@ m60
 );
 
 
-/*
-  第一支撐帶
-*/
+/* =========================
+   第一支撐帶
+========================= */
 
 const support1High=
 Math.min(
@@ -1381,9 +1598,9 @@ A*.18
 );
 
 
-/*
-  第二支撐帶
-*/
+/* =========================
+   第二支撐帶
+========================= */
 
 const support2High=
 Math.min(
@@ -1400,10 +1617,15 @@ A*.18
 );
 
 
-/*
-  進場區：
-  優先使用最近有效支撐
-*/
+/* =========================
+   進場區
+
+   有效突破後：
+   原壓力 → 回踩進場區
+
+   尚未突破：
+   維持最近有效支撐進場
+========================= */
 
 let entryHigh=
 Math.min(
@@ -1419,11 +1641,12 @@ support1Low
 
 
 /*
-  如果價格正在支撐上方很遠，
-  不追價，仍保留回測區。
+  尚未出現壓力轉支撐時，
+  如果離支撐太遠就不追價。
 */
 
 if(
+!structure.breakoutActive &&
 p-entryHigh>A*2.3
 ){
 
@@ -1443,15 +1666,66 @@ m20-A*.35
 
 
 /*
-  結構 SL：
-  第二支撐下方 / ATR 緩衝
+  有效突破後，
+  直接以舊壓力附近作為新的回踩觀察區。
 */
 
-let sl=
+if(
+structure.breakoutActive &&
+structure.flippedSupport
+){
+
+entryLow=
+Math.max(
+0,
+structure.flippedSupport-
+A*.22
+);
+
+entryHigh=
+Math.min(
+p,
+structure.flippedSupport+
+A*.22
+);
+
+}
+
+
+/* =========================
+   SL
+
+   有效突破後：
+   SL 放在新支撐下方。
+
+   一般狀態：
+   使用原本結構 SL。
+========================= */
+
+let sl;
+
+if(
+structure.breakoutActive &&
+structure.flippedSupport
+){
+
+sl=
+structure.flippedSupport-
+Math.max(
+A*.65,
+structure.flippedSupport*.012
+);
+
+}else{
+
+sl=
 Math.min(
 support1Low-A*.55,
 support2High-A*.15
 );
+
+}
+
 
 const maxRisk=
 p*.065;
@@ -1465,6 +1739,7 @@ p-maxRisk;
 
 }
 
+
 if(sl>=entryLow){
 
 sl=
@@ -1477,13 +1752,16 @@ entryLow*.012
 }
 
 
-/*
-  TP 不再硬套固定 R
-  優先真實壓力結構
-*/
+/* =========================
+   TP
+
+   永遠使用目前價格上方
+   尚未突破的有效結構。
+========================= */
 
 let tp1=
 structure.breakout;
+
 
 if(
 tp1<=p*1.006
@@ -1509,10 +1787,6 @@ tp2+A*.85
 );
 
 
-/*
-  確保目標排序
-*/
-
 if(tp2<=tp1){
 
 tp2=
@@ -1523,6 +1797,7 @@ p*.018
 );
 
 }
+
 
 if(tp3<=tp2){
 
@@ -1536,18 +1811,17 @@ p*.025
 }
 
 
-/*
-  籌碼
-*/
+/* =========================
+   籌碼
+========================= */
 
 const chip=
 d.institutional||{};
 
 const chipBull=
-chip.available &&
-(
-chip.total5>0 ||
-chip.foreign5>0 ||
+chip.available&&(
+chip.total5>0||
+chip.foreign5>0||
 chip.trust5>0
 );
 
@@ -1607,6 +1881,12 @@ structure.pressure1,
 
 pressure2:
 structure.pressure2,
+
+breakoutActive:
+structure.breakoutActive,
+
+flippedSupport:
+structure.flippedSupport,
 
 volumeSupport:
 structure.volumeSupport,
@@ -1905,9 +2185,29 @@ const showPlan=
 a.qualified||a.near;
 
 
-/*
-  TP / SL
-*/
+const breakoutNotice=
+a.breakoutActive
+?
+`
+<div
+class="empty"
+style="
+margin-top:14px;
+background:#ecfaf7;
+border-color:#cbece5;
+color:#16775f
+"
+>
+⚡ 已確認突破原壓力
+${a.flippedSupport?` ${fmt(a.flippedSupport)}`:''}。
+
+原壓力已轉為新的回踩支撐，
+系統已重新計算進場區、停損與下一層壓力。
+</div>
+`
+:
+'';
+
 
 const plan=
 showPlan
@@ -1920,8 +2220,8 @@ a.near
 `
 <div class="empty" style="margin-top:14px">
 目前 ${a.passed}/8，接近形成但尚未正式成立。
-下方價位改採「真實結構」分析，
-不是單純用固定報酬倍數推算。
+下方價位採用動態真實結構分析，
+不是單純使用固定報酬倍數推算。
 </div>
 `
 :
@@ -1937,7 +2237,13 @@ a.near
 <div class="level entry full">
 
 <span>
-👀 觀察進場區
+👀 ${
+a.breakoutActive
+?
+'突破後回踩進場區'
+:
+'觀察進場區'
+}
 </span>
 
 <strong>
@@ -1947,8 +2253,13 @@ ${fmt(a.entryHigh)}
 </strong>
 
 <small>
-優先等待回測最近有效支撐，
-避免在離支撐過遠的位置追價。
+${
+a.breakoutActive
+?
+'原壓力確認突破後轉為支撐，優先等待回踩新支撐附近，而不是突破後直接追高。'
+:
+'優先等待回測最近有效支撐，避免在離支撐過遠的位置追價。'
+}
 </small>
 
 </div>
@@ -1964,8 +2275,13 @@ ${fmt(a.sl)}
 </strong>
 
 <small>
-跌破主要支撐並超過 ATR 緩衝後，
-原本波段結構視為失效。
+${
+a.breakoutActive
+?
+'跌回突破後的新支撐下方並超過 ATR 緩衝，視為突破結構失效。'
+:
+'跌破主要支撐並超過 ATR 緩衝後，原本波段結構視為失效。'
+}
 </small>
 
 </div>
@@ -1981,7 +2297,7 @@ ${fmt(a.tp1)}
 </strong>
 
 <small>
-最近突破／壓力結構。
+目前價格上方最近的有效突破／壓力結構。
 </small>
 
 </div>
@@ -2030,10 +2346,6 @@ ${fmt(a.tp3)}
 `;
 
 
-/*
-  籌碼
-*/
-
 const chipHTML=
 chip.available
 ?
@@ -2051,7 +2363,10 @@ ${esc(a.chipText)}
 </strong>
 </div>
 
-<div class="muted" style="font-size:11px;margin-top:3px">
+<div
+class="muted"
+style="font-size:11px;margin-top:3px"
+>
 資料日期 ${esc(chip.latestDate||'--')}
 </div>
 
@@ -2175,6 +2490,9 @@ ${a.passed}/8
 </div>
 
 
+${breakoutNotice}
+
+
 <div class="section-title">
 🛡️ 支撐觀察
 </div>
@@ -2184,7 +2502,13 @@ ${a.passed}/8
 <div class="level support full">
 
 <span>
-第一支撐｜近期有效結構
+${
+a.breakoutActive
+?
+'第一支撐｜原壓力轉支撐'
+:
+'第一支撐｜近期有效結構'
+}
 </span>
 
 <strong>
@@ -2194,8 +2518,13 @@ ${fmt(a.support1High)}
 </strong>
 
 <small>
-綜合近期轉折低點、收盤密集區、
-均線與爆量 K 結構。
+${
+a.breakoutActive
+?
+'原本壓力經確認突破後，自動升級為新的回踩支撐。'
+:
+'綜合近期轉折低點、收盤密集區、均線與爆量 K 結構。'
+}
 </small>
 
 </div>
@@ -2231,7 +2560,13 @@ ${fmt(a.support2High)}
 <div class="level breakout full">
 
 <span>
-關鍵突破／壓力共振區
+${
+a.breakoutActive
+?
+'下一個關鍵突破／壓力區'
+:
+'關鍵突破／壓力共振區'
+}
 </span>
 
 <strong>
@@ -2239,8 +2574,13 @@ ${fmt(a.breakout)}
 </strong>
 
 <small>
-突破後仍需觀察是否站穩及量能，
-不是看到突破就直接追價。
+${
+a.breakoutActive
+?
+'原壓力已經確認突破，因此系統自動往上尋找下一個尚未突破的有效壓力。'
+:
+'需要站上壓力並搭配收盤、量能或持續站穩確認，避免把盤中假突破誤判成有效突破。'
+}
 </small>
 
 </div>
@@ -2313,18 +2653,20 @@ ${esc(x[2])}
 
 <div class="note">
 
-現在的價位分析改為：
-近期 Swing High / Low、爆量 K、
-MA5 / MA13 / MA20 / MA60、
-ATR、成交量與法人籌碼共同判斷。
+價格維持每 20 秒重新取得並分析。
 
-8 條條件仍負責判斷策略成熟度；
-7/8 以上為正式成立，6/8 為接近形成。
+支撐、壓力、進場區、TP 與 SL
+也會跟著最新價格與 K 線結構重新計算。
+
+壓力被有效突破後，
+原壓力會轉為新的回踩支撐，
+並自動尋找下一層壓力；
+單純盤中刺穿則不會立即視為有效突破。
 
 法人資料並非盤中即時資料，
-因此只作為籌碼確認，不拿它冒充即時訊號。
+因此只作為籌碼確認。
 
-任何技術位置都可能被跳空、消息或市場波動突破，
+任何技術位置仍可能受跳空、消息或市場波動影響，
 TP / SL 為策略參考，不代表保證到價。
 
 </div>
@@ -2956,4 +3298,5 @@ radar,
 </script>
 
 </body>
+
 </html>
