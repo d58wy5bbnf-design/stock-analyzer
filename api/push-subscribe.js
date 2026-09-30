@@ -1,42 +1,51 @@
 /* =========================================================
    api/push-subscribe.js
    儲存 / 更新 / 刪除 Web Push 訂閱
+   Vercel Upstash Redis / KV 版本
 ========================================================= */
 
 const REDIS_URL =
+  process.env.KV_REST_API_URL ||
   process.env.UPSTASH_REDIS_REST_URL;
 
 const REDIS_TOKEN =
+  process.env.KV_REST_API_TOKEN ||
   process.env.UPSTASH_REDIS_REST_TOKEN;
 
 
-/* ---------- Redis ---------- */
+/* =========================================================
+   Redis REST
+========================================================= */
 
 async function redis(command) {
 
   if (!REDIS_URL || !REDIS_TOKEN) {
+
     throw new Error(
-      "Upstash Redis 環境變數尚未設定"
+      "Redis 環境變數尚未設定"
     );
+
   }
 
-  const response = await fetch(
-    REDIS_URL,
-    {
-      method: "POST",
 
-      headers: {
-        Authorization:
-          `Bearer ${REDIS_TOKEN}`,
+  const response =
+    await fetch(
+      REDIS_URL,
+      {
+        method: "POST",
 
-        "Content-Type":
-          "application/json"
-      },
+        headers: {
+          Authorization:
+            `Bearer ${REDIS_TOKEN}`,
 
-      body:
-        JSON.stringify(command)
-    }
-  );
+          "Content-Type":
+            "application/json"
+        },
+
+        body:
+          JSON.stringify(command)
+      }
+    );
 
 
   const data =
@@ -57,10 +66,13 @@ async function redis(command) {
 
 
   return data.result;
+
 }
 
 
-/* ---------- 股票代號整理 ---------- */
+/* =========================================================
+   股票代號整理
+========================================================= */
 
 function normalizeSymbols(list) {
 
@@ -68,9 +80,12 @@ function normalizeSymbols(list) {
     return [];
   }
 
+
   return [
     ...new Set(
+
       list
+
         .map(
           item =>
             String(item || "")
@@ -81,13 +96,16 @@ function normalizeSymbols(list) {
           symbol =>
             /^\d{4,6}$/.test(symbol)
         )
+
     )
   ].slice(0, 50);
 
 }
 
 
-/* ---------- API ---------- */
+/* =========================================================
+   API
+========================================================= */
 
 module.exports =
 async function handler(req, res) {
@@ -142,8 +160,7 @@ async function handler(req, res) {
 
 
     /* =====================================================
-       DELETE
-       使用者關閉通知
+       關閉通知
     ===================================================== */
 
     if (
@@ -174,8 +191,7 @@ async function handler(req, res) {
 
 
     /* =====================================================
-       POST
-       新增 / 更新訂閱
+       新增 / 更新 Push 訂閱
     ===================================================== */
 
     const subscription =
@@ -225,6 +241,7 @@ async function handler(req, res) {
       deviceId,
 
       subscription: {
+
         endpoint:
           subscription.endpoint,
 
@@ -233,17 +250,23 @@ async function handler(req, res) {
           null,
 
         keys: {
+
           p256dh:
             subscription.keys.p256dh,
 
           auth:
             subscription.keys.auth
+
         }
+
       },
 
       symbols,
 
       enabled: true,
+
+      createdAt:
+        new Date().toISOString(),
 
       updatedAt:
         new Date().toISOString()
@@ -251,16 +274,24 @@ async function handler(req, res) {
     };
 
 
+    /* 儲存手機 Push 資料 */
+
     await redis([
       "SET",
+
       `swing:push:device:${deviceId}`,
+
       JSON.stringify(record)
     ]);
 
 
+    /* 加入所有 Push 裝置清單 */
+
     await redis([
       "SADD",
+
       "swing:push:devices",
+
       deviceId
     ]);
 
