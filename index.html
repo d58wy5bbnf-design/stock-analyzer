@@ -3,9 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="波段分析">
+
 <meta name="theme-color" content="#f6f7f9">
+
+<link rel="manifest" href="/manifest.json">
+
 <title>波段分析</title>
 
 <style>
@@ -49,6 +55,11 @@ border:1px solid #e0e4e9;
 background:#fff;
 border-radius:13px;
 padding:10px 12px
+}
+
+.icon.push-on{
+background:#e9f8ef;
+border-color:#c8ead5
 }
 
 .search{
@@ -489,12 +500,16 @@ margin-right:5px
 <div class="app">
 
 <header class="top">
+
 <div class="brand">
 波段分析
 <small>台股即時策略</small>
 </div>
 
-<button id="notify" class="icon">🔔</button>
+<button id="notify" class="icon" aria-label="進場通知">
+🔔
+</button>
+
 </header>
 
 
@@ -515,7 +530,9 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 
 </div>
 
-<button id="go" class="primary">分析</button>
+<button id="go" class="primary">
+分析
+</button>
 
 </div>
 
@@ -562,8 +579,13 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 
 <script>
 
+/* =========================================================
+   基本設定
+========================================================= */
+
 const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
+const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
 
 const DEFAULT=[
 '2330',
@@ -590,6 +612,11 @@ let selectedSearchSymbol='';
 
 const $=id=>document.getElementById(id);
 
+
+/* =========================================================
+   基本工具
+========================================================= */
+
 const fmt=(n,d=2)=>
 Number.isFinite(+n)
 ?
@@ -603,6 +630,7 @@ maximumFractionDigits:d
 :
 '--';
 
+
 const esc=s=>
 String(s??'')
 .replaceAll('&','&amp;')
@@ -610,12 +638,14 @@ String(s??'')
 .replaceAll('>','&gt;')
 .replaceAll('"','&quot;');
 
+
 const avg=a=>
 a.length
 ?
 a.reduce((x,y)=>x+y,0)/a.length
 :
 0;
+
 
 const sma=(a,n)=>
 avg(a.slice(-n));
@@ -706,6 +736,10 @@ return avg(v);
 }
 
 
+/* =========================================================
+   自選
+========================================================= */
+
 const watch=()=>{
 
 try{
@@ -730,7 +764,8 @@ return [];
 };
 
 
-const saveWatch=a=>
+function saveWatch(a){
+
 localStorage.setItem(
 WATCH_KEY,
 JSON.stringify(
@@ -738,6 +773,14 @@ JSON.stringify(
 )
 );
 
+syncPushSymbols();
+
+}
+
+
+/* =========================================================
+   搜尋歷史
+========================================================= */
 
 const searchHistory=()=>{
 
@@ -796,6 +839,10 @@ h.slice(0,10)
 }
 
 
+/* =========================================================
+   股票 API
+========================================================= */
+
 async function getStock(symbol){
 
 const r=
@@ -841,9 +888,9 @@ return d;
 }
 
 
-/* =========================
+/* =========================================================
    SMC Swing
-========================= */
+========================================================= */
 
 function swings(
 rows,
@@ -975,9 +1022,9 @@ x=>x.close>zone.high
 }
 
 
-/* =========================
+/* =========================================================
    SMC 主分析
-========================= */
+========================================================= */
 
 function smcAnalysis(
 rows,
@@ -1007,7 +1054,7 @@ const supports=[];
 const pressures=[];
 
 
-/* Bullish / Bearish OB */
+/* ---------- Bullish / Bearish OB ---------- */
 
 for(
 let i=2;
@@ -1119,7 +1166,7 @@ pressures.push(z);
 }
 
 
-/* FVG */
+/* ---------- FVG ---------- */
 
 for(
 let i=1;
@@ -1210,7 +1257,7 @@ pressures.push(z);
 }
 
 
-/* BOS / Breaker */
+/* ---------- BOS / Breaker ---------- */
 
 for(
 const h
@@ -1318,7 +1365,7 @@ score:3.8
 }
 
 
-/* Liquidity Sweep */
+/* ---------- Liquidity Sweep ---------- */
 
 for(
 let i=3;
@@ -1402,7 +1449,7 @@ score:5.5
 }
 
 
-/* 成交量確認 */
+/* ---------- 成交量確認 ---------- */
 
 for(
 const z
@@ -1438,7 +1485,7 @@ dist*12;
 }
 
 
-/* 法人籌碼確認 */
+/* ---------- 法人籌碼確認 ---------- */
 
 const chip=
 inst||{};
@@ -1493,7 +1540,7 @@ z=>z.score+=.3
 }
 
 
-/* 有效支撐 */
+/* ---------- 有效支撐 ---------- */
 
 const validS=
 supports
@@ -1522,7 +1569,7 @@ return (
 );
 
 
-/* 有效壓力 */
+/* ---------- 有效壓力 ---------- */
 
 const validP=
 pressures
@@ -1539,13 +1586,14 @@ a.low-b.low
 );
 
 
-/* 第一支撐 */
+/* ---------- 第一支撐 ---------- */
 
 const nearS=
 validS.filter(
 z=>
 (price-z.high)/price<=.10
 );
+
 
 let s1=
 nearS.sort(
@@ -1567,36 +1615,29 @@ a.score-da*30
 }
 )[0]
 ||
-validS[0];
+validS[0]
+||
+null;
 
 
-if(!s1){
-
-s1={
-
-type:
-'近期結構',
-
-low:
-price-A*1.4,
-
-high:
-price-A*.8,
-
-score:0
-
-};
-
-}
+/*
+  不再用 ATR 假造第一支撐。
+  找不到真正 SMC 結構就是 null。
+*/
 
 
-/* 第二支撐 */
+/* ---------- 第二支撐 ---------- */
 
-let s2=
+let s2=null;
+
+if(s1){
+
+s2=
 validS
 
 .filter(
 z=>
+z!==s1 &&
 z.high<
 s1.low-
 Math.max(
@@ -1608,158 +1649,84 @@ price*.003
 .sort(
 (a,b)=>
 b.high-a.high
-)[0];
-
-
-if(!s2){
-
-s2={
-
-type:
-'深層 Demand',
-
-low:
-s1.low-A*1.5,
-
-high:
-s1.low-A*.7,
-
-score:0
-
-};
+)[0]
+||
+null;
 
 }
 
 
-/* 壓力 1 */
+/* ---------- 壓力 ---------- */
 
-let p1=
-validP[0];
-
-if(!p1){
-
-p1={
-
-type:
-'下一層流動性',
-
-low:
-price+
-Math.max(
-A*1.1,
-price*.018
-),
-
-high:
-price+
-Math.max(
-A*1.35,
-price*.022
-)
-
-};
-
-}
+const p1=
+validP[0]
+||
+null;
 
 
-/* 壓力 2 */
+let p2=null;
+let p3=null;
 
-let p2=
+
+if(p1){
+
+p2=
 validP.find(
 z=>
+z!==p1 &&
 z.low>
 p1.high+
 Math.max(
 A*.2,
 price*.002
 )
-);
-
-
-if(!p2){
-
-p2={
-
-type:
-'上方 Supply',
-
-low:
-p1.high+
-Math.max(
-A*1.1,
-price*.02
-),
-
-high:
-p1.high+
-Math.max(
-A*1.4,
-price*.026
 )
-
-};
+||
+null;
 
 }
 
 
-/* TP3 */
+if(p2){
 
-let p3=
+p3=
 validP.find(
 z=>
+z!==p1 &&
+z!==p2 &&
 z.low>
 p2.high+
 Math.max(
 A*.2,
 price*.002
 )
-);
-
-
-if(!p3){
-
-p3={
-
-type:
-'主要 Buy-side Liquidity',
-
-low:
-p2.high+
-Math.max(
-A*1.2,
-price*.022
-),
-
-high:
-p2.high+
-Math.max(
-A*1.55,
-price*.03
 )
-
-};
+||
+null;
 
 }
 
 
-/* 進場 */
+/* ---------- 進場與 SL ---------- */
 
-const entryLow=
+let entryLow=null;
+let entryHigh=null;
+let sl=null;
+
+
+if(s1){
+
+entryLow=
 Math.max(
 0,
 s1.low
 );
 
-const entryHigh=
-Math.min(
-price,
-s1.high
-);
+entryHigh=
+s1.high;
 
 
-/* 停損 */
-
-let sl=
+sl=
 s1.low-
 Math.max(
 A*.45,
@@ -1780,6 +1747,42 @@ price*.005
 
 }
 
+}
+
+
+/* ---------- 是否接近真正進場區 ---------- */
+
+let entryReady=false;
+
+
+if(
+s1 &&
+Number.isFinite(entryLow) &&
+Number.isFinite(entryHigh)
+){
+
+const tolerance=
+Math.max(
+A*.60,
+price*.012
+);
+
+entryReady=
+price>=
+entryLow-
+Math.max(
+A*.15,
+price*.003
+)
+&&
+price<=
+entryHigh+
+tolerance;
+
+}
+
+
+/* ---------- 回傳 ---------- */
 
 return {
 
@@ -1788,11 +1791,17 @@ support1:s1,
 support2:s2,
 
 breakout:
-p1.low,
+p1
+?
+p1.low
+:
+null,
 
 pressure1:p1,
 
 pressure2:p2,
+
+pressure3:p3,
 
 entryLow,
 
@@ -1801,13 +1810,30 @@ entryHigh,
 sl,
 
 tp1:
-p1.low,
+p1
+?
+p1.low
+:
+null,
 
 tp2:
-p2.low,
+p2
+?
+p2.low
+:
+null,
 
 tp3:
-p3.low,
+p3
+?
+p3.low
+:
+null,
+
+entryReady,
+
+hasRealStructure:
+!!s1,
 
 chipBias:
 chip5>0
@@ -1825,9 +1851,9 @@ chip5<0
 }
 
 
-/* =========================
+/* =========================================================
    8 條策略
-========================= */
+========================================================= */
 
 function analyzeData(d){
 
@@ -2081,23 +2107,53 @@ vr,
 
 R,
 
+hasRealStructure:
+smc.hasRealStructure,
+
+entryReady:
+smc.entryReady,
+
 support1Low:
-smc.support1.low,
+smc.support1
+?
+smc.support1.low
+:
+null,
 
 support1High:
-smc.support1.high,
+smc.support1
+?
+smc.support1.high
+:
+null,
 
 support2Low:
-smc.support2.low,
+smc.support2
+?
+smc.support2.low
+:
+null,
 
 support2High:
-smc.support2.high,
+smc.support2
+?
+smc.support2.high
+:
+null,
 
 support1Type:
-smc.support1.type,
+smc.support1
+?
+smc.support1.type
+:
+'無有效 SMC 結構',
 
 support2Type:
-smc.support2.type,
+smc.support2
+?
+smc.support2.type
+:
+'無第二有效結構',
 
 entryLow:
 smc.entryLow,
@@ -2112,10 +2168,18 @@ breakout:
 smc.breakout,
 
 pressure1:
-smc.pressure1.low,
+smc.pressure1
+?
+smc.pressure1.low
+:
+null,
 
 pressure2:
-smc.pressure2.low,
+smc.pressure2
+?
+smc.pressure2.low
+:
+null,
 
 tp1:
 smc.tp1,
@@ -2127,10 +2191,18 @@ tp3:
 smc.tp3,
 
 pressure1Type:
-smc.pressure1.type,
+smc.pressure1
+?
+smc.pressure1.type
+:
+'無有效壓力',
 
 pressure2Type:
-smc.pressure2.type,
+smc.pressure2
+?
+smc.pressure2.type
+:
+'無第二有效壓力',
 
 chipBias:
 smc.chipBias
@@ -2139,6 +2211,10 @@ smc.chipBias
 
 }
 
+
+/* =========================================================
+   狀態
+========================================================= */
 
 function statusOf(a){
 
@@ -2163,6 +2239,10 @@ a.near
 
 }
 
+
+/* =========================================================
+   首頁股票卡
+========================================================= */
 
 function renderCard(a){
 
@@ -2314,9 +2394,9 @@ x.dataset.symbol
 }
 
 
-/* =========================
+/* =========================================================
    法人
-========================= */
+========================================================= */
 
 function chipHTML(i){
 
@@ -2385,9 +2465,9 @@ ${sign(i.total5)}${fmt(i.total5,0)}
 }
 
 
-/* =========================
+/* =========================================================
    個股頁
-========================= */
+========================================================= */
 
 function renderDetail(a){
 
@@ -2472,7 +2552,13 @@ ${a.score}%
 </span>
 
 <strong>
-${fmt(a.support1Low)}～${fmt(a.support1High)}
+${
+a.hasRealStructure
+?
+`${fmt(a.support1Low)}～${fmt(a.support1High)}`
+:
+'無有效結構'
+}
 </strong>
 
 <small>
@@ -2489,7 +2575,14 @@ SMC 最近有效 Demand / OB / Breaker / Liquidity 結構
 </span>
 
 <strong>
-${fmt(a.support2Low)}～${fmt(a.support2High)}
+${
+Number.isFinite(+a.support2Low) &&
+Number.isFinite(+a.support2High)
+?
+`${fmt(a.support2Low)}～${fmt(a.support2High)}`
+:
+'無有效結構'
+}
 </strong>
 
 <small>
@@ -2569,7 +2662,13 @@ SMC 觀察進場區
 </span>
 
 <strong>
-${fmt(a.entryLow)}～${fmt(a.entryHigh)}
+${
+a.hasRealStructure
+?
+`${fmt(a.entryLow)}～${fmt(a.entryHigh)}`
+:
+'目前沒有有效進場結構'
+}
 </strong>
 
 <small>
@@ -2717,9 +2816,9 @@ renderHome();
 }
 
 
-/* =========================
+/* =========================================================
    開啟個股
-========================= */
+========================================================= */
 
 async function openStock(symbol){
 
@@ -2820,9 +2919,9 @@ catch{}
 }
 
 
-/* =========================
+/* =========================================================
    雷達
-========================= */
+========================================================= */
 
 async function radar(){
 
@@ -2860,9 +2959,9 @@ renderHome();
 }
 
 
-/* =========================
-   搜尋下拉控制
-========================= */
+/* =========================================================
+   搜尋下拉
+========================================================= */
 
 function hideSuggestions(){
 
@@ -2873,11 +2972,9 @@ $('suggestions')
 }
 
 
-/* =========================
+/* =========================================================
    搜尋歷史
-
-   只有點搜尋框時才呼叫
-========================= */
+========================================================= */
 
 function renderSearchHistory(){
 
@@ -2994,9 +3091,9 @@ x.dataset.symbol
 }
 
 
-/* =========================
-   API 搜尋
-========================= */
+/* =========================================================
+   股票搜尋 API
+========================================================= */
 
 async function searchStocks(q){
 
@@ -3034,9 +3131,9 @@ return d.items||[];
 }
 
 
-/* =========================
+/* =========================================================
    搜尋候選
-========================= */
+========================================================= */
 
 async function showSuggestions(q){
 
@@ -3047,11 +3144,6 @@ $('suggestions');
 if(
 !q.trim()
 ){
-
-/*
-  空白時只有在搜尋框仍有焦點
-  才顯示歷史。
-*/
 
 if(
 document.activeElement===
@@ -3173,9 +3265,9 @@ hideSuggestions();
 }
 
 
-/* =========================
+/* =========================================================
    執行搜尋
-========================= */
+========================================================= */
 
 async function submitSearch(){
 
@@ -3248,9 +3340,9 @@ e.message
 }
 
 
-/* =========================
-   搜尋框事件
-========================= */
+/* =========================================================
+   搜尋事件
+========================================================= */
 
 $('q')
 .addEventListener(
@@ -3280,11 +3372,6 @@ e.target.value
 );
 
 
-/*
-  只有使用者真的點進搜尋框，
-  才顯示最近搜尋。
-*/
-
 $('q')
 .addEventListener(
 'focus',
@@ -3312,8 +3399,37 @@ $('q').value
 
 
 /*
-  Enter 搜尋時先收起。
+  iPhone 已經 focus 的情況下，
+  再點一次搜尋框也能叫出歷史。
 */
+
+$('q')
+.addEventListener(
+'click',
+e=>{
+
+e.stopPropagation();
+
+if(
+!$('q')
+.value
+.trim()
+){
+
+renderSearchHistory();
+
+}
+else{
+
+showSuggestions(
+$('q').value
+);
+
+}
+
+}
+);
+
 
 $('q')
 .addEventListener(
@@ -3336,10 +3452,6 @@ submitSearch();
 );
 
 
-/*
-  分析按鈕
-*/
-
 $('go').onclick=
 e=>{
 
@@ -3353,11 +3465,6 @@ submitSearch();
 
 };
 
-
-/*
-  點擊搜尋區以外任何地方，
-  歷史／候選結果立即收起。
-*/
 
 document.addEventListener(
 'click',
@@ -3384,10 +3491,6 @@ hideSuggestions();
 );
 
 
-/*
-  頁面切到背景也收起。
-*/
-
 document.addEventListener(
 'visibilitychange',
 ()=>{
@@ -3404,9 +3507,9 @@ hideSuggestions();
 );
 
 
-/* =========================
+/* =========================================================
    返回
-========================= */
+========================================================= */
 
 $('back').onclick=
 ()=>{
@@ -3437,9 +3540,9 @@ renderHome();
 };
 
 
-/* =========================
+/* =========================================================
    Tabs
-========================= */
+========================================================= */
 
 document
 .querySelectorAll(
@@ -3476,15 +3579,307 @@ renderHome();
 );
 
 
-/* =========================
-   通知
-========================= */
+/* =========================================================
+   Web Push
+========================================================= */
 
-$('notify').onclick=
-async()=>{
+function pushSymbols(){
 
-hideSuggestions();
+return [
+...new Set(
+[
+...DEFAULT,
+...watch()
+]
+)
+];
 
+}
+
+
+function getDeviceId(){
+
+let id=
+localStorage.getItem(
+PUSH_DEVICE_KEY
+);
+
+
+if(!id){
+
+if(
+window.crypto &&
+crypto.randomUUID
+){
+
+id=
+crypto.randomUUID();
+
+}
+else{
+
+id=
+'device-'+
+Date.now()+
+'-'+
+Math.random()
+.toString(36)
+.slice(2);
+
+}
+
+
+localStorage.setItem(
+PUSH_DEVICE_KEY,
+id
+);
+
+}
+
+
+return id;
+
+}
+
+
+function urlBase64ToUint8Array(
+base64String
+){
+
+const padding=
+'='.repeat(
+(4-base64String.length%4)%4
+);
+
+const base64=
+(
+base64String+
+padding
+)
+.replace(/-/g,'+')
+.replace(/_/g,'/');
+
+
+const rawData=
+window.atob(
+base64
+);
+
+
+const outputArray=
+new Uint8Array(
+rawData.length
+);
+
+
+for(
+let i=0;
+i<rawData.length;
+++i
+){
+
+outputArray[i]=
+rawData.charCodeAt(i);
+
+}
+
+
+return outputArray;
+
+}
+
+
+async function getSWRegistration(){
+
+if(
+!(
+'serviceWorker'
+in navigator
+)
+){
+
+throw Error(
+'此瀏覽器不支援背景通知'
+);
+
+}
+
+
+const registration=
+await navigator
+.serviceWorker
+.register(
+'/sw.js',
+{
+scope:'/'
+}
+);
+
+
+await navigator
+.serviceWorker
+.ready;
+
+
+return registration;
+
+}
+
+
+async function getPushPublicKey(){
+
+const r=
+await fetch(
+'/api/push-config?t='+
+Date.now(),
+{
+cache:'no-store'
+}
+);
+
+
+const d=
+await r.json();
+
+
+if(
+!r.ok ||
+!d.ok ||
+!d.publicKey
+){
+
+throw Error(
+d.error||
+'Push 公鑰取得失敗'
+);
+
+}
+
+
+return d.publicKey;
+
+}
+
+
+async function savePushSubscription(
+subscription
+){
+
+const r=
+await fetch(
+'/api/push-subscribe',
+{
+
+method:'POST',
+
+headers:{
+'Content-Type':
+'application/json'
+},
+
+body:
+JSON.stringify({
+
+deviceId:
+getDeviceId(),
+
+subscription:
+subscription.toJSON(),
+
+symbols:
+pushSymbols()
+
+})
+
+}
+);
+
+
+const d=
+await r.json();
+
+
+if(
+!r.ok ||
+!d.ok
+){
+
+throw Error(
+d.error||
+'Push 訂閱儲存失敗'
+);
+
+}
+
+
+return d;
+
+}
+
+
+/*
+  自選變更後，
+  自動把最新監控股票同步到 Redis。
+*/
+
+async function syncPushSymbols(){
+
+try{
+
+if(
+!(
+'serviceWorker'
+in navigator
+) ||
+!(
+'PushManager'
+in window
+)
+){
+
+return;
+
+}
+
+
+const registration=
+await navigator
+.serviceWorker
+.getRegistration('/');
+
+
+if(!registration)return;
+
+
+const subscription=
+await registration
+.pushManager
+.getSubscription();
+
+
+if(!subscription)return;
+
+
+await savePushSubscription(
+subscription
+);
+
+}
+catch(e){
+
+console.warn(
+'Push 股票同步失敗',
+e
+);
+
+}
+
+}
+
+
+async function updatePushButton(){
+
+try{
 
 if(
 !(
@@ -3493,46 +3888,358 @@ in window
 )
 ){
 
-return alert(
+return;
+
+}
+
+
+if(
+Notification.permission!==
+'granted'
+){
+
+$('notify')
+.classList
+.remove(
+'push-on'
+);
+
+$('notify').textContent=
+'🔔';
+
+return;
+
+}
+
+
+if(
+!(
+'serviceWorker'
+in navigator
+)
+){
+
+return;
+
+}
+
+
+const registration=
+await navigator
+.serviceWorker
+.getRegistration('/');
+
+
+if(!registration)return;
+
+
+const subscription=
+await registration
+.pushManager
+.getSubscription();
+
+
+if(subscription){
+
+$('notify')
+.classList
+.add(
+'push-on'
+);
+
+$('notify').textContent=
+'🔔';
+
+}
+
+}
+catch{}
+
+}
+
+
+/* =========================================================
+   開啟 Push
+========================================================= */
+
+async function enablePush(){
+
+if(
+!(
+'Notification'
+in window
+)
+){
+
+throw Error(
 '此瀏覽器不支援通知'
 );
 
 }
 
 
-const p=
+if(
+!(
+'PushManager'
+in window
+)
+){
+
+throw Error(
+'此瀏覽器不支援背景 Push'
+);
+
+}
+
+
+const permission=
 await Notification
 .requestPermission();
 
 
-alert(
-p==='granted'
-?
-'通知已開啟'
-:
-'通知未開啟'
+if(
+permission!=='granted'
+){
+
+throw Error(
+'通知權限沒有開啟'
 );
+
+}
+
+
+const registration=
+await getSWRegistration();
+
+
+let subscription=
+await registration
+.pushManager
+.getSubscription();
+
+
+if(!subscription){
+
+const publicKey=
+await getPushPublicKey();
+
+
+subscription=
+await registration
+.pushManager
+.subscribe({
+
+userVisibleOnly:true,
+
+applicationServerKey:
+urlBase64ToUint8Array(
+publicKey
+)
+
+});
+
+}
+
+
+await savePushSubscription(
+subscription
+);
+
+
+$('notify')
+.classList
+.add(
+'push-on'
+);
+
+
+$('notify').textContent=
+'🔔';
+
+
+return true;
+
+}
+
+
+/* =========================================================
+   通知按鈕
+========================================================= */
+
+$('notify').onclick=
+async()=>{
+
+hideSuggestions();
+
+
+$('notify').disabled=
+true;
+
+
+try{
+
+await enablePush();
+
+
+alert(
+'進場通知已開啟。\n\n之後網站沒有開著，只要背景監控偵測到正式進場訊號，也可以推播通知你。'
+);
+
+}
+catch(e){
+
+const isiOS=
+/iPad|iPhone|iPod/
+.test(
+navigator.userAgent
+);
+
+
+const standalone=
+window.matchMedia(
+'(display-mode: standalone)'
+).matches
+||
+window.navigator.standalone===true;
+
+
+if(
+isiOS &&
+!standalone
+){
+
+alert(
+'請先把「波段分析」加入 iPhone 主畫面。\n\nSafari 下方分享 → 加入主畫面 → 從主畫面重新開啟「波段分析」→ 再按一次 🔔。'
+);
+
+}
+else{
+
+alert(
+e.message||
+'通知開啟失敗'
+);
+
+}
+
+}
+finally{
+
+$('notify').disabled=
+false;
+
+}
 
 };
 
 
-/* =========================
-   啟動
+/* =========================================================
+   從 Push 通知開啟指定股票
+========================================================= */
 
-   注意：
-   啟動時不呼叫 renderSearchHistory()
-   所以首頁預設一定是收起的。
-========================= */
+async function openStockFromURL(){
+
+try{
+
+const params=
+new URLSearchParams(
+location.search
+);
+
+
+const symbol=
+params.get('stock')
+||
+params.get('symbol');
+
+
+if(
+symbol &&
+/^\d{4,6}$/.test(symbol)
+){
+
+await openStock(
+symbol
+);
+
+
+history.replaceState(
+{},
+'',
+location.pathname
+);
+
+}
+
+}
+catch{}
+
+}
+
+
+/* =========================================================
+   啟動
+========================================================= */
+
+async function startApp(){
 
 hideSuggestions();
 
+
+/*
+  先註冊 Service Worker。
+  不要求通知權限，
+  權限仍然只會在使用者按 🔔 時詢問。
+*/
+
+if(
+'serviceWorker'
+in navigator
+){
+
+try{
+
+await navigator
+.serviceWorker
+.register(
+'/sw.js',
+{
+scope:'/'
+}
+);
+
+}
+catch(e){
+
+console.warn(
+'Service Worker 註冊失敗',
+e
+);
+
+}
+
+}
+
+
+updatePushButton();
+
+
 radar();
+
 
 radarTimer=
 setInterval(
 radar,
 60000
 );
+
+
+openStockFromURL();
+
+}
+
+
+startApp();
 
 </script>
 
