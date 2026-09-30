@@ -3,6 +3,9 @@
   "functions": {
     "api/stock.js": {
       "maxDuration": 30
+    },
+    "api/monitor.js": {
+      "maxDuration": 300
     }
   },
   "headers": [
