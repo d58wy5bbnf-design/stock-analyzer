@@ -1,8 +1,8 @@
 const webpush = require("web-push");
 
-// ========================================
+// ============================================================
 // Redis
-// ========================================
+// ============================================================
 
 function getRedisConfig() {
   const url =
@@ -14,11 +14,11 @@ function getRedisConfig() {
     process.env.KV_REST_API_TOKEN;
 
   if (!url) {
-    throw new Error("缺少 UPSTASH_REDIS_REST_URL");
+    throw new Error("缺少 UPSTASH_REDIS_REST_URL / KV_REST_API_URL");
   }
 
   if (!token) {
-    throw new Error("缺少 UPSTASH_REDIS_REST_TOKEN");
+    throw new Error("缺少 UPSTASH_REDIS_REST_TOKEN / KV_REST_API_TOKEN");
   }
 
   return {
@@ -32,7 +32,6 @@ async function redis(command) {
 
   const controller = new AbortController();
 
-  // Redis 最多等 8 秒
   const timer = setTimeout(() => {
     controller.abort();
   }, 8000);
@@ -48,7 +47,17 @@ async function redis(command) {
       signal: controller.signal,
     });
 
-    const data = await response.json();
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      const text = await response.text();
+
+      throw new Error(
+        `Redis 回傳不是 JSON：HTTP ${response.status} ${text}`
+      );
+    }
 
     if (!response.ok || data.error) {
       throw new Error(
@@ -62,9 +71,9 @@ async function redis(command) {
   }
 }
 
-// ========================================
+// ============================================================
 // VAPID
-// ========================================
+// ============================================================
 
 function configurePush() {
   const publicKey = process.env.VAPID_PUBLIC_KEY;
@@ -100,11 +109,17 @@ function configurePush() {
     publicKey,
     privateKey
   );
+
+  return {
+    subject,
+    publicKeyLength: publicKey.length,
+    privateKeyLength: privateKey.length,
+  };
 }
 
-// ========================================
-// 找 Push 訂閱
-// ========================================
+// ============================================================
+// 讀取 Push 訂閱
+// ============================================================
 
 async function getSubscriptions() {
   const subscriptions = [];
@@ -157,14 +172,46 @@ async function getSubscriptions() {
   return subscriptions;
 }
 
-// ========================================
-// 單一 Push：最多等待 10 秒
-// ========================================
+// ============================================================
+// 判斷 Push endpoint
+// ============================================================
+
+function getEndpointType(endpoint = "") {
+  try {
+    const host = new URL(endpoint).hostname;
+
+    if (
+      host.includes("push.apple.com") ||
+      host.includes("web.push.apple.com")
+    ) {
+      return "Apple Push";
+    }
+
+    if (
+      host.includes("googleapis.com") ||
+      host.includes("fcm.googleapis.com")
+    ) {
+      return "Google FCM";
+    }
+
+    if (host.includes("mozilla.com")) {
+      return "Mozilla Push";
+    }
+
+    return host;
+  } catch {
+    return "Unknown";
+  }
+}
+
+// ============================================================
+// Push timeout
+// ============================================================
 
 async function sendPushWithTimeout(
   subscription,
   payload,
-  timeoutMs = 10000
+  timeoutMs = 15000
 ) {
   let timer;
 
@@ -172,7 +219,7 @@ async function sendPushWithTimeout(
     (_, reject) => {
       timer = setTimeout(() => {
         const error = new Error(
-          `Apple Push 超過 ${timeoutMs / 1000} 秒沒有回應`
+          `Push 超時 ${timeoutMs / 1000} 秒`
         );
 
         error.code = "PUSH_TIMEOUT";
@@ -198,12 +245,69 @@ async function sendPushWithTimeout(
   }
 }
 
-// ========================================
+// ============================================================
+// 整理錯誤
+// ============================================================
+
+function normalizeError(error) {
+  let body = error?.body ?? null;
+
+  if (Buffer.isBuffer(body)) {
+    body = body.toString("utf8");
+  }
+
+  if (
+    body &&
+    typeof body !== "string"
+  ) {
+    try {
+      body = JSON.stringify(body);
+    } catch {
+      body = String(body);
+    }
+  }
+
+  let headers = null;
+
+  if (error?.headers) {
+    try {
+      headers = JSON.parse(
+        JSON.stringify(error.headers)
+      );
+    } catch {
+      headers = String(error.headers);
+    }
+  }
+
+  return {
+    message:
+      error?.message ||
+      "Unknown Push Error",
+
+    statusCode:
+      error?.statusCode ||
+      error?.status ||
+      null,
+
+    code:
+      error?.code ||
+      null,
+
+    body,
+
+    headers,
+  };
+}
+
+// ============================================================
 // API
-// ========================================
+// ============================================================
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "no-store");
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate"
+  );
 
   if (req.method !== "GET") {
     return res.status(405).json({
@@ -213,7 +317,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    configurePush();
+    const vapid = configurePush();
 
     const subscriptions =
       await getSubscriptions();
@@ -224,15 +328,16 @@ module.exports = async function handler(req, res) {
         sent: 0,
         failed: 0,
         totalSubscriptions: 0,
+        vapid,
         message:
-          "目前 Redis 裡沒有找到手機 Push 訂閱。請先從 iPhone 主畫面的波段分析開啟「進場通知」。",
+          "Redis 裡沒有找到有效的手機 Push 訂閱",
       });
     }
 
     const payload = JSON.stringify({
       title: "✅ 台股進場通知測試成功",
       body:
-        "背景推播系統測試中。如果你看到這則通知，代表手機 Push 訂閱與通知功能已連線。",
+        "背景推播系統測試中。如果你看到這則通知，代表 Web Push 已成功。",
       tag: `test-push-${Date.now()}`,
       url: "/",
     });
@@ -242,49 +347,67 @@ module.exports = async function handler(req, res) {
 
     const results = [];
 
-    // ========================================
-    // 逐台測試
-    // 每台最多 10 秒
-    // ========================================
-
     for (const item of subscriptions) {
+      const endpoint =
+        item.subscription?.endpoint || "";
+
+      const endpointType =
+        getEndpointType(endpoint);
+
+      let endpointHost = null;
+
       try {
-        await sendPushWithTimeout(
-          item.subscription,
-          payload,
-          10000
-        );
+        endpointHost =
+          new URL(endpoint).hostname;
+      } catch {
+        endpointHost = "invalid-endpoint";
+      }
+
+      try {
+        const response =
+          await sendPushWithTimeout(
+            item.subscription,
+            payload
+          );
 
         sent++;
 
         results.push({
           deviceId: item.deviceId,
           ok: true,
+          endpointType,
+          endpointHost,
+          statusCode:
+            response?.statusCode || 201,
         });
       } catch (error) {
         failed++;
 
-        const statusCode =
-          error.statusCode ||
-          error.status ||
-          null;
+        const detail =
+          normalizeError(error);
 
         console.error(
           "Push 發送失敗：",
-          item.deviceId,
-          statusCode,
-          error.message
+          {
+            deviceId: item.deviceId,
+            endpointType,
+            endpointHost,
+            ...detail,
+          }
         );
 
         results.push({
           deviceId: item.deviceId,
           ok: false,
-          statusCode,
-          code: error.code || null,
-          error: error.message,
+          endpointType,
+          endpointHost,
+          ...detail,
         });
 
-        // Apple / Push Service 表示訂閱已失效
+        const statusCode =
+          detail.statusCode;
+
+        // 訂閱確定失效才刪除
         if (
           statusCode === 404 ||
           statusCode === 410
@@ -316,10 +439,14 @@ module.exports = async function handler(req, res) {
       failed,
       totalSubscriptions:
         subscriptions.length,
+
+      vapid,
+
       message:
         sent > 0
           ? `測試通知已送出 ${sent} 台裝置`
-          : "找到訂閱，但通知沒有成功送出",
+          : "找到訂閱，但所有 Push 都發送失敗",
+
       results,
     });
   } catch (error) {
@@ -331,8 +458,9 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       ok: false,
       error:
-        error.message ||
+        error?.message ||
         "Internal Server Error",
+      detail: normalizeError(error),
     });
   }
 };
