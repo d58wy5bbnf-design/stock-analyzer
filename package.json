@@ -1,0 +1,9 @@
+{
+  "name": "stock-analyzer",
+  "version": "4.0.0",
+  "private": true,
+  "description": "台股 SMC 波段分析與背景進場通知",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
