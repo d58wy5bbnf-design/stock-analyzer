@@ -37,10 +37,7 @@ min-height:62px;
 margin:0 0 22px
 }
 
-.brand{
-font-size:25px;
-font-weight:900
-}
+.brand{font-size:25px;font-weight:900}
 
 .brand small{
 display:block;
@@ -130,22 +127,9 @@ color:#17202a
 .suggestion:last-child{border-bottom:0}
 .suggestion:active{background:#f4f7fa}
 
-.suggestion-main{
-font-weight:850;
-font-size:15px
-}
-
-.suggestion-code{
-font-size:12px;
-color:#7d8793;
-margin-top:3px
-}
-
-.suggestion-market{
-font-size:11px;
-color:#7d8793;
-white-space:nowrap
-}
+.suggestion-main{font-weight:850;font-size:15px}
+.suggestion-code{font-size:12px;color:#7d8793;margin-top:3px}
+.suggestion-market{font-size:11px;color:#7d8793;white-space:nowrap}
 
 .history-head{
 display:flex;
@@ -217,28 +201,10 @@ gap:12px;
 align-items:flex-start
 }
 
-.symbol{
-font-size:17px;
-font-weight:900
-}
-
-.name{
-font-size:12px;
-color:#7d8793;
-margin-top:3px
-}
-
-.price{
-text-align:right;
-font-size:19px;
-font-weight:900
-}
-
-.change{
-font-size:12px;
-font-weight:800;
-margin-top:3px
-}
+.symbol{font-size:17px;font-weight:900}
+.name{font-size:12px;color:#7d8793;margin-top:3px}
+.price{text-align:right;font-size:19px;font-weight:900}
+.change{font-size:12px;font-weight:800;margin-top:3px}
 
 .up{color:#d73a49}
 .down{color:#159447}
@@ -254,20 +220,9 @@ font-weight:800;
 margin-top:10px
 }
 
-.green{
-background:#e9f8ef;
-color:#148244
-}
-
-.yellow{
-background:#fff5d8;
-color:#a06a00
-}
-
-.gray{
-background:#f0f2f4;
-color:#6f7882
-}
+.green{background:#e9f8ef;color:#148244}
+.yellow{background:#fff5d8;color:#a06a00}
+.gray{background:#f0f2f4;color:#6f7882}
 
 .score{
 font-size:11px;
@@ -300,15 +255,8 @@ justify-content:space-between;
 align-items:center
 }
 
-.strategy-title{
-font-size:20px;
-font-weight:950
-}
-
-.bigscore{
-font-size:25px;
-font-weight:950
-}
+.strategy-title{font-size:20px;font-weight:950}
+.bigscore{font-size:25px;font-weight:950}
 
 .section-title{
 font-size:16px;
@@ -353,35 +301,12 @@ color:#7c8793;
 margin-top:5px
 }
 
-.entry{
-background:#edf5ff;
-border-color:#cfe1fa
-}
-
-.sl{
-background:#fff0f0;
-border-color:#f4d0d0
-}
-
-.tp{
-background:#eef9f1;
-border-color:#d0ebd8
-}
-
-.support{
-background:#ecfaf7;
-border-color:#cbece5
-}
-
-.breakout{
-background:#eef5ff;
-border-color:#cfe1fa
-}
-
-.pressure{
-background:#fff5ed;
-border-color:#f2dccb
-}
+.entry{background:#edf5ff;border-color:#cfe1fa}
+.sl{background:#fff0f0;border-color:#f4d0d0}
+.tp{background:#eef9f1;border-color:#d0ebd8}
+.support{background:#ecfaf7;border-color:#cbece5}
+.breakout{background:#eef5ff;border-color:#cfe1fa}
+.pressure{background:#fff5ed;border-color:#f2dccb}
 
 .chip{
 margin-top:12px;
@@ -450,7 +375,6 @@ margin-top:13px
 }
 
 .back{margin-bottom:12px}
-
 .hidden{display:none!important}
 
 .note{
@@ -562,27 +486,13 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 
 <script>
 
-/* =========================================================
-   基本設定
-========================================================= */
-
 const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
 const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
 
 const DEFAULT=[
-'2330',
-'2317',
-'2454',
-'2308',
-'2382',
-'3231',
-'2881',
-'2882',
-'2891',
-'2886',
-'2603',
-'2615'
+'2330','2317','2454','2308','2382','3231',
+'2881','2882','2891','2886','2603','2615'
 ];
 
 let tab='signal';
@@ -594,11 +504,6 @@ let searchTimer=null;
 let selectedSearchSymbol='';
 
 const $=id=>document.getElementById(id);
-
-
-/* =========================================================
-   基本工具
-========================================================= */
 
 const fmt=(n,d=2)=>
 Number.isFinite(+n)
@@ -627,8 +532,7 @@ a.reduce((x,y)=>x+y,0)/a.length
 :
 0;
 
-const sma=(a,n)=>
-avg(a.slice(-n));
+const sma=(a,n)=>avg(a.slice(-n));
 
 function ema(a,n){
 
@@ -804,7 +708,7 @@ return d;
 
 
 /* =========================================================
-   SMC Swing
+   SMC
 ========================================================= */
 
 function swings(rows,left=2,right=2){
@@ -873,15 +777,9 @@ return !after.some(x=>x.close<zone.low);
 return !after.some(x=>x.close>zone.high);
 }
 
-
-/* =========================================================
-   SMC 主分析
-========================================================= */
-
 function smcAnalysis(rows,price,A,inst){
 
 const recent=rows.slice(-140);
-
 const S=swings(recent,2,2);
 
 const volBase=
@@ -895,7 +793,7 @@ const supports=[];
 const pressures=[];
 
 
-/* ---------- Bullish / Bearish OB ---------- */
+/* Bullish / Bearish OB */
 
 for(let i=2;i<recent.length-2;i++){
 
@@ -959,7 +857,7 @@ pressures.push(z);
 }
 
 
-/* ---------- FVG ---------- */
+/* FVG */
 
 for(let i=1;i<recent.length-1;i++){
 
@@ -1007,7 +905,7 @@ pressures.push(z);
 }
 
 
-/* ---------- BOS / Breaker ---------- */
+/* BOS / Breaker */
 
 for(const h of S.highs){
 
@@ -1066,7 +964,7 @@ score:3.8
 }
 
 
-/* ---------- Liquidity Sweep ---------- */
+/* Liquidity Sweep */
 
 for(let i=3;i<recent.length;i++){
 
@@ -1119,7 +1017,7 @@ score:5.5
 }
 
 
-/* ---------- 成交量確認 ---------- */
+/* 成交量 */
 
 for(const z of [...supports,...pressures]){
 
@@ -1143,7 +1041,7 @@ z.score-=dist*12;
 }
 
 
-/* ---------- 法人籌碼確認 ---------- */
+/* 法人 */
 
 const chip=inst||{};
 const chip5=Number(chip.total5||0);
@@ -1165,13 +1063,9 @@ supports.forEach(z=>z.score+=.3);
 }
 
 
-/* ---------- 有效支撐 ---------- */
-
 const validS=
 supports
-.filter(
-z=>z.high<=price*1.012
-)
+.filter(z=>z.high<=price*1.012)
 .sort(
 (a,b)=>{
 
@@ -1183,20 +1077,10 @@ return (db-da)*5+(b.score-a.score);
 }
 );
 
-
-/* ---------- 有效壓力 ---------- */
-
 const validP=
 pressures
-.filter(
-z=>z.low>price*1.001
-)
-.sort(
-(a,b)=>a.low-b.low
-);
-
-
-/* ---------- 第一支撐 ---------- */
+.filter(z=>z.low>price*1.001)
+.sort((a,b)=>a.low-b.low);
 
 const nearS=
 validS.filter(
@@ -1224,9 +1108,6 @@ validS[0]
 ||
 null;
 
-
-/* ---------- 第二支撐 ---------- */
-
 let s2=null;
 
 if(s1){
@@ -1240,16 +1121,11 @@ z.high<
 s1.low-
 Math.max(A*.25,price*.003)
 )
-.sort(
-(a,b)=>b.high-a.high
-)[0]
+.sort((a,b)=>b.high-a.high)[0]
 ||
 null;
 
 }
-
-
-/* ---------- 壓力 ---------- */
 
 const p1=validP[0]||null;
 
@@ -1287,9 +1163,6 @@ null;
 
 }
 
-
-/* ---------- 進場與 SL ---------- */
-
 let entryLow=null;
 let entryHigh=null;
 let sl=null;
@@ -1313,9 +1186,6 @@ Math.max(A*.35,price*.005);
 
 }
 
-
-/* ---------- 是否接近真正進場區 ---------- */
-
 let entryReady=false;
 
 if(
@@ -1338,16 +1208,12 @@ tolerance;
 
 }
 
-
-/* ---------- 回傳 ---------- */
-
 return {
 
 support1:s1,
 support2:s2,
 
-breakout:
-p1?p1.low:null,
+breakout:p1?p1.low:null,
 
 pressure1:p1,
 pressure2:p2,
@@ -1685,15 +1551,13 @@ a.near
 
 
 /* =========================================================
-   首頁股票卡
+   首頁
 ========================================================= */
 
 function renderCard(a){
 
 const [label,cls]=statusOf(a);
-
-const cp=
-Number(a.changePercent||0);
+const cp=Number(a.changePercent||0);
 
 return `
 <div
@@ -1741,7 +1605,6 @@ ${a.passed}/8 · ${a.score}%
 `;
 
 }
-
 
 function renderHome(){
 
@@ -1867,7 +1730,7 @@ ${sign(i.total5)}${fmt(i.total5,0)}
 
 
 /* =========================================================
-   個股頁
+   個股
 ========================================================= */
 
 function renderDetail(a){
@@ -2073,49 +1936,25 @@ ${fmt(a.sl)}
 
 <div class="level tp">
 
-<span>
-TP1
-</span>
-
-<strong>
-${fmt(a.tp1)}
-</strong>
-
-<small>
-最近上方流動性／供給
-</small>
+<span>TP1</span>
+<strong>${fmt(a.tp1)}</strong>
+<small>最近上方流動性／供給</small>
 
 </div>
 
 <div class="level tp">
 
-<span>
-TP2
-</span>
-
-<strong>
-${fmt(a.tp2)}
-</strong>
-
-<small>
-下一層 Supply / Bearish OB
-</small>
+<span>TP2</span>
+<strong>${fmt(a.tp2)}</strong>
+<small>下一層 Supply / Bearish OB</small>
 
 </div>
 
 <div class="level tp">
 
-<span>
-TP3
-</span>
-
-<strong>
-${fmt(a.tp3)}
-</strong>
-
-<small>
-更高層級 Buy-side Liquidity
-</small>
+<span>TP3</span>
+<strong>${fmt(a.tp3)}</strong>
+<small>更高層級 Buy-side Liquidity</small>
 
 </div>
 
@@ -2241,7 +2080,6 @@ refreshDetail,
 
 }
 
-
 async function refreshDetail(){
 
 if(!current)return;
@@ -2279,13 +2117,6 @@ const symbols=
 )
 ];
 
-
-/*
-  同時抓取所有股票。
-  原本是一支抓完才抓下一支，
-  第一次開啟會比較慢。
-*/
-
 const results=
 await Promise.allSettled(
 symbols.map(
@@ -2306,7 +2137,6 @@ data:a
 )
 );
 
-
 for(const result of results){
 
 if(
@@ -2322,19 +2152,13 @@ result.value.data;
 
 }
 
-
-/*
-  每次雷達完成後，
-  一定重新畫首頁。
-*/
-
 renderHome();
 
 }
 
 
 /* =========================================================
-   搜尋下拉
+   搜尋
 ========================================================= */
 
 function hideSuggestions(){
@@ -2344,11 +2168,6 @@ $('suggestions')
 .add('hidden');
 
 }
-
-
-/* =========================================================
-   搜尋歷史
-========================================================= */
 
 function renderSearchHistory(){
 
@@ -2446,11 +2265,6 @@ x.dataset.symbol
 
 }
 
-
-/* =========================================================
-   股票搜尋 API
-========================================================= */
-
 async function searchStocks(q){
 
 const r=
@@ -2482,11 +2296,6 @@ d.error||
 return d.items||[];
 
 }
-
-
-/* =========================================================
-   搜尋候選
-========================================================= */
 
 async function showSuggestions(q){
 
@@ -2597,11 +2406,6 @@ hideSuggestions();
 
 }
 
-
-/* =========================================================
-   執行搜尋
-========================================================= */
-
 async function submitSearch(){
 
 hideSuggestions();
@@ -2658,11 +2462,6 @@ alert(e.message);
 
 }
 
-
-/* =========================================================
-   搜尋事件
-========================================================= */
-
 $('q')
 .addEventListener(
 'input',
@@ -2686,7 +2485,6 @@ e.target.value
 
 }
 );
-
 
 $('q')
 .addEventListener(
@@ -2713,7 +2511,6 @@ $('q').value
 }
 );
 
-
 $('q')
 .addEventListener(
 'click',
@@ -2741,7 +2538,6 @@ $('q').value
 }
 );
 
-
 $('q')
 .addEventListener(
 'keydown',
@@ -2760,7 +2556,6 @@ submitSearch();
 }
 );
 
-
 $('go').onclick=
 e=>{
 
@@ -2773,7 +2568,6 @@ $('q').blur();
 submitSearch();
 
 };
-
 
 document.addEventListener(
 'click',
@@ -2793,7 +2587,6 @@ hideSuggestions();
 
 }
 );
-
 
 document.addEventListener(
 'visibilitychange',
@@ -2881,7 +2674,6 @@ return [
 
 }
 
-
 function getDeviceId(){
 
 let id=
@@ -2923,7 +2715,6 @@ return id;
 
 }
 
-
 function urlBase64ToUint8Array(base64String){
 
 const padding=
@@ -2962,7 +2753,6 @@ return outputArray;
 
 }
 
-
 async function getSWRegistration(){
 
 if(
@@ -2996,7 +2786,6 @@ return registration;
 
 }
 
-
 async function getPushPublicKey(){
 
 const r=
@@ -3027,7 +2816,6 @@ d.error||
 return d.publicKey;
 
 }
-
 
 async function savePushSubscription(subscription){
 
@@ -3133,7 +2921,6 @@ e
 
 }
 
-
 async function updatePushButton(){
 
 try{
@@ -3196,6 +2983,15 @@ $('notify')
 $('notify').textContent='🔔';
 
 }
+else{
+
+$('notify')
+.classList
+.remove('push-on');
+
+$('notify').textContent='🔔';
+
+}
 
 }
 catch{}
@@ -3205,6 +3001,9 @@ catch{}
 
 /* =========================================================
    開啟 Push
+   修正版：
+   舊 subscription 一律取消，
+   使用目前 VAPID Public Key 重新建立
 ========================================================= */
 
 async function enablePush(){
@@ -3235,6 +3034,11 @@ throw Error(
 
 }
 
+
+/*
+  取得通知權限
+*/
+
 const permission=
 await Notification
 .requestPermission();
@@ -3249,18 +3053,77 @@ throw Error(
 
 }
 
+
+/*
+  取得 Service Worker
+*/
+
 const registration=
 await getSWRegistration();
 
-let subscription=
+
+/*
+  從後端取得目前正在使用的
+  VAPID PUBLIC KEY
+*/
+
+const publicKey=
+await getPushPublicKey();
+
+
+/*
+  取得舊訂閱
+*/
+
+const oldSubscription=
 await registration
 .pushManager
 .getSubscription();
 
-if(!subscription){
 
-const publicKey=
-await getPushPublicKey();
+/*
+  關鍵修正：
+  舊 subscription 是使用之前的 VAPID Key 建立，
+  Apple Push 會回：
+  VapidPkHashMismatch
+
+  因此直接取消舊 subscription。
+*/
+
+if(oldSubscription){
+
+try{
+
+const unsubscribed=
+await oldSubscription
+.unsubscribe();
+
+console.log(
+'舊 Push Subscription 已取消',
+unsubscribed
+);
+
+}
+catch(e){
+
+console.warn(
+'舊 Push Subscription 取消失敗',
+e
+);
+
+}
+
+}
+
+
+/*
+  使用目前 Vercel 的 VAPID PUBLIC KEY
+  建立全新的 Apple Web Push Subscription
+*/
+
+let subscription;
+
+try{
 
 subscription=
 await registration
@@ -3277,16 +3140,63 @@ publicKey
 });
 
 }
+catch(e){
+
+console.error(
+'建立新 Push Subscription 失敗',
+e
+);
+
+throw Error(
+'重新建立推播訂閱失敗：'+
+(e?.message||'未知錯誤')
+);
+
+}
+
+
+/*
+  確認真的取得新 subscription
+*/
+
+if(
+!subscription ||
+!subscription.endpoint
+){
+
+throw Error(
+'沒有取得新的 Push Subscription'
+);
+
+}
+
+
+/*
+  將新的 subscription
+  寫入 Redis
+*/
 
 await savePushSubscription(
 subscription
 );
+
+
+/*
+  更新畫面
+*/
 
 $('notify')
 .classList
 .add('push-on');
 
 $('notify').textContent='🔔';
+
+
+console.log(
+'Push 已重新訂閱成功',
+subscription.endpoint
+);
+
 
 return true;
 
@@ -3309,7 +3219,7 @@ try{
 await enablePush();
 
 alert(
-'進場通知已開啟。\n\n之後網站沒有開著，只要背景監控偵測到正式進場訊號，也可以推播通知你。'
+'進場通知已重新設定完成。\n\n已使用目前的推播金鑰重新建立訂閱，之後網站沒有開著，只要背景監控偵測到正式進場訊號，也可以推播通知你。'
 );
 
 }
@@ -3334,7 +3244,7 @@ isiOS &&
 ){
 
 alert(
-'請先把「波段分析」加入 iPhone 主畫面。\n\nSafari 下方分享 → 加入主畫面 → 從主畫面重新開啟「波段分析」→ 再按一次 🔔。'
+'請先把「波段分析」加入 iPhone／iPad 主畫面。\n\nSafari 分享 → 加入主畫面 → 從主畫面重新開啟「波段分析」→ 再按一次 🔔。'
 );
 
 }
@@ -3404,23 +3314,12 @@ async function startApp(){
 
 hideSuggestions();
 
-
-/*
-  第一次開啟時直接顯示掃描中。
-  不需要先切換 Tab。
-*/
-
 $('homeList').innerHTML=
 `
 <div class="card loader">
 正在掃描策略...
 </div>
 `;
-
-
-/*
-  註冊 Service Worker。
-*/
 
 if(
 'serviceWorker'
@@ -3450,18 +3349,7 @@ e
 
 }
 
-
-/*
-  Push 按鈕狀態不阻塞首頁。
-*/
-
 updatePushButton();
-
-
-/*
-  關鍵修正：
-  第一次開啟必須等待 radar 完成。
-*/
 
 try{
 
@@ -3477,18 +3365,7 @@ e
 
 }
 
-
-/*
-  再強制依照目前預設的 signal Tab
-  畫一次首頁。
-*/
-
 renderHome();
-
-
-/*
-  每 60 秒重新掃描。
-*/
 
 clearInterval(
 radarTimer
@@ -3516,12 +3393,6 @@ e
 60000
 );
 
-
-/*
-  如果是從 Push 點進來，
-  開啟指定股票。
-*/
-
 try{
 
 await openStockFromURL();
@@ -3537,11 +3408,6 @@ e
 }
 
 }
-
-
-/*
-  確保整個 HTML 建立完成後才啟動。
-*/
 
 if(
 document.readyState==='loading'
