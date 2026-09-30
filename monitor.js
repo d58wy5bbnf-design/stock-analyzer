@@ -1,13 +1,25 @@
 /* =========================================================
    api/monitor.js
    台股背景進場訊號監控 + Web Push
+
+   正式 Push 條件與 index.html 對齊：
+   1. passed >= 7
+   2. hasRealStructure === true
+   3. entryReady === true
+
+   支援：
+   - iPhone / iPad 多裝置
+   - Redis
+   - Vercel Cron
+   - 6 小時同 Setup 防重複
+   - 失效 Push 自動清除
 ========================================================= */
 
 const webpush = require("web-push");
 
 
 /* =========================================================
-   環境變數
+   ENV
 ========================================================= */
 
 const REDIS_URL =
@@ -91,14 +103,9 @@ async function redis(command) {
   } finally {
 
     clearTimeout(timer);
-
   }
 }
 
-
-/* =========================================================
-   刪除 Push 裝置
-========================================================= */
 
 async function deleteDevice(deviceId) {
 
@@ -145,45 +152,136 @@ function num(v) {
 }
 
 
-function avg(arr) {
+function avg(a) {
 
-  const clean =
-    arr.filter(
-      n =>
-        Number.isFinite(n)
+  const values =
+    a.filter(
+      Number.isFinite
     );
 
-  if (!clean.length) {
-    return 0;
-  }
+  return values.length
+    ? values.reduce(
+        (x, y) => x + y,
+        0
+      ) / values.length
+    : 0;
+}
 
-  return (
-    clean.reduce(
-      (a, b) => a + b,
-      0
-    ) /
-    clean.length
+
+function sma(a, n) {
+
+  return avg(
+    a.slice(-n)
   );
 }
 
 
-function formatPrice(v) {
+function ema(a, n) {
+
+  if (!a.length) {
+    return 0;
+  }
+
+  let e =
+    a[0];
+
+  const k =
+    2 / (n + 1);
+
+  for (
+    let i = 1;
+    i < a.length;
+    i++
+  ) {
+
+    e =
+      a[i] * k +
+      e * (1 - k);
+  }
+
+  return e;
+}
+
+
+function rsi(a, n = 14) {
 
   if (
-    !Number.isFinite(v)
+    a.length <= n
   ) {
-    return "--";
+    return 50;
   }
 
-  if (v >= 1000) {
-    return v.toFixed(0);
+  let g = 0;
+  let l = 0;
+
+  for (
+    let i =
+      a.length - n;
+    i < a.length;
+    i++
+  ) {
+
+    const d =
+      a[i] -
+      a[i - 1];
+
+    if (d > 0) {
+      g += d;
+    } else {
+      l -= d;
+    }
   }
 
-  if (v >= 100) {
-    return v.toFixed(1);
+  if (l === 0) {
+    return 100;
   }
 
-  return v.toFixed(2);
+  return (
+    100 -
+    100 /
+    (
+      1 +
+      (g / n) /
+      (l / n)
+    )
+  );
+}
+
+
+function atr(rows, n = 14) {
+
+  const v = [];
+
+  for (
+    let i =
+      Math.max(
+        1,
+        rows.length - n
+      );
+    i < rows.length;
+    i++
+  ) {
+
+    const x =
+      rows[i];
+
+    const p =
+      rows[i - 1].close;
+
+    v.push(
+      Math.max(
+        x.high - x.low,
+        Math.abs(
+          x.high - p
+        ),
+        Math.abs(
+          x.low - p
+        )
+      )
+    );
+  }
+
+  return avg(v);
 }
 
 
@@ -196,6 +294,31 @@ function unique(list) {
       )
     )
   ];
+}
+
+
+function formatPrice(v) {
+
+  if (
+    !Number.isFinite(
+      Number(v)
+    )
+  ) {
+    return "--";
+  }
+
+  const n =
+    Number(v);
+
+  if (n >= 1000) {
+    return n.toFixed(0);
+  }
+
+  if (n >= 100) {
+    return n.toFixed(1);
+  }
+
+  return n.toFixed(2);
 }
 
 
@@ -232,12 +355,10 @@ function taipeiParts() {
   const get =
     type =>
       parts.find(
-        p =>
-          p.type === type
+        p => p.type === type
       )?.value;
 
   return {
-
     weekday:
       get("weekday"),
 
@@ -288,1660 +409,1415 @@ function isMarketTime() {
 
 
 /* =========================================================
-   技術指標
+   SMC
+   與 index.html 對齊
 ========================================================= */
 
-function sma(
-  values,
-  length
-) {
-
-  if (
-    values.length <
-    length
-  ) {
-    return null;
-  }
-
-  return avg(
-    values.slice(
-      -length
-    )
-  );
-}
-
-
-function ema(
-  values,
-  length
-) {
-
-  if (!values.length) {
-    return null;
-  }
-
-  const k =
-    2 /
-    (length + 1);
-
-  let value =
-    values[0];
-
-  for (
-    let i = 1;
-    i < values.length;
-    i++
-  ) {
-
-    value =
-      values[i] * k +
-      value *
-      (1 - k);
-  }
-
-  return value;
-}
-
-
-function calcRSI(
-  values,
-  length = 14
-) {
-
-  if (
-    values.length <
-    length + 1
-  ) {
-
-    return null;
-  }
-
-  let gains = 0;
-  let losses = 0;
-
-  const start =
-    values.length -
-    length;
-
-  for (
-    let i = start;
-    i < values.length;
-    i++
-  ) {
-
-    const diff =
-      values[i] -
-      values[i - 1];
-
-    if (diff > 0) {
-
-      gains += diff;
-
-    } else {
-
-      losses +=
-        Math.abs(diff);
-    }
-  }
-
-  if (
-    losses === 0
-  ) {
-    return 100;
-  }
-
-  const rs =
-    gains / losses;
-
-  return (
-    100 -
-    100 /
-    (1 + rs)
-  );
-}
-
-
-function calcATR(
-  rows,
-  length = 14
-) {
-
-  if (
-    rows.length <
-    length + 1
-  ) {
-
-    return null;
-  }
-
-  const trs = [];
-
-  for (
-    let i = 1;
-    i < rows.length;
-    i++
-  ) {
-
-    const high =
-      num(
-        rows[i].high
-      );
-
-    const low =
-      num(
-        rows[i].low
-      );
-
-    const prevClose =
-      num(
-        rows[i - 1].close
-      );
-
-    if (
-      high === null ||
-      low === null ||
-      prevClose === null
-    ) {
-
-      continue;
-    }
-
-    trs.push(
-      Math.max(
-        high - low,
-
-        Math.abs(
-          high -
-          prevClose
-        ),
-
-        Math.abs(
-          low -
-          prevClose
-        )
-      )
-    );
-  }
-
-  return avg(
-    trs.slice(
-      -length
-    )
-  );
-}
-
-
-/* =========================================================
-   Swing High / Swing Low
-========================================================= */
-
-function findSwings(
+function swings(
   rows,
   left = 2,
   right = 2
 ) {
 
-  const highs = [];
   const lows = [];
+  const highs = [];
 
   for (
     let i = left;
-    i <
-    rows.length -
-    right;
+    i < rows.length - right;
     i++
   ) {
 
-    const h =
-      num(
-        rows[i].high
-      );
-
-    const l =
-      num(
-        rows[i].low
-      );
-
-    if (
-      h === null ||
-      l === null
-    ) {
-
-      continue;
-    }
-
-    let isHigh = true;
-    let isLow = true;
+    let lo = true;
+    let hi = true;
 
     for (
-      let j =
-        i - left;
-
-      j <=
-        i + right;
-
+      let j = 1;
+      j <= left;
       j++
     ) {
 
       if (
-        j === i
+        rows[i].low >
+        rows[i - j].low
       ) {
-        continue;
+        lo = false;
       }
 
       if (
-        num(
-          rows[j].high
-        ) >= h
+        rows[i].high <
+        rows[i - j].high
       ) {
-
-        isHigh = false;
-      }
-
-      if (
-        num(
-          rows[j].low
-        ) <= l
-      ) {
-
-        isLow = false;
+        hi = false;
       }
     }
 
-    if (isHigh) {
+    for (
+      let j = 1;
+      j <= right;
+      j++
+    ) {
 
-      highs.push({
-        index: i,
-        price: h
+      if (
+        rows[i].low >
+        rows[i + j].low
+      ) {
+        lo = false;
+      }
+
+      if (
+        rows[i].high <
+        rows[i + j].high
+      ) {
+        hi = false;
+      }
+    }
+
+    if (lo) {
+
+      lows.push({
+        i,
+        value:
+          rows[i].low,
+        row:
+          rows[i]
       });
     }
 
-    if (isLow) {
+    if (hi) {
 
-      lows.push({
-        index: i,
-        price: l
+      highs.push({
+        i,
+        value:
+          rows[i].high,
+        row:
+          rows[i]
       });
     }
   }
 
   return {
-    highs,
-    lows
+    lows,
+    highs
   };
 }
 
 
-/* =========================================================
-   Bullish Order Block
-========================================================= */
-
-function bullishOrderBlocks(
+function zoneValid(
+  zone,
   rows,
-  atr
+  bullish = true
 ) {
 
-  const result = [];
-
-  if (
-    !Number.isFinite(atr) ||
-    atr <= 0
-  ) {
-
-    return result;
-  }
-
-  for (
-    let i = 1;
-    i <
-    rows.length - 2;
-    i++
-  ) {
-
-    const open =
-      num(
-        rows[i].open
-      );
-
-    const close =
-      num(
-        rows[i].close
-      );
-
-    const high =
-      num(
-        rows[i].high
-      );
-
-    const low =
-      num(
-        rows[i].low
-      );
-
-    if (
-      open === null ||
-      close === null ||
-      high === null ||
-      low === null
-    ) {
-
-      continue;
-    }
-
-    if (
-      close >= open
-    ) {
-
-      continue;
-    }
-
-    let displacement =
-      false;
-
-    let breakHigh =
-      false;
-
-    const previousRows =
-      rows.slice(
-        Math.max(
-          0,
-          i - 8
-        ),
-        i
-      );
-
-    if (
-      !previousRows.length
-    ) {
-
-      continue;
-    }
-
-    const previousHigh =
-      Math.max(
-        ...previousRows
-        .map(
-          r =>
-            num(
-              r.high
-            )
-        )
-        .filter(
-          Number.isFinite
-        )
-      );
-
-    if (
-      !Number.isFinite(
-        previousHigh
-      )
-    ) {
-
-      continue;
-    }
-
-    for (
-      let j =
-        i + 1;
-
-      j <=
-        Math.min(
-          rows.length - 1,
-          i + 3
-        );
-
-      j++
-    ) {
-
-      const jo =
-        num(
-          rows[j].open
-        );
-
-      const jc =
-        num(
-          rows[j].close
-        );
-
-      if (
-        jo === null ||
-        jc === null
-      ) {
-
-        continue;
-      }
-
-      if (
-        jc > jo &&
-        jc - jo >=
-        atr * 0.55
-      ) {
-
-        displacement =
-          true;
-      }
-
-      if (
-        jc >
-        previousHigh
-      ) {
-
-        breakHigh =
-          true;
-      }
-    }
-
-    if (
-      !displacement ||
-      !breakHigh
-    ) {
-
-      continue;
-    }
-
-    let invalidated =
-      false;
-
-    for (
-      let j =
-        i + 1;
-      j < rows.length;
-      j++
-    ) {
-
-      const jc =
-        num(
-          rows[j].close
-        );
-
-      if (
-        jc !== null &&
-        jc <
-        low -
-        atr * 0.15
-      ) {
-
-        invalidated =
-          true;
-
-        break;
-      }
-    }
-
-    if (
-      invalidated
-    ) {
-
-      continue;
-    }
-
-    result.push({
-
-      type:
-        "Bullish OB",
-
-      low,
-
-      high:
-        Math.max(
-          open,
-          close
-        ),
-
-      index: i,
-
-      score: 5
-    });
-  }
-
-  return result;
-}
-
-
-/* =========================================================
-   Bullish FVG
-========================================================= */
-
-function bullishFVG(
-  rows
-) {
-
-  const result = [];
-
-  for (
-    let i = 2;
-    i < rows.length;
-    i++
-  ) {
-
-    const firstHigh =
-      num(
-        rows[
-          i - 2
-        ].high
-      );
-
-    const thirdLow =
-      num(
-        rows[i].low
-      );
-
-    if (
-      firstHigh === null ||
-      thirdLow === null
-    ) {
-
-      continue;
-    }
-
-    if (
-      thirdLow >
-      firstHigh
-    ) {
-
-      const low =
-        firstHigh;
-
-      const high =
-        thirdLow;
-
-      let invalidated =
-        false;
-
-      for (
-        let j =
-          i + 1;
-        j < rows.length;
-        j++
-      ) {
-
-        const c =
-          num(
-            rows[j].close
-          );
-
-        if (
-          c !== null &&
-          c < low
-        ) {
-
-          invalidated =
-            true;
-
-          break;
-        }
-      }
-
-      if (
-        !invalidated
-      ) {
-
-        result.push({
-
-          type:
-            "Bullish FVG",
-
-          low,
-
-          high,
-
-          index:
-            i - 1,
-
-          score: 3
-        });
-      }
-    }
-  }
-
-  return result;
-}
-
-
-/* =========================================================
-   Liquidity Sweep
-========================================================= */
-
-function bullishSweeps(
-  rows,
-  swings,
-  atr
-) {
-
-  const result = [];
-
-  if (
-    !Number.isFinite(
-      atr
-    )
-  ) {
-
-    return result;
-  }
-
-  for (
-    const swing of
-    swings.lows
-  ) {
-
-    for (
-      let i =
-        swing.index + 1;
-
-      i < rows.length;
-
-      i++
-    ) {
-
-      const low =
-        num(
-          rows[i].low
-        );
-
-      const close =
-        num(
-          rows[i].close
-        );
-
-      if (
-        low === null ||
-        close === null
-      ) {
-
-        continue;
-      }
-
-      if (
-        low <
-        swing.price -
-        atr * 0.05
-        &&
-        close >
-        swing.price
-      ) {
-
-        let invalidated =
-          false;
-
-        for (
-          let j =
-            i + 1;
-
-          j <
-            rows.length;
-
-          j++
-        ) {
-
-          const c =
-            num(
-              rows[j].close
-            );
-
-          if (
-            c !== null &&
-            c <
-            low -
-            atr * 0.1
-          ) {
-
-            invalidated =
-              true;
-
-            break;
-          }
-        }
-
-        if (
-          !invalidated
-        ) {
-
-          result.push({
-
-            type:
-              "Liquidity Sweep",
-
-            low,
-
-            high:
-              swing.price,
-
-            index: i,
-
-            score: 5
-          });
-        }
-
-        break;
-      }
-    }
-  }
-
-  return result;
-}
-
-
-/* =========================================================
-   BOS / Breaker
-========================================================= */
-
-function bullishBreakers(
-  rows,
-  swings,
-  atr
-) {
-
-  const result = [];
-
-  if (
-    !Number.isFinite(
-      atr
-    )
-  ) {
-
-    return result;
-  }
-
-  for (
-    const swing of
-    swings.highs
-  ) {
-
-    let breakIndex =
-      -1;
-
-    for (
-      let i =
-        swing.index + 1;
-
-      i < rows.length;
-
-      i++
-    ) {
-
-      const close =
-        num(
-          rows[i].close
-        );
-
-      if (
-        close !== null &&
-        close >
-        swing.price +
-        atr * 0.08
-      ) {
-
-        breakIndex =
-          i;
-
-        break;
-      }
-    }
-
-    if (
-      breakIndex === -1
-    ) {
-
-      continue;
-    }
-
-    let failed =
-      false;
-
-    for (
-      let i =
-        breakIndex + 1;
-
-      i < rows.length;
-
-      i++
-    ) {
-
-      const close =
-        num(
-          rows[i].close
-        );
-
-      if (
-        close !== null &&
-        close <
-        swing.price -
-        atr * 0.18
-      ) {
-
-        failed =
-          true;
-
-        break;
-      }
-    }
-
-    if (
-      failed
-    ) {
-
-      continue;
-    }
-
-    result.push({
-
-      type:
-        "BOS / Breaker",
-
-      low:
-        swing.price -
-        atr * 0.15,
-
-      high:
-        swing.price +
-        atr * 0.15,
-
-      index:
-        breakIndex,
-
-      score: 5
-    });
-  }
-
-  return result;
-}
-
-
-/* =========================================================
-   找 SMC 支撐
-========================================================= */
-
-function findSupport(
-  rows,
-  price,
-  atr
-) {
-
-  const swings =
-    findSwings(
-      rows
+  const after =
+    rows.slice(
+      zone.i + 1
     );
 
-  const candidates = [
+  if (bullish) {
 
-    ...bullishOrderBlocks(
-      rows,
-      atr
-    ),
-
-    ...bullishFVG(
-      rows
-    ),
-
-    ...bullishSweeps(
-      rows,
-      swings,
-      atr
-    ),
-
-    ...bullishBreakers(
-      rows,
-      swings,
-      atr
-    )
-  ];
-
-  const valid =
-    candidates
-
-    .filter(
-      z =>
-        Number.isFinite(
-          z.low
-        ) &&
-        Number.isFinite(
-          z.high
-        ) &&
-        z.low > 0 &&
-        z.high >= z.low
-    )
-
-    .filter(
-      z =>
-        z.low <=
-        price +
-        atr * 0.5
-    )
-
-    .map(
-      z => {
-
-        const distance =
-          price >
-          z.high
-          ?
-          price -
-          z.high
-          :
-          0;
-
-        const freshness =
-          Math.max(
-            0,
-
-            2 -
-            (
-              rows.length -
-              1 -
-              z.index
-            ) /
-            25
-          );
-
-        return {
-
-          ...z,
-
-          distance,
-
-          finalScore:
-            z.score +
-            freshness -
-            distance /
-            Math.max(
-              atr,
-              0.0001
-            ) *
-            0.35
-        };
-      }
-    )
-
-    .sort(
-      (a, b) =>
-        b.finalScore -
-        a.finalScore
+    return !after.some(
+      x =>
+        x.close <
+        zone.low
     );
+  }
 
-  return (
-    valid[0] ||
-    null
+  return !after.some(
+    x =>
+      x.close >
+      zone.high
   );
 }
 
 
-/* =========================================================
-   上方流動性 / TP
-========================================================= */
-
-function findTargets(
+function smcAnalysis(
   rows,
   price,
-  atr
+  A,
+  inst
 ) {
 
-  const swings =
-    findSwings(
-      rows
+  /*
+    跟 index.html 一樣：
+    只使用最近 140 根
+  */
+
+  const recent =
+    rows.slice(-140);
+
+  const S =
+    swings(
+      recent,
+      2,
+      2
     );
 
-  let levels =
-    swings.highs
-
-    .map(
-      s =>
-        s.price
-    )
-
-    .filter(
-      p =>
-        p >
-        price +
-        atr * 0.25
-    )
-
-    .sort(
-      (a, b) =>
-        a - b
+  const volBase =
+    avg(
+      recent
+      .slice(
+        -21,
+        -1
+      )
+      .map(
+        x =>
+          x.volume
+      )
     );
 
-  const recentHighs =
-    rows
-    .slice(-60)
-    .map(
-      r =>
-        num(
-          r.high
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
+  const supports = [];
+  const pressures = [];
+
+
+  /* =======================================================
+     Bullish / Bearish OB
+  ======================================================= */
 
   for (
-    let i = 0;
-    i <
-    recentHighs.length;
+    let i = 2;
+    i < recent.length - 2;
     i++
   ) {
 
-    for (
-      let j =
-        i + 1;
+    const x =
+      recent[i];
 
-      j <
-        recentHighs.length;
+    const n2 =
+      recent[i + 2];
 
-      j++
+    const displacementUp =
+      n2.close >
+      x.high +
+      Math.max(
+        A * 0.35,
+        price * 0.004
+      );
+
+    const displacementDown =
+      n2.close <
+      x.low -
+      Math.max(
+        A * 0.35,
+        price * 0.004
+      );
+
+    if (
+      x.close < x.open &&
+      displacementUp
     ) {
 
-      const a =
-        recentHighs[i];
+      const z = {
+        type:
+          "Bullish OB",
 
-      const b =
-        recentHighs[j];
+        i,
+
+        low:
+          x.low,
+
+        high:
+          Math.max(
+            x.open,
+            x.close
+          ),
+
+        score: 5
+      };
 
       if (
-        Math.abs(
-          a - b
-        ) <=
-        atr * 0.18
+        zoneValid(
+          z,
+          recent,
+          true
+        ) &&
+        z.low < price
       ) {
 
-        const level =
-          Math.max(
-            a,
-            b
-          );
+        supports.push(z);
+      }
+    }
 
-        if (
-          level >
-          price +
-          atr * 0.25
-        ) {
+    if (
+      x.close > x.open &&
+      displacementDown
+    ) {
 
-          levels.push(
-            level
-          );
-        }
+      const z = {
+        type:
+          "Bearish OB",
+
+        i,
+
+        low:
+          Math.min(
+            x.open,
+            x.close
+          ),
+
+        high:
+          x.high,
+
+        score: 5
+      };
+
+      if (
+        zoneValid(
+          z,
+          recent,
+          false
+        ) &&
+        z.high > price
+      ) {
+
+        pressures.push(z);
       }
     }
   }
 
-  levels =
-    unique(
-      levels.map(
-        n =>
-          Number(
-            n.toFixed(4)
+
+  /* =======================================================
+     FVG
+  ======================================================= */
+
+  for (
+    let i = 1;
+    i < recent.length - 1;
+    i++
+  ) {
+
+    const a =
+      recent[i - 1];
+
+    const c =
+      recent[i + 1];
+
+    if (
+      c.low >
+      a.high
+    ) {
+
+      const z = {
+        type:
+          "Bullish FVG",
+
+        i,
+
+        low:
+          a.high,
+
+        high:
+          c.low,
+
+        score:
+          3.5
+      };
+
+      if (
+        zoneValid(
+          z,
+          recent,
+          true
+        ) &&
+        z.low < price
+      ) {
+
+        supports.push(z);
+      }
+    }
+
+    if (
+      c.high <
+      a.low
+    ) {
+
+      const z = {
+        type:
+          "Bearish FVG",
+
+        i,
+
+        low:
+          c.high,
+
+        high:
+          a.low,
+
+        score:
+          3.5
+      };
+
+      if (
+        zoneValid(
+          z,
+          recent,
+          false
+        ) &&
+        z.high > price
+      ) {
+
+        pressures.push(z);
+      }
+    }
+  }
+
+
+  /* =======================================================
+     BOS / Breaker
+  ======================================================= */
+
+  for (
+    const h of
+    S.highs
+  ) {
+
+    const later =
+      recent.slice(
+        h.i + 1
+      );
+
+    const broken =
+      later.some(
+        x =>
+          x.close >
+          h.value +
+          Math.max(
+            A * 0.12,
+            h.value * 0.0025
           )
-      )
+      );
+
+    if (
+      broken &&
+      h.value < price
+    ) {
+
+      supports.push({
+        type:
+          "BOS / Breaker",
+
+        i:
+          h.i,
+
+        low:
+          h.value -
+          A * 0.15,
+
+        high:
+          h.value +
+          A * 0.15,
+
+        score: 6
+      });
+
+    } else if (
+      h.value > price
+    ) {
+
+      pressures.push({
+        type:
+          "Buy-side Liquidity",
+
+        i:
+          h.i,
+
+        low:
+          h.value -
+          A * 0.08,
+
+        high:
+          h.value +
+          A * 0.08,
+
+        score:
+          4.5
+      });
+    }
+  }
+
+
+  for (
+    const l of
+    S.lows
+  ) {
+
+    if (
+      l.value < price
+    ) {
+
+      supports.push({
+        type:
+          "Sell-side Liquidity / Demand",
+
+        i:
+          l.i,
+
+        low:
+          l.value -
+          A * 0.10,
+
+        high:
+          l.value +
+          A * 0.12,
+
+        score:
+          3.8
+      });
+    }
+  }
+
+
+  /* =======================================================
+     Liquidity Sweep
+  ======================================================= */
+
+  for (
+    let i = 3;
+    i < recent.length;
+    i++
+  ) {
+
+    const prevLow =
+      Math.min(
+        ...recent
+        .slice(
+          Math.max(
+            0,
+            i - 8
+          ),
+          i
+        )
+        .map(
+          x =>
+            x.low
+        )
+      );
+
+    const prevHigh =
+      Math.max(
+        ...recent
+        .slice(
+          Math.max(
+            0,
+            i - 8
+          ),
+          i
+        )
+        .map(
+          x =>
+            x.high
+        )
+      );
+
+    const x =
+      recent[i];
+
+    if (
+      x.low <
+      prevLow &&
+      x.close >
+      prevLow
+    ) {
+
+      supports.push({
+        type:
+          "Liquidity Sweep",
+
+        i,
+
+        low:
+          x.low,
+
+        high:
+          prevLow,
+
+        score:
+          5.5
+      });
+    }
+
+    if (
+      x.high >
+      prevHigh &&
+      x.close <
+      prevHigh
+    ) {
+
+      pressures.push({
+        type:
+          "Liquidity Sweep",
+
+        i,
+
+        low:
+          prevHigh,
+
+        high:
+          x.high,
+
+        score:
+          5.5
+      });
+    }
+  }
+
+
+  /* =======================================================
+     成交量加權
+  ======================================================= */
+
+  for (
+    const z of
+    [
+      ...supports,
+      ...pressures
+    ]
+  ) {
+
+    const r =
+      recent[z.i];
+
+    if (
+      r &&
+      volBase > 0 &&
+      r.volume >=
+      volBase * 1.35
+    ) {
+
+      z.score += 1.5;
+    }
+
+    const dist =
+      Math.abs(
+        price -
+        (
+          z.low +
+          z.high
+        ) / 2
+      ) /
+      price;
+
+    z.score -=
+      dist * 12;
+  }
+
+
+  /* =======================================================
+     法人加權
+  ======================================================= */
+
+  const chip =
+    inst || {};
+
+  const chip5 =
+    Number(
+      chip.total5 || 0
+    );
+
+  if (
+    chip5 > 0
+  ) {
+
+    supports.forEach(
+      z =>
+        z.score += 0.7
+    );
+  }
+
+  if (
+    chip5 < 0
+  ) {
+
+    pressures.forEach(
+      z =>
+        z.score += 0.7
+    );
+  }
+
+  if (
+    Number(
+      chip.foreign5 || 0
+    ) > 0
+  ) {
+
+    supports.forEach(
+      z =>
+        z.score += 0.3
+    );
+  }
+
+  if (
+    Number(
+      chip.trust5 || 0
+    ) > 0
+  ) {
+
+    supports.forEach(
+      z =>
+        z.score += 0.3
+    );
+  }
+
+
+  /* =======================================================
+     有效支撐
+  ======================================================= */
+
+  const validS =
+    supports
+    .filter(
+      z =>
+        z.high <=
+        price * 1.012
     )
-    .map(Number)
+    .sort(
+      (a, b) => {
+
+        const da =
+          (
+            price -
+            a.high
+          ) /
+          price;
+
+        const db =
+          (
+            price -
+            b.high
+          ) /
+          price;
+
+        return (
+          (db - da) * 5 +
+          (
+            b.score -
+            a.score
+          )
+        );
+      }
+    );
+
+
+  /* =======================================================
+     有效壓力
+  ======================================================= */
+
+  const validP =
+    pressures
+    .filter(
+      z =>
+        z.low >
+        price * 1.001
+    )
     .sort(
       (a, b) =>
-        a - b
+        a.low -
+        b.low
     );
+
+
+  const nearS =
+    validS.filter(
+      z =>
+        (
+          price -
+          z.high
+        ) /
+        price <=
+        0.10
+    );
+
+
+  let s1 =
+    nearS
+    .sort(
+      (a, b) => {
+
+        const da =
+          (
+            price -
+            a.high
+          ) /
+          price;
+
+        const db =
+          (
+            price -
+            b.high
+          ) /
+          price;
+
+        return (
+          b.score -
+          db * 30
+        ) -
+        (
+          a.score -
+          da * 30
+        );
+      }
+    )[0]
+    ||
+    validS[0]
+    ||
+    null;
+
+
+  let s2 =
+    null;
+
+  if (s1) {
+
+    s2 =
+      validS
+      .filter(
+        z =>
+          z !== s1 &&
+          z.high <
+          s1.low -
+          Math.max(
+            A * 0.25,
+            price * 0.003
+          )
+      )
+      .sort(
+        (a, b) =>
+          b.high -
+          a.high
+      )[0]
+      ||
+      null;
+  }
+
+
+  const p1 =
+    validP[0] ||
+    null;
+
+
+  let p2 =
+    null;
+
+  let p3 =
+    null;
+
+
+  if (p1) {
+
+    p2 =
+      validP.find(
+        z =>
+          z !== p1 &&
+          z.low >
+          p1.high +
+          Math.max(
+            A * 0.2,
+            price * 0.002
+          )
+      )
+      ||
+      null;
+  }
+
+
+  if (p2) {
+
+    p3 =
+      validP.find(
+        z =>
+          z !== p1 &&
+          z !== p2 &&
+          z.low >
+          p2.high +
+          Math.max(
+            A * 0.2,
+            price * 0.002
+          )
+      )
+      ||
+      null;
+  }
+
+
+  /* =======================================================
+     Entry / SL
+  ======================================================= */
+
+  let entryLow =
+    null;
+
+  let entryHigh =
+    null;
+
+  let sl =
+    null;
+
+
+  if (s1) {
+
+    entryLow =
+      Math.max(
+        0,
+        s1.low
+      );
+
+    entryHigh =
+      s1.high;
+
+    sl =
+      s1.low -
+      Math.max(
+        A * 0.45,
+        price * 0.006
+      );
+
+    if (
+      sl >=
+      entryLow
+    ) {
+
+      sl =
+        entryLow -
+        Math.max(
+          A * 0.35,
+          price * 0.005
+        );
+    }
+  }
+
+
+  /* =======================================================
+     Entry Ready
+  ======================================================= */
+
+  let entryReady =
+    false;
+
+
+  if (
+    s1 &&
+    Number.isFinite(
+      entryLow
+    ) &&
+    Number.isFinite(
+      entryHigh
+    )
+  ) {
+
+    const tolerance =
+      Math.max(
+        A * 0.60,
+        price * 0.012
+      );
+
+    entryReady =
+      price >=
+      entryLow -
+      Math.max(
+        A * 0.15,
+        price * 0.003
+      )
+      &&
+      price <=
+      entryHigh +
+      tolerance;
+  }
+
 
   return {
 
+    support1:
+      s1,
+
+    support2:
+      s2,
+
+    breakout:
+      p1
+      ?
+      p1.low
+      :
+      null,
+
+    pressure1:
+      p1,
+
+    pressure2:
+      p2,
+
+    pressure3:
+      p3,
+
+    entryLow,
+
+    entryHigh,
+
+    sl,
+
     tp1:
-      levels[0] ||
+      p1
+      ?
+      p1.low
+      :
       null,
 
     tp2:
-      levels[1] ||
+      p2
+      ?
+      p2.low
+      :
       null,
 
     tp3:
-      levels[2] ||
-      null
+      p3
+      ?
+      p3.low
+      :
+      null,
+
+    entryReady,
+
+    hasRealStructure:
+      !!s1,
+
+    chipBias:
+      chip5 > 0
+      ?
+      "偏多"
+      :
+      chip5 < 0
+      ?
+      "偏空"
+      :
+      "中性"
   };
 }
 
 
 /* =========================================================
    8 條策略
+   與 index.html 對齊
 ========================================================= */
 
-function strategyConditions(
-  rows,
-  price,
-  atr
-) {
-
-  const closes =
-    rows
-    .map(
-      r =>
-        num(
-          r.close
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
-
-  const volumes =
-    rows
-    .map(
-      r =>
-        num(
-          r.volume
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
+function analyzeData(d) {
 
   if (
-    closes.length <
-    60
+    !Array.isArray(
+      d?.rows
+    ) ||
+    d.rows.length < 60
   ) {
 
     return null;
   }
 
-  const ma20 =
+
+  const rows =
+    d.rows
+    .map(
+      x => ({
+        date:
+          x.date || "",
+
+        open:
+          +x.open,
+
+        high:
+          +x.high,
+
+        low:
+          +x.low,
+
+        close:
+          +x.close,
+
+        volume:
+          +x.volume || 0
+      })
+    )
+    .filter(
+      x =>
+        Number.isFinite(
+          x.close
+        ) &&
+        x.close > 0
+    );
+
+
+  if (
+    rows.length < 60
+  ) {
+
+    return null;
+  }
+
+
+  const c =
+    rows.map(
+      x =>
+        x.close
+    );
+
+
+  let p =
+    +d.price;
+
+
+  if (
+    !Number.isFinite(p) ||
+    p <= 0
+  ) {
+
+    p =
+      rows[
+        rows.length - 1
+      ].close;
+  }
+
+
+  const m20 =
     sma(
-      closes,
+      c,
       20
     );
 
-  const ma60 =
+
+  const m60 =
     sma(
-      closes,
+      c,
       60
     );
 
-  const rsi =
-    calcRSI(
-      closes,
-      14
+
+  /*
+    跟 index.html 完全相同：
+    ATR 至少使用股價 0.6%
+  */
+
+  const A =
+    Math.max(
+      atr(rows),
+      p * 0.006
     );
 
-  const ema12 =
+
+  const R =
+    rsi(c);
+
+
+  const macd =
     ema(
-      closes.slice(-80),
+      c.slice(-100),
       12
-    );
-
-  const ema26 =
+    )
+    -
     ema(
-      closes.slice(-80),
+      c.slice(-100),
       26
     );
 
-  const lows20 =
-    rows
-    .slice(-20)
-    .map(
-      r =>
-        num(
-          r.low
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
 
-  const highs20 =
-    rows
-    .slice(-20)
-    .map(
-      r =>
-        num(
-          r.high
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
+  const r20 =
+    rows.slice(-20);
 
-  const highs60 =
-    rows
-    .slice(-60)
-    .map(
-      r =>
-        num(
-          r.high
-        )
-    )
-    .filter(
-      Number.isFinite
-    );
 
-  if (
-    !lows20.length ||
-    !highs20.length ||
-    !highs60.length
-  ) {
+  const r60 =
+    rows.slice(-60);
 
-    return null;
-  }
 
-  const support20 =
+  const support =
     Math.min(
-      ...lows20
-    );
-
-  const resistance20 =
-    Math.max(
-      ...highs20
-    );
-
-  const high60 =
-    Math.max(
-      ...highs60
-    );
-
-  const currentVolume =
-    volumes[
-      volumes.length - 1
-    ] || 0;
-
-  const avgVolume20 =
-    avg(
-      volumes.slice(
-        -21,
-        -1
+      ...r20.map(
+        x =>
+          x.low
       )
     );
 
-  const volumeRatio =
-    avgVolume20 > 0
+
+  const res =
+    Math.max(
+      ...r20.map(
+        x =>
+          x.high
+      )
+    );
+
+
+  const high60 =
+    Math.max(
+      ...r60.map(
+        x =>
+          x.high
+      )
+    );
+
+
+  const vol =
+    rows[
+      rows.length - 1
+    ].volume;
+
+
+  const volAvg =
+    avg(
+      rows
+      .slice(
+        -21,
+        -1
+      )
+      .map(
+        x =>
+          x.volume
+      )
+    );
+
+
+  const vr =
+    volAvg
     ?
-    currentVolume /
-    avgVolume20
+    vol /
+    volAvg
     :
     0;
 
+
   const conditions = [
 
-    ma20 > ma60,
+    m20 > m60,
 
-    price >=
-    ma60 * 0.985,
+    p >=
+      m60 * 0.985,
 
     Math.abs(
-      price -
-      ma20
+      p - m20
     ) <=
-    atr * 2.2,
+      A * 2.2,
 
-    price >=
-    support20 * 0.99,
+    p >=
+      support * 0.99,
 
-    rsi >= 45 &&
-    rsi <= 72,
+    R >= 45 &&
+      R <= 72,
 
-    ema12 -
-    ema26 >=
-    -atr * 0.05,
+    macd >=
+      -A * 0.05,
 
-    volumeRatio >=
-    0.8,
+    vr >=
+      0.8,
 
     Math.max(
-      resistance20,
+      res,
       high60
     ) >
-    price * 1.025
+      p * 1.025
   ];
 
-  return {
 
-    conditions,
-
-    passed:
-      conditions.filter(
-        Boolean
-      ).length,
-
-    ma20,
-
-    ma60,
-
-    rsi,
-
-    volumeRatio
-  };
-}
+  const passed =
+    conditions
+    .filter(Boolean)
+    .length;
 
 
-/* =========================================================
-   法人
-========================================================= */
-
-function institutionalBias(
-  institutional
-) {
-
-  if (
-    !institutional
-  ) {
-
-    return {
-      score: 0,
-      text:
-        "法人中性"
-    };
-  }
-
-  /*
-    優先使用首頁相同格式
-  */
-
-  const total5 =
-    Number(
-      institutional.total5
-    );
-
-  if (
-    Number.isFinite(
-      total5
-    )
-  ) {
-
-    if (
-      total5 > 0
-    ) {
-
-      return {
-        score: 1,
-        text:
-          "法人偏多"
-      };
-    }
-
-    if (
-      total5 < 0
-    ) {
-
-      return {
-        score: -1,
-        text:
-          "法人偏空"
-      };
-    }
-  }
-
-  return {
-    score: 0,
-    text:
-      "法人中性"
-  };
-}
-
-
-/* =========================================================
-   分析股票
-========================================================= */
-
-function analyzeStock(
-  data
-) {
-
-  if (
-    !data ||
-    !Array.isArray(
-      data.rows
-    ) ||
-    data.rows.length <
-    60
-  ) {
-
-    return null;
-  }
-
-  const rows =
-    data.rows
-
-    .map(
-      r => ({
-
-        open:
-          num(
-            r.open
-          ),
-
-        high:
-          num(
-            r.high
-          ),
-
-        low:
-          num(
-            r.low
-          ),
-
-        close:
-          num(
-            r.close
-          ),
-
-        volume:
-          num(
-            r.volume
-          )
-      })
-    )
-
-    .filter(
-      r =>
-        r.open !== null &&
-        r.high !== null &&
-        r.low !== null &&
-        r.close !== null
-    );
-
-  if (
-    rows.length <
-    60
-  ) {
-
-    return null;
-  }
-
-  const price =
-    num(
-      data.price
-    ) ??
-    rows[
-      rows.length - 1
-    ].close;
-
-  const atr =
-    calcATR(
+  const smc =
+    smcAnalysis(
       rows,
-      14
+      p,
+      A,
+      d.institutional
     );
 
-  if (
-    !Number.isFinite(
-      price
-    ) ||
-    !Number.isFinite(
-      atr
-    ) ||
-    atr <= 0
-  ) {
-
-    return null;
-  }
-
-  const strategy =
-    strategyConditions(
-      rows,
-      price,
-      atr
-    );
-
-  if (
-    !strategy
-  ) {
-
-    return null;
-  }
-
-  /*
-    正式訊號：
-    至少 7 / 8
-  */
-
-  if (
-    strategy.passed <
-    7
-  ) {
-
-    return null;
-  }
-
-  const support =
-    findSupport(
-      rows,
-      price,
-      atr
-    );
-
-  if (
-    !support
-  ) {
-
-    return null;
-  }
-
-  const tolerance =
-    Math.max(
-      atr * 0.6,
-      price * 0.012
-    );
-
-  const nearSupport =
-    price >=
-    support.low -
-    atr * 0.15
-    &&
-    price <=
-    support.high +
-    tolerance;
-
-  if (
-    !nearSupport
-  ) {
-
-    return null;
-  }
-
-  if (
-    price <
-    support.low -
-    atr * 0.15
-  ) {
-
-    return null;
-  }
-
-  const targets =
-    findTargets(
-      rows,
-      price,
-      atr
-    );
-
-  if (
-    !targets.tp1
-  ) {
-
-    return null;
-  }
-
-  const stopLoss =
-    support.low -
-    atr * 0.22;
-
-  if (
-    stopLoss <= 0 ||
-    stopLoss >= price
-  ) {
-
-    return null;
-  }
-
-  if (
-    targets.tp1 <=
-    price +
-    atr * 0.35
-  ) {
-
-    return null;
-  }
-
-  if (
-    strategy.volumeRatio <
-    0.8
-  ) {
-
-    return null;
-  }
-
-  const institution =
-    institutionalBias(
-      data.institutional
-    );
-
-  const fingerprint =
-    [
-      String(
-        data.symbol
-      ),
-
-      support.type,
-
-      support.low.toFixed(2),
-
-      support.high.toFixed(2),
-
-      strategy.passed
-    ]
-    .join(":");
 
   return {
 
     symbol:
       String(
-        data.symbol
+        d.symbol || ""
       ),
 
     name:
-      data.name ||
-      data.symbol,
+      d.name ||
+      d.symbol ||
+      "",
 
-    price,
+    price:
+      p,
 
-    passed:
-      strategy.passed,
+    passed,
 
-    supportType:
-      support.type,
+    qualified:
+      passed >= 7,
+
+    near:
+      passed === 6,
+
+    A,
+
+    vr,
+
+    R,
+
+    hasRealStructure:
+      smc.hasRealStructure,
+
+    entryReady:
+      smc.entryReady,
+
+    support1Low:
+      smc.support1
+      ?
+      smc.support1.low
+      :
+      null,
+
+    support1High:
+      smc.support1
+      ?
+      smc.support1.high
+      :
+      null,
+
+    support1Type:
+      smc.support1
+      ?
+      smc.support1.type
+      :
+      "無有效 SMC 結構",
 
     entryLow:
-      support.low,
+      smc.entryLow,
 
     entryHigh:
-      support.high,
+      smc.entryHigh,
 
-    stopLoss,
+    sl:
+      smc.sl,
+
+    breakout:
+      smc.breakout,
+
+    pressure1:
+      smc.pressure1
+      ?
+      smc.pressure1.low
+      :
+      null,
+
+    pressure2:
+      smc.pressure2
+      ?
+      smc.pressure2.low
+      :
+      null,
 
     tp1:
-      targets.tp1,
+      smc.tp1,
 
     tp2:
-      targets.tp2,
+      smc.tp2,
 
     tp3:
-      targets.tp3,
+      smc.tp3,
 
-    volumeRatio:
-      strategy.volumeRatio,
+    chipBias:
+      smc.chipBias
+  };
+}
 
-    institution:
-      institution.text,
+
+/* =========================================================
+   正式進場訊號
+========================================================= */
+
+function makeSignal(data) {
+
+  const a =
+    analyzeData(data);
+
+  if (!a) {
+    return null;
+  }
+
+
+  /*
+    跟網站一致：
+    7 / 8 才是策略成立
+  */
+
+  if (
+    !a.qualified
+  ) {
+    return null;
+  }
+
+
+  /*
+    一定要有真正 SMC 支撐
+  */
+
+  if (
+    !a.hasRealStructure
+  ) {
+    return null;
+  }
+
+
+  /*
+    一定要真的進入網站計算的
+    SMC 進場範圍
+  */
+
+  if (
+    !a.entryReady
+  ) {
+    return null;
+  }
+
+
+  if (
+    !Number.isFinite(
+      a.entryLow
+    ) ||
+    !Number.isFinite(
+      a.entryHigh
+    ) ||
+    !Number.isFinite(
+      a.sl
+    )
+  ) {
+
+    return null;
+  }
+
+
+  /*
+    fingerprint：
+    同一支股票、同一個 SMC 支撐區，
+    6 小時只通知一次。
+  */
+
+  const fingerprint =
+    [
+      a.symbol,
+
+      a.support1Type,
+
+      Number(
+        a.entryLow
+      ).toFixed(2),
+
+      Number(
+        a.entryHigh
+      ).toFixed(2),
+
+      a.passed
+    ]
+    .join(":");
+
+
+  return {
+
+    ...a,
 
     fingerprint
   };
@@ -1949,7 +1825,7 @@ function analyzeStock(
 
 
 /* =========================================================
-   取得股票
+   股票 API
 ========================================================= */
 
 async function fetchStock(
@@ -1973,22 +1849,38 @@ async function fetchStock(
         }
       );
 
+
     if (
       !response.ok
     ) {
 
+      console.error(
+        "stock api status:",
+        symbol,
+        response.status
+      );
+
       return null;
     }
 
+
     const data =
       await response.json();
+
 
     if (
       !data?.ok
     ) {
 
+      console.error(
+        "stock api error:",
+        symbol,
+        data?.error
+      );
+
       return null;
     }
+
 
     return data;
 
@@ -2006,7 +1898,7 @@ async function fetchStock(
 
 
 /* =========================================================
-   Push 訊息
+   Push
 ========================================================= */
 
 function buildNotification(
@@ -2014,43 +1906,47 @@ function buildNotification(
 ) {
 
   const entry =
-    signal.entryLow ===
-    signal.entryHigh
-    ?
-    formatPrice(
-      signal.entryLow
-    )
-    :
     `${formatPrice(signal.entryLow)}～${formatPrice(signal.entryHigh)}`;
 
-  const targetParts = [];
+
+  const targets = [];
+
 
   if (
-    signal.tp1
+    Number.isFinite(
+      signal.tp1
+    )
   ) {
 
-    targetParts.push(
+    targets.push(
       `TP1 ${formatPrice(signal.tp1)}`
     );
   }
 
+
   if (
-    signal.tp2
+    Number.isFinite(
+      signal.tp2
+    )
   ) {
 
-    targetParts.push(
+    targets.push(
       `TP2 ${formatPrice(signal.tp2)}`
     );
   }
 
+
   if (
-    signal.tp3
+    Number.isFinite(
+      signal.tp3
+    )
   ) {
 
-    targetParts.push(
+    targets.push(
       `TP3 ${formatPrice(signal.tp3)}`
     );
   }
+
 
   return {
 
@@ -2063,15 +1959,13 @@ function buildNotification(
 
         `進場 ${entry}`,
 
-        `SL ${formatPrice(signal.stopLoss)}`,
+        `SL ${formatPrice(signal.sl)}`,
 
-        targetParts.join("｜"),
+        targets.join("｜"),
 
-        `${signal.supportType}｜${signal.institution}`
+        `${signal.support1Type}｜法人${signal.chipBias}`
       ]
-      .filter(
-        Boolean
-      )
+      .filter(Boolean)
       .join("\n"),
 
     tag:
@@ -2083,10 +1977,6 @@ function buildNotification(
 }
 
 
-/* =========================================================
-   發送 Push
-========================================================= */
-
 async function sendPush(
   device,
   signal
@@ -2094,12 +1984,11 @@ async function sendPush(
 
   const subscription =
     device.subscription ||
-    device.pushSubscription ||
-    device;
+    device.pushSubscription;
+
 
   if (
-    !subscription ||
-    !subscription.endpoint
+    !subscription?.endpoint
   ) {
 
     throw new Error(
@@ -2107,12 +1996,14 @@ async function sendPush(
     );
   }
 
+
   const payload =
     JSON.stringify(
       buildNotification(
         signal
       )
     );
+
 
   return webpush
     .sendNotification(
@@ -2126,7 +2017,7 @@ async function sendPush(
 
 
 /* =========================================================
-   API Handler
+   Handler
 ========================================================= */
 
 module.exports =
@@ -2142,7 +2033,7 @@ async function handler(
 
 
   /* =======================================================
-     Cron 驗證
+     Cron Secret
   ======================================================= */
 
   if (
@@ -2151,6 +2042,7 @@ async function handler(
 
     const expected =
       `Bearer ${process.env.CRON_SECRET}`;
+
 
     if (
       req.headers.authorization !==
@@ -2172,7 +2064,8 @@ async function handler(
 
     if (
       !VAPID_PUBLIC_KEY ||
-      !VAPID_PRIVATE_KEY
+      !VAPID_PRIVATE_KEY ||
+      !VAPID_SUBJECT
     ) {
 
       throw new Error(
@@ -2188,18 +2081,13 @@ async function handler(
     );
 
 
-    /* =====================================================
-       測試模式
-       ?test=1 可以略過交易時間
-       但仍然需要 CRON_SECRET
-    ===================================================== */
-
     const testMode =
       req.query?.test === "1";
 
 
     /*
-      正式模式才限制交易時間
+      正式 Cron：
+      只在台股監控時間真正掃股票。
     */
 
     if (
@@ -2218,6 +2106,9 @@ async function handler(
         testMode:
           false,
 
+        marketTime:
+          false,
+
         reason:
           "非台股監控時段"
       });
@@ -2225,7 +2116,7 @@ async function handler(
 
 
     /* =====================================================
-       取得裝置
+       取得所有裝置
     ===================================================== */
 
     const deviceIds =
@@ -2247,6 +2138,9 @@ async function handler(
 
         testMode,
 
+        marketTime:
+          isMarketTime(),
+
         devices: 0,
 
         stocks: 0,
@@ -2255,7 +2149,11 @@ async function handler(
 
         sent: 0,
 
-        removed: 0
+        failed: 0,
+
+        removed: 0,
+
+        deduped: 0
       });
     }
 
@@ -2275,9 +2173,13 @@ async function handler(
         ]);
 
 
-      if (
-        !raw
-      ) {
+      if (!raw) {
+
+        /*
+          Set 裡有 ID，
+          但實際 device 不存在，
+          順便清掉。
+        */
 
         await redis([
           "SREM",
@@ -2292,8 +2194,7 @@ async function handler(
       try {
 
         const device =
-          typeof raw ===
-          "string"
+          typeof raw === "string"
           ?
           JSON.parse(raw)
           :
@@ -2309,12 +2210,9 @@ async function handler(
           subscription?.endpoint &&
           Array.isArray(
             device.symbols
-          )
+          ) &&
+          device.symbols.length
         ) {
-
-          /*
-            確保 deviceId 一定存在。
-          */
 
           devices.push({
 
@@ -2324,7 +2222,12 @@ async function handler(
               device.deviceId ||
               deviceId,
 
-            subscription
+            subscription,
+
+            symbols:
+              unique(
+                device.symbols
+              )
           });
         }
 
@@ -2351,6 +2254,9 @@ async function handler(
 
         testMode,
 
+        marketTime:
+          isMarketTime(),
+
         devices: 0,
 
         stocks: 0,
@@ -2359,28 +2265,28 @@ async function handler(
 
         sent: 0,
 
-        removed: 0
+        failed: 0,
+
+        removed: 0,
+
+        deduped: 0
       });
     }
 
 
     /* =====================================================
-       合併股票
+       iPhone + iPad 的股票全部合併
+       同一支股票只抓一次
     ===================================================== */
 
     const symbols =
       unique(
         devices.flatMap(
-          device =>
-            device.symbols ||
-            []
+          d =>
+            d.symbols
         )
       );
 
-
-    /* =====================================================
-       網站網址
-    ===================================================== */
 
     const host =
       req.headers[
@@ -2400,10 +2306,6 @@ async function handler(
       `${proto}://${host}`;
 
 
-    /* =====================================================
-       分析股票
-    ===================================================== */
-
     const signalMap =
       new Map();
 
@@ -2412,8 +2314,11 @@ async function handler(
       [];
 
 
-    const batchSize =
-      3;
+    /*
+      避免一次同時打太多 API
+    */
+
+    const batchSize = 3;
 
 
     for (
@@ -2443,29 +2348,31 @@ async function handler(
 
       for (
         let j = 0;
-        j <
-        results.length;
+        j < results.length;
         j++
       ) {
 
         const symbol =
-          batch[j];
+          String(
+            batch[j]
+          );
+
 
         const data =
           results[j];
 
 
-        if (
-          !data
-        ) {
+        if (!data) {
 
           checkedStocks.push({
 
             symbol,
 
-            ok: false,
+            api:
+              false,
 
-            signal: false,
+            signal:
+              false,
 
             reason:
               "股票資料取得失敗"
@@ -2475,8 +2382,19 @@ async function handler(
         }
 
 
+        /*
+          先取得完整網站分析結果，
+          測試時方便查看為何沒 Push。
+        */
+
+        const analysis =
+          analyzeData(
+            data
+          );
+
+
         const signal =
-          analyzeStock(
+          makeSignal(
             data
           );
 
@@ -2485,39 +2403,51 @@ async function handler(
 
           symbol,
 
-          ok: true,
-
           name:
             data.name ||
             "",
 
+          api:
+            true,
+
           price:
-            num(
-              data.price
-            ),
-
-          signal:
-            !!signal,
-
-          passed:
-            signal
-            ?
-            signal.passed
-            :
+            analysis?.price ??
             null,
 
+          passed:
+            analysis?.passed ??
+            null,
+
+          qualified:
+            analysis?.qualified ??
+            false,
+
+          hasRealStructure:
+            analysis?.hasRealStructure ??
+            false,
+
+          entryReady:
+            analysis?.entryReady ??
+            false,
+
           supportType:
-            signal
-            ?
-            signal.supportType
-            :
-            null
+            analysis?.support1Type ??
+            null,
+
+          entryLow:
+            analysis?.entryLow ??
+            null,
+
+          entryHigh:
+            analysis?.entryHigh ??
+            null,
+
+          signal:
+            !!signal
         });
 
 
-        if (
-          signal
-        ) {
+        if (signal) {
 
           signalMap.set(
             symbol,
@@ -2529,17 +2459,25 @@ async function handler(
 
 
     /* =====================================================
-       發送 Push
+       Push 到每一台裝置
     ===================================================== */
 
     let sent = 0;
-    let removed = 0;
     let failed = 0;
+    let removed = 0;
     let deduped = 0;
 
 
-    const pushResults =
-      [];
+    const pushResults = [];
+
+
+    /*
+      如果同一裝置已經失效，
+      不要後面其他股票繼續送。
+    */
+
+    const deadDevices =
+      new Set();
 
 
     for (
@@ -2547,39 +2485,54 @@ async function handler(
       devices
     ) {
 
+      if (
+        deadDevices.has(
+          device.deviceId
+        )
+      ) {
+        continue;
+      }
+
+
       for (
-        const symbol of
+        const rawSymbol of
         device.symbols
       ) {
 
-        const signal =
-          signalMap.get(
-            String(
-              symbol
-            )
+        if (
+          deadDevices.has(
+            device.deviceId
+          )
+        ) {
+          break;
+        }
+
+
+        const symbol =
+          String(
+            rawSymbol
           );
 
 
-        if (
-          !signal
-        ) {
+        const signal =
+          signalMap.get(
+            symbol
+          );
 
+
+        if (!signal) {
           continue;
         }
 
 
-        /*
-          正式模式：
-          6 小時內同一 setup 不重複推。
-
-          測試模式：
-          不使用 dedupe，
-          方便我們現在確認 monitor。
-        */
-
         let dedupeKey =
           null;
 
+
+        /*
+          test=1 不使用防重複，
+          正式 Cron 才使用。
+        */
 
         if (
           !testMode
@@ -2601,8 +2554,7 @@ async function handler(
 
 
           if (
-            acquired !==
-            "OK"
+            acquired !== "OK"
           ) {
 
             deduped++;
@@ -2629,10 +2581,10 @@ async function handler(
             deviceId:
               device.deviceId,
 
-            symbol:
-              signal.symbol,
+            symbol,
 
-            ok: true,
+            ok:
+              true,
 
             statusCode:
               response?.statusCode ||
@@ -2683,11 +2635,6 @@ async function handler(
             false;
 
 
-          /*
-            無效 subscription
-            直接清除
-          */
-
           if (
             expired ||
             vapidMismatch
@@ -2699,11 +2646,13 @@ async function handler(
               );
 
 
-            if (
-              deleted
-            ) {
+            if (deleted) {
 
               removed++;
+
+              deadDevices.add(
+                device.deviceId
+              );
             }
 
           } else {
@@ -2712,9 +2661,9 @@ async function handler(
 
 
             /*
-              正式模式如果 Push 失敗，
-              把 dedupe key 刪掉，
-              下次 Cron 可以重試。
+              真正發送失敗：
+              刪掉 dedupe，
+              下一輪可以重試。
             */
 
             if (
@@ -2729,7 +2678,6 @@ async function handler(
                 ]);
 
               } catch (_) {}
-
             }
           }
 
@@ -2739,10 +2687,10 @@ async function handler(
             deviceId:
               device.deviceId,
 
-            symbol:
-              signal.symbol,
+            symbol,
 
-            ok: false,
+            ok:
+              false,
 
             statusCode,
 
@@ -2760,14 +2708,15 @@ async function handler(
 
 
     /* =====================================================
-       回傳
+       Result
     ===================================================== */
 
     return res
     .status(200)
     .json({
 
-      ok: true,
+      ok:
+        true,
 
       testMode,
 
@@ -2792,8 +2741,8 @@ async function handler(
       deduped,
 
       /*
-        test=1 時把股票檢查結果顯示出來，
-        正式 Cron 不需要輸出一堆資料。
+        test=1 才輸出詳細分析。
+        正式 Cron 保持精簡。
       */
 
       checkedStocks:
@@ -2824,7 +2773,8 @@ async function handler(
     .status(500)
     .json({
 
-      ok: false,
+      ok:
+        false,
 
       error:
         error?.message ||
