@@ -2,323 +2,308 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="波段分析">
 <meta name="theme-color" content="#f6f7f9">
+
 <title>波段分析</title>
 
 <style>
-*{box-sizing:border-box}
+
+*{
+box-sizing:border-box
+}
+
+html{
+background:#f6f7f9;
+-webkit-text-size-adjust:100%;
+}
 
 body{
 margin:0;
 background:#f6f7f9;
 color:#17202a;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+-webkit-font-smoothing:antialiased;
+}
+
+button,
+input{
+font:inherit;
+}
+
+button{
+-webkit-tap-highlight-color:transparent;
 }
 
 .app{
+width:100%;
 max-width:760px;
-margin:auto;
-padding:16px 14px 90px
+margin:0 auto;
+
+padding-top:calc(env(safe-area-inset-top,0px) + 22px);
+padding-right:max(16px,env(safe-area-inset-right,0px));
+padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));
+padding-left:max(16px,env(safe-area-inset-left,0px));
 }
+
+/* ===== 頂部 ===== */
 
 .top{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin:4px 0 18px
+gap:14px;
+min-height:62px;
+margin:0 0 22px;
 }
 
 .brand{
 font-size:25px;
-font-weight:900
+font-weight:900;
+line-height:1.15;
+letter-spacing:-.5px;
+min-width:0;
 }
 
 .brand small{
 display:block;
 color:#7c8795;
-font-size:11px;
+font-size:12px;
 font-weight:600;
-margin-top:2px
+letter-spacing:0;
+margin-top:6px;
 }
 
 .icon{
+flex:0 0 auto;
 border:1px solid #e0e4e9;
 background:#fff;
-border-radius:13px;
-padding:10px 12px
+border-radius:14px;
+padding:11px 13px;
+font-size:17px;
+min-width:48px;
+min-height:48px;
+box-shadow:0 2px 8px rgba(20,30,40,.03);
 }
+
+/* ===== 搜尋 ===== */
 
 .search{
 display:flex;
-gap:8px
+gap:9px;
+width:100%;
 }
 
 .search input{
 flex:1;
 min-width:0;
+height:54px;
 border:1px solid #dfe4e9;
 background:#fff;
-border-radius:14px;
-padding:14px;
+border-radius:15px;
+padding:0 16px;
 font-size:16px;
-outline:none
+outline:none;
+color:#17202a;
+box-shadow:0 2px 8px rgba(20,30,40,.02);
+}
+
+.search input::placeholder{
+color:#a5abb2;
+}
+
+.search input:focus{
+border-color:#1769e0;
+box-shadow:0 0 0 3px rgba(23,105,224,.08);
 }
 
 .primary{
+flex:0 0 auto;
+height:54px;
+min-width:78px;
 border:0;
 background:#1769e0;
 color:#fff;
-border-radius:14px;
+border-radius:15px;
 padding:0 18px;
-font-weight:800
+font-weight:800;
+font-size:15px;
 }
+
+/* ===== 分頁 ===== */
 
 .tabs{
 display:flex;
 gap:8px;
-margin:14px 0 18px
+margin:16px 0 20px;
+overflow-x:auto;
+-webkit-overflow-scrolling:touch;
+scrollbar-width:none;
+padding-bottom:2px;
+}
+
+.tabs::-webkit-scrollbar{
+display:none;
 }
 
 .tab{
+flex:0 0 auto;
+white-space:nowrap;
 border:1px solid #dfe4e9;
 background:#fff;
 border-radius:999px;
-padding:9px 13px;
-font-weight:700;
-color:#687382
+padding:10px 14px;
+font-size:14px;
+font-weight:750;
+color:#687382;
 }
 
 .tab.on{
 background:#17202a;
 color:#fff;
-border-color:#17202a
+border-color:#17202a;
 }
+
+/* ===== 通用 ===== */
 
 .section-title{
 font-size:18px;
 font-weight:900;
-margin:24px 2px 10px
+margin:24px 2px 10px;
 }
 
-.muted{color:#7d8793}
+.muted{
+color:#7d8793;
+}
 
-.empty,.card{
+.empty,
+.card{
 background:#fff;
 border:1px solid #e4e8ec;
 border-radius:18px;
-box-shadow:0 4px 18px rgba(24,34,45,.04)
+box-shadow:0 4px 18px rgba(24,34,45,.04);
 }
 
 .empty{
-padding:18px;
-color:#7d8793
+padding:20px 17px;
+color:#7d8793;
+font-size:14px;
+line-height:1.6;
 }
 
+/* ===== 股票卡 ===== */
+
 .stock-card{
-padding:15px;
-margin-bottom:9px;
-cursor:pointer
+padding:17px;
+margin-bottom:11px;
+cursor:pointer;
+-webkit-tap-highlight-color:transparent;
+}
+
+.stock-card:active{
+transform:scale(.995);
 }
 
 .row{
 display:flex;
 justify-content:space-between;
 gap:12px;
-align-items:flex-start
+align-items:flex-start;
 }
 
 .symbol{
-font-size:17px;
-font-weight:900
+font-size:18px;
+font-weight:900;
+line-height:1.25;
 }
 
 .name{
-font-size:12px;
+font-size:13px;
 color:#7d8793;
-margin-top:3px
+margin-left:3px;
+font-weight:700;
 }
 
 .price{
 text-align:right;
-font-size:19px;
-font-weight:900
+font-size:21px;
+font-weight:900;
+line-height:1.2;
+white-space:nowrap;
 }
 
 .change{
-font-size:12px;
+font-size:13px;
 font-weight:800;
-margin-top:3px
+margin-top:5px;
+text-align:right;
 }
 
-.up{color:#d73a49}
-.down{color:#159447}
+.up{
+color:#d73a49;
+}
+
+.down{
+color:#159447;
+}
 
 .status{
 display:inline-flex;
 align-items:center;
 gap:5px;
 border-radius:999px;
-padding:6px 9px;
-font-size:11px;
+padding:7px 10px;
+font-size:12px;
 font-weight:800;
-margin-top:10px
+margin-top:12px;
 }
 
 .green{
 background:#e9f8ef;
-color:#148244
+color:#148244;
 }
 
 .yellow{
 background:#fff5d8;
-color:#a06a00
+color:#a06a00;
 }
 
 .gray{
 background:#f0f2f4;
-color:#6f7882
+color:#6f7882;
 }
 
 .score{
-font-size:11px;
+font-size:12px;
 color:#65717d;
-margin-top:9px
+margin-top:11px;
 }
 
+/* ===== 個股分析 ===== */
+
 .hero{
-padding:18px
+padding:19px;
 }
 
 .hero-price{
 font-size:34px;
 font-weight:950;
-margin-top:8px
+letter-spacing:-1px;
+margin-top:9px;
 }
 
 .live{
 font-size:11px;
 color:#697581;
-margin-top:5px
-}
-
-.strategy{
-padding:17px;
-margin-top:12px
-}
-
-.strategy-head{
-display:flex;
-justify-content:space-between;
-align-items:center
-}
-
-.strategy-title{
-font-size:20px;
-font-weight:950
-}
-
-.bigscore{
-font-size:25px;
-font-weight:950
-}
-
-.levels{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px;
-margin-top:14px
-}
-
-.level{
-padding:12px;
-border-radius:13px;
-background:#f7f8fa;
-border:1px solid #e7eaee
-}
-
-.level.full{
-grid-column:1/-1
-}
-
-.level span{
-display:block;
-font-size:10px;
-color:#7c8793
-}
-
-.level strong{
-display:block;
-font-size:17px;
-margin-top:3px
-}
-
-.entry{
-background:#edf5ff;
-border-color:#cfe1fa
-}
-
-.sl{
-background:#fff0f0;
-border-color:#f4d0d0
-}
-
-.tp{
-background:#eef9f1;
-border-color:#d0ebd8
-}
-
-.conditions{
-margin-top:15px;
-border-top:1px solid #edf0f2;
-padding-top:8px
-}
-
-.cond{
-padding:10px 0;
-border-bottom:1px solid #f0f2f4;
-font-size:13px
-}
-
-.ok{color:#16864a}
-.no{color:#c44848}
-
-.cond small{
-display:block;
-color:#7c8793;
-margin:4px 0 0 19px;
-line-height:1.4
-}
-
-.fav{
-width:100%;
-border:1px solid #dfe4e9;
-background:#fff;
-border-radius:12px;
-padding:11px;
-font-weight:800;
-margin-top:13px
-}
-
-.back{
-margin-bottom:12px
-}
-
-.hidden{
-display:none!important
-}
-
-.note{
-font-size:11px;
-line-height:1.55;
-color:#7c8793;
-margin-top:20px
-}
-
-.loader{
-padding:28px;
-text-align:center
+margin-top:7px;
 }
 
 .pulse{
@@ -327,13 +312,286 @@ width:7px;
 height:7px;
 border-radius:50%;
 background:#19a15f;
-margin-right:5px
+margin-right:5px;
 }
 
-@media(max-width:480px){
-.levels{grid-template-columns:1fr 1fr}
-.hero-price{font-size:31px}
+.strategy{
+padding:18px;
+margin-top:12px;
 }
+
+.strategy-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+}
+
+.strategy-title{
+font-size:20px;
+font-weight:950;
+}
+
+.bigscore{
+font-size:25px;
+font-weight:950;
+white-space:nowrap;
+}
+
+/* ===== TP SL ===== */
+
+.levels{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:15px;
+}
+
+.level{
+padding:13px;
+border-radius:14px;
+background:#f7f8fa;
+border:1px solid #e7eaee;
+min-width:0;
+}
+
+.level.full{
+grid-column:1/-1;
+}
+
+.level span{
+display:block;
+font-size:11px;
+color:#7c8793;
+line-height:1.35;
+}
+
+.level strong{
+display:block;
+font-size:18px;
+margin-top:4px;
+line-height:1.25;
+}
+
+.entry{
+background:#edf5ff;
+border-color:#cfe1fa;
+}
+
+.sl{
+background:#fff0f0;
+border-color:#f4d0d0;
+}
+
+.tp{
+background:#eef9f1;
+border-color:#d0ebd8;
+}
+
+/* ===== 條件 ===== */
+
+.conditions{
+margin-top:16px;
+border-top:1px solid #edf0f2;
+padding-top:8px;
+}
+
+.cond{
+padding:11px 0;
+border-bottom:1px solid #f0f2f4;
+font-size:13px;
+font-weight:650;
+line-height:1.4;
+}
+
+.ok{
+color:#16864a;
+}
+
+.no{
+color:#c44848;
+}
+
+.cond small{
+display:block;
+color:#7c8793;
+margin:4px 0 0 19px;
+line-height:1.5;
+font-weight:500;
+}
+
+/* ===== 自選 ===== */
+
+.fav{
+width:100%;
+border:1px solid #dfe4e9;
+background:#fff;
+border-radius:13px;
+padding:12px;
+font-weight:800;
+margin-top:15px;
+color:#17202a;
+}
+
+.back{
+margin-bottom:14px;
+}
+
+.hidden{
+display:none!important;
+}
+
+.note{
+font-size:11px;
+line-height:1.65;
+color:#7c8793;
+margin-top:20px;
+padding:0 3px;
+}
+
+.loader{
+padding:30px 20px;
+text-align:center;
+color:#687382;
+}
+
+/* ===== iPhone / 手機 ===== */
+
+@media(max-width:480px){
+
+.app{
+padding-top:calc(env(safe-area-inset-top,0px) + 20px);
+padding-right:max(15px,env(safe-area-inset-right,0px));
+padding-left:max(15px,env(safe-area-inset-left,0px));
+padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));
+}
+
+.top{
+min-height:64px;
+margin-bottom:20px;
+}
+
+.brand{
+font-size:24px;
+}
+
+.brand small{
+font-size:12px;
+margin-top:5px;
+}
+
+.icon{
+min-width:46px;
+min-height:46px;
+padding:10px 12px;
+}
+
+.search{
+gap:8px;
+}
+
+.search input{
+height:53px;
+padding:0 15px;
+font-size:16px;
+}
+
+.primary{
+height:53px;
+min-width:75px;
+padding:0 15px;
+}
+
+.tabs{
+margin-top:15px;
+margin-bottom:19px;
+}
+
+.tab{
+padding:9px 13px;
+font-size:13px;
+}
+
+.stock-card{
+padding:16px;
+border-radius:17px;
+}
+
+.symbol{
+font-size:17px;
+}
+
+.name{
+font-size:12px;
+}
+
+.price{
+font-size:20px;
+}
+
+.hero{
+padding:17px;
+}
+
+.hero-price{
+font-size:31px;
+}
+
+.strategy{
+padding:17px;
+}
+
+.levels{
+grid-template-columns:1fr 1fr;
+}
+
+.level{
+padding:12px;
+}
+
+.level strong{
+font-size:17px;
+}
+
+}
+
+/* ===== 小螢幕 ===== */
+
+@media(max-width:360px){
+
+.brand{
+font-size:22px;
+}
+
+.search input{
+font-size:15px;
+}
+
+.primary{
+min-width:70px;
+padding:0 12px;
+}
+
+.price{
+font-size:18px;
+}
+
+.symbol{
+font-size:16px;
+}
+
+}
+
+/* ===== PWA 全螢幕模式額外安全距離 ===== */
+
+@media(display-mode:standalone){
+
+.app{
+padding-top:calc(env(safe-area-inset-top,0px) + 18px);
+}
+
+}
+
 </style>
 </head>
 
@@ -348,7 +606,11 @@ margin-right:5px
 <small>台股即時策略</small>
 </div>
 
-<button id="notify" class="icon">
+<button
+id="notify"
+class="icon"
+aria-label="開啟通知"
+>
 🔔
 </button>
 
@@ -361,6 +623,7 @@ margin-right:5px
 <input
 id="q"
 inputmode="numeric"
+autocomplete="off"
 placeholder="輸入台股代號，例如 2330"
 >
 
