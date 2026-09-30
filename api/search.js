@@ -1,29 +1,427 @@
-const https = require("https");
-
-
 /*
-  台股中文名稱 / 代號搜尋
+  api/search.js
+
+  台股中文名稱 / 股票代號搜尋
 
   支援：
+  2330    -> 台積電
+  台積    -> 台積電
+  積電    -> 台積電
+  聯發    -> 聯發科
+  鴻      -> 鴻海
+  長榮    -> 長榮 / 長榮航 等
 
-  2330
-  台積電
-  台積
-  積電
-  聯發
-  鴻
-  長榮
-
-  不需要輸入完整名稱。
+  中文不用輸入完整。
 */
 
 
-let stockCache = null;
+/* =========================================================
+   股票資料庫
+========================================================= */
 
-let cacheTime = 0;
+const STOCKS = [
 
-const CACHE_MS =
-6 * 60 * 60 * 1000;
+  /* =========================
+     半導體 / 電子
+  ========================= */
+
+  ["2330","台積電","TW"],
+  ["2303","聯電","TW"],
+  ["2454","聯發科","TW"],
+  ["2379","瑞昱","TW"],
+  ["3034","聯詠","TW"],
+  ["3711","日月光投控","TW"],
+  ["2449","京元電子","TW"],
+  ["2408","南亞科","TW"],
+  ["2344","華邦電","TW"],
+  ["2337","旺宏","TW"],
+  ["6770","力積電","TW"],
+  ["3661","世芯-KY","TW"],
+  ["3443","創意","TW"],
+  ["3533","嘉澤","TW"],
+  ["5269","祥碩","TW"],
+  ["3035","智原","TW"],
+  ["6415","矽力-KY","TW"],
+  ["4961","天鈺","TW"],
+  ["3016","嘉晶","TW"],
+  ["6239","力成","TW"],
+  ["6257","矽格","TW"],
+  ["8150","南茂","TW"],
+
+  /* =========================
+     AI / 伺服器 / 電腦
+  ========================= */
+
+  ["2317","鴻海","TW"],
+  ["2382","廣達","TW"],
+  ["3231","緯創","TW"],
+  ["6669","緯穎","TW"],
+  ["2356","英業達","TW"],
+  ["2324","仁寶","TW"],
+  ["2357","華碩","TW"],
+  ["2376","技嘉","TW"],
+  ["2377","微星","TW"],
+  ["4938","和碩","TW"],
+  ["3706","神達","TW"],
+  ["3017","奇鋐","TW"],
+  ["3324","雙鴻","TWO"],
+  ["3653","健策","TW"],
+  ["8210","勤誠","TW"],
+  ["2059","川湖","TW"],
+  ["2383","台光電","TW"],
+  ["2368","金像電","TW"],
+  ["3044","健鼎","TW"],
+  ["2313","華通","TW"],
+  ["6274","台燿","TW"],
+  ["3189","景碩","TW"],
+  ["8046","南電","TW"],
+  ["3037","欣興","TW"],
+
+  /* =========================
+     電源 / 散熱 / 零組件
+  ========================= */
+
+  ["2308","台達電","TW"],
+  ["2301","光寶科","TW"],
+  ["3013","晟銘電","TW"],
+  ["6282","康舒","TW"],
+  ["6412","群電","TW"],
+  ["8996","高力","TW"],
+  ["2421","建準","TW"],
+  ["3015","全漢","TW"],
+
+  /* =========================
+     光電 / 面板
+  ========================= */
+
+  ["3008","大立光","TW"],
+  ["3406","玉晶光","TW"],
+  ["2409","友達","TW"],
+  ["3481","群創","TW"],
+  ["6116","彩晶","TW"],
+  ["2393","億光","TW"],
+  ["5371","中光電","TWO"],
+
+  /* =========================
+     通訊 / 網通
+  ========================= */
+
+  ["2412","中華電","TW"],
+  ["3045","台灣大","TW"],
+  ["4904","遠傳","TW"],
+  ["2345","智邦","TW"],
+  ["6285","啟碁","TW"],
+  ["5388","中磊","TWO"],
+  ["3596","智易","TW"],
+  ["3704","合勤控","TW"],
+
+  /* =========================
+     金融
+  ========================= */
+
+  ["2881","富邦金","TW"],
+  ["2882","國泰金","TW"],
+  ["2891","中信金","TW"],
+  ["2886","兆豐金","TW"],
+  ["2884","玉山金","TW"],
+  ["2885","元大金","TW"],
+  ["2880","華南金","TW"],
+  ["2883","凱基金","TW"],
+  ["2887","台新新光金","TW"],
+  ["2890","永豐金","TW"],
+  ["2892","第一金","TW"],
+  ["5880","合庫金","TW"],
+  ["2889","國票金","TW"],
+  ["5876","上海商銀","TW"],
+  ["2801","彰銀","TW"],
+  ["2834","臺企銀","TW"],
+  ["2845","遠東銀","TW"],
+  ["2812","台中銀","TW"],
+  ["2809","京城銀","TW"],
+
+  /* =========================
+     航運 / 航空
+  ========================= */
+
+  ["2603","長榮","TW"],
+  ["2609","陽明","TW"],
+  ["2615","萬海","TW"],
+  ["2618","長榮航","TW"],
+  ["2610","華航","TW"],
+  ["2637","慧洋-KY","TW"],
+  ["2606","裕民","TW"],
+  ["2605","新興","TW"],
+  ["5608","四維航","TW"],
+  ["2607","榮運","TW"],
+  ["2608","嘉里大榮","TW"],
+
+  /* =========================
+     鋼鐵
+  ========================= */
+
+  ["2002","中鋼","TW"],
+  ["2014","中鴻","TW"],
+  ["2027","大成鋼","TW"],
+  ["2031","新光鋼","TW"],
+  ["2023","燁輝","TW"],
+  ["9958","世紀鋼","TW"],
+
+  /* =========================
+     塑化
+  ========================= */
+
+  ["1301","台塑","TW"],
+  ["1303","南亞","TW"],
+  ["1326","台化","TW"],
+  ["6505","台塑化","TW"],
+  ["1314","中石化","TW"],
+  ["1312","國喬","TW"],
+  ["1718","中纖","TW"],
+
+  /* =========================
+     水泥 / 原物料
+  ========================= */
+
+  ["1101","台泥","TW"],
+  ["1102","亞泥","TW"],
+  ["1103","嘉泥","TW"],
+  ["1104","環泥","TW"],
+
+  /* =========================
+     食品
+  ========================= */
+
+  ["1216","統一","TW"],
+  ["1210","大成","TW"],
+  ["1201","味全","TW"],
+  ["1227","佳格","TW"],
+  ["1231","聯華食","TW"],
+  ["1232","大統益","TW"],
+
+  /* =========================
+     生技 / 醫療
+  ========================= */
+
+  ["1795","美時","TW"],
+  ["6446","藥華藥","TW"],
+  ["4743","合一","TWO"],
+  ["6472","保瑞","TW"],
+  ["1762","中化生","TW"],
+  ["4105","東洋","TWO"],
+  ["4128","中天","TWO"],
+  ["4142","國光生","TW"],
+  ["6547","高端疫苗","TWO"],
+
+  /* =========================
+     車用 / 汽車
+  ========================= */
+
+  ["2207","和泰車","TW"],
+  ["2201","裕隆","TW"],
+  ["2204","中華","TW"],
+  ["2227","裕日車","TW"],
+  ["2231","為升","TW"],
+  ["1319","東陽","TW"],
+  ["1536","和大","TW"],
+  ["1522","堤維西","TW"],
+
+  /* =========================
+     電動車 / 電池
+  ========================= */
+
+  ["2308","台達電","TW"],
+  ["1519","華城","TW"],
+  ["1513","中興電","TW"],
+  ["1503","士電","TW"],
+  ["1609","大亞","TW"],
+  ["1605","華新","TW"],
+  ["6781","AES-KY","TW"],
+
+  /* =========================
+     重電
+  ========================= */
+
+  ["1519","華城","TW"],
+  ["1513","中興電","TW"],
+  ["1503","士電","TW"],
+  ["1514","亞力","TW"],
+  ["1618","合機","TW"],
+  ["1608","華榮","TW"],
+
+  /* =========================
+     營建 / 資產
+  ========================= */
+
+  ["2542","興富發","TW"],
+  ["2520","冠德","TW"],
+  ["2501","國建","TW"],
+  ["2511","太子","TW"],
+  ["5522","遠雄","TW"],
+  ["2534","宏盛","TW"],
+  ["2548","華固","TW"],
+  ["9945","潤泰新","TW"],
+
+  /* =========================
+     百貨 / 通路
+  ========================= */
+
+  ["2912","統一超","TW"],
+  ["5904","寶雅","TWO"],
+  ["2903","遠百","TW"],
+  ["2915","潤泰全","TW"],
+  ["8454","富邦媒","TW"],
+  ["2614","東森","TW"],
+
+  /* =========================
+     觀光 / 餐飲
+  ========================= */
+
+  ["2727","王品","TW"],
+  ["2753","八方雲集","TW"],
+  ["2707","晶華","TW"],
+  ["2731","雄獅","TWO"],
+  ["2748","雲品","TW"],
+  ["5706","鳳凰","TWO"],
+
+  /* =========================
+     遊戲
+  ========================= */
+
+  ["3293","鈊象","TWO"],
+  ["6180","橘子","TWO"],
+  ["3546","宇峻","TWO"],
+  ["5478","智冠","TWO"],
+  ["3083","網龍","TWO"],
+
+  /* =========================
+     IC 設計 / IP
+  ========================= */
+
+  ["3661","世芯-KY","TW"],
+  ["3443","創意","TW"],
+  ["3035","智原","TW"],
+  ["3529","力旺","TWO"],
+  ["6643","M31","TWO"],
+  ["6533","晶心科","TW"],
+  ["3227","原相","TWO"],
+  ["4966","譜瑞-KY","TW"],
+
+  /* =========================
+     記憶體
+  ========================= */
+
+  ["2408","南亞科","TW"],
+  ["2344","華邦電","TW"],
+  ["2337","旺宏","TW"],
+  ["8299","群聯","TWO"],
+  ["3260","威剛","TWO"],
+  ["8271","宇瞻","TW"],
+  ["4967","十銓","TW"],
+
+  /* =========================
+     PCB / CCL
+  ========================= */
+
+  ["2383","台光電","TW"],
+  ["2368","金像電","TW"],
+  ["3037","欣興","TW"],
+  ["8046","南電","TW"],
+  ["3189","景碩","TW"],
+  ["2313","華通","TW"],
+  ["3044","健鼎","TW"],
+  ["6274","台燿","TW"],
+  ["6213","聯茂","TW"],
+
+  /* =========================
+     機器人 / 自動化
+  ========================= */
+
+  ["2049","上銀","TW"],
+  ["1590","亞德客-KY","TW"],
+  ["2395","研華","TW"],
+  ["2464","盟立","TW"],
+  ["8374","羅昇","TW"],
+  ["4576","大銀微系統","TW"],
+
+  /* =========================
+     軍工 / 航太
+  ========================= */
+
+  ["2634","漢翔","TW"],
+  ["8033","雷虎","TW"],
+  ["6753","龍德造船","TW"],
+  ["2208","台船","TW"],
+  ["4541","晟田","TWO"],
+
+  /* =========================
+     綠能
+  ========================= */
+
+  ["6443","元晶","TW"],
+  ["3576","聯合再生","TW"],
+  ["6244","茂迪","TWO"],
+  ["6806","森崴能源","TW"],
+  ["6869","雲豹能源","TW"],
+  ["6873","泓德能源","TW"],
+
+  /* =========================
+     其他大型 / 熱門
+  ========================= */
+
+  ["2105","正新","TW"],
+  ["2103","台橡","TW"],
+  ["1402","遠東新","TW"],
+  ["1476","儒鴻","TW"],
+  ["9910","豐泰","TW"],
+  ["9914","美利達","TW"],
+  ["9921","巨大","TW"],
+  ["2106","建大","TW"],
+  ["9904","寶成","TW"],
+  ["5871","中租-KY","TW"],
+  ["9917","中保科","TW"],
+  ["9933","中鼎","TW"],
+  ["9941","裕融","TW"]
+
+];
+
+
+/* =========================================================
+   清除重複股票
+========================================================= */
+
+const STOCK_MAP =
+new Map();
+
+
+for(
+  const [
+    symbol,
+    name,
+    market
+  ]
+  of STOCKS
+){
+
+  if(
+    !STOCK_MAP.has(symbol)
+  ){
+
+    STOCK_MAP.set(
+      symbol,
+      {
+        symbol,
+        name,
+        market
+      }
+    );
+
+  }
+
+}
+
+
+const STOCK_LIST =
+[...STOCK_MAP.values()];
 
 
 /* =========================================================
@@ -33,814 +431,327 @@ const CACHE_MS =
 module.exports =
 async function handler(req,res){
 
-res.setHeader(
-"Access-Control-Allow-Origin",
-"*"
-);
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
 
-res.setHeader(
-"Access-Control-Allow-Methods",
-"GET, OPTIONS"
-);
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, OPTIONS"
+  );
 
-res.setHeader(
-"Cache-Control",
-"public, max-age=300, s-maxage=300"
-);
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type"
+  );
 
-
-if(
-req.method==="OPTIONS"
-){
-
-return res
-.status(200)
-.end();
-
-}
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate"
+  );
 
 
-try{
+  if(
+    req.method==="OPTIONS"
+  ){
 
-const q=
-String(
-req.query.q || ""
-)
-.trim()
-.toLowerCase();
+    return res
+      .status(200)
+      .end();
 
-
-if(!q){
-
-return res
-.status(200)
-.json({
-
-ok:true,
-
-items:[]
-
-});
-
-}
+  }
 
 
-const stocks=
-await getStocks();
+  try{
+
+    const raw =
+      String(
+        req.query.q || ""
+      ).trim();
 
 
-const normalizedQuery=
-normalize(q);
+    if(!raw){
+
+      return res
+        .status(200)
+        .json({
+
+          ok:true,
+
+          items:[]
+
+        });
+
+    }
 
 
-let result=
-stocks
-.map(
-
-stock=>{
-
-const symbol=
-normalize(
-stock.symbol
-);
-
-const name=
-normalize(
-stock.name
-);
+    const q =
+      normalize(raw);
 
 
-let score=0;
+    const isNumber =
+      /^\d+$/.test(q);
 
 
-/*
-  完整代號
-*/
+    let results =
+      STOCK_LIST
+      .map(
+        stock=>{
 
-if(
-symbol===normalizedQuery
-){
+          const symbol =
+            normalize(
+              stock.symbol
+            );
 
-score=1000;
-
-}
-
-
-/*
-  代號開頭
-*/
-
-else if(
-symbol.startsWith(
-normalizedQuery
-)
-){
-
-score=900;
-
-}
+          const name =
+            normalize(
+              stock.name
+            );
 
 
-/*
-  完整中文名稱
-*/
-
-else if(
-name===normalizedQuery
-){
-
-score=850;
-
-}
+          let score = 0;
 
 
-/*
-  中文名稱開頭
+          /*
+            =========================
+            股票代號搜尋
+            =========================
+          */
 
-  例如：
-  台積 → 台積電
-  聯發 → 聯發科
-*/
+          if(isNumber){
 
-else if(
-name.startsWith(
-normalizedQuery
-)
-){
+            /*
+              2330
+            */
 
-score=800;
+            if(
+              symbol===q
+            ){
 
-}
+              score=10000;
 
+            }
 
-/*
-  中文名稱任意位置
+            /*
+              23
+              233
+            */
 
-  例如：
-  積電 → 台積電
-*/
+            else if(
+              symbol.startsWith(q)
+            ){
 
-else if(
-name.includes(
-normalizedQuery
-)
-){
+              score=9000;
 
-score=700;
+            }
 
-}
+            /*
+              330
+            */
 
+            else if(
+              symbol.includes(q)
+            ){
 
-/*
-  代號部分符合
-*/
+              score=8000;
 
-else if(
-symbol.includes(
-normalizedQuery
-)
-){
+            }
 
-score=600;
-
-}
+          }
 
 
-return {
+          /*
+            =========================
+            中文名稱搜尋
+            =========================
+          */
 
-...stock,
+          else{
 
-score
+            /*
+              台積電
+            */
+
+            if(
+              name===q
+            ){
+
+              score=10000;
+
+            }
+
+
+            /*
+              台積
+              聯發
+              長榮
+            */
+
+            else if(
+              name.startsWith(q)
+            ){
+
+              score=9000;
+
+            }
+
+
+            /*
+              積電
+              發科
+              榮航
+            */
+
+            else if(
+              name.includes(q)
+            ){
+
+              score=8000;
+
+            }
+
+
+            /*
+              字元順序模糊比對
+
+              例如：
+              台電
+              可以找到名稱中依序出現
+              台...電 的股票
+            */
+
+            else if(
+              fuzzyContains(
+                name,
+                q
+              )
+            ){
+
+              score=6000;
+
+            }
+
+          }
+
+
+          /*
+            名稱越接近輸入長度，
+            排名稍微提高。
+          */
+
+          if(score>0){
+
+            score -=
+              Math.abs(
+                name.length -
+                q.length
+              );
+
+          }
+
+
+          return {
+
+            ...stock,
+
+            score
+
+          };
+
+        }
+      )
+
+      .filter(
+        stock=>
+          stock.score>0
+      )
+
+      .sort(
+        (a,b)=>{
+
+          if(
+            b.score!==a.score
+          ){
+
+            return (
+              b.score -
+              a.score
+            );
+
+          }
+
+
+          return (
+            a.symbol.localeCompare(
+              b.symbol
+            )
+          );
+
+        }
+      )
+
+      .slice(
+        0,
+        20
+      )
+
+      .map(
+        stock=>({
+
+          symbol:
+            stock.symbol,
+
+          name:
+            stock.name,
+
+          market:
+            stock.market
+
+        })
+      );
+
+
+    return res
+      .status(200)
+      .json({
+
+        ok:true,
+
+        query:raw,
+
+        count:
+          results.length,
+
+        items:
+          results
+
+      });
+
+
+  }catch(error){
+
+    console.error(
+      "search error:",
+      error
+    );
+
+
+    return res
+      .status(500)
+      .json({
+
+        ok:false,
+
+        error:
+          error?.message ||
+          "搜尋失敗"
+
+      });
+
+  }
 
 };
-
-}
-
-)
-.filter(
-x=>x.score>0
-)
-.sort(
-
-(a,b)=>{
-
-if(
-b.score!==a.score
-){
-
-return b.score-a.score;
-
-}
-
-
-return (
-a.symbol.localeCompare(
-b.symbol
-)
-);
-
-}
-
-)
-.slice(
-0,
-20
-)
-.map(
-x=>({
-
-symbol:x.symbol,
-
-name:x.name,
-
-market:x.market
-
-})
-);
-
-
-return res
-.status(200)
-.json({
-
-ok:true,
-
-query:q,
-
-items:result
-
-});
-
-
-}catch(error){
-
-console.error(
-"search api error:",
-error
-);
-
-
-return res
-.status(500)
-.json({
-
-ok:false,
-
-error:
-error?.message ||
-"台股搜尋資料取得失敗"
-
-});
-
-}
-
-};
-
-
-/* =========================================================
-   Stock List
-========================================================= */
-
-async function getStocks(){
-
-if(
-stockCache &&
-Date.now()-cacheTime<
-CACHE_MS
-){
-
-return stockCache;
-
-}
-
-
-const all=[];
-
-
-/*
-  上市股票
-*/
-
-try{
-
-const listed=
-await getListedStocks();
-
-all.push(
-...listed
-);
-
-}catch(error){
-
-console.error(
-"TWSE search source error",
-error
-);
-
-}
-
-
-/*
-  上櫃股票
-*/
-
-try{
-
-const otc=
-await getOTCStocks();
-
-all.push(
-...otc
-);
-
-}catch(error){
-
-console.error(
-"TPEX search source error",
-error
-);
-
-}
-
-
-/*
-  如果官方來源其中一個暫時失敗，
-  至少保留常用股票，
-  不讓搜尋功能整個掛掉。
-*/
-
-all.push(
-...fallbackStocks()
-);
-
-
-const map=
-new Map();
-
-
-for(
-const stock of all
-){
-
-if(
-!stock ||
-!stock.symbol ||
-!stock.name
-)
-continue;
-
-
-const symbol=
-String(
-stock.symbol
-)
-.trim();
-
-
-const name=
-String(
-stock.name
-)
-.trim();
-
-
-if(
-!/^\d{4,6}$/.test(
-symbol
-)
-)
-continue;
-
-
-if(
-!map.has(symbol)
-){
-
-map.set(
-symbol,
-{
-
-symbol,
-
-name,
-
-market:
-stock.market || "TW"
-
-}
-);
-
-}
-
-}
-
-
-stockCache=
-[...map.values()];
-
-
-cacheTime=
-Date.now();
-
-
-return stockCache;
-
-}
-
-
-/* =========================================================
-   TWSE 上市
-========================================================= */
-
-async function getListedStocks(){
-
-const urls=[
-
-"https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
-
-"https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
-
-];
-
-
-for(
-const url of urls
-){
-
-try{
-
-const json=
-await requestJSON(
-url
-);
-
-
-if(
-!Array.isArray(json)
-)
-continue;
-
-
-const result=[];
-
-
-for(
-const row of json
-){
-
-const symbol=
-String(
-
-row["公司代號"] ||
-
-row["Code"] ||
-
-row["證券代號"] ||
-
-""
-
-)
-.trim();
-
-
-const name=
-String(
-
-row["公司簡稱"] ||
-
-row["Name"] ||
-
-row["證券名稱"] ||
-
-""
-
-)
-.trim();
-
-
-if(
-/^\d{4,6}$/.test(
-symbol
-)
-&&
-name
-){
-
-result.push({
-
-symbol,
-
-name,
-
-market:"TW"
-
-});
-
-}
-
-}
-
-
-if(
-result.length
-){
-
-return result;
-
-}
-
-}catch(error){
-
-console.error(
-"TWSE URL failed:",
-url,
-error.message
-);
-
-}
-
-}
-
-
-return [];
-
-}
-
-
-/* =========================================================
-   TPEX 上櫃
-========================================================= */
-
-async function getOTCStocks(){
-
-const urls=[
-
-"https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
-
-"https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes"
-
-];
-
-
-for(
-const url of urls
-){
-
-try{
-
-const json=
-await requestJSON(
-url
-);
-
-
-if(
-!Array.isArray(json)
-)
-continue;
-
-
-const result=[];
-
-
-for(
-const row of json
-){
-
-const symbol=
-String(
-
-row["公司代號"] ||
-
-row["SecuritiesCompanyCode"] ||
-
-row["SecuritiesCompanyCode "] ||
-
-row["股票代號"] ||
-
-row["代號"] ||
-
-row["Code"] ||
-
-""
-
-)
-.trim();
-
-
-const name=
-String(
-
-row["公司簡稱"] ||
-
-row["CompanyName"] ||
-
-row["SecuritiesCompanyName"] ||
-
-row["股票名稱"] ||
-
-row["名稱"] ||
-
-row["Name"] ||
-
-""
-
-)
-.trim();
-
-
-if(
-/^\d{4,6}$/.test(
-symbol
-)
-&&
-name
-){
-
-result.push({
-
-symbol,
-
-name,
-
-market:"TWO"
-
-});
-
-}
-
-}
-
-
-if(
-result.length
-){
-
-return result;
-
-}
-
-}catch(error){
-
-console.error(
-"TPEX URL failed:",
-url,
-error.message
-);
-
-}
-
-}
-
-
-return [];
-
-}
-
-
-/* =========================================================
-   Fallback
-========================================================= */
-
-function fallbackStocks(){
-
-return [
-
-{
-symbol:"2330",
-name:"台積電",
-market:"TW"
-},
-
-{
-symbol:"2317",
-name:"鴻海",
-market:"TW"
-},
-
-{
-symbol:"2454",
-name:"聯發科",
-market:"TW"
-},
-
-{
-symbol:"2308",
-name:"台達電",
-market:"TW"
-},
-
-{
-symbol:"2382",
-name:"廣達",
-market:"TW"
-},
-
-{
-symbol:"3231",
-name:"緯創",
-market:"TW"
-},
-
-{
-symbol:"2881",
-name:"富邦金",
-market:"TW"
-},
-
-{
-symbol:"2882",
-name:"國泰金",
-market:"TW"
-},
-
-{
-symbol:"2891",
-name:"中信金",
-market:"TW"
-},
-
-{
-symbol:"2886",
-name:"兆豐金",
-market:"TW"
-},
-
-{
-symbol:"2603",
-name:"長榮",
-market:"TW"
-},
-
-{
-symbol:"2615",
-name:"萬海",
-market:"TW"
-},
-
-{
-symbol:"2412",
-name:"中華電",
-market:"TW"
-},
-
-{
-symbol:"1301",
-name:"台塑",
-market:"TW"
-},
-
-{
-symbol:"1303",
-name:"南亞",
-market:"TW"
-},
-
-{
-symbol:"2002",
-name:"中鋼",
-market:"TW"
-},
-
-{
-symbol:"2303",
-name:"聯電",
-market:"TW"
-},
-
-{
-symbol:"2357",
-name:"華碩",
-market:"TW"
-},
-
-{
-symbol:"2379",
-name:"瑞昱",
-market:"TW"
-},
-
-{
-symbol:"3008",
-name:"大立光",
-market:"TW"
-},
-
-{
-symbol:"3711",
-name:"日月光投控",
-market:"TW"
-},
-
-{
-symbol:"6505",
-name:"台塑化",
-market:"TW"
-}
-
-];
-
-}
 
 
 /* =========================================================
@@ -849,173 +760,80 @@ market:"TW"
 
 function normalize(value){
 
-return String(
-value || ""
-)
-.toLowerCase()
-.replace(/\s+/g,"")
-.replace(/[()（）\-_.]/g,"");
+  return String(
+    value || ""
+  )
+
+  .toLowerCase()
+
+  .trim()
+
+  .replace(
+    /\s+/g,
+    ""
+  )
+
+  .replace(
+    /台灣/g,
+    "臺灣"
+  )
+
+  .replace(
+    /[\-_.()（）]/g,
+    ""
+  );
 
 }
 
 
 /* =========================================================
-   HTTP
+   模糊中文比對
 ========================================================= */
 
-function requestJSON(url){
-
-return new Promise(
-(resolve,reject)=>{
-
-let done=false;
-
-
-const req=
-https.get(
-
-url,
-
-{
-
-headers:{
-
-"User-Agent":
-"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/131 Safari/537.36",
-
-"Accept":
-"application/json,text/plain,*/*",
-
-"Accept-Language":
-"zh-TW,zh;q=0.9,en;q=0.8",
-
-"Cache-Control":
-"no-cache"
-
-},
-
-timeout:10000
-
-},
-
-response=>{
-
-let body="";
-
-
-response.setEncoding(
-"utf8"
-);
-
-
-response.on(
-"data",
-chunk=>{
-
-if(
-body.length<
-10*1024*1024
+function fuzzyContains(
+  text,
+  query
 ){
 
-body+=chunk;
+  if(
+    !text ||
+    !query
+  ){
 
-}
+    return false;
 
-}
-);
-
-
-response.on(
-"end",
-()=>{
-
-if(done)
-return;
+  }
 
 
-done=true;
+  let index=0;
 
 
-if(
-response.statusCode<200 ||
-response.statusCode>=300
-){
+  for(
+    const char of text
+  ){
 
-return reject(
-new Error(
-"HTTP "+
-response.statusCode
-)
-);
+    if(
+      char===
+      query[index]
+    ){
 
-}
+      index++;
 
-
-try{
-
-resolve(
-JSON.parse(body)
-);
-
-}catch{
-
-reject(
-new Error(
-"JSON 解析失敗"
-)
-);
-
-}
-
-}
-);
-
-}
-
-);
+    }
 
 
-req.on(
-"timeout",
-()=>{
+    if(
+      index===
+      query.length
+    ){
 
-if(done)
-return;
+      return true;
 
+    }
 
-done=true;
-
-
-req.destroy();
+  }
 
 
-reject(
-new Error(
-"連線逾時"
-)
-);
-
-}
-);
-
-
-req.on(
-"error",
-error=>{
-
-if(done)
-return;
-
-
-done=true;
-
-
-reject(error);
-
-}
-);
-
-}
-);
+  return false;
 
 }
