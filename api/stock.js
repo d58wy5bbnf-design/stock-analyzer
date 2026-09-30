@@ -1,10 +1,35 @@
 const https = require("https");
 
+/*
+  api/stock.js
+
+  FinMind 台股資料 API
+
+  功能：
+  1. 歷史日 K
+  2. Sponsor 即時報價
+  3. 三大法人籌碼
+  4. TaiwanStockInfo 中文名稱
+  5. 提供前端 SMC 分析需要的完整 K 線
+*/
+
 module.exports = async function handler(req, res) {
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, OPTIONS"
+  );
+
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type"
+  );
+
   res.setHeader(
     "Cache-Control",
     "no-store, no-cache, must-revalidate, proxy-revalidate"
@@ -16,51 +41,68 @@ module.exports = async function handler(req, res) {
 
   try {
 
-    const token = String(
-      process.env.FINMIND_TOKEN || ""
-    ).trim();
+    const token =
+      process.env.FINMIND_TOKEN;
 
     if (!token) {
-      return res.status(500).json({
-        ok: false,
-        error: "Vercel 尚未設定 FINMIND_TOKEN"
-      });
+      throw new Error(
+        "Vercel 尚未設定 FINMIND_TOKEN"
+      );
     }
 
-    const symbol = String(
-      req.query.symbol || ""
-    )
+    const symbol =
+      String(
+        req.query.symbol || ""
+      )
       .trim()
-      .replace(/\.TW$/i, "")
-      .replace(/\.TWO$/i, "");
+      .toUpperCase();
 
-    if (!/^\d{4,6}$/.test(symbol)) {
-      return res.status(400).json({
-        ok: false,
-        error: "股票代號格式錯誤"
-      });
+    if (
+      !/^[0-9A-Z]{4,10}$/.test(symbol)
+    ) {
+      throw new Error(
+        "股票代號格式錯誤"
+      );
     }
 
-    const now = new Date();
+    /*
+      抓約 500 天，
+      確保 SMC 有足夠歷史結構。
+    */
 
-    const historyStart = new Date(now);
-    historyStart.setDate(
-      historyStart.getDate() - 550
+    const end =
+      new Date();
+
+    const start =
+      new Date();
+
+    start.setDate(
+      start.getDate() - 500
     );
 
-    const chipStart = new Date(now);
-    chipStart.setDate(
-      chipStart.getDate() - 45
-    );
+    const startDate =
+      formatDate(start);
 
-    const endDate = formatDate(now);
+    const endDate =
+      formatDate(end);
 
-    const results = await Promise.allSettled([
 
-      getData(
-        "TaiwanStockPrice",
+    /*
+      歷史 K 線、即時報價、
+      法人、股票名稱並行抓取。
+    */
+
+    const [
+      priceResult,
+      realtimeResult,
+      institutionalResult,
+      infoResult
+    ] =
+    await Promise.allSettled([
+
+      getHistorical(
         symbol,
-        formatDate(historyStart),
+        startDate,
         endDate,
         token
       ),
@@ -70,338 +112,487 @@ module.exports = async function handler(req, res) {
         token
       ),
 
-      getData(
-        "TaiwanStockInstitutionalInvestorsBuySell",
+      getInstitutional(
         symbol,
-        formatDate(chipStart),
+        startDate,
         endDate,
+        token
+      ),
+
+      getStockInfo(
         token
       )
 
     ]);
 
-    /* =========================
-       歷史 K
-    ========================= */
 
-    if (results[0].status !== "fulfilled") {
-      throw new Error(
-        "歷史股價取得失敗：" +
-        (
-          results[0].reason?.message ||
-          "未知錯誤"
+    /*
+      歷史 K 線為必要資料。
+    */
+
+    if (
+      priceResult.status !==
+      "fulfilled"
+    ) {
+
+      throw (
+        priceResult.reason ||
+        new Error(
+          "歷史股價取得失敗"
         )
       );
+
     }
 
-    const history = results[0].value;
 
-    let rows = history
-      .map(x => {
+    const rows =
+      priceResult.value;
 
-        const open = num(x.open);
-        const high = num(x.max);
-        const low = num(x.min);
-        const close = num(x.close);
-        const volume = num(x.Trading_Volume);
 
-        if (
-          open === null ||
-          high === null ||
-          low === null ||
-          close === null ||
-          close <= 0
-        ) {
-          return null;
-        }
+    if (
+      !Array.isArray(rows) ||
+      rows.length < 60
+    ) {
 
-        return {
-          date: String(x.date || ""),
-          open: round(open),
-          high: round(high),
-          low: round(low),
-          close: round(close),
-          volume:
-            volume !== null && volume >= 0
-              ? volume
-              : 0
-        };
-
-      })
-      .filter(Boolean)
-      .sort(
-        (a, b) =>
-          a.date.localeCompare(b.date)
-      )
-      .slice(-365);
-
-    if (rows.length < 60) {
       throw new Error(
-        "歷史 K 線不足 60 筆"
+        "歷史 K 線不足 60 根"
       );
+
     }
+
+
+    /*
+      中文股票名稱
+    */
+
+    let name = "";
+
+    let market = "";
+
+    if (
+      infoResult.status ===
+      "fulfilled"
+    ) {
+
+      const info =
+        infoResult.value
+        .find(
+          x =>
+            String(
+              x.stock_id || ""
+            ) === symbol
+        );
+
+      if (info) {
+
+        name =
+          String(
+            info.stock_name ||
+            ""
+          );
+
+        market =
+          normalizeMarket(
+            info.type ||
+            info.industry_category ||
+            ""
+          );
+
+      }
+
+    }
+
+
+    /*
+      即時報價。
+      即時 API 若暫時失敗，
+      不讓整個分析頁一起掛掉。
+    */
+
+    let realtime = null;
+
+    let realtimeError = "";
+
+    if (
+      realtimeResult.status ===
+      "fulfilled"
+    ) {
+
+      realtime =
+        realtimeResult.value;
+
+    } else {
+
+      realtimeError =
+        realtimeResult.reason?.message ||
+        "即時報價暫時無法取得";
+
+    }
+
+
+    /*
+      法人籌碼。
+      法人 API 暫時失敗也不阻止
+      SMC 股價結構分析。
+    */
+
+    let institutional =
+      emptyInstitutional();
+
+    if (
+      institutionalResult.status ===
+      "fulfilled"
+    ) {
+
+      institutional =
+        institutionalResult.value;
+
+    }
+
+
+    /*
+      歷史最新一根。
+    */
 
     const latest =
-      rows[rows.length - 1];
+      rows[
+        rows.length - 1
+      ];
 
     const previous =
       rows.length >= 2
-        ? rows[rows.length - 2]
-        : latest;
+      ? rows[
+          rows.length - 2
+        ]
+      : latest;
 
-    /* =========================
-       即時
-    ========================= */
 
-    let realtime = null;
-    let realtimeError = null;
+    /*
+      優先使用即時價。
+      沒有即時價才使用最新日 K。
+    */
 
-    if (results[1].status === "fulfilled") {
-      realtime = results[1].value;
-    } else {
-      realtimeError =
-        results[1].reason?.message ||
-        "即時行情取得失敗";
-    }
-
-    const realtimePrice =
+    let currentPrice =
       positive(
+        realtime?.price,
         realtime?.close,
-        realtime?.price
+        realtime?.last_price,
+        realtime?.lastPrice,
+        latest.close
       );
 
-    const price =
-      realtimePrice ||
-      positive(latest.close);
 
-    if (!price) {
-      throw new Error(
-        "目前股價取得失敗"
-      );
-    }
-
-    const realtimeDate =
-      normalizeDate(
-        realtime?.date || ""
+    let previousClose =
+      positive(
+        realtime?.previous_close,
+        realtime?.previousClose,
+        realtime?.reference_price,
+        realtime?.referencePrice,
+        previous.close
       );
 
-    let previousClose = 0;
 
-    const realtimeChange =
-      finite(
-        realtime?.change_price
-      );
+    /*
+      即時 OHLC
+    */
 
-    if (
-      realtimePrice &&
-      realtimeChange !== null
-    ) {
-
-      const calculated =
-        realtimePrice -
-        realtimeChange;
-
-      if (calculated > 0) {
-        previousClose = calculated;
-      }
-    }
-
-    if (!previousClose) {
-
-      if (
-        realtimeDate &&
-        latest.date === realtimeDate
-      ) {
-        previousClose =
-          positive(previous.close);
-      } else {
-        previousClose =
-          positive(latest.close);
-      }
-
-    }
-
-    if (!previousClose) {
-      previousClose = price;
-    }
-
-    const change =
-      price - previousClose;
-
-    const changePercent =
-      previousClose > 0
-        ? change / previousClose * 100
-        : 0;
-
-    const open =
+    const currentOpen =
       positive(
         realtime?.open,
-        latest.open,
-        price
+        realtime?.open_price,
+        realtime?.openPrice,
+        latest.open
       );
 
-    const high =
+    const currentHigh =
       positive(
         realtime?.high,
         realtime?.max,
+        realtime?.high_price,
+        realtime?.highPrice,
         latest.high,
-        price
+        currentPrice
       );
 
-    const low =
+    const currentLow =
       positive(
         realtime?.low,
         realtime?.min,
+        realtime?.low_price,
+        realtime?.lowPrice,
         latest.low,
-        price
+        currentPrice
       );
 
-    const volume =
+    const currentVolume =
       nonNegative(
-        realtime?.total_volume,
         realtime?.volume,
-        latest.volume,
-        0
+        realtime?.total_volume,
+        realtime?.totalVolume,
+        realtime?.Trading_Volume,
+        latest.volume
       );
 
-    /* =========================
-       今日即時 K 併入 rows
-    ========================= */
+
+    /*
+      今日即時價併入最後一根 K。
+
+      這很重要：
+      SMC 分析需要知道目前價格
+      是否正在突破 BOS、
+      Sweep、FVG、OB 等結構。
+    */
+
+    const today =
+      formatDate(
+        new Date()
+      );
+
+    let mergedRows =
+      rows.map(
+        x => ({ ...x })
+      );
+
+
+    const last =
+      mergedRows[
+        mergedRows.length - 1
+      ];
+
 
     if (
       realtime &&
-      realtimePrice &&
-      realtimeDate
+      currentPrice > 0
     ) {
-
-      const last =
-        rows[rows.length - 1];
 
       if (
         last &&
-        last.date === realtimeDate
+        normalizeDate(
+          last.date
+        ) === today
       ) {
 
-        last.open = round(open);
+        last.open =
+          currentOpen ||
+          last.open;
 
-        last.high = round(
-          Math.max(high, price)
-        );
+        last.high =
+          Math.max(
+            last.high || 0,
+            currentHigh || 0,
+            currentPrice
+          );
 
-        last.low = round(
-          Math.min(low, price)
-        );
+        last.low =
+          Math.min(
+            ...[
+              last.low,
+              currentLow,
+              currentPrice
+            ]
+            .filter(
+              x =>
+                Number.isFinite(+x) &&
+                +x > 0
+            )
+          );
 
-        last.close = round(price);
+        last.close =
+          currentPrice;
 
-        last.volume = volume;
+        if (
+          currentVolume > 0
+        ) {
+
+          last.volume =
+            currentVolume;
+
+        }
 
       } else {
 
-        rows.push({
-          date: realtimeDate,
-          open: round(open),
-          high: round(
-            Math.max(high, price)
-          ),
-          low: round(
-            Math.min(low, price)
-          ),
-          close: round(price),
-          volume
+        mergedRows.push({
+
+          date:
+            today,
+
+          open:
+            currentOpen ||
+            currentPrice,
+
+          high:
+            Math.max(
+              currentHigh ||
+              currentPrice,
+              currentPrice
+            ),
+
+          low:
+            Math.min(
+              ...[
+                currentLow,
+                currentPrice
+              ]
+              .filter(
+                x =>
+                  Number.isFinite(+x) &&
+                  +x > 0
+              )
+            ),
+
+          close:
+            currentPrice,
+
+          volume:
+            currentVolume || 0
+
         });
 
       }
 
     }
 
-    rows = rows.slice(-365);
 
-    /* =========================
-       法人籌碼
-    ========================= */
+    /*
+      限制資料量。
+      SMC 前端目前主要分析最近 140 根，
+      但保留 300 根給未來擴充。
+    */
 
-    let institutional = [];
+    mergedRows =
+      mergedRows
+      .slice(-300);
 
-    if (results[2].status === "fulfilled") {
-      institutional = results[2].value;
-    }
 
-    const chip =
-      summarizeInstitutional(
-        institutional
-      );
+    /*
+      漲跌幅
+    */
 
-    return res.status(200).json({
+    const change =
+      currentPrice -
+      previousClose;
 
-      ok: true,
+    const changePercent =
+      previousClose > 0
+      ?
+      change /
+      previousClose *
+      100
+      :
+      0;
 
-      source: "FinMind",
 
-      realtime:
-        Boolean(
-          realtime &&
-          realtimePrice
-        ),
+    /*
+      回傳前端
+    */
 
-      symbol,
+    return res
+      .status(200)
+      .json({
 
-      name:
-        getStockName(symbol) ||
+        ok: true,
+
+        source:
+          "FinMind",
+
+        realtime:
+          Boolean(
+            realtime
+          ),
+
         symbol,
 
-      price: round(price),
+        name:
+          name ||
+          symbol,
 
-      previousClose:
-        round(previousClose),
+        market,
 
-      change:
-        round(change),
+        price:
+          round(
+            currentPrice
+          ),
 
-      changePercent:
-        round(changePercent),
+        previousClose:
+          round(
+            previousClose
+          ),
 
-      open:
-        round(open),
+        change:
+          round(
+            change
+          ),
 
-      high:
-        round(high),
+        changePercent:
+          round(
+            changePercent
+          ),
 
-      low:
-        round(low),
+        open:
+          round(
+            currentOpen
+          ),
 
-      volume,
+        high:
+          round(
+            currentHigh
+          ),
 
-      quoteDate:
-        realtimeDate ||
-        latest.date,
+        low:
+          round(
+            currentLow
+          ),
 
-      updatedAt:
-        Date.now(),
+        volume:
+          currentVolume,
 
-      realtimeError,
+        quoteDate:
+          today,
 
-      institutional:
-        chip,
+        updatedAt:
+          new Date()
+          .toLocaleString(
+            "zh-TW",
+            {
+              timeZone:
+                "Asia/Taipei",
 
-      rows
+              hour12:
+                false
+            }
+          ),
 
-    });
+        realtimeError,
+
+        institutional,
+
+        rows:
+          mergedRows
+
+      });
+
 
   } catch (error) {
 
     console.error(
-      "STOCK API ERROR:",
+      "stock api error:",
       error
     );
 
-    return res.status(500).json({
-      ok: false,
-      source: "FinMind",
-      error:
-        error?.message ||
-        "FinMind 股票資料取得失敗"
-    });
+    return res
+      .status(500)
+      .json({
+
+        ok: false,
+
+        source:
+          "FinMind",
+
+        error:
+          error?.message ||
+          "FinMind 股票資料取得失敗"
+
+      });
 
   }
 
@@ -409,11 +600,10 @@ module.exports = async function handler(req, res) {
 
 
 /* =========================================================
-   FinMind Dataset
+   歷史日 K
 ========================================================= */
 
-async function getData(
-  dataset,
+async function getHistorical(
   symbol,
   startDate,
   endDate,
@@ -422,14 +612,20 @@ async function getData(
 
   const url =
     "https://api.finmindtrade.com/api/v4/data" +
-    "?dataset=" +
-    encodeURIComponent(dataset) +
+    "?dataset=TaiwanStockPrice" +
     "&data_id=" +
-    encodeURIComponent(symbol) +
+    encodeURIComponent(
+      symbol
+    ) +
     "&start_date=" +
-    encodeURIComponent(startDate) +
+    encodeURIComponent(
+      startDate
+    ) +
     "&end_date=" +
-    encodeURIComponent(endDate);
+    encodeURIComponent(
+      endDate
+    );
+
 
   const json =
     await requestJSON(
@@ -437,29 +633,125 @@ async function getData(
       token
     );
 
-  if (
-    json.status !== undefined &&
-    Number(json.status) !== 200
+
+  checkFinMind(
+    json,
+    "歷史股價"
+  );
+
+
+  const data =
+    Array.isArray(
+      json.data
+    )
+    ?
+    json.data
+    :
+    [];
+
+
+  const rows =
+    data
+    .map(
+      row => {
+
+        const open =
+          positive(
+            row.open
+          );
+
+        const high =
+          positive(
+            row.max,
+            row.high
+          );
+
+        const low =
+          positive(
+            row.min,
+            row.low
+          );
+
+        const close =
+          positive(
+            row.close
+          );
+
+        const volume =
+          nonNegative(
+            row.Trading_Volume,
+            row.volume
+          );
+
+
+        return {
+
+          date:
+            normalizeDate(
+              row.date
+            ),
+
+          open,
+
+          high,
+
+          low,
+
+          close,
+
+          volume
+
+        };
+
+      }
+    )
+
+    .filter(
+      row =>
+        row.date &&
+        row.open > 0 &&
+        row.high > 0 &&
+        row.low > 0 &&
+        row.close > 0
+    )
+
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(
+          b.date
+        )
+    );
+
+
+  /*
+    防止同一天重複。
+  */
+
+  const map =
+    new Map();
+
+  for (
+    const row
+    of rows
   ) {
-    throw new Error(
-      json.msg ||
-      dataset + " API 錯誤"
+
+    map.set(
+      row.date,
+      row
     );
+
   }
 
-  if (!Array.isArray(json.data)) {
-    throw new Error(
-      dataset + " 資料格式錯誤"
-    );
-  }
 
-  return json.data;
+  return [
+    ...map.values()
+  ];
 
 }
 
 
 /* =========================================================
-   即時
+   FinMind Sponsor 即時報價
 ========================================================= */
 
 async function getRealtime(
@@ -468,12 +760,14 @@ async function getRealtime(
 ) {
 
   const url =
-    "https://api.finmindtrade.com" +
-    "/api/v4/taiwan_stock_tick_snapshot" +
+    "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot" +
     "?data_id=" +
-    encodeURIComponent(symbol) +
+    encodeURIComponent(
+      symbol
+    ) +
     "&_=" +
     Date.now();
+
 
   const json =
     await requestJSON(
@@ -481,174 +775,539 @@ async function getRealtime(
       token
     );
 
-  if (
-    json.status !== undefined &&
-    Number(json.status) !== 200
-  ) {
-    throw new Error(
-      json.msg ||
-      "FinMind 即時 API 錯誤"
-    );
-  }
+
+  checkFinMind(
+    json,
+    "即時報價"
+  );
+
+
+  let data =
+    json.data;
+
 
   if (
-    !Array.isArray(json.data) ||
-    !json.data.length
+    Array.isArray(data)
   ) {
-    throw new Error(
-      "FinMind 查無即時行情"
-    );
+
+    data =
+      data.find(
+        x =>
+          String(
+            x.stock_id ||
+            x.code ||
+            x.symbol ||
+            ""
+          ) === symbol
+      )
+      ||
+      data[0];
+
   }
 
-  return (
-    json.data.find(
-      x =>
-        String(x.stock_id) ===
-        String(symbol)
+
+  if (
+    !data ||
+    typeof data !==
+    "object"
+  ) {
+
+    throw new Error(
+      "即時報價沒有資料"
+    );
+
+  }
+
+
+  /*
+    FinMind 即時欄位可能因 API
+    回傳版本有所不同，
+    這裡統一轉成前端使用格式。
+  */
+
+  return {
+
+    price:
+      positive(
+        data.price,
+        data.close,
+        data.last_price,
+        data.lastPrice
+      ),
+
+    open:
+      positive(
+        data.open,
+        data.open_price,
+        data.openPrice
+      ),
+
+    high:
+      positive(
+        data.high,
+        data.max,
+        data.high_price,
+        data.highPrice
+      ),
+
+    low:
+      positive(
+        data.low,
+        data.min,
+        data.low_price,
+        data.lowPrice
+      ),
+
+    volume:
+      nonNegative(
+        data.volume,
+        data.total_volume,
+        data.totalVolume,
+        data.Trading_Volume
+      ),
+
+    previous_close:
+      positive(
+        data.previous_close,
+        data.previousClose,
+        data.reference_price,
+        data.referencePrice
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   股票完整中文名稱
+========================================================= */
+
+async function getStockInfo(
+  token
+) {
+
+  const url =
+    "https://api.finmindtrade.com/api/v4/data" +
+    "?dataset=TaiwanStockInfo";
+
+
+  const json =
+    await requestJSON(
+      url,
+      token
+    );
+
+
+  checkFinMind(
+    json,
+    "股票名稱"
+  );
+
+
+  if (
+    !Array.isArray(
+      json.data
     )
-    ||
-    json.data[0]
+  ) {
+
+    return [];
+
+  }
+
+
+  return json.data;
+
+}
+
+
+/* =========================================================
+   三大法人籌碼
+========================================================= */
+
+async function getInstitutional(
+  symbol,
+  startDate,
+  endDate,
+  token
+) {
+
+  const url =
+    "https://api.finmindtrade.com/api/v4/data" +
+    "?dataset=TaiwanStockInstitutionalInvestorsBuySell" +
+    "&data_id=" +
+    encodeURIComponent(
+      symbol
+    ) +
+    "&start_date=" +
+    encodeURIComponent(
+      startDate
+    ) +
+    "&end_date=" +
+    encodeURIComponent(
+      endDate
+    );
+
+
+  const json =
+    await requestJSON(
+      url,
+      token
+    );
+
+
+  checkFinMind(
+    json,
+    "法人籌碼"
+  );
+
+
+  const data =
+    Array.isArray(
+      json.data
+    )
+    ?
+    json.data
+    :
+    [];
+
+
+  /*
+    每天可能有：
+    Foreign_Investor
+    Investment_Trust
+    Dealer_self
+    Dealer_Hedging
+
+    所以先依日期合併。
+  */
+
+  const daily = {};
+
+
+  for (
+    const row
+    of data
+  ) {
+
+    const date =
+      normalizeDate(
+        row.date
+      );
+
+    if (!date) {
+      continue;
+    }
+
+
+    if (
+      !daily[date]
+    ) {
+
+      daily[date] = {
+
+        date,
+
+        foreign: 0,
+
+        trust: 0,
+
+        dealer: 0,
+
+        total: 0
+
+      };
+
+    }
+
+
+    const buy =
+      nonNegative(
+        row.buy
+      );
+
+    const sell =
+      nonNegative(
+        row.sell
+      );
+
+    const net =
+      buy - sell;
+
+
+    const name =
+      String(
+        row.name || ""
+      )
+      .toLowerCase();
+
+
+    /*
+      外資
+    */
+
+    if (
+      name.includes(
+        "foreign"
+      ) ||
+      name.includes(
+        "外資"
+      )
+    ) {
+
+      daily[date]
+        .foreign += net;
+
+    }
+
+
+    /*
+      投信
+    */
+
+    else if (
+      name.includes(
+        "investment_trust"
+      ) ||
+      name.includes(
+        "investment trust"
+      ) ||
+      name.includes(
+        "投信"
+      )
+    ) {
+
+      daily[date]
+        .trust += net;
+
+    }
+
+
+    /*
+      自營商
+    */
+
+    else if (
+      name.includes(
+        "dealer"
+      ) ||
+      name.includes(
+        "自營"
+      )
+    ) {
+
+      daily[date]
+        .dealer += net;
+
+    }
+
+
+    daily[date]
+      .total += net;
+
+  }
+
+
+  const dates =
+    Object
+    .keys(daily)
+    .sort();
+
+
+  if (
+    !dates.length
+  ) {
+
+    return emptyInstitutional();
+
+  }
+
+
+  const recent5 =
+    dates
+    .slice(-5)
+    .map(
+      date =>
+        daily[date]
+    );
+
+
+  const recent10 =
+    dates
+    .slice(-10)
+    .map(
+      date =>
+        daily[date]
+    );
+
+
+  const latestDate =
+    dates[
+      dates.length - 1
+    ];
+
+
+  return {
+
+    latestDate,
+
+    foreignLatest:
+      daily[
+        latestDate
+      ].foreign,
+
+    trustLatest:
+      daily[
+        latestDate
+      ].trust,
+
+    dealerLatest:
+      daily[
+        latestDate
+      ].dealer,
+
+    totalLatest:
+      daily[
+        latestDate
+      ].total,
+
+    foreign5:
+      sum(
+        recent5,
+        "foreign"
+      ),
+
+    trust5:
+      sum(
+        recent5,
+        "trust"
+      ),
+
+    dealer5:
+      sum(
+        recent5,
+        "dealer"
+      ),
+
+    total5:
+      sum(
+        recent5,
+        "total"
+      ),
+
+    total10:
+      sum(
+        recent10,
+        "total"
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   空法人資料
+========================================================= */
+
+function emptyInstitutional() {
+
+  return {
+
+    latestDate: "",
+
+    foreignLatest: 0,
+
+    trustLatest: 0,
+
+    dealerLatest: 0,
+
+    totalLatest: 0,
+
+    foreign5: 0,
+
+    trust5: 0,
+
+    dealer5: 0,
+
+    total5: 0,
+
+    total10: 0
+
+  };
+
+}
+
+
+/* =========================================================
+   法人加總
+========================================================= */
+
+function sum(
+  rows,
+  key
+) {
+
+  return rows.reduce(
+    (
+      total,
+      row
+    ) =>
+      total +
+      (
+        Number(
+          row[key]
+        ) || 0
+      ),
+    0
   );
 
 }
 
 
 /* =========================================================
-   法人整理
+   FinMind 錯誤檢查
 ========================================================= */
 
-function summarizeInstitutional(data) {
+function checkFinMind(
+  json,
+  label
+) {
 
-  const daily = {};
+  if (
+    !json ||
+    typeof json !==
+    "object"
+  ) {
 
-  for (const row of data || []) {
-
-    const date =
-      String(row.date || "");
-
-    if (!date) continue;
-
-    if (!daily[date]) {
-
-      daily[date] = {
-        foreign: 0,
-        trust: 0,
-        dealer: 0,
-        total: 0
-      };
-
-    }
-
-    const buy =
-      Number(row.buy) || 0;
-
-    const sell =
-      Number(row.sell) || 0;
-
-    const net =
-      buy - sell;
-
-    const name =
-      String(row.name || "");
-
-    if (
-      name === "Foreign_Investor" ||
-      name === "Foreign_Dealer_Self"
-    ) {
-
-      daily[date].foreign += net;
-
-    }
-
-    if (
-      name === "Investment_Trust"
-    ) {
-
-      daily[date].trust += net;
-
-    }
-
-    if (
-      name === "Dealer" ||
-      name === "Dealer_self" ||
-      name === "Dealer_Hedging"
-    ) {
-
-      daily[date].dealer += net;
-
-    }
-
-    daily[date].total += net;
+    throw new Error(
+      label +
+      " API 回傳格式錯誤"
+    );
 
   }
 
-  const dates =
-    Object.keys(daily)
-      .sort();
 
-  const recent5 =
-    dates.slice(-5);
+  /*
+    FinMind status 通常為 200。
+  */
 
-  const recent10 =
-    dates.slice(-10);
+  if (
+    json.status !==
+      undefined &&
+    Number(
+      json.status
+    ) !== 200
+  ) {
 
-  const sum =
-    (dates, key) =>
-      dates.reduce(
-        (s, d) =>
-          s +
-          (daily[d]?.[key] || 0),
-        0
-      );
+    throw new Error(
+      json.msg ||
+      json.message ||
+      label +
+      "取得失敗"
+    );
 
-  const latestDate =
-    dates.length
-      ? dates[dates.length - 1]
-      : "";
-
-  return {
-
-    available:
-      dates.length > 0,
-
-    latestDate,
-
-    foreignLatest:
-      latestDate
-        ? daily[latestDate].foreign
-        : 0,
-
-    trustLatest:
-      latestDate
-        ? daily[latestDate].trust
-        : 0,
-
-    dealerLatest:
-      latestDate
-        ? daily[latestDate].dealer
-        : 0,
-
-    totalLatest:
-      latestDate
-        ? daily[latestDate].total
-        : 0,
-
-    foreign5:
-      sum(recent5, "foreign"),
-
-    trust5:
-      sum(recent5, "trust"),
-
-    dealer5:
-      sum(recent5, "dealer"),
-
-    total5:
-      sum(recent5, "total"),
-
-    total10:
-      sum(recent10, "total")
-
-  };
+  }
 
 }
 
@@ -657,12 +1316,20 @@ function summarizeInstitutional(data) {
    HTTPS
 ========================================================= */
 
-function requestJSON(url, token) {
+function requestJSON(
+  url,
+  token
+) {
 
   return new Promise(
-    (resolve, reject) => {
+    (
+      resolve,
+      reject
+    ) => {
 
-      let settled = false;
+      let settled =
+        false;
+
 
       const request =
         https.get(
@@ -681,7 +1348,7 @@ function requestJSON(url, token) {
                 "application/json",
 
               "User-Agent":
-                "stock-analyzer/2.0",
+                "stock-analyzer/3.0",
 
               "Cache-Control":
                 "no-cache"
@@ -689,7 +1356,7 @@ function requestJSON(url, token) {
             },
 
             timeout:
-              12000
+              15000
 
           },
 
@@ -697,9 +1364,11 @@ function requestJSON(url, token) {
 
             let body = "";
 
+
             response.setEncoding(
               "utf8"
             );
+
 
             response.on(
               "data",
@@ -707,25 +1376,39 @@ function requestJSON(url, token) {
 
                 if (
                   body.length <
-                  12 * 1024 * 1024
+                  15 *
+                  1024 *
+                  1024
                 ) {
+
                   body += chunk;
+
                 }
 
               }
             );
 
+
             response.on(
               "end",
               () => {
 
-                if (settled) return;
+                if (
+                  settled
+                ) {
+                  return;
+                }
 
-                settled = true;
+
+                settled =
+                  true;
+
 
                 if (
-                  response.statusCode < 200 ||
-                  response.statusCode >= 300
+                  response.statusCode <
+                    200 ||
+                  response.statusCode >=
+                    300
                 ) {
 
                   return reject(
@@ -737,10 +1420,13 @@ function requestJSON(url, token) {
 
                 }
 
+
                 try {
 
                   resolve(
-                    JSON.parse(body)
+                    JSON.parse(
+                      body
+                    )
                   );
 
                 } catch {
@@ -760,13 +1446,19 @@ function requestJSON(url, token) {
 
         );
 
+
       request.on(
         "timeout",
         () => {
 
-          if (settled) return;
+          if (
+            settled
+          ) {
+            return;
+          }
 
-          settled = true;
+          settled =
+            true;
 
           request.destroy();
 
@@ -779,15 +1471,23 @@ function requestJSON(url, token) {
         }
       );
 
+
       request.on(
         "error",
         error => {
 
-          if (settled) return;
+          if (
+            settled
+          ) {
+            return;
+          }
 
-          settled = true;
+          settled =
+            true;
 
-          reject(error);
+          reject(
+            error
+          );
 
         }
       );
@@ -799,33 +1499,111 @@ function requestJSON(url, token) {
 
 
 /* =========================================================
-   工具
+   市場名稱
 ========================================================= */
 
-function formatDate(date) {
+function normalizeMarket(
+  value
+) {
+
+  const x =
+    String(
+      value || ""
+    )
+    .toLowerCase();
+
+
+  if (
+    x.includes(
+      "twse"
+    ) ||
+    x.includes(
+      "上市"
+    )
+  ) {
+
+    return "上市";
+
+  }
+
+
+  if (
+    x.includes(
+      "tpex"
+    ) ||
+    x.includes(
+      "otc"
+    ) ||
+    x.includes(
+      "上櫃"
+    )
+  ) {
+
+    return "上櫃";
+
+  }
+
+
+  if (
+    x.includes(
+      "emerging"
+    ) ||
+    x.includes(
+      "興櫃"
+    )
+  ) {
+
+    return "興櫃";
+
+  }
+
+
+  return value || "";
+
+}
+
+
+/* =========================================================
+   日期
+========================================================= */
+
+function formatDate(
+  date
+) {
 
   return (
     date.getFullYear() +
     "-" +
     String(
       date.getMonth() + 1
-    ).padStart(2, "0") +
+    ).padStart(
+      2,
+      "0"
+    ) +
     "-" +
     String(
       date.getDate()
-    ).padStart(2, "0")
+    ).padStart(
+      2,
+      "0"
+    )
   );
 
 }
 
 
-function normalizeDate(value) {
+function normalizeDate(
+  value
+) {
 
   const match =
-    String(value || "")
-      .match(
-        /^(\d{4}-\d{2}-\d{2})/
-      );
+    String(
+      value || ""
+    )
+    .match(
+      /^(\d{4}-\d{2}-\d{2})/
+    );
+
 
   return match
     ? match[1]
@@ -834,164 +1612,130 @@ function normalizeDate(value) {
 }
 
 
-function num(value) {
+/* =========================================================
+   數字處理
+========================================================= */
+
+function num(
+  value
+) {
 
   if (
     value === null ||
     value === undefined ||
     value === ""
   ) {
+
     return null;
+
   }
 
-  const n = Number(value);
 
-  return Number.isFinite(n)
+  const n =
+    Number(
+      value
+    );
+
+
+  return Number.isFinite(
+    n
+  )
     ? n
     : null;
 
 }
 
 
-function positive(...values) {
+function positive(
+  ...values
+) {
 
-  for (const value of values) {
+  for (
+    const value
+    of values
+  ) {
 
-    const n = num(value);
+    const n =
+      num(
+        value
+      );
+
 
     if (
       n !== null &&
       n > 0
     ) {
+
       return n;
+
     }
 
   }
+
 
   return 0;
 
 }
 
 
-function finite(value) {
+function nonNegative(
+  ...values
+) {
 
-  return num(value);
+  for (
+    const value
+    of values
+  ) {
 
-}
+    const n =
+      num(
+        value
+      );
 
-
-function nonNegative(...values) {
-
-  for (const value of values) {
-
-    const n = num(value);
 
     if (
       n !== null &&
       n >= 0
     ) {
+
       return n;
+
     }
 
   }
+
 
   return 0;
 
 }
 
 
-function round(value) {
+function round(
+  value
+) {
 
-  const n = Number(value);
+  const n =
+    Number(
+      value
+    );
 
-  if (!Number.isFinite(n)) {
+
+  if (
+    !Number.isFinite(
+      n
+    )
+  ) {
+
     return 0;
+
   }
 
+
   return (
-    Math.round(n * 100) /
+    Math.round(
+      n * 100
+    ) /
     100
   );
-
-}
-
-
-/* =========================================================
-   股票名稱
-========================================================= */
-
-function getStockName(symbol) {
-
-  const names = {
-
-    "1101":"台泥",
-    "1102":"亞泥",
-    "1216":"統一",
-    "1301":"台塑",
-    "1303":"南亞",
-    "1326":"台化",
-
-    "1503":"士電",
-    "1513":"中興電",
-    "1519":"華城",
-
-    "2002":"中鋼",
-    "2207":"和泰車",
-
-    "2303":"聯電",
-    "2308":"台達電",
-    "2317":"鴻海",
-    "2330":"台積電",
-    "2337":"旺宏",
-    "2344":"華邦電",
-    "2345":"智邦",
-    "2357":"華碩",
-    "2368":"金像電",
-    "2376":"技嘉",
-    "2377":"微星",
-    "2379":"瑞昱",
-    "2382":"廣達",
-    "2383":"台光電",
-    "2408":"南亞科",
-    "2412":"中華電",
-    "2454":"聯發科",
-
-    "2603":"長榮",
-    "2609":"陽明",
-    "2610":"華航",
-    "2615":"萬海",
-    "2618":"長榮航",
-
-    "2881":"富邦金",
-    "2882":"國泰金",
-    "2884":"玉山金",
-    "2885":"元大金",
-    "2886":"兆豐金",
-    "2891":"中信金",
-
-    "2912":"統一超",
-
-    "3008":"大立光",
-    "3017":"奇鋐",
-    "3035":"智原",
-    "3037":"欣興",
-
-    "3231":"緯創",
-    "3293":"鈊象",
-    "3324":"雙鴻",
-    "3443":"創意",
-    "3481":"群創",
-    "3661":"世芯-KY",
-
-    "3711":"日月光投控",
-
-    "6505":"台塑化",
-    "6669":"緯穎",
-    "6770":"力積電",
-    "8046":"南電"
-
-  };
-
-  return names[symbol] || "";
 
 }
