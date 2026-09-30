@@ -234,6 +234,27 @@ white-space:nowrap
 }
 
 
+.history-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 14px 7px;
+font-size:11px;
+font-weight:800;
+color:#7d8793
+}
+
+
+.history-clear{
+border:0;
+background:transparent;
+color:#1769e0;
+font-size:11px;
+font-weight:700;
+padding:4px
+}
+
+
 /* =========================
    Tabs
 ========================= */
@@ -757,6 +778,10 @@ const WATCH_KEY =
 'swing_tw_watch_v1';
 
 
+const HISTORY_KEY =
+'swing_tw_search_history_v1';
+
+
 const DEFAULT = [
 
 '2330',
@@ -776,13 +801,6 @@ const DEFAULT = [
 
 ];
 
-
-/*
-  這兩個搜尋變數一定要宣告。
-
-  前一版就是少了這裡，
-  導致搜尋 JavaScript 出錯。
-*/
 
 let tab =
 'signal';
@@ -908,6 +926,102 @@ JSON.stringify(
 )
 
 );
+
+
+
+/* =========================================================
+   搜尋歷史
+========================================================= */
+
+const searchHistory =
+()=>{
+
+try{
+
+const data =
+JSON.parse(
+localStorage.getItem(
+HISTORY_KEY
+)
+||
+'[]'
+);
+
+return Array.isArray(data)
+?
+data
+:
+[];
+
+}catch{
+
+return [];
+
+}
+
+};
+
+
+
+function saveSearchHistory(stock){
+
+if(
+!stock
+||
+!stock.symbol
+)
+return;
+
+
+let history =
+searchHistory();
+
+
+history =
+history.filter(
+x=>x.symbol!==stock.symbol
+);
+
+
+history.unshift({
+
+symbol:
+String(stock.symbol),
+
+name:
+String(
+stock.name||''
+),
+
+market:
+String(
+stock.market||''
+),
+
+time:
+Date.now()
+
+});
+
+
+history =
+history.slice(
+0,
+10
+);
+
+
+localStorage.setItem(
+
+HISTORY_KEY,
+
+JSON.stringify(
+history
+)
+
+);
+
+}
 
 
 
@@ -2101,11 +2215,43 @@ let chg =
 
 let target =
 
+(
 a.qualified
+||
+a.near
+)
 
 ?
 
 `
+
+${
+a.near
+
+?
+
+`
+
+<div
+class="empty"
+style="margin-top:14px"
+>
+
+目前 ${a.passed}/8，接近形成但尚未正式成立。
+
+以下進場區、TP 與 SL
+依目前支撐、壓力、ATR 與風險結構即時計算，
+可作為提前規劃參考。
+
+</div>
+
+`
+
+:
+
+''
+}
+
 
 <div class="levels">
 
@@ -2141,7 +2287,7 @@ ${fmt(a.sl)}
 <div class="level tp">
 
 <span>
-💰 TP1
+💰 TP1｜第一目標
 </span>
 
 <strong>
@@ -2154,7 +2300,7 @@ ${fmt(a.tp1)}
 <div class="level tp">
 
 <span>
-💰 TP2
+💰 TP2｜第二目標
 </span>
 
 <strong>
@@ -2167,7 +2313,7 @@ ${fmt(a.tp2)}
 <div class="level tp full">
 
 <span>
-🔥 TP3
+🔥 TP3｜延伸目標
 </span>
 
 <strong>
@@ -2190,17 +2336,8 @@ class="empty"
 style="margin-top:14px"
 >
 
-${
-a.near
-
-?
-
-'目前 6/8，接近形成，但尚未正式成立；暫不顯示可執行的 TP / SL。'
-
-:
-
-'目前條件不足，暫不顯示進場、TP 與 SL。'
-}
+目前僅符合 ${a.passed}/8 條件，
+尚未進入接近形成區域，因此暫不顯示 TP / SL。
 
 </div>
 
@@ -2373,7 +2510,9 @@ TP / SL 是依目前技術結構、
 支撐壓力與 ATR 計算的策略參考，
 不保證成交或報酬。
 
-正式策略成立才顯示目標價位。
+7/8 以上為正式策略成立；
+6/8 接近形成時也會提供技術結構推算的 TP / SL，
+但不代表策略已正式觸發。
 
 </div>
 
@@ -2491,6 +2630,25 @@ return;
 
 
 cache[s]=a;
+
+
+/*
+  成功取得股票資料後，
+  才加入搜尋歷史。
+*/
+
+saveSearchHistory({
+
+symbol:
+a.symbol,
+
+name:
+a.name||'',
+
+market:
+a.market||''
+
+});
 
 
 $('detailBody').innerHTML =
@@ -2717,6 +2875,201 @@ box.innerHTML='';
 
 
 /* =========================================================
+   搜尋歷史畫面
+========================================================= */
+
+function renderSearchHistory(){
+
+const history =
+searchHistory();
+
+
+if(!history.length){
+
+hideSuggestions();
+
+return;
+
+}
+
+
+const box =
+$('suggestions');
+
+
+box.innerHTML =
+
+`
+
+<div class="history-head">
+
+<span>
+最近搜尋
+</span>
+
+<button
+id="clearHistory"
+class="history-clear"
+type="button"
+>
+清除
+</button>
+
+</div>
+
+`
+
++
+
+history
+
+.map(
+
+x=>`
+
+<button
+class="suggestion"
+type="button"
+data-history="${esc(x.symbol)}"
+>
+
+<div>
+
+<div class="suggestion-main">
+
+${esc(
+x.name
+||
+x.symbol
+)}
+
+</div>
+
+<div class="suggestion-code">
+
+${esc(x.symbol)}
+
+</div>
+
+</div>
+
+
+<div class="suggestion-market">
+
+最近搜尋
+
+</div>
+
+</button>
+
+`
+
+)
+
+.join('');
+
+
+box.classList.remove(
+'hidden'
+);
+
+
+
+box
+
+.querySelectorAll(
+'[data-history]'
+)
+
+.forEach(
+
+button=>{
+
+button.onclick =
+()=>{
+
+const symbol =
+button.dataset.history;
+
+
+const item =
+history.find(
+x=>x.symbol===symbol
+);
+
+
+selectedSearchSymbol =
+symbol;
+
+
+$('q').value =
+
+item
+
+?
+
+(
+item.name
+?
+item.name
++
+' '
++
+symbol
+:
+symbol
+)
+
+:
+
+symbol;
+
+
+hideSuggestions();
+
+
+openDetail(
+symbol
+);
+
+};
+
+}
+
+);
+
+
+
+const clear =
+$('clearHistory');
+
+
+if(clear){
+
+clear.onclick =
+e=>{
+
+e.preventDefault();
+
+e.stopPropagation();
+
+
+localStorage.removeItem(
+HISTORY_KEY
+);
+
+
+hideSuggestions();
+
+};
+
+}
+
+}
+
+
+
+/* =========================================================
    顯示候選股票
 ========================================================= */
 
@@ -2865,6 +3218,33 @@ symbol
 
 
 /* =========================================================
+   點搜尋框顯示最近搜尋
+========================================================= */
+
+$('q')
+.addEventListener(
+
+'focus',
+
+()=>{
+
+const keyword =
+$('q').value.trim();
+
+
+if(!keyword){
+
+renderSearchHistory();
+
+}
+
+}
+
+);
+
+
+
+/* =========================================================
    搜尋框輸入
 ========================================================= */
 
@@ -2889,7 +3269,7 @@ $('q').value.trim();
 
 if(!keyword){
 
-hideSuggestions();
+renderSearchHistory();
 
 return;
 
@@ -2966,10 +3346,6 @@ const raw =
 $('q').value.trim();
 
 
-/*
-  已經從候選選過
-*/
-
 if(
 selectedSearchSymbol
 ){
@@ -2980,10 +3356,6 @@ selectedSearchSymbol
 
 }
 
-
-/*
-  使用者直接輸入股票代號
-*/
 
 const direct =
 
@@ -3013,10 +3385,6 @@ return alert(
 
 }
 
-
-/*
-  中文名稱搜尋
-*/
 
 try{
 
