@@ -1,11 +1,32 @@
 const https = require("https");
 
+/*
+  api/stock.js
+
+  FinMind Sponsor 版本
+  ----------------------------
+  即時價格：
+  taiwan_stock_tick_snapshot
+
+  歷史日 K：
+  TaiwanStockPrice
+
+  Vercel Environment Variable：
+  FINMIND_TOKEN
+
+  Yahoo Finance：完全不使用
+*/
+
 module.exports = async function handler(req, res) {
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -13,615 +34,724 @@ module.exports = async function handler(req, res) {
 
   try {
 
-    let symbol = String(req.query.symbol || "")
+    /* =========================
+       Token
+    ========================= */
+
+    const token =
+      process.env.FINMIND_TOKEN;
+
+
+    if (!token) {
+
+      return res.status(500).json({
+        ok: false,
+        error: "Vercel 尚未設定 FINMIND_TOKEN"
+      });
+
+    }
+
+
+    /* =========================
+       股票代號
+    ========================= */
+
+    const symbol =
+      String(
+        req.query.symbol || ""
+      )
       .trim()
-      .toUpperCase()
-      .replace(".TW", "")
-      .replace(".TWO", "");
+      .replace(/\.TW$/i, "")
+      .replace(/\.TWO$/i, "");
+
 
     if (!/^\d{4,6}$/.test(symbol)) {
+
       return res.status(400).json({
         ok: false,
-        error: "請輸入正確的台股代號"
+        error: "股票代號格式錯誤"
       });
+
     }
 
-    /*
-      Yahoo 台股：
-      上市 = .TW
-      上櫃 = .TWO
 
-      先嘗試上市，
-      找不到再自動嘗試上櫃。
-    */
+    /* =========================
+       日期
 
-    let result = null;
+       抓約 1 年，
+       確保 MA60 / RSI / MACD / ATR
+       有足夠資料
+    ========================= */
 
-    try {
-      result = await loadStock(symbol + ".TW");
-    } catch (e) {}
+    const today =
+      new Date();
 
-    if (!result || !result.rows || result.rows.length < 60) {
-      try {
-        result = await loadStock(symbol + ".TWO");
-      } catch (e) {}
+
+    const start =
+      new Date();
+
+
+    start.setDate(
+      start.getDate() - 450
+    );
+
+
+    const startDate =
+      formatDate(start);
+
+
+    const endDate =
+      formatDate(today);
+
+
+    /* =========================
+       同時抓：
+       1. 即時快照
+       2. 歷史日 K
+    ========================= */
+
+    const [
+      realtimeResult,
+      historyResult
+    ] = await Promise.allSettled([
+
+      getRealtime(
+        symbol,
+        token
+      ),
+
+      getHistory(
+        symbol,
+        token,
+        startDate,
+        endDate
+      )
+
+    ]);
+
+
+    /* =========================
+       歷史資料
+    ========================= */
+
+    if (
+      historyResult.status !==
+      "fulfilled"
+    ) {
+
+      throw new Error(
+        "FinMind 歷史股價取得失敗：" +
+        (
+          historyResult.reason?.message ||
+          "未知錯誤"
+        )
+      );
+
     }
 
-    if (!result || !result.rows || result.rows.length < 60) {
-      throw new Error("找不到股票資料");
+
+    const history =
+      historyResult.value;
+
+
+    if (
+      !Array.isArray(history)
+      ||
+      history.length < 60
+    ) {
+
+      throw new Error(
+        "FinMind 歷史 K 線不足"
+      );
+
     }
 
-    const rows = result.rows;
 
-    const latest = rows[rows.length - 1];
-    const previous = rows.length >= 2 ? rows[rows.length - 2] : latest;
+    const rows =
+      history
+      .map(row => {
 
-    /*
-      即時價格優先順序：
+        const open =
+          Number(row.open);
 
-      1. Yahoo chart meta regularMarketPrice
-      2. 最新 K 線 close
-    */
+        const high =
+          Number(
+            row.max
+          );
 
-    let price = Number(result.price);
+        const low =
+          Number(
+            row.min
+          );
 
-    if (!Number.isFinite(price) || price <= 0) {
-      price = Number(latest.close);
+        const close =
+          Number(
+            row.close
+          );
+
+        const volume =
+          Number(
+            row.Trading_Volume
+          );
+
+
+        if (
+          !Number.isFinite(open)
+          ||
+          !Number.isFinite(high)
+          ||
+          !Number.isFinite(low)
+          ||
+          !Number.isFinite(close)
+          ||
+          close <= 0
+        ) {
+
+          return null;
+
+        }
+
+
+        return {
+
+          date:
+            row.date,
+
+          open,
+
+          high,
+
+          low,
+
+          close,
+
+          volume:
+            Number.isFinite(volume)
+              ? volume
+              : 0
+
+        };
+
+      })
+
+      .filter(Boolean)
+
+      .sort(
+        (a, b) =>
+          String(a.date)
+          .localeCompare(
+            String(b.date)
+          )
+      )
+
+      .slice(-365);
+
+
+    if (rows.length < 60) {
+
+      throw new Error(
+        "有效歷史 K 線不足"
+      );
+
     }
 
-    /*
-      昨收優先使用 Yahoo meta previousClose。
-    */
 
-    let previousClose = Number(result.previousClose);
+    /* =========================
+       最新 / 前一日
+    ========================= */
 
-    if (!Number.isFinite(previousClose) || previousClose <= 0) {
-      previousClose = Number(previous.close);
+    const latest =
+      rows[
+        rows.length - 1
+      ];
+
+
+    const previous =
+      rows.length >= 2
+        ? rows[
+            rows.length - 2
+          ]
+        : latest;
+
+
+    /* =========================
+       即時資料
+    ========================= */
+
+    let realtime =
+      null;
+
+
+    if (
+      realtimeResult.status ===
+      "fulfilled"
+    ) {
+
+      realtime =
+        realtimeResult.value;
+
+    } else {
+
+      console.error(
+        "FinMind realtime error:",
+        realtimeResult.reason
+      );
+
     }
 
-    let change = price - previousClose;
+
+    /* =========================
+       即時價格
+
+       有 Sponsor 快照：
+       使用快照 close
+
+       快照暫時沒資料：
+       才 fallback 最新日 K
+    ========================= */
+
+    const realtimePrice =
+      positiveNumber(
+        realtime?.close
+      );
+
+
+    const price =
+      realtimePrice
+      ||
+      positiveNumber(
+        latest.close
+      );
+
+
+    if (!price) {
+
+      throw new Error(
+        "找不到目前股價"
+      );
+
+    }
+
+
+    /* =========================
+       昨收
+
+       FinMind 即時快照提供
+       change_price / change_rate。
+
+       若有 change_price：
+       昨收 = 現價 - 漲跌
+
+       沒有才使用歷史 K
+    ========================= */
+
+    let previousClose =
+      0;
+
+
+    const changePrice =
+      finiteNumber(
+        realtime?.change_price
+      );
+
+
+    if (
+      realtimePrice
+      &&
+      changePrice !== null
+    ) {
+
+      previousClose =
+        realtimePrice -
+        changePrice;
+
+    }
+
+
+    if (
+      !Number.isFinite(
+        previousClose
+      )
+      ||
+      previousClose <= 0
+    ) {
+
+      /*
+        如果今日歷史 K 已經包含今天，
+        previous 才是真正上一交易日。
+
+        如果歷史資料還沒包含今天，
+        latest 就是上一交易日。
+      */
+
+      const realtimeDate =
+        String(
+          realtime?.date || ""
+        )
+        .slice(0, 10);
+
+
+      if (
+        realtimeDate
+        &&
+        latest.date ===
+        realtimeDate
+      ) {
+
+        previousClose =
+          positiveNumber(
+            previous.close
+          );
+
+      } else {
+
+        previousClose =
+          positiveNumber(
+            latest.close
+          );
+
+      }
+
+    }
+
+
+    if (!previousClose) {
+
+      previousClose =
+        price;
+
+    }
+
+
+    /* =========================
+       漲跌
+    ========================= */
+
+    const change =
+      price -
+      previousClose;
+
 
     let changePercent =
       previousClose > 0
-        ? (change / previousClose) * 100
-        : 0;
+        ?
+        (
+          change /
+          previousClose
+        ) * 100
+        :
+        0;
+
 
     /*
-      名稱
+      如果 FinMind 有直接提供 change_rate，
+      優先採用官方即時值。
     */
 
-    let name =
-      result.longName ||
-      result.shortName ||
+    const realtimeRate =
+      finiteNumber(
+        realtime?.change_rate
+      );
+
+
+    if (
+      realtimeRate !== null
+    ) {
+
+      changePercent =
+        realtimeRate;
+
+    }
+
+
+    /* =========================
+       今日 OHLC
+    ========================= */
+
+    const open =
+      positiveNumber(
+        realtime?.open
+      )
+      ||
+      positiveNumber(
+        latest.open
+      )
+      ||
+      price;
+
+
+    const high =
+      positiveNumber(
+        realtime?.high
+      )
+      ||
+      positiveNumber(
+        latest.high
+      )
+      ||
+      price;
+
+
+    const low =
+      positiveNumber(
+        realtime?.low
+      )
+      ||
+      positiveNumber(
+        latest.low
+      )
+      ||
+      price;
+
+
+    /* =========================
+       成交量
+    ========================= */
+
+    const volume =
+      nonNegativeNumber(
+        realtime?.total_volume
+      )
+      ??
+      nonNegativeNumber(
+        realtime?.volume
+      )
+      ??
+      nonNegativeNumber(
+        latest.volume
+      )
+      ??
+      0;
+
+
+    /* =========================
+       把即時今日資料更新進 rows
+
+       這樣技術分析不是只看到昨收，
+       而是會納入目前即時價格。
+    ========================= */
+
+    const realtimeDate =
+      String(
+        realtime?.date || ""
+      )
+      .slice(0, 10);
+
+
+    if (
+      realtime
+      &&
+      realtimeDate
+    ) {
+
+      const last =
+        rows[
+          rows.length - 1
+        ];
+
+
+      if (
+        last &&
+        last.date ===
+        realtimeDate
+      ) {
+
+        last.open =
+          open;
+
+        last.high =
+          high;
+
+        last.low =
+          low;
+
+        last.close =
+          price;
+
+        last.volume =
+          volume;
+
+      } else {
+
+        rows.push({
+
+          date:
+            realtimeDate,
+
+          open,
+
+          high,
+
+          low,
+
+          close:
+            price,
+
+          volume
+
+        });
+
+      }
+
+    }
+
+
+    /*
+      最多留 365 根
+    */
+
+    const finalRows =
+      rows.slice(-365);
+
+
+    /* =========================
+       股票名稱
+
+       FinMind 即時快照未必提供名稱，
+       先使用名稱表。
+    ========================= */
+
+    const name =
+      getStockName(
+        symbol
+      )
+      ||
       symbol;
 
-    /*
-      今日 OHLC
 
-      即時交易期間 Yahoo 最新一根日 K
-      有時 close 尚未更新，因此價格仍以 meta 為優先。
-    */
+    /* =========================
+       回傳
+    ========================= */
 
-    let todayOpen = Number(result.open);
+    return res
+      .status(200)
+      .json({
 
-    if (!Number.isFinite(todayOpen) || todayOpen <= 0) {
-      todayOpen = Number(latest.open);
-    }
+        ok: true,
 
-    let todayHigh = Number(result.dayHigh);
+        source:
+          "FinMind",
 
-    if (!Number.isFinite(todayHigh) || todayHigh <= 0) {
-      todayHigh = Number(latest.high);
-    }
+        realtime:
+          !!realtime,
 
-    let todayLow = Number(result.dayLow);
+        symbol,
 
-    if (!Number.isFinite(todayLow) || todayLow <= 0) {
-      todayLow = Number(latest.low);
-    }
+        name,
 
-    let volume = Number(result.volume);
+        price:
+          round(price),
 
-    if (!Number.isFinite(volume) || volume < 0) {
-      volume = Number(latest.volume || 0);
-    }
+        previousClose:
+          round(
+            previousClose
+          ),
 
-    return res.status(200).json({
+        change:
+          round(change),
 
-      ok: true,
+        changePercent:
+          round(
+            changePercent
+          ),
 
-      symbol,
+        open:
+          round(open),
 
-      yahooSymbol: result.yahooSymbol,
+        high:
+          round(high),
 
-      market:
-        result.yahooSymbol.endsWith(".TWO")
-          ? "TWO"
-          : "TW",
+        low:
+          round(low),
 
-      name,
+        volume,
 
-      price: round(price),
+        averagePrice:
+          round(
+            positiveNumber(
+              realtime?.average_price
+            )
+            || 0
+          ),
 
-      previousClose: round(previousClose),
+        buyPrice:
+          round(
+            positiveNumber(
+              realtime?.buy_price
+            )
+            || 0
+          ),
 
-      change: round(change),
+        sellPrice:
+          round(
+            positiveNumber(
+              realtime?.sell_price
+            )
+            || 0
+          ),
 
-      changePercent: round(changePercent),
+        buyVolume:
+          nonNegativeNumber(
+            realtime?.buy_volume
+          )
+          ?? 0,
 
-      open: round(todayOpen),
+        sellVolume:
+          nonNegativeNumber(
+            realtime?.sell_volume
+          )
+          ?? 0,
 
-      high: round(todayHigh),
+        totalAmount:
+          nonNegativeNumber(
+            realtime?.total_amount
+          )
+          ?? 0,
 
-      low: round(todayLow),
+        volumeRatio:
+          finiteNumber(
+            realtime?.volume_ratio
+          )
+          ?? null,
 
-      volume,
+        yesterdayVolume:
+          nonNegativeNumber(
+            realtime?.yesterday_volume
+          )
+          ?? null,
 
-      currency: "TWD",
+        quoteDate:
+          realtime?.date
+          || latest.date,
 
-      marketState:
-        result.marketState || "",
+        updatedAt:
+          Date.now(),
 
-      timestamp:
-        result.timestamp || Date.now(),
+        rows:
+          finalRows
 
-      rows
+      });
 
-    });
 
   } catch (error) {
 
-    console.error(error);
-
-    return res.status(500).json({
-      ok: false,
-      error:
-        error && error.message
-          ? error.message
-          : "股票資料取得失敗"
-    });
-
-  }
-};
-
-
-/* =========================================================
-   Yahoo Finance
-========================================================= */
-
-async function loadStock(yahooSymbol) {
-
-  /*
-    取約一年資料。
-
-    前端目前需要：
-    MA20
-    MA60
-    RSI
-    MACD
-    ATR
-    支撐
-    壓力
-    成交量
-
-    所以一年日 K 足夠。
-  */
-
-  const period2 = Math.floor(Date.now() / 1000);
-
-  /*
-    多抓 450 天，
-    避免假日造成交易日不足。
-  */
-
-  const period1 =
-    period2 - 450 * 24 * 60 * 60;
-
-  const url =
-    "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(yahooSymbol) +
-    "?period1=" +
-    period1 +
-    "&period2=" +
-    period2 +
-    "&interval=1d" +
-    "&includePrePost=false" +
-    "&events=div%2Csplits" +
-    "&corsDomain=finance.yahoo.com";
-
-  const json = await requestJSON(url);
-
-  if (
-    !json ||
-    !json.chart ||
-    json.chart.error
-  ) {
-
-    throw new Error(
-      json &&
-      json.chart &&
-      json.chart.error &&
-      json.chart.error.description
-        ? json.chart.error.description
-        : "Yahoo 股票資料取得失敗"
+    console.error(
+      "FinMind stock API error:",
+      error
     );
 
-  }
 
-  const result =
-    json.chart.result &&
-    json.chart.result[0];
+    return res
+      .status(500)
+      .json({
 
-  if (!result) {
-    throw new Error("查無股票資料");
-  }
+        ok: false,
 
-  const timestamps =
-    Array.isArray(result.timestamp)
-      ? result.timestamp
-      : [];
+        source:
+          "FinMind",
 
-  const quote =
-    result.indicators &&
-    result.indicators.quote &&
-    result.indicators.quote[0];
+        error:
+          error?.message ||
+          "FinMind 股票資料取得失敗"
 
-  if (!quote) {
-    throw new Error("股票 K 線資料不存在");
-  }
-
-  const opens =
-    quote.open || [];
-
-  const highs =
-    quote.high || [];
-
-  const lows =
-    quote.low || [];
-
-  const closes =
-    quote.close || [];
-
-  const volumes =
-    quote.volume || [];
-
-  const rows = [];
-
-  for (
-    let i = 0;
-    i < timestamps.length;
-    i++
-  ) {
-
-    const open =
-      Number(opens[i]);
-
-    const high =
-      Number(highs[i]);
-
-    const low =
-      Number(lows[i]);
-
-    const close =
-      Number(closes[i]);
-
-    const volume =
-      Number(volumes[i] || 0);
-
-    /*
-      缺 OHLC 的資料不加入技術分析。
-    */
-
-    if (
-      !Number.isFinite(open) ||
-      !Number.isFinite(high) ||
-      !Number.isFinite(low) ||
-      !Number.isFinite(close) ||
-      close <= 0
-    ) {
-      continue;
-    }
-
-    rows.push({
-
-      timestamp:
-        timestamps[i] * 1000,
-
-      date:
-        formatDate(
-          timestamps[i] * 1000
-        ),
-
-      open:
-        round(open),
-
-      high:
-        round(high),
-
-      low:
-        round(low),
-
-      close:
-        round(close),
-
-      volume:
-        Number.isFinite(volume)
-          ? volume
-          : 0
-
-    });
-
-  }
-
-  if (rows.length < 60) {
-    throw new Error("歷史資料不足");
-  }
-
-  /*
-    最多保留最近 365 個交易資料。
-
-    已足夠前端技術分析，
-    同時減少 API 傳輸量。
-  */
-
-  const cleanRows =
-    rows.slice(-365);
-
-  const meta =
-    result.meta || {};
-
-  return {
-
-    yahooSymbol,
-
-    rows: cleanRows,
-
-    price:
-      firstNumber(
-        meta.regularMarketPrice,
-        cleanRows.at(-1)?.close
-      ),
-
-    previousClose:
-      firstNumber(
-        meta.chartPreviousClose,
-        meta.previousClose,
-        cleanRows.at(-2)?.close
-      ),
-
-    open:
-      firstNumber(
-        meta.regularMarketOpen,
-        cleanRows.at(-1)?.open
-      ),
-
-    dayHigh:
-      firstNumber(
-        meta.regularMarketDayHigh,
-        cleanRows.at(-1)?.high
-      ),
-
-    dayLow:
-      firstNumber(
-        meta.regularMarketDayLow,
-        cleanRows.at(-1)?.low
-      ),
-
-    volume:
-      firstNumber(
-        meta.regularMarketVolume,
-        cleanRows.at(-1)?.volume,
-        0
-      ),
-
-    longName:
-      meta.longName || "",
-
-    shortName:
-      meta.shortName || "",
-
-    marketState:
-      meta.marketState || "",
-
-    timestamp:
-      Number(meta.regularMarketTime)
-        ? Number(meta.regularMarketTime) * 1000
-        : Date.now()
-
-  };
-
-}
-
-
-/* =========================================================
-   HTTP Request
-========================================================= */
-
-function requestJSON(url) {
-
-  return new Promise(
-    (resolve, reject) => {
-
-      const options = {
-        headers: {
-
-          "User-Agent":
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1",
-
-          "Accept":
-            "application/json,text/plain,*/*",
-
-          "Accept-Language":
-            "zh-TW,zh;q=0.9,en;q=0.8",
-
-          "Cache-Control":
-            "no-cache",
-
-          "Pragma":
-            "no-cache"
-
-        },
-
-        timeout: 12000
-      };
-
-      const req =
-        https.get(
-          url,
-          options,
-          response => {
-
-            let data = "";
-
-            response.on(
-              "data",
-              chunk => {
-                data += chunk;
-              }
-            );
-
-            response.on(
-              "end",
-              () => {
-
-                if (
-                  response.statusCode < 200 ||
-                  response.statusCode >= 300
-                ) {
-
-                  return reject(
-                    new Error(
-                      "行情服務回傳錯誤 " +
-                      response.statusCode
-                    )
-                  );
-
-                }
-
-                try {
-
-                  const json =
-                    JSON.parse(data);
-
-                  resolve(json);
-
-                } catch (e) {
-
-                  reject(
-                    new Error(
-                      "行情資料格式錯誤"
-                    )
-                  );
-
-                }
-
-              }
-            );
-
-          }
-        );
-
-      req.on(
-        "timeout",
-        () => {
-
-          req.destroy();
-
-          reject(
-            new Error(
-              "行情服務連線逾時"
-            )
-          );
-
-        }
-      );
-
-      req.on(
-        "error",
-        reject
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   Helpers
-========================================================= */
-
-function firstNumber(...values) {
-
-  for (const value of values) {
-
-    const n =
-      Number(value);
-
-    if (
-      Number.isFinite(n) &&
-      n >= 0
-    ) {
-      return n;
-    }
-
-  }
-
-  return 0;
-}
-
-
-function round(value) {
-
-  const n =
-    Number(value);
-
-  if (!Number.isFinite(n)) {
-    return 0;
-  }
-
-  /*
-    台股高價股也保留兩位，
-    前端會統一格式化。
-  */
-
-  return Math.round(
-    n * 100
-  ) / 100;
-
-}
-
-
-function formatDate(ms) {
-
-  const d =
-    new Date(ms);
-
-  const year =
-    d.getUTCFullYear();
-
-  const month =
-    String(
-      d.getUTCMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-  const day =
-    String(
-      d.getUTCDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-  return (
-    year +
-    "-" +
-    month +
-    "-" +
-    day
-  );
-
-}
+     
