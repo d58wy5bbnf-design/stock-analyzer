@@ -1,50 +1,71 @@
 const webpush = require("web-push");
 
-// ==============================
-// Redis / KV
-// ==============================
+// ========================================
+// Redis
+// ========================================
+
 function getRedisConfig() {
   const url =
-    process.env.KV_REST_API_URL ||
-    process.env.UPSTASH_REDIS_REST_URL;
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL;
 
   const token =
-    process.env.KV_REST_API_TOKEN ||
-    process.env.UPSTASH_REDIS_REST_TOKEN;
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN;
 
-  if (!url || !token) {
-    throw new Error("找不到 Redis / KV 環境變數");
+  if (!url) {
+    throw new Error("缺少 UPSTASH_REDIS_REST_URL");
   }
 
-  return { url, token };
+  if (!token) {
+    throw new Error("缺少 UPSTASH_REDIS_REST_TOKEN");
+  }
+
+  return {
+    url: url.replace(/\/+$/, ""),
+    token,
+  };
 }
 
 async function redis(command) {
   const { url, token } = getRedisConfig();
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(command),
-  });
+  const controller = new AbortController();
 
-  const data = await response.json();
+  // Redis 最多等 8 秒
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, 8000);
 
-  if (!response.ok || data.error) {
-    throw new Error(
-      `Redis 錯誤：${data.error || response.status}`
-    );
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(command),
+      signal: controller.signal,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(
+        `Redis 錯誤：${data.error || response.status}`
+      );
+    }
+
+    return data.result;
+  } finally {
+    clearTimeout(timer);
   }
-
-  return data.result;
 }
 
-// ==============================
+// ========================================
 // VAPID
-// ==============================
+// ========================================
+
 function configurePush() {
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -55,9 +76,6 @@ function configurePush() {
 
   subject = String(subject).trim();
 
-  // 防止之前那種：
-  // Liaozhanxie@gmail.com
-  // 被 web-push 判定為 invalid URL
   if (
     !subject.startsWith("mailto:") &&
     !subject.startsWith("https://")
@@ -84,15 +102,18 @@ function configurePush() {
   );
 }
 
-// ==============================
+// ========================================
 // 找 Push 訂閱
-// ==============================
+// ========================================
+
 async function getSubscriptions() {
   const subscriptions = [];
 
-  // 目前系統主要使用的 device list
   const deviceIds =
-    (await redis(["SMEMBERS", "swing:push:devices"])) || [];
+    (await redis([
+      "SMEMBERS",
+      "swing:push:devices",
+    ])) || [];
 
   for (const deviceId of deviceIds) {
     try {
@@ -136,9 +157,51 @@ async function getSubscriptions() {
   return subscriptions;
 }
 
-// ==============================
+// ========================================
+// 單一 Push：最多等待 10 秒
+// ========================================
+
+async function sendPushWithTimeout(
+  subscription,
+  payload,
+  timeoutMs = 10000
+) {
+  let timer;
+
+  const timeoutPromise = new Promise(
+    (_, reject) => {
+      timer = setTimeout(() => {
+        const error = new Error(
+          `Apple Push 超過 ${timeoutMs / 1000} 秒沒有回應`
+        );
+
+        error.code = "PUSH_TIMEOUT";
+
+        reject(error);
+      }, timeoutMs);
+    }
+  );
+
+  try {
+    return await Promise.race([
+      webpush.sendNotification(
+        subscription,
+        payload,
+        {
+          TTL: 60,
+        }
+      ),
+      timeoutPromise,
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ========================================
 // API
-// ==============================
+// ========================================
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -152,12 +215,15 @@ module.exports = async function handler(req, res) {
   try {
     configurePush();
 
-    const subscriptions = await getSubscriptions();
+    const subscriptions =
+      await getSubscriptions();
 
     if (!subscriptions.length) {
       return res.status(200).json({
         ok: false,
         sent: 0,
+        failed: 0,
+        totalSubscriptions: 0,
         message:
           "目前 Redis 裡沒有找到手機 Push 訂閱。請先從 iPhone 主畫面的波段分析開啟「進場通知」。",
       });
@@ -166,7 +232,7 @@ module.exports = async function handler(req, res) {
     const payload = JSON.stringify({
       title: "✅ 台股進場通知測試成功",
       body:
-        "背景推播系統已正常連線。之後符合正式進場條件時，網站關閉也可以收到通知。",
+        "背景推播系統測試中。如果你看到這則通知，代表手機 Push 訂閱與通知功能已連線。",
       tag: `test-push-${Date.now()}`,
       url: "/",
     });
@@ -176,14 +242,17 @@ module.exports = async function handler(req, res) {
 
     const results = [];
 
+    // ========================================
+    // 逐台測試
+    // 每台最多 10 秒
+    // ========================================
+
     for (const item of subscriptions) {
       try {
-        await webpush.sendNotification(
+        await sendPushWithTimeout(
           item.subscription,
           payload,
-          {
-            TTL: 60,
-          }
+          10000
         );
 
         sent++;
@@ -211,6 +280,7 @@ module.exports = async function handler(req, res) {
           deviceId: item.deviceId,
           ok: false,
           statusCode,
+          code: error.code || null,
           error: error.message,
         });
 
@@ -244,7 +314,8 @@ module.exports = async function handler(req, res) {
       ok: sent > 0,
       sent,
       failed,
-      totalSubscriptions: subscriptions.length,
+      totalSubscriptions:
+        subscriptions.length,
       message:
         sent > 0
           ? `測試通知已送出 ${sent} 台裝置`
@@ -252,11 +323,16 @@ module.exports = async function handler(req, res) {
       results,
     });
   } catch (error) {
-    console.error("test-push error:", error);
+    console.error(
+      "test-push error:",
+      error
+    );
 
     return res.status(500).json({
       ok: false,
-      error: error.message || "Internal Server Error",
+      error:
+        error.message ||
+        "Internal Server Error",
     });
   }
 };
