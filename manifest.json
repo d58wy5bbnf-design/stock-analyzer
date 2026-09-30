@@ -1,0 +1,17 @@
+{
+  "name": "台股波段分析",
+  "short_name": "波段分析",
+  "description": "台股 SMC 波段分析與進場訊號通知",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#f6f7f9",
+  "lang": "zh-Hant-TW",
+  "dir": "ltr",
+  "orientation": "portrait",
+  "categories": [
+    "finance",
+    "utilities"
+  ]
+}
