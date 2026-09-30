@@ -1,454 +1,196 @@
 const https = require("https");
 
-/*
-=========================================================
-  台股行情 API - FinMind Sponsor
-  /api/stock?symbol=2330
-
-  即時行情：
-  FinMind taiwan_stock_tick_snapshot
-
-  歷史日K：
-  FinMind TaiwanStockPrice
-
-  Vercel Environment Variable：
-  FINMIND_TOKEN
-
-  Yahoo Finance：
-  完全不使用
-=========================================================
-*/
-
 module.exports = async function handler(req, res) {
-
-  /* =========================
-     Headers
-  ========================= */
 
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   res.setHeader(
     "Cache-Control",
     "no-store, no-cache, must-revalidate, proxy-revalidate"
   );
 
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-
-
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-
   try {
 
-    /* =========================
-       FinMind Token
-    ========================= */
-
-    const token =
-      String(
-        process.env.FINMIND_TOKEN || ""
-      ).trim();
-
+    const token = String(
+      process.env.FINMIND_TOKEN || ""
+    ).trim();
 
     if (!token) {
-
       return res.status(500).json({
         ok: false,
-        source: "FinMind",
         error: "Vercel 尚未設定 FINMIND_TOKEN"
       });
-
     }
 
-
-    /* =========================
-       股票代號
-    ========================= */
-
-    const symbol =
-      String(
-        req.query.symbol || ""
-      )
-        .trim()
-        .toUpperCase()
-        .replace(/\.TW$/i, "")
-        .replace(/\.TWO$/i, "");
-
+    const symbol = String(
+      req.query.symbol || ""
+    )
+      .trim()
+      .replace(/\.TW$/i, "")
+      .replace(/\.TWO$/i, "");
 
     if (!/^\d{4,6}$/.test(symbol)) {
-
       return res.status(400).json({
         ok: false,
-        source: "FinMind",
-        error: "請輸入正確的台股代號"
+        error: "股票代號格式錯誤"
       });
-
     }
 
+    const now = new Date();
 
-    /* =========================
-       歷史資料日期
-
-       抓 500 天
-       足夠 MA60 / RSI / MACD / ATR
-    ========================= */
-
-    const now =
-      new Date();
-
-
-    const start =
-      new Date(
-        now.getTime()
-      );
-
-
-    start.setDate(
-      start.getDate() - 500
+    const historyStart = new Date(now);
+    historyStart.setDate(
+      historyStart.getDate() - 550
     );
 
+    const chipStart = new Date(now);
+    chipStart.setDate(
+      chipStart.getDate() - 45
+    );
 
-    const startDate =
-      formatDate(start);
+    const endDate = formatDate(now);
 
+    const results = await Promise.allSettled([
 
-    const endDate =
-      formatDate(now);
+      getData(
+        "TaiwanStockPrice",
+        symbol,
+        formatDate(historyStart),
+        endDate,
+        token
+      ),
 
+      getRealtime(
+        symbol,
+        token
+      ),
 
-    /* =========================
-       同時抓：
-       1. 歷史日 K
-       2. 即時行情
-    ========================= */
+      getData(
+        "TaiwanStockInstitutionalInvestorsBuySell",
+        symbol,
+        formatDate(chipStart),
+        endDate,
+        token
+      )
 
-    const results =
-      await Promise.allSettled([
-
-        getHistory(
-          symbol,
-          token,
-          startDate,
-          endDate
-        ),
-
-        getRealtime(
-          symbol,
-          token
-        )
-
-      ]);
-
-
-    const historyResult =
-      results[0];
-
-
-    const realtimeResult =
-      results[1];
-
+    ]);
 
     /* =========================
-       歷史資料必須成功
-    ========================= */
-
-    if (
-      historyResult.status !==
-      "fulfilled"
-    ) {
-
-      const reason =
-        historyResult.reason &&
-        historyResult.reason.message
-          ?
-          historyResult.reason.message
-          :
-          "未知錯誤";
-
-
-      throw new Error(
-        "歷史股價取得失敗：" +
-        reason
-      );
-
-    }
-
-
-    const history =
-      historyResult.value;
-
-
-    if (
-      !Array.isArray(history)
-      ||
-      history.length === 0
-    ) {
-
-      throw new Error(
-        "FinMind 查無此股票歷史資料"
-      );
-
-    }
-
-
-    /* =========================
-       整理歷史 K 線
-    ========================= */
-
-    let rows =
-      history
-        .map(function (row) {
-
-          const open =
-            toNumber(
-              row.open
-            );
-
-
-          const high =
-            toNumber(
-              row.max
-            );
-
-
-          const low =
-            toNumber(
-              row.min
-            );
-
-
-          const close =
-            toNumber(
-              row.close
-            );
-
-
-          const volume =
-            toNumber(
-              row.Trading_Volume
-            );
-
-
-          if (
-            open === null ||
-            high === null ||
-            low === null ||
-            close === null ||
-            close <= 0
-          ) {
-
-            return null;
-
-          }
-
-
-          return {
-
-            date:
-              String(
-                row.date || ""
-              ),
-
-            open:
-              round(open),
-
-            high:
-              round(high),
-
-            low:
-              round(low),
-
-            close:
-              round(close),
-
-            volume:
-              volume !== null &&
-              volume >= 0
-                ?
-                volume
-                :
-                0
-
-          };
-
-        })
-
-        .filter(function (row) {
-
-          return (
-            row &&
-            row.date
-          );
-
-        })
-
-        .sort(function (a, b) {
-
-          return a.date.localeCompare(
-            b.date
-          );
-
-        });
-
-
-    if (rows.length < 60) {
-
-      throw new Error(
-        "歷史 K 線不足 60 筆"
-      );
-
-    }
-
-
-    /*
-      最多保留 365 個交易日
-    */
-
-    rows =
-      rows.slice(-365);
-
-
-    /* =========================
-       最新歷史 K
-    ========================= */
-
-    const latestHistory =
-      rows[
-        rows.length - 1
-      ];
-
-
-    const previousHistory =
-      rows.length >= 2
-        ?
-        rows[
-          rows.length - 2
-        ]
-        :
-        latestHistory;
-
-
-    /* =========================
-       即時行情
-
-       即時失敗時：
-       網頁仍可使用歷史 K
-    ========================= */
-
-    let realtime =
-      null;
-
-
-    let realtimeError =
-      null;
-
-
-    if (
-      realtimeResult.status ===
-      "fulfilled"
-    ) {
-
-      realtime =
-        realtimeResult.value;
-
-    } else {
-
-      realtimeError =
-        realtimeResult.reason &&
-        realtimeResult.reason.message
-          ?
-          realtimeResult.reason.message
-          :
-          "即時行情取得失敗";
-
-
-      console.error(
-        "FinMind realtime:",
-        realtimeError
-      );
-
-    }
-
-
-    /* =========================
-       即時價格
-    ========================= */
-
-    const realtimePrice =
-      getFirstPositive(
-        realtime
-          ?
-          realtime.close
-          :
-          null,
-
-        realtime
-          ?
-          realtime.price
-          :
-          null
-      );
-
-
-    const price =
-      realtimePrice
-      ||
-      getFirstPositive(
-        latestHistory.close
-      );
-
-
-    if (!price) {
-
-      throw new Error(
-        "目前股價取得失敗"
-      );
-
-    }
-
-
-    /* =========================
-       即時日期
-    ========================= */
-
-    const realtimeDate =
-      normalizeDate(
-        realtime
-          ?
-          realtime.date
-          :
-          ""
-      );
-
-
-    /* =========================
-       昨收
-
-       優先：
-       即時漲跌反推
-
-       再 fallback：
        歷史 K
     ========================= */
 
-    let previousClose =
-      0;
+    if (results[0].status !== "fulfilled") {
+      throw new Error(
+        "歷史股價取得失敗：" +
+        (
+          results[0].reason?.message ||
+          "未知錯誤"
+        )
+      );
+    }
 
+    const history = results[0].value;
 
-    const realtimeChange =
-      getFirstFinite(
-        realtime
-          ?
-          realtime.change_price
-          :
-          null
+    let rows = history
+      .map(x => {
+
+        const open = num(x.open);
+        const high = num(x.max);
+        const low = num(x.min);
+        const close = num(x.close);
+        const volume = num(x.Trading_Volume);
+
+        if (
+          open === null ||
+          high === null ||
+          low === null ||
+          close === null ||
+          close <= 0
+        ) {
+          return null;
+        }
+
+        return {
+          date: String(x.date || ""),
+          open: round(open),
+          high: round(high),
+          low: round(low),
+          close: round(close),
+          volume:
+            volume !== null && volume >= 0
+              ? volume
+              : 0
+        };
+
+      })
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          a.date.localeCompare(b.date)
+      )
+      .slice(-365);
+
+    if (rows.length < 60) {
+      throw new Error(
+        "歷史 K 線不足 60 筆"
+      );
+    }
+
+    const latest =
+      rows[rows.length - 1];
+
+    const previous =
+      rows.length >= 2
+        ? rows[rows.length - 2]
+        : latest;
+
+    /* =========================
+       即時
+    ========================= */
+
+    let realtime = null;
+    let realtimeError = null;
+
+    if (results[1].status === "fulfilled") {
+      realtime = results[1].value;
+    } else {
+      realtimeError =
+        results[1].reason?.message ||
+        "即時行情取得失敗";
+    }
+
+    const realtimePrice =
+      positive(
+        realtime?.close,
+        realtime?.price
       );
 
+    const price =
+      realtimePrice ||
+      positive(latest.close);
+
+    if (!price) {
+      throw new Error(
+        "目前股價取得失敗"
+      );
+    }
+
+    const realtimeDate =
+      normalizeDate(
+        realtime?.date || ""
+      );
+
+    let previousClose = 0;
+
+    const realtimeChange =
+      finite(
+        realtime?.change_price
+      );
 
     if (
       realtimePrice &&
@@ -459,189 +201,71 @@ module.exports = async function handler(req, res) {
         realtimePrice -
         realtimeChange;
 
-
-      if (
-        Number.isFinite(
-          calculated
-        )
-        &&
-        calculated > 0
-      ) {
-
-        previousClose =
-          calculated;
-
+      if (calculated > 0) {
+        previousClose = calculated;
       }
-
     }
 
-
     if (!previousClose) {
-
-      /*
-        如果歷史 K 最後一筆就是今天，
-        昨收使用倒數第二筆。
-
-        如果歷史 K 尚未包含今天，
-        最後一筆就是昨收。
-      */
 
       if (
         realtimeDate &&
-        latestHistory.date ===
-        realtimeDate
+        latest.date === realtimeDate
       ) {
-
         previousClose =
-          getFirstPositive(
-            previousHistory.close
-          );
-
+          positive(previous.close);
       } else {
-
         previousClose =
-          getFirstPositive(
-            latestHistory.close
-          );
-
+          positive(latest.close);
       }
 
     }
 
-
     if (!previousClose) {
-
-      previousClose =
-        price;
-
+      previousClose = price;
     }
 
-
-    /* =========================
-       漲跌
-    ========================= */
-
     const change =
-      price -
-      previousClose;
-
-
-    const calculatedChangePercent =
-      previousClose > 0
-        ?
-        (
-          change /
-          previousClose
-        ) * 100
-        :
-        0;
-
-
-    /*
-      直接使用計算值，
-      避免不同 API change_rate
-      百分比單位定義不同。
-    */
+      price - previousClose;
 
     const changePercent =
-      calculatedChangePercent;
-
-
-    /* =========================
-       今日開高低
-    ========================= */
+      previousClose > 0
+        ? change / previousClose * 100
+        : 0;
 
     const open =
-      getFirstPositive(
-
-        realtime
-          ?
-          realtime.open
-          :
-          null,
-
-        latestHistory.open,
-
+      positive(
+        realtime?.open,
+        latest.open,
         price
-
       );
-
 
     const high =
-      getFirstPositive(
-
-        realtime
-          ?
-          realtime.high
-          :
-          null,
-
-        realtime
-          ?
-          realtime.max
-          :
-          null,
-
-        latestHistory.high,
-
+      positive(
+        realtime?.high,
+        realtime?.max,
+        latest.high,
         price
-
       );
-
 
     const low =
-      getFirstPositive(
-
-        realtime
-          ?
-          realtime.low
-          :
-          null,
-
-        realtime
-          ?
-          realtime.min
-          :
-          null,
-
-        latestHistory.low,
-
+      positive(
+        realtime?.low,
+        realtime?.min,
+        latest.low,
         price
-
       );
-
-
-    /* =========================
-       成交量
-    ========================= */
 
     const volume =
-      getFirstNonNegative(
-
-        realtime
-          ?
-          realtime.total_volume
-          :
-          null,
-
-        realtime
-          ?
-          realtime.volume
-          :
-          null,
-
-        latestHistory.volume,
-
+      nonNegative(
+        realtime?.total_volume,
+        realtime?.volume,
+        latest.volume,
         0
-
       );
 
-
     /* =========================
-       把今日即時行情放進 K 線
-
-       這樣策略分析會用目前價格，
-       而不是只用昨天收盤。
+       今日即時 K 併入 rows
     ========================= */
 
     if (
@@ -651,180 +275,118 @@ module.exports = async function handler(req, res) {
     ) {
 
       const last =
-        rows[
-          rows.length - 1
-        ];
-
+        rows[rows.length - 1];
 
       if (
         last &&
-        last.date ===
-        realtimeDate
+        last.date === realtimeDate
       ) {
 
-        last.open =
-          round(open);
+        last.open = round(open);
 
+        last.high = round(
+          Math.max(high, price)
+        );
 
-        last.high =
-          round(
-            Math.max(
-              high,
-              price
-            )
-          );
+        last.low = round(
+          Math.min(low, price)
+        );
 
+        last.close = round(price);
 
-        last.low =
-          round(
-            Math.min(
-              low,
-              price
-            )
-          );
-
-
-        last.close =
-          round(price);
-
-
-        last.volume =
-          volume;
+        last.volume = volume;
 
       } else {
 
         rows.push({
-
-          date:
-            realtimeDate,
-
-          open:
-            round(open),
-
-          high:
-            round(
-              Math.max(
-                high,
-                price
-              )
-            ),
-
-          low:
-            round(
-              Math.min(
-                low,
-                price
-              )
-            ),
-
-          close:
-            round(price),
-
-          volume:
-            volume
-
+          date: realtimeDate,
+          open: round(open),
+          high: round(
+            Math.max(high, price)
+          ),
+          low: round(
+            Math.min(low, price)
+          ),
+          close: round(price),
+          volume
         });
 
       }
 
     }
 
-
-    rows =
-      rows.slice(-365);
-
+    rows = rows.slice(-365);
 
     /* =========================
-       名稱
+       法人籌碼
     ========================= */
 
-    const name =
-      getStockName(symbol)
-      ||
-      symbol;
+    let institutional = [];
 
+    if (results[2].status === "fulfilled") {
+      institutional = results[2].value;
+    }
 
-    /* =========================
-       回傳給 index.html
+    const chip =
+      summarizeInstitutional(
+        institutional
+      );
 
-       保留原本前端需要的格式：
-       ok
-       symbol
-       name
-       price
-       changePercent
-       rows
-    ========================= */
+    return res.status(200).json({
 
-    return res
-      .status(200)
-      .json({
+      ok: true,
 
-        ok: true,
+      source: "FinMind",
 
-        source:
-          "FinMind",
+      realtime:
+        Boolean(
+          realtime &&
+          realtimePrice
+        ),
 
-        realtime:
-          Boolean(
-            realtime &&
-            realtimePrice
-          ),
+      symbol,
 
-        symbol:
-          symbol,
+      name:
+        getStockName(symbol) ||
+        symbol,
 
-        name:
-          name,
+      price: round(price),
 
-        price:
-          round(price),
+      previousClose:
+        round(previousClose),
 
-        previousClose:
-          round(
-            previousClose
-          ),
+      change:
+        round(change),
 
-        change:
-          round(change),
+      changePercent:
+        round(changePercent),
 
-        changePercent:
-          round(
-            changePercent
-          ),
+      open:
+        round(open),
 
-        open:
-          round(open),
+      high:
+        round(high),
 
-        high:
-          round(high),
+      low:
+        round(low),
 
-        low:
-          round(low),
+      volume,
 
-        volume:
-          volume,
+      quoteDate:
+        realtimeDate ||
+        latest.date,
 
-        quoteDate:
-          realtimeDate
-          ||
-          latestHistory.date,
+      updatedAt:
+        Date.now(),
 
-        updatedAt:
-          Date.now(),
+      realtimeError,
 
-        realtimeError:
-          realtime
-            ?
-            null
-            :
-            realtimeError,
+      institutional:
+        chip,
 
-        rows:
-          rows
+      rows
 
-      });
-
+    });
 
   } catch (error) {
 
@@ -833,25 +395,13 @@ module.exports = async function handler(req, res) {
       error
     );
 
-
-    return res
-      .status(500)
-      .json({
-
-        ok: false,
-
-        source:
-          "FinMind",
-
-        error:
-          error &&
-          error.message
-            ?
-            error.message
-            :
-            "FinMind 股票資料取得失敗"
-
-      });
+    return res.status(500).json({
+      ok: false,
+      source: "FinMind",
+      error:
+        error?.message ||
+        "FinMind 股票資料取得失敗"
+    });
 
   }
 
@@ -859,7 +409,57 @@ module.exports = async function handler(req, res) {
 
 
 /* =========================================================
-   FinMind 即時行情
+   FinMind Dataset
+========================================================= */
+
+async function getData(
+  dataset,
+  symbol,
+  startDate,
+  endDate,
+  token
+) {
+
+  const url =
+    "https://api.finmindtrade.com/api/v4/data" +
+    "?dataset=" +
+    encodeURIComponent(dataset) +
+    "&data_id=" +
+    encodeURIComponent(symbol) +
+    "&start_date=" +
+    encodeURIComponent(startDate) +
+    "&end_date=" +
+    encodeURIComponent(endDate);
+
+  const json =
+    await requestJSON(
+      url,
+      token
+    );
+
+  if (
+    json.status !== undefined &&
+    Number(json.status) !== 200
+  ) {
+    throw new Error(
+      json.msg ||
+      dataset + " API 錯誤"
+    );
+  }
+
+  if (!Array.isArray(json.data)) {
+    throw new Error(
+      dataset + " 資料格式錯誤"
+    );
+  }
+
+  return json.data;
+
+}
+
+
+/* =========================================================
+   即時
 ========================================================= */
 
 async function getRealtime(
@@ -875,80 +475,38 @@ async function getRealtime(
     "&_=" +
     Date.now();
 
-
   const json =
     await requestJSON(
       url,
       token
     );
 
-
-  if (!json) {
-
-    throw new Error(
-      "FinMind 即時資料沒有回應"
-    );
-
-  }
-
-
   if (
     json.status !== undefined &&
     Number(json.status) !== 200
   ) {
-
     throw new Error(
-      json.msg
-        ?
-        String(json.msg)
-        :
-        "FinMind 即時 API 錯誤"
+      json.msg ||
+      "FinMind 即時 API 錯誤"
     );
-
   }
 
-
   if (
-    !Array.isArray(
-      json.data
-    )
+    !Array.isArray(json.data) ||
+    !json.data.length
   ) {
-
-    throw new Error(
-      "FinMind 即時資料格式錯誤"
-    );
-
-  }
-
-
-  if (
-    json.data.length === 0
-  ) {
-
     throw new Error(
       "FinMind 查無即時行情"
     );
-
   }
 
-
-  const exact =
-    json.data.find(
-      function (item) {
-
-        return (
-          String(
-            item.stock_id || ""
-          ) ===
-          String(symbol)
-        );
-
-      }
-    );
-
-
   return (
-    exact ||
+    json.data.find(
+      x =>
+        String(x.stock_id) ===
+        String(symbol)
+    )
+    ||
     json.data[0]
   );
 
@@ -956,102 +514,141 @@ async function getRealtime(
 
 
 /* =========================================================
-   FinMind 歷史日 K
+   法人整理
 ========================================================= */
 
-async function getHistory(
-  symbol,
-  token,
-  startDate,
-  endDate
-) {
+function summarizeInstitutional(data) {
 
-  const query =
+  const daily = {};
 
-    "dataset=" +
-    encodeURIComponent(
-      "TaiwanStockPrice"
-    ) +
+  for (const row of data || []) {
 
-    "&data_id=" +
-    encodeURIComponent(
-      symbol
-    ) +
+    const date =
+      String(row.date || "");
 
-    "&start_date=" +
-    encodeURIComponent(
-      startDate
-    ) +
+    if (!date) continue;
 
-    "&end_date=" +
-    encodeURIComponent(
-      endDate
-    );
+    if (!daily[date]) {
 
+      daily[date] = {
+        foreign: 0,
+        trust: 0,
+        dealer: 0,
+        total: 0
+      };
 
-  const url =
-    "https://api.finmindtrade.com" +
-    "/api/v4/data?" +
-    query;
+    }
 
+    const buy =
+      Number(row.buy) || 0;
 
-  const json =
-    await requestJSON(
-      url,
-      token
-    );
+    const sell =
+      Number(row.sell) || 0;
 
+    const net =
+      buy - sell;
 
-  if (!json) {
+    const name =
+      String(row.name || "");
 
-    throw new Error(
-      "FinMind 歷史資料沒有回應"
-    );
+    if (
+      name === "Foreign_Investor" ||
+      name === "Foreign_Dealer_Self"
+    ) {
 
-  }
+      daily[date].foreign += net;
 
+    }
 
-  if (
-    json.status !== undefined &&
-    Number(json.status) !== 200
-  ) {
+    if (
+      name === "Investment_Trust"
+    ) {
 
-    throw new Error(
-      json.msg
-        ?
-        String(json.msg)
-        :
-        "FinMind 歷史 API 錯誤"
-    );
+      daily[date].trust += net;
+
+    }
+
+    if (
+      name === "Dealer" ||
+      name === "Dealer_self" ||
+      name === "Dealer_Hedging"
+    ) {
+
+      daily[date].dealer += net;
+
+    }
+
+    daily[date].total += net;
 
   }
 
+  const dates =
+    Object.keys(daily)
+      .sort();
 
-  if (
-    !Array.isArray(
-      json.data
-    )
-  ) {
+  const recent5 =
+    dates.slice(-5);
 
-    throw new Error(
-      "FinMind 歷史資料格式錯誤"
-    );
+  const recent10 =
+    dates.slice(-10);
 
-  }
+  const sum =
+    (dates, key) =>
+      dates.reduce(
+        (s, d) =>
+          s +
+          (daily[d]?.[key] || 0),
+        0
+      );
 
+  const latestDate =
+    dates.length
+      ? dates[dates.length - 1]
+      : "";
 
-  if (
-    json.data.length === 0
-  ) {
+  return {
 
-    throw new Error(
-      "FinMind 查無此股票"
-    );
+    available:
+      dates.length > 0,
 
-  }
+    latestDate,
 
+    foreignLatest:
+      latestDate
+        ? daily[latestDate].foreign
+        : 0,
 
-  return json.data;
+    trustLatest:
+      latestDate
+        ? daily[latestDate].trust
+        : 0,
+
+    dealerLatest:
+      latestDate
+        ? daily[latestDate].dealer
+        : 0,
+
+    totalLatest:
+      latestDate
+        ? daily[latestDate].total
+        : 0,
+
+    foreign5:
+      sum(recent5, "foreign"),
+
+    trust5:
+      sum(recent5, "trust"),
+
+    dealer5:
+      sum(recent5, "dealer"),
+
+    total5:
+      sum(recent5, "total"),
+
+    total10:
+      sum(recent10, "total")
+
+  };
 
 }
 
@@ -1060,20 +657,12 @@ async function getHistory(
    HTTPS
 ========================================================= */
 
-function requestJSON(
-  url,
-  token
-) {
+function requestJSON(url, token) {
 
   return new Promise(
-    function (
-      resolve,
-      reject
-    ) {
+    (resolve, reject) => {
 
-      let settled =
-        false;
-
+      let settled = false;
 
       const request =
         https.get(
@@ -1084,20 +673,17 @@ function requestJSON(
 
             headers: {
 
-              "Authorization":
+              Authorization:
                 "Bearer " +
                 token,
 
-              "Accept":
+              Accept:
                 "application/json",
 
               "User-Agent":
-                "Mozilla/5.0 stock-analyzer",
+                "stock-analyzer/2.0",
 
               "Cache-Control":
-                "no-cache",
-
-              "Pragma":
                 "no-cache"
 
             },
@@ -1107,129 +693,62 @@ function requestJSON(
 
           },
 
-          function (response) {
+          response => {
 
-            let body =
-              "";
-
+            let body = "";
 
             response.setEncoding(
               "utf8"
             );
 
-
             response.on(
               "data",
-              function (chunk) {
+              chunk => {
 
                 if (
                   body.length <
-                  10 * 1024 * 1024
+                  12 * 1024 * 1024
                 ) {
-
-                  body +=
-                    chunk;
-
+                  body += chunk;
                 }
 
               }
             );
 
-
             response.on(
               "end",
-              function () {
+              () => {
 
-                if (settled) {
-                  return;
-                }
+                if (settled) return;
 
-
-                settled =
-                  true;
-
-
-                const statusCode =
-                  Number(
-                    response.statusCode || 0
-                  );
-
+                settled = true;
 
                 if (
-                  statusCode < 200 ||
-                  statusCode >= 300
+                  response.statusCode < 200 ||
+                  response.statusCode >= 300
                 ) {
 
-                  let apiMessage =
-                    "";
-
-
-                  try {
-
-                    const parsed =
-                      JSON.parse(
-                        body
-                      );
-
-
-                    if (
-                      parsed &&
-                      parsed.msg
-                    ) {
-
-                      apiMessage =
-                        String(
-                          parsed.msg
-                        );
-
-                    }
-
-                  } catch (_) {}
-
-
                   return reject(
-
                     new Error(
-
                       "FinMind HTTP " +
-                      statusCode +
-                      (
-                        apiMessage
-                          ?
-                          "：" +
-                          apiMessage
-                          :
-                          ""
-                      )
-
+                      response.statusCode
                     )
-
                   );
 
                 }
-
 
                 try {
 
-                  const json =
-                    JSON.parse(
-                      body
-                    );
-
-
                   resolve(
-                    json
+                    JSON.parse(body)
                   );
 
-
-                } catch (_) {
+                } catch {
 
                   reject(
-
                     new Error(
-                      "FinMind 回傳不是有效 JSON"
+                      "FinMind JSON 解析失敗"
                     )
-
                   );
 
                 }
@@ -1241,51 +760,34 @@ function requestJSON(
 
         );
 
-
       request.on(
         "timeout",
-        function () {
+        () => {
 
-          if (settled) {
-            return;
-          }
+          if (settled) return;
 
-
-          settled =
-            true;
-
+          settled = true;
 
           request.destroy();
 
-
           reject(
-
             new Error(
               "FinMind 連線逾時"
             )
-
           );
 
         }
       );
 
-
       request.on(
         "error",
-        function (error) {
+        error => {
 
-          if (settled) {
-            return;
-          }
+          if (settled) return;
 
+          settled = true;
 
-          settled =
-            true;
-
-
-          reject(
-            error
-          );
+          reject(error);
 
         }
       );
@@ -1297,39 +799,21 @@ function requestJSON(
 
 
 /* =========================================================
-   日期工具
+   工具
 ========================================================= */
 
 function formatDate(date) {
 
-  const year =
-    date.getFullYear();
-
-
-  const month =
+  return (
+    date.getFullYear() +
+    "-" +
     String(
       date.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
+    ).padStart(2, "0") +
+    "-" +
     String(
       date.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  return (
-    year +
-    "-" +
-    month +
-    "-" +
-    day
+    ).padStart(2, "0")
   );
 
 }
@@ -1337,152 +821,79 @@ function formatDate(date) {
 
 function normalizeDate(value) {
 
-  if (!value) {
-    return "";
-  }
-
-
-  const text =
-    String(value).trim();
-
-
   const match =
-    text.match(
-      /^(\d{4}-\d{2}-\d{2})/
-    );
+    String(value || "")
+      .match(
+        /^(\d{4}-\d{2}-\d{2})/
+      );
 
-
-  if (match) {
-    return match[1];
-  }
-
-
-  return "";
+  return match
+    ? match[1]
+    : "";
 
 }
 
 
-/* =========================================================
-   數字工具
-========================================================= */
-
-function toNumber(value) {
+function num(value) {
 
   if (
     value === null ||
     value === undefined ||
     value === ""
   ) {
-
     return null;
-
   }
 
+  const n = Number(value);
 
-  const number =
-    Number(value);
-
-
-  if (
-    !Number.isFinite(number)
-  ) {
-
-    return null;
-
-  }
-
-
-  return number;
+  return Number.isFinite(n)
+    ? n
+    : null;
 
 }
 
 
-function getFirstPositive() {
+function positive(...values) {
 
-  for (
-    let i = 0;
-    i < arguments.length;
-    i++
-  ) {
+  for (const value of values) {
 
-    const number =
-      toNumber(
-        arguments[i]
-      );
-
+    const n = num(value);
 
     if (
-      number !== null &&
-      number > 0
+      n !== null &&
+      n > 0
     ) {
-
-      return number;
-
+      return n;
     }
 
   }
-
 
   return 0;
 
 }
 
 
-function getFirstFinite() {
+function finite(value) {
 
-  for (
-    let i = 0;
-    i < arguments.length;
-    i++
-  ) {
-
-    const number =
-      toNumber(
-        arguments[i]
-      );
-
-
-    if (
-      number !== null
-    ) {
-
-      return number;
-
-    }
-
-  }
-
-
-  return null;
+  return num(value);
 
 }
 
 
-function getFirstNonNegative() {
+function nonNegative(...values) {
 
-  for (
-    let i = 0;
-    i < arguments.length;
-    i++
-  ) {
+  for (const value of values) {
 
-    const number =
-      toNumber(
-        arguments[i]
-      );
-
+    const n = num(value);
 
     if (
-      number !== null &&
-      number >= 0
+      n !== null &&
+      n >= 0
     ) {
-
-      return number;
-
+      return n;
     }
 
   }
-
 
   return 0;
 
@@ -1491,111 +902,96 @@ function getFirstNonNegative() {
 
 function round(value) {
 
-  const number =
-    Number(value);
+  const n = Number(value);
 
-
-  if (
-    !Number.isFinite(number)
-  ) {
-
+  if (!Number.isFinite(n)) {
     return 0;
-
   }
 
-
   return (
-    Math.round(
-      number * 100
-    ) / 100
+    Math.round(n * 100) /
+    100
   );
 
 }
 
 
 /* =========================================================
-   股票名稱備援
+   股票名稱
 ========================================================= */
 
 function getStockName(symbol) {
 
   const names = {
 
-    "1101": "台泥",
-    "1102": "亞泥",
+    "1101":"台泥",
+    "1102":"亞泥",
+    "1216":"統一",
+    "1301":"台塑",
+    "1303":"南亞",
+    "1326":"台化",
 
-    "1216": "統一",
+    "1503":"士電",
+    "1513":"中興電",
+    "1519":"華城",
 
-    "1301": "台塑",
-    "1303": "南亞",
-    "1326": "台化",
+    "2002":"中鋼",
+    "2207":"和泰車",
 
-    "1503": "士電",
-    "1513": "中興電",
-    "1519": "華城",
+    "2303":"聯電",
+    "2308":"台達電",
+    "2317":"鴻海",
+    "2330":"台積電",
+    "2337":"旺宏",
+    "2344":"華邦電",
+    "2345":"智邦",
+    "2357":"華碩",
+    "2368":"金像電",
+    "2376":"技嘉",
+    "2377":"微星",
+    "2379":"瑞昱",
+    "2382":"廣達",
+    "2383":"台光電",
+    "2408":"南亞科",
+    "2412":"中華電",
+    "2454":"聯發科",
 
-    "2002": "中鋼",
+    "2603":"長榮",
+    "2609":"陽明",
+    "2610":"華航",
+    "2615":"萬海",
+    "2618":"長榮航",
 
-    "2207": "和泰車",
+    "2881":"富邦金",
+    "2882":"國泰金",
+    "2884":"玉山金",
+    "2885":"元大金",
+    "2886":"兆豐金",
+    "2891":"中信金",
 
-    "2303": "聯電",
-    "2308": "台達電",
-    "2317": "鴻海",
-    "2330": "台積電",
-    "2337": "旺宏",
-    "2344": "華邦電",
-    "2345": "智邦",
-    "2357": "華碩",
-    "2368": "金像電",
-    "2376": "技嘉",
-    "2377": "微星",
-    "2379": "瑞昱",
-    "2382": "廣達",
-    "2383": "台光電",
-    "2408": "南亞科",
-    "2412": "中華電",
-    "2454": "聯發科",
+    "2912":"統一超",
 
-    "2603": "長榮",
-    "2609": "陽明",
-    "2610": "華航",
-    "2615": "萬海",
-    "2618": "長榮航",
+    "3008":"大立光",
+    "3017":"奇鋐",
+    "3035":"智原",
+    "3037":"欣興",
 
-    "2881": "富邦金",
-    "2882": "國泰金",
-    "2884": "玉山金",
-    "2885": "元大金",
-    "2886": "兆豐金",
-    "2891": "中信金",
+    "3231":"緯創",
+    "3293":"鈊象",
+    "3324":"雙鴻",
+    "3443":"創意",
+    "3481":"群創",
+    "3661":"世芯-KY",
 
-    "2912": "統一超",
+    "3711":"日月光投控",
 
-    "3008": "大立光",
-    "3017": "奇鋐",
-    "3035": "智原",
-    "3037": "欣興",
-
-    "3231": "緯創",
-    "3293": "鈊象",
-    "3324": "雙鴻",
-    "3443": "創意",
-    "3661": "世芯-KY",
-
-    "3711": "日月光投控",
-
-    "6505": "台塑化",
-    "6669": "緯穎",
-    "6770": "力積電",
-
-    "8046": "南電"
+    "6505":"台塑化",
+    "6669":"緯穎",
+    "6770":"力積電",
+    "8046":"南電"
 
   };
 
-
-  return (
-    names[symbol] ||
-    ""
-  );
+  return names[symbol] || "";
 
 }
