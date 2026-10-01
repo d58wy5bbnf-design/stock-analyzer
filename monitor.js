@@ -1,13 +1,18 @@
 /* =========================================================
    api/monitor.js
-   Stock Analysis Monitor 6.4
+   Stock Analysis Monitor 7.0
+
+   交易模式：
+   1. PULLBACK 回檔型
+   2. BREAKOUT 突破型
+   3. WAIT 等待
 
    正式 Push 條件：
    1. 綜合評分 >= 75
    2. 資料完整度 >= 60%
    3. 技術面 >= 12 / 20
    4. 量價 >= 10 / 20
-   5. 已進入合理進場區
+   5. 已真正進入合理進場區
    6. 有有效 SL / TP1
    7. TP1 RR >= 1.3
 
@@ -18,12 +23,6 @@
    - 正式監控 08:55～13:40
    - 6 小時同 Setup 防重複
    - 失效 Push 自動清除
-
-   Test：
-   - ?test=1
-   - x-monitor-test: 1
-   - Test 模式跳過市場時間
-   - Test 模式跳過 Push 防重複
 ========================================================= */
 
 const webpush = require("web-push");
@@ -72,13 +71,10 @@ const DEDUPE_SECONDS = 21600;
 async function redis(command) {
 
   if (!REDIS_URL || !REDIS_TOKEN) {
-    throw new Error(
-      "Redis 環境變數尚未設定"
-    );
+    throw new Error("Redis 環境變數尚未設定");
   }
 
-  const controller =
-    new AbortController();
+  const controller = new AbortController();
 
   const timer =
     setTimeout(
@@ -117,6 +113,7 @@ async function redis(command) {
       !response.ok ||
       data?.error
     ) {
+
       throw new Error(
         data?.error ||
         "Redis request failed"
@@ -168,8 +165,7 @@ async function deleteDevice(deviceId) {
 
 function num(v) {
 
-  const n =
-    Number(v);
+  const n = Number(v);
 
   return Number.isFinite(n)
     ? n
@@ -180,11 +176,7 @@ function num(v) {
 function avg(a) {
 
   const values =
-    (
-      Array.isArray(a)
-        ? a
-        : []
-    )
+    (Array.isArray(a) ? a : [])
       .map(Number)
       .filter(Number.isFinite);
 
@@ -217,10 +209,7 @@ function sma(a, n) {
 }
 
 
-function emaSeries(
-  values,
-  period
-) {
+function emaSeries(values, period) {
 
   if (
     !Array.isArray(values) ||
@@ -258,10 +247,7 @@ function emaSeries(
 }
 
 
-function rsi(
-  values,
-  n = 14
-) {
+function rsi(values, n = 14) {
 
   if (
     !Array.isArray(values) ||
@@ -287,8 +273,7 @@ function rsi(
     if (d > 0) {
       gain += d;
     } else {
-      loss +=
-        Math.abs(d);
+      loss += Math.abs(d);
     }
   }
 
@@ -308,10 +293,7 @@ function rsi(
 }
 
 
-function atr(
-  rows,
-  n = 14
-) {
+function atr(rows, n = 14) {
 
   if (
     !Array.isArray(rows) ||
@@ -341,11 +323,9 @@ function atr(
     values.push(
       Math.max(
         x.high - x.low,
-
         Math.abs(
           x.high - previous
         ),
-
         Math.abs(
           x.low - previous
         )
@@ -361,11 +341,7 @@ function unique(list) {
 
   return [
     ...new Set(
-      (
-        Array.isArray(list)
-          ? list
-          : []
-      )
+      (Array.isArray(list) ? list : [])
         .map(
           x =>
             String(x).trim()
@@ -376,10 +352,7 @@ function unique(list) {
 }
 
 
-function round(
-  v,
-  digits = 2
-) {
+function round(v, digits = 2) {
 
   const n =
     Number(v);
@@ -401,11 +374,7 @@ function round(
 }
 
 
-function clamp(
-  v,
-  min,
-  max
-) {
+function clamp(v, min, max) {
 
   return Math.min(
     max,
@@ -446,13 +415,6 @@ function formatPrice(v) {
 
 function getTestMode(req) {
 
-  /*
-    monitor-test.js 會送：
-    x-monitor-test: 1
-
-    這個方式優先判斷。
-  */
-
   if (
     String(
       req.headers?.[
@@ -462,12 +424,6 @@ function getTestMode(req) {
   ) {
     return true;
   }
-
-
-  /*
-    Safari 直接：
-    /api/monitor?test=1
-  */
 
   try {
 
@@ -502,7 +458,6 @@ function getTestMode(req) {
       error
     );
   }
-
 
   const queryTest =
     req.query?.test;
@@ -681,8 +636,8 @@ function getMACD(closes) {
 
 function getSwings(
   rows,
-  left = 2,
-  right = 2
+  left = 3,
+  right = 3
 ) {
 
   const highs = [];
@@ -704,14 +659,14 @@ function getSwings(
     ) {
 
       if (
-        rows[i].high <=
+        rows[i].high >
         rows[i - j].high
       ) {
         isHigh = false;
       }
 
       if (
-        rows[i].low >=
+        rows[i].low <
         rows[i - j].low
       ) {
         isLow = false;
@@ -725,14 +680,14 @@ function getSwings(
     ) {
 
       if (
-        rows[i].high <=
+        rows[i].high >
         rows[i + j].high
       ) {
         isHigh = false;
       }
 
       if (
-        rows[i].low >=
+        rows[i].low <
         rows[i + j].low
       ) {
         isLow = false;
@@ -770,7 +725,91 @@ function getSwings(
 
 
 /* =========================================================
-   Entry / SL / TP
+   壓力／支撐合併
+========================================================= */
+
+function clusterLevels(
+  items,
+  distance
+) {
+
+  const sorted =
+    (items || [])
+      .filter(
+        x =>
+          Number.isFinite(
+            Number(x.price)
+          ) &&
+          Number(x.price) > 0
+      )
+      .sort(
+        (a, b) =>
+          Number(a.price) -
+          Number(b.price)
+      );
+
+  const groups = [];
+
+  for (
+    const item of
+    sorted
+  ) {
+
+    const last =
+      groups[
+        groups.length - 1
+      ];
+
+    if (
+      last &&
+      Math.abs(
+        Number(item.price) -
+        last.price
+      ) <= distance
+    ) {
+
+      last.values.push(
+        Number(item.price)
+      );
+
+      last.price =
+        avg(
+          last.values
+        );
+
+      last.count += 1;
+
+    } else {
+
+      groups.push({
+        price:
+          Number(item.price),
+
+        values: [
+          Number(item.price)
+        ],
+
+        count: 1
+      });
+    }
+  }
+
+  return groups;
+}
+
+
+/* =========================================================
+   Entry / SL / TP 7.0
+
+   PULLBACK：
+   現價接近有效支撐
+
+   BREAKOUT：
+   現價已離支撐太遠，
+   但距上方壓力不遠
+
+   WAIT：
+   不硬給 Entry
 ========================================================= */
 
 function buildTradePlan(
@@ -780,7 +819,7 @@ function buildTradePlan(
 ) {
 
   const recent =
-    rows.slice(-180);
+    rows.slice(-240);
 
   const closes =
     recent.map(
@@ -802,24 +841,54 @@ function buildTradePlan(
   const swings =
     getSwings(
       recent,
-      2,
-      2
+      3,
+      3
     );
 
-  const supports = [];
+  const mergeDistance =
+    Math.max(
+      A * 0.45,
+      price * 0.005
+    );
+
+
+  /* =======================================================
+     支撐
+  ======================================================= */
+
+  const supportRaw = [];
+
+
+  for (
+    const x of
+    swings.lows
+  ) {
+
+    if (
+      x.price <=
+        price * 1.01 &&
+      x.price >=
+        price * 0.75
+    ) {
+
+      supportRaw.push({
+        price:
+          x.price
+      });
+    }
+  }
 
 
   if (
     Number.isFinite(m20) &&
     m20 <=
-      price * 1.005
+      price * 1.01 &&
+    m20 >=
+      price * 0.75
   ) {
 
-    supports.push({
-      price: m20,
-      type:
-        "MA20 支撐",
-      weight: 4
+    supportRaw.push({
+      price: m20
     });
   }
 
@@ -827,181 +896,288 @@ function buildTradePlan(
   if (
     Number.isFinite(m60) &&
     m60 <=
-      price * 1.005
+      price * 1.01 &&
+    m60 >=
+      price * 0.75
   ) {
 
-    supports.push({
-      price: m60,
-      type:
-        "MA60 支撐",
-      weight: 3
+    supportRaw.push({
+      price: m60
     });
   }
 
 
+  const low20 =
+    Math.min(
+      ...rows
+        .slice(-20)
+        .map(
+          x => x.low
+        )
+    );
+
+
+  const low60 =
+    Math.min(
+      ...rows
+        .slice(-60)
+        .map(
+          x => x.low
+        )
+    );
+
+
+  supportRaw.push({
+    price: low20
+  });
+
+
+  supportRaw.push({
+    price: low60
+  });
+
+
+  const supportGroups =
+    clusterLevels(
+      supportRaw,
+      mergeDistance
+    )
+      .filter(
+        x =>
+          x.price <=
+            price * 1.01 &&
+          x.price >=
+            price * 0.75
+      )
+      .sort(
+        (a, b) =>
+          b.price -
+          a.price
+      );
+
+
+  const support1 =
+    supportGroups[0]
+      ?.price ??
+    (
+      Number.isFinite(m20)
+        ? Math.min(
+            price,
+            m20
+          )
+        : price - A
+    );
+
+
+  const support2 =
+    supportGroups.find(
+      x =>
+        x.price <
+        support1 -
+        mergeDistance
+    )?.price ??
+    (
+      Number.isFinite(m60) &&
+      m60 < support1
+        ? m60
+        : null
+    );
+
+
+  /* =======================================================
+     壓力
+  ======================================================= */
+
+  const pressureRaw = [];
+
+
   for (
-    const s of
-    swings.lows
+    const x of
+    swings.highs
   ) {
 
     if (
-      s.price <=
-        price * 1.005 &&
-      s.price >=
-        price * 0.88
+      x.price >
+      price +
+        mergeDistance *
+        0.20
     ) {
 
-      supports.push({
+      pressureRaw.push({
         price:
-          s.price,
-        type:
-          "波段低點支撐",
-        weight: 5,
-        date:
-          s.date
+          x.price
       });
     }
   }
 
 
   for (
-    const h of
-    swings.highs
+    let i = 20;
+    i < recent.length;
+    i += 10
   ) {
 
+    const block =
+      recent.slice(
+        Math.max(
+          0,
+          i - 20
+        ),
+        i + 1
+      );
+
+
+    if (!block.length) {
+      continue;
+    }
+
+
+    const high =
+      Math.max(
+        ...block.map(
+          x => x.high
+        )
+      );
+
+
     if (
-      h.price < price &&
-      h.price >=
-        price * 0.90
+      high >
+      price +
+        mergeDistance *
+        0.20
     ) {
 
-      const broken =
-        recent
-          .slice(
-            h.index + 1
-          )
-          .some(
-            x =>
-              x.close >
-              h.price *
-              1.005
-          );
-
-      if (broken) {
-
-        supports.push({
-          price:
-            h.price,
-          type:
-            "前高突破回測",
-          weight: 6,
-          date:
-            h.date
-        });
-      }
+      pressureRaw.push({
+        price: high
+      });
     }
   }
 
 
-  const rankedSupports =
-    supports
+  const pressureGroups =
+    clusterLevels(
+      pressureRaw,
+      mergeDistance
+    )
       .filter(
         x =>
-          Number.isFinite(
-            x.price
-          ) &&
-          x.price > 0
-      )
-      .map(
-        x => ({
-          ...x,
-
-          distance:
-            (
-              price -
-              x.price
-            ) /
-            price
-        })
-      )
-      .filter(
-        x =>
-          x.distance >=
-            -0.005 &&
-          x.distance <=
-            0.10
+          x.price >
+          price +
+            mergeDistance *
+            0.20
       )
       .sort(
-        (a, b) => {
-
-          const sa =
-            a.weight -
-            a.distance * 25;
-
-          const sb =
-            b.weight -
-            b.distance * 25;
-
-          return sb - sa;
-        }
+        (a, b) =>
+          a.price -
+          b.price
       );
 
 
-  const support1 =
-    rankedSupports[0] ||
+  const breakout =
+    pressureGroups[0]
+      ?.price ??
     null;
 
 
-  let support2 =
-    null;
+  /* =======================================================
+     判斷模式
+  ======================================================= */
+
+  const supportDistance =
+    support1 > 0
+      ? (
+          price -
+          support1
+        ) /
+        price
+      : 999;
 
 
-  if (support1) {
+  const breakoutDistance =
+    breakout
+      ? (
+          breakout -
+          price
+        ) /
+        price
+      : 999;
 
-    support2 =
-      rankedSupports
-        .filter(
-          x =>
-            x !==
-              support1 &&
-            x.price <
-              support1.price -
-              Math.max(
-                A * 0.4,
-                price * 0.004
-              )
-        )
-        .sort(
-          (a, b) =>
-            b.price -
-            a.price
-        )[0] ||
-      null;
+
+  let planType =
+    "WAIT";
+
+
+  /*
+    現價離第一支撐 5% 內：
+    回檔型
+  */
+
+  if (
+    supportDistance >=
+      -0.01 &&
+    supportDistance <=
+      0.05
+  ) {
+
+    planType =
+      "PULLBACK";
   }
 
+
+  /*
+    已離支撐超過 5%，
+    但距上方突破位 <= 3.5%
+  */
+
+  else if (
+    breakout &&
+    breakoutDistance >= 0 &&
+    breakoutDistance <=
+      0.035 &&
+    supportDistance >
+      0.05
+  ) {
+
+    planType =
+      "BREAKOUT";
+  }
+
+
+  /* =======================================================
+     Entry / SL
+  ======================================================= */
 
   let entryLow = null;
   let entryHigh = null;
   let entryMid = null;
+
   let sl = null;
 
 
-  if (support1) {
+  /* =======================================================
+     PULLBACK
+  ======================================================= */
 
-    const width =
-      Math.max(
-        A * 0.30,
-        support1.price *
-          0.003
-      );
+  if (
+    planType ===
+    "PULLBACK"
+  ) {
 
     entryLow =
-      support1.price -
-      width;
+      support1 -
+      Math.max(
+        A * 0.20,
+        price * 0.0025
+      );
+
 
     entryHigh =
-      support1.price +
-      width;
+      support1 +
+      Math.max(
+        A * 0.35,
+        price * 0.004
+      );
+
 
     entryMid =
       (
@@ -1010,41 +1186,42 @@ function buildTradePlan(
       ) / 2;
 
 
-    const lowerSwing =
+    const structuralLows =
       swings.lows
+        .map(
+          x => x.price
+        )
         .filter(
           x =>
-            x.price <
-            support1.price
+            x <
+              support1 -
+              mergeDistance *
+              0.20 &&
+            x >=
+              entryMid *
+              0.90
         )
         .sort(
           (a, b) =>
-            b.price -
-            a.price
-        )[0] ||
-      null;
+            b - a
+        );
 
 
     const invalidation =
-      lowerSwing &&
-      lowerSwing.price >=
-        support1.price *
-        0.94
-
-        ? lowerSwing.price
-        : support1.price;
-
-
-    const buffer =
-      Math.max(
-        A * 0.35,
-        price * 0.004
+      structuralLows[0] ||
+      support2 ||
+      (
+        support1 -
+        A * 0.8
       );
 
 
     sl =
       invalidation -
-      buffer;
+      Math.max(
+        A * 0.25,
+        price * 0.003
+      );
 
 
     if (
@@ -1053,211 +1230,91 @@ function buildTradePlan(
 
       sl =
         entryLow -
-        buffer;
+        Math.max(
+          A * 0.40,
+          price * 0.0045
+        );
     }
   }
 
 
   /* =======================================================
-     歷史壓力
+     BREAKOUT
   ======================================================= */
 
-  const resistances = [];
-
-
-  for (
-    const h of
-    swings.highs
+  else if (
+    planType ===
+    "BREAKOUT"
   ) {
 
-    if (
-      h.price >
-        price * 1.003
-    ) {
+    /*
+      Entry 直接改成突破位附近。
 
-      resistances.push({
-        price:
-          h.price,
-        type:
-          "歷史波段高點",
-        date:
-          h.date
-      });
-    }
-  }
+      例如：
+      現價 1215
+      壓力 1230
 
+      不會再叫它等 1020。
+    */
 
-  for (
-    const length of
-    [20, 60, 120]
-  ) {
-
-    const part =
-      recent.slice(
-        -length
-      );
-
-    if (!part.length) {
-      continue;
-    }
-
-    const high =
+    entryLow =
+      breakout -
       Math.max(
-        ...part.map(
-          x => x.high
-        )
+        A * 0.18,
+        breakout * 0.002
       );
 
+
+    entryHigh =
+      breakout +
+      Math.max(
+        A * 0.35,
+        breakout * 0.004
+      );
+
+
+    entryMid =
+      (
+        entryLow +
+        entryHigh
+      ) / 2;
+
+
+    /*
+      突破型 SL：
+      放突破失敗區。
+
+      不使用很遠的舊支撐。
+    */
+
+    sl =
+      breakout -
+      Math.max(
+        A * 0.75,
+        breakout * 0.012
+      );
+
+
     if (
-      high >
-        price * 1.003
+      sl >= entryLow
     ) {
 
-      resistances.push({
-        price:
-          high,
-        type:
-          `${length} 日高點`
-      });
-    }
-  }
-
-
-  resistances.sort(
-    (a, b) =>
-      a.price -
-      b.price
-  );
-
-
-  const merged = [];
-
-
-  for (
-    const x of
-    resistances
-  ) {
-
-    const last =
-      merged[
-        merged.length - 1
-      ];
-
-
-    if (
-      last &&
-      Math.abs(
-        x.price -
-        last.price
-      ) <=
+      sl =
+        entryLow -
         Math.max(
-          A * 0.45,
+          A * 0.40,
           price * 0.005
-        )
-    ) {
-
-      last.price =
-        (
-          last.price +
-          x.price
-        ) / 2;
-
-      last.type =
-        "壓力共振";
-
-    } else {
-
-      merged.push({
-        ...x
-      });
+        );
     }
   }
 
 
-  let tp1 =
-    merged[0]?.price ??
-    null;
-
-  let tp2 =
-    merged[1]?.price ??
-    null;
-
-  let tp3 =
-    merged[2]?.price ??
-    null;
-
-
-  let tp1Source =
-    merged[0]?.type ||
-    "";
-
-  let tp2Source =
-    merged[1]?.type ||
-    "";
-
-  let tp3Source =
-    merged[2]?.type ||
-    "";
-
-
-  if (
-    Number.isFinite(
-      entryMid
-    )
-  ) {
-
-    if (
-      !Number.isFinite(tp1)
-    ) {
-
-      tp1 =
-        Math.max(
-          price + A * 2,
-          entryMid + A * 2
-        );
-
-      tp1Source =
-        "ATR 延伸";
-    }
-
-
-    if (
-      !Number.isFinite(tp2)
-    ) {
-
-      tp2 =
-        Math.max(
-          tp1 + A * 1.5,
-          entryMid + A * 3.5
-        );
-
-      tp2Source =
-        "ATR 波段延伸";
-    }
-
-
-    if (
-      !Number.isFinite(tp3)
-    ) {
-
-      tp3 =
-        Math.max(
-          tp2 + A * 1.5,
-          entryMid + A * 5
-        );
-
-      tp3Source =
-        "ATR 長波段延伸";
-    }
-  }
-
+  /* =======================================================
+     Risk
+  ======================================================= */
 
   let risk = null;
   let riskPct = null;
-
-  let rr1 = null;
-  let rr2 = null;
-  let rr3 = null;
 
 
   if (
@@ -1272,57 +1329,186 @@ function buildTradePlan(
       entryMid -
       sl;
 
+
     riskPct =
       risk /
       entryMid *
       100;
-
-
-    if (
-      Number.isFinite(tp1)
-    ) {
-
-      rr1 =
-        (
-          tp1 -
-          entryMid
-        ) /
-        risk;
-    }
-
-
-    if (
-      Number.isFinite(tp2)
-    ) {
-
-      rr2 =
-        (
-          tp2 -
-          entryMid
-        ) /
-        risk;
-    }
-
-
-    if (
-      Number.isFinite(tp3)
-    ) {
-
-      rr3 =
-        (
-          tp3 -
-          entryMid
-        ) /
-        risk;
-    }
   }
 
+
+  /* =======================================================
+     TP
+
+     PULLBACK：
+     第一個高於 Entry 的真實壓力即可當 TP1。
+
+     BREAKOUT：
+     breakout 本身就是 Entry 依據，
+     所以 TP1 必須在 breakout 上方。
+  ======================================================= */
+
+  const targetBase =
+    Number.isFinite(
+      entryHigh
+    )
+      ? entryHigh
+      : price;
+
+
+  const targets =
+    pressureGroups
+      .map(
+        x => x.price
+      )
+      .filter(
+        value =>
+          value >
+          targetBase +
+            mergeDistance *
+            0.25
+      );
+
+
+  let tp1 =
+    targets[0] ??
+    null;
+
+
+  let tp2 =
+    tp1
+      ? (
+          targets.find(
+            value =>
+              value >
+              tp1 +
+              mergeDistance
+          ) ??
+          null
+        )
+      : null;
+
+
+  let tp3 =
+    tp2
+      ? (
+          targets.find(
+            value =>
+              value >
+              tp2 +
+              mergeDistance
+          ) ??
+          null
+        )
+      : null;
+
+
+  let tp1Source =
+    tp1
+      ? "歷史壓力"
+      : "";
+
+
+  let tp2Source =
+    tp2
+      ? "更高歷史壓力"
+      : "";
+
+
+  let tp3Source =
+    tp3
+      ? "更高一層歷史壓力"
+      : "";
+
+
+  /*
+    只有已經找到 TP1、TP2，
+    但缺 TP3 時，
+    才允許 TP3 做延伸。
+
+    不硬生 ATR TP1。
+  */
+
+  if (
+    !tp3 &&
+    tp2 &&
+    tp1
+  ) {
+
+    const base =
+      support2 ||
+      support1;
+
+
+    tp3 =
+      tp2 +
+      Math.max(
+        tp2 - base,
+        A * 3
+      ) *
+      0.618;
+
+
+    tp3Source =
+      "歷史壓力不足，Fib 0.618 延伸";
+  }
+
+
+  /* =======================================================
+     RR
+  ======================================================= */
+
+  function getRR(target) {
+
+    if (
+      !Number.isFinite(
+        target
+      ) ||
+      !Number.isFinite(
+        risk
+      ) ||
+      risk <= 0
+    ) {
+      return null;
+    }
+
+
+    return (
+      target -
+      entryMid
+    ) /
+    risk;
+  }
+
+
+  const rr1 =
+    getRR(tp1);
+
+
+  const rr2 =
+    getRR(tp2);
+
+
+  const rr3 =
+    getRR(tp3);
+
+
+  /* =======================================================
+     Entry Ready
+  ======================================================= */
 
   let entryReady =
     false;
 
 
+  /*
+    回檔型：
+    現價真的靠近 Entry。
+  */
+
   if (
+    planType ===
+    "PULLBACK" &&
     Number.isFinite(
       entryLow
     ) &&
@@ -1331,38 +1517,105 @@ function buildTradePlan(
     )
   ) {
 
-    const tolerance =
-      Math.max(
-        A * 0.45,
-        price * 0.008
-      );
-
-
     entryReady =
       price >=
         entryLow -
-        tolerance
+        Math.max(
+          A * 0.25,
+          price * 0.004
+        )
       &&
       price <=
         entryHigh +
-        tolerance;
+        Math.max(
+          A * 0.35,
+          price * 0.006
+        );
+  }
+
+
+  /*
+    突破型：
+
+    靠近突破位不算。
+
+    必須：
+    現價 >= breakout
+
+    才允許正式 Push。
+  */
+
+  if (
+    planType ===
+      "BREAKOUT" &&
+    Number.isFinite(
+      breakout
+    ) &&
+    Number.isFinite(
+      entryHigh
+    )
+  ) {
+
+    entryReady =
+      price >= breakout &&
+      price <=
+        entryHigh +
+        Math.max(
+          A * 0.20,
+          price * 0.003
+        );
   }
 
 
   return {
 
-    support1,
+    planType,
 
-    support2,
+    support1:
+      round(
+        support1
+      ),
+
+    support2:
+      round(
+        support2
+      ),
+
+    breakout:
+      round(
+        breakout
+      ),
+
+    supportDistance:
+      supportDistance === 999
+        ? null
+        : round(
+            supportDistance *
+            100
+          ),
+
+    breakoutDistance:
+      breakoutDistance === 999
+        ? null
+        : round(
+            breakoutDistance *
+            100
+          ),
 
     entryLow:
-      round(entryLow),
+      round(
+        entryLow
+      ),
 
     entryHigh:
-      round(entryHigh),
+      round(
+        entryHigh
+      ),
 
     entryMid:
-      round(entryMid),
+      round(
+        entryMid
+      ),
 
     sl:
       round(sl),
@@ -1371,7 +1624,9 @@ function buildTradePlan(
       round(risk),
 
     riskPct:
-      round(riskPct),
+      round(
+        riskPct
+      ),
 
     tp1:
       round(tp1),
@@ -2789,14 +3044,57 @@ function makeSignal(a) {
   }
 
 
+  /*
+    WAIT 永遠不 Push
+  */
+
+  if (
+    a.planType ===
+    "WAIT"
+  ) {
+
+    return {
+      signal: null,
+      reason:
+        "目前沒有合理進場位置"
+    };
+  }
+
+
+  /*
+    BREAKOUT：
+    沒有真的突破不能 Push。
+  */
+
+  if (
+    a.planType ===
+      "BREAKOUT" &&
+    Number(a.price) <
+      Number(a.breakout)
+  ) {
+
+    return {
+      signal: null,
+      reason:
+        `等待突破 ${formatPrice(a.breakout)}`
+    };
+  }
+
+
   if (
     !a.entryReady
   ) {
 
     return {
       signal: null,
+
       reason:
-        "尚未進入合理進場區"
+        a.planType ===
+        "BREAKOUT"
+
+          ? "尚未完成突破確認"
+
+          : "尚未進入回檔進場區"
     };
   }
 
@@ -2828,6 +3126,19 @@ function makeSignal(a) {
 
 
   if (
+    Number(a.sl) >=
+    Number(a.entryLow)
+  ) {
+
+    return {
+      signal: null,
+      reason:
+        "停損位置無效"
+    };
+  }
+
+
+  if (
     !Number.isFinite(
       Number(
         a.tp1
@@ -2844,7 +3155,7 @@ function makeSignal(a) {
     return {
       signal: null,
       reason:
-        "上方沒有足夠目標空間"
+        "上方沒有足夠歷史目標空間"
     };
   }
 
@@ -2873,6 +3184,8 @@ function makeSignal(a) {
     [
       a.symbol,
 
+      a.planType,
+
       Number(
         a.entryLow
       ).toFixed(2),
@@ -2899,7 +3212,12 @@ function makeSignal(a) {
     },
 
     reason:
-      "符合正式進場通知條件"
+      a.planType ===
+      "BREAKOUT"
+
+        ? "符合突破型正式進場通知條件"
+
+        : "符合回檔型正式進場通知條件"
   };
 }
 
@@ -3112,14 +3430,28 @@ function buildNotification(
   }
 
 
+  const mode =
+    signal.planType ===
+    "BREAKOUT"
+
+      ? "突破進場"
+
+      : "回檔進場";
+
+
   return {
 
     title:
-      `📈 ${signal.name} ${signal.symbol}｜綜合 ${signal.score} 分`,
+      `📈 ${signal.name} ${signal.symbol}｜${mode}｜${signal.score} 分`,
 
     body:
       [
         `現價 ${formatPrice(signal.price)}`,
+
+        signal.planType ===
+        "BREAKOUT"
+          ? `突破位 ${formatPrice(signal.breakout)}`
+          : `支撐 ${formatPrice(signal.support1)}`,
 
         `進場 ${entry}`,
 
@@ -3137,7 +3469,7 @@ function buildNotification(
         .join("\n"),
 
     tag:
-      `entry-${signal.symbol}`,
+      `entry-${signal.symbol}-${signal.planType}`,
 
     url:
       `/?symbol=${encodeURIComponent(signal.symbol)}`
@@ -3198,25 +3530,9 @@ async function handler(
   );
 
 
-  /* =======================================================
-     TEST MODE
-
-     1. /api/monitor?test=1
-     2. monitor-test.js 送 x-monitor-test: 1
-  ======================================================= */
-
   const testMode =
     getTestMode(req);
 
-
-  /* =======================================================
-     安全性
-
-     x-monitor-test 模式仍由 monitor-test.js
-     自動帶 CRON_SECRET。
-
-     Safari ?test=1 保留原本測試方式。
-  ======================================================= */
 
   const internalTest =
     String(
@@ -3249,7 +3565,7 @@ async function handler(
           ok: false,
 
           engine:
-            "Stock Analysis Monitor 6.4",
+            "Stock Analysis Monitor 7.0",
 
           testMode,
 
@@ -3288,10 +3604,8 @@ async function handler(
 
 
     /* =====================================================
-       正式模式才限制市場時間
-
-       Test Mode：
-       凌晨也能完整執行
+       正式模式 08:55～13:40
+       Test Mode 跳過
     ===================================================== */
 
     if (
@@ -3305,7 +3619,7 @@ async function handler(
           ok: true,
 
           engine:
-            "Stock Analysis Monitor 6.4",
+            "Stock Analysis Monitor 7.0",
 
           skipped:
             true,
@@ -3423,7 +3737,7 @@ async function handler(
           ok: true,
 
           engine:
-            "Stock Analysis Monitor 6.4",
+            "Stock Analysis Monitor 7.0",
 
           testMode,
 
@@ -3553,8 +3867,7 @@ async function handler(
 
 
         /* =================================================
-           第一階段
-           不抓新聞先分析
+           第一階段：不抓新聞
         ================================================= */
 
         const preliminary =
@@ -3590,7 +3903,7 @@ async function handler(
 
 
         /* =================================================
-           強勢候選才抓新聞
+           候選才抓新聞
         ================================================= */
 
         let newsData =
@@ -3677,6 +3990,30 @@ async function handler(
 
           news:
             analysis?.news?.score ??
+            null,
+
+          planType:
+            analysis?.planType ??
+            "WAIT",
+
+          support1:
+            analysis?.support1 ??
+            null,
+
+          support2:
+            analysis?.support2 ??
+            null,
+
+          breakout:
+            analysis?.breakout ??
+            null,
+
+          supportDistance:
+            analysis?.supportDistance ??
+            null,
+
+          breakoutDistance:
+            analysis?.breakoutDistance ??
             null,
 
           entryReady:
@@ -3799,8 +4136,8 @@ async function handler(
           Test：
           不防重複
 
-          正式 Cron：
-          6 小時防重複
+          正式：
+          6 小時同 Setup 防重複
         */
 
         if (
@@ -3853,6 +4190,9 @@ async function handler(
               device.deviceId,
 
             symbol,
+
+            planType:
+              signal.planType,
 
             ok: true,
 
@@ -3950,6 +4290,9 @@ async function handler(
 
             symbol,
 
+            planType:
+              signal.planType,
+
             ok: false,
 
             statusCode,
@@ -3968,7 +4311,7 @@ async function handler(
 
 
     /* =====================================================
-       Result
+       RESULT
     ===================================================== */
 
     return res
@@ -3977,7 +4320,10 @@ async function handler(
         ok: true,
 
         engine:
-          "Stock Analysis Monitor 6.4",
+          "Stock Analysis Monitor 7.0",
+
+        tradePlan:
+          "PULLBACK / BREAKOUT / WAIT",
 
         strategy:
           "技術＋量價＋法人＋基本面＋新聞",
@@ -4047,7 +4393,7 @@ async function handler(
         ok: false,
 
         engine:
-          "Stock Analysis Monitor 6.4",
+          "Stock Analysis Monitor 7.0",
 
         testMode,
 
