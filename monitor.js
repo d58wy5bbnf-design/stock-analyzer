@@ -1,27 +1,33 @@
 /* =========================================================
    api/monitor.js
-   妖子平台 Stock Analysis Monitor 6.2
+   Stock Analysis Monitor 6.3
 
-   正式 Push：
-   - 綜合評分 >= 75
-   - 資料完整度 >= 60%
-   - 技術面 >= 12 / 20
-   - 量價 >= 10 / 20
-   - 進入合理進場區
-   - 有有效 SL / TP1
-   - TP1 RR >= 1.3
+   正式 Push 條件：
+   1. 綜合評分 >= 75
+   2. 資料完整度 >= 60%
+   3. 技術面 >= 12 / 20
+   4. 量價 >= 10 / 20
+   5. 已進入合理進場區
+   6. 有有效 SL / TP1
+   7. TP1 RR >= 1.3
 
-   保留：
+   支援：
    - iPhone / iPad 多裝置
    - Redis
    - Vercel Cron
-   - 08:55 ~ 13:40
+   - 正式監控 08:55～13:40
    - 6 小時同 Setup 防重複
    - 失效 Push 自動清除
-   - ?test=1 可直接 Safari 測試，不受 CRON_SECRET 限制
+   - ?test=1 Safari 直接測試
+   - test=1 跳過 CRON_SECRET
 ========================================================= */
 
 const webpush = require("web-push");
+
+
+/* =========================================================
+   ENV
+========================================================= */
 
 const REDIS_URL =
   process.env.KV_REST_API_URL ||
@@ -51,7 +57,9 @@ const MIN_COMPLETENESS = 60;
 const MIN_TECHNICAL = 12;
 const MIN_VOLUME = 10;
 const MIN_RR = 1.3;
-const DEDUPE_SECONDS = 21600;
+
+const DEDUPE_SECONDS =
+  21600;
 
 
 /* =========================================================
@@ -61,6 +69,7 @@ const DEDUPE_SECONDS = 21600;
 async function redis(command) {
 
   if (!REDIS_URL || !REDIS_TOKEN) {
+
     throw new Error(
       "Redis 環境變數尚未設定"
     );
@@ -170,22 +179,25 @@ function num(v) {
 function avg(a) {
 
   const values =
-    (Array.isArray(a)
-      ? a
-      : []
+    (
+      Array.isArray(a)
+        ? a
+        : []
     )
       .map(Number)
-      .filter(
-        Number.isFinite
-      );
+      .filter(Number.isFinite);
 
-  return values.length
-    ? values.reduce(
-        (x, y) =>
-          x + y,
-        0
-      ) / values.length
-    : 0;
+  if (!values.length) {
+    return 0;
+  }
+
+  return (
+    values.reduce(
+      (x, y) => x + y,
+      0
+    ) /
+    values.length
+  );
 }
 
 
@@ -195,6 +207,7 @@ function sma(a, n) {
     !Array.isArray(a) ||
     a.length < n
   ) {
+
     return null;
   }
 
@@ -213,6 +226,7 @@ function emaSeries(
     !Array.isArray(values) ||
     !values.length
   ) {
+
     return [];
   }
 
@@ -254,6 +268,7 @@ function rsi(
     !Array.isArray(values) ||
     values.length <= n
   ) {
+
     return 50;
   }
 
@@ -307,6 +322,7 @@ function atr(
     !Array.isArray(rows) ||
     rows.length < 2
   ) {
+
     return 0;
   }
 
@@ -333,13 +349,11 @@ function atr(
         x.high - x.low,
 
         Math.abs(
-          x.high -
-          previous
+          x.high - previous
         ),
 
         Math.abs(
-          x.low -
-          previous
+          x.low - previous
         )
       )
     );
@@ -360,8 +374,7 @@ function unique(list) {
       )
         .map(
           x =>
-            String(x)
-              .trim()
+            String(x).trim()
         )
         .filter(Boolean)
     )
@@ -380,6 +393,7 @@ function round(
   if (
     !Number.isFinite(n)
   ) {
+
     return null;
   }
 
@@ -418,6 +432,7 @@ function formatPrice(v) {
   if (
     !Number.isFinite(n)
   ) {
+
     return "--";
   }
 
@@ -430,6 +445,74 @@ function formatPrice(v) {
   }
 
   return n.toFixed(2);
+}
+
+
+/* =========================================================
+   TEST MODE
+   直接解析 req.url
+========================================================= */
+
+function getTestMode(req) {
+
+  try {
+
+    const host =
+      req.headers?.host ||
+      "localhost";
+
+    const protocol =
+      req.headers?.[
+        "x-forwarded-proto"
+      ] ||
+      "https";
+
+    const url =
+      new URL(
+        req.url || "/",
+        `${protocol}://${host}`
+      );
+
+    if (
+      url.searchParams.get(
+        "test"
+      ) === "1"
+    ) {
+
+      return true;
+    }
+
+  } catch (error) {
+
+    console.error(
+      "URL parse error:",
+      error
+    );
+  }
+
+
+  const queryTest =
+    req.query?.test;
+
+
+  if (
+    queryTest === "1"
+  ) {
+
+    return true;
+  }
+
+
+  if (
+    Array.isArray(queryTest) &&
+    queryTest.includes("1")
+  ) {
+
+    return true;
+  }
+
+
+  return false;
 }
 
 
@@ -504,6 +587,7 @@ function isMarketTime() {
       t.weekday
     )
   ) {
+
     return false;
   }
 
@@ -616,6 +700,7 @@ function getSwings(
         rows[i].high <=
         rows[i - j].high
       ) {
+
         isHigh = false;
       }
 
@@ -623,6 +708,7 @@ function getSwings(
         rows[i].low >=
         rows[i - j].low
       ) {
+
         isLow = false;
       }
     }
@@ -637,6 +723,7 @@ function getSwings(
         rows[i].high <=
         rows[i + j].high
       ) {
+
         isHigh = false;
       }
 
@@ -644,6 +731,7 @@ function getSwings(
         rows[i].low >=
         rows[i + j].low
       ) {
+
         isLow = false;
       }
     }
@@ -651,12 +739,9 @@ function getSwings(
     if (isHigh) {
 
       highs.push({
-
         index: i,
-
         price:
           rows[i].high,
-
         date:
           rows[i].date
       });
@@ -665,12 +750,9 @@ function getSwings(
     if (isLow) {
 
       lows.push({
-
         index: i,
-
         price:
           rows[i].low,
-
         date:
           rows[i].date
       });
@@ -724,8 +806,6 @@ function buildTradePlan(
   const supports = [];
 
 
-  /* MA20 */
-
   if (
     Number.isFinite(m20) &&
     m20 <=
@@ -733,19 +813,13 @@ function buildTradePlan(
   ) {
 
     supports.push({
-
-      price:
-        m20,
-
+      price: m20,
       type:
         "MA20 支撐",
-
       weight: 4
     });
   }
 
-
-  /* MA60 */
 
   if (
     Number.isFinite(m60) &&
@@ -754,19 +828,13 @@ function buildTradePlan(
   ) {
 
     supports.push({
-
-      price:
-        m60,
-
+      price: m60,
       type:
         "MA60 支撐",
-
       weight: 3
     });
   }
 
-
-  /* 波段低點 */
 
   for (
     const s of
@@ -781,23 +849,17 @@ function buildTradePlan(
     ) {
 
       supports.push({
-
         price:
           s.price,
-
         type:
           "波段低點支撐",
-
         weight: 5,
-
         date:
           s.date
       });
     }
   }
 
-
-  /* 前高突破回測 */
 
   for (
     const h of
@@ -825,15 +887,11 @@ function buildTradePlan(
       if (broken) {
 
         supports.push({
-
           price:
             h.price,
-
           type:
             "前高突破回測",
-
           weight: 6,
-
           date:
             h.date
         });
@@ -853,7 +911,6 @@ function buildTradePlan(
       )
       .map(
         x => ({
-
           ...x,
 
           distance:
@@ -882,9 +939,7 @@ function buildTradePlan(
             b.weight -
             b.distance * 25;
 
-          return (
-            sb - sa
-          );
+          return sb - sa;
         }
       );
 
@@ -922,10 +977,6 @@ function buildTradePlan(
   }
 
 
-  /* =======================================================
-     Entry
-  ======================================================= */
-
   let entryLow = null;
   let entryHigh = null;
   let entryMid = null;
@@ -955,10 +1006,6 @@ function buildTradePlan(
         entryHigh
       ) / 2;
 
-
-    /* =====================================================
-       SL
-    ===================================================== */
 
     const lowerSwing =
       swings.lows
@@ -1026,13 +1073,10 @@ function buildTradePlan(
     ) {
 
       resistances.push({
-
         price:
           h.price,
-
         type:
           "歷史波段高點",
-
         date:
           h.date
       });
@@ -1054,7 +1098,6 @@ function buildTradePlan(
       continue;
     }
 
-
     const high =
       Math.max(
         ...part.map(
@@ -1062,17 +1105,14 @@ function buildTradePlan(
         )
       );
 
-
     if (
       high >
         price * 1.003
     ) {
 
       resistances.push({
-
         price:
           high,
-
         type:
           `${length} 日高點`
       });
@@ -1086,8 +1126,6 @@ function buildTradePlan(
       b.price
   );
 
-
-  /* 合併過近壓力 */
 
   const merged = [];
 
@@ -1133,13 +1171,6 @@ function buildTradePlan(
   }
 
 
-  /* =======================================================
-     TP1 / TP2 / TP3
-
-     優先真實歷史壓力。
-     沒有才使用 ATR 延伸。
-  ======================================================= */
-
   let tp1 =
     merged[0]?.price ??
     null;
@@ -1166,6 +1197,11 @@ function buildTradePlan(
     "";
 
 
+  /*
+    上方真的沒有歷史壓力時，
+    才使用 ATR 延伸。
+  */
+
   if (
     Number.isFinite(
       entryMid
@@ -1183,7 +1219,7 @@ function buildTradePlan(
         );
 
       tp1Source =
-        "上方無有效歷史壓力／ATR 延伸";
+        "ATR 延伸";
     }
 
 
@@ -1217,10 +1253,6 @@ function buildTradePlan(
     }
   }
 
-
-  /* =======================================================
-     RR
-  ======================================================= */
 
   let risk = null;
   let riskPct = null;
@@ -1288,11 +1320,8 @@ function buildTradePlan(
   }
 
 
-  /* =======================================================
-     Entry Ready
-  ======================================================= */
-
-  let entryReady = false;
+  let entryReady =
+    false;
 
 
   if (
@@ -1376,7 +1405,7 @@ function buildTradePlan(
 
 
 /* =========================================================
-   技術面 0 ~ 20
+   技術面 0～20
 ========================================================= */
 
 function scoreTechnical(
@@ -1550,7 +1579,8 @@ function scoreTechnical(
 
   return {
 
-    available: true,
+    available:
+      true,
 
     score:
       clamp(
@@ -1591,7 +1621,7 @@ function scoreTechnical(
 
 
 /* =========================================================
-   量價 0 ~ 20
+   量價 0～20
 ========================================================= */
 
 function scoreVolume(
@@ -1621,7 +1651,6 @@ function scoreVolume(
     rows[
       rows.length - 1
     ];
-
 
   const previous =
     rows[
@@ -1774,7 +1803,8 @@ function scoreVolume(
           0,
           rows.length - 10
         )
-      ].close * 0.98
+      ].close *
+      0.98
   ) {
 
     score += 4;
@@ -1817,7 +1847,7 @@ function scoreVolume(
 
 
 /* =========================================================
-   法人籌碼 0 ~ 20
+   法人籌碼 0～20
 ========================================================= */
 
 function scoreInstitutional(
@@ -1825,58 +1855,52 @@ function scoreInstitutional(
 ) {
 
   if (
-    i.available ===
+    i?.available ===
     false
   ) {
 
     return {
-
-      available:
-        false,
-
-      score:
-        null,
-
-      reasons:
-        []
+      available: false,
+      score: null,
+      reasons: []
     };
   }
 
 
   const foreign5 =
-    num(i.foreign5);
+    num(i?.foreign5);
 
   const foreign10 =
-    num(i.foreign10);
+    num(i?.foreign10);
 
   const trust5 =
-    num(i.trust5);
+    num(i?.trust5);
 
   const trust10 =
-    num(i.trust10);
+    num(i?.trust10);
 
   const dealer5 =
-    num(i.dealer5);
+    num(i?.dealer5);
 
   const total5 =
-    num(i.total5);
+    num(i?.total5);
 
   const total10 =
-    num(i.total10);
+    num(i?.total10);
 
   const foreignBuyDays5 =
     num(
-      i.foreignBuyDays5
+      i?.foreignBuyDays5
     );
 
   const trustBuyDays5 =
     num(
-      i.trustBuyDays5
+      i?.trustBuyDays5
     );
 
   const totalBuyDays5 =
     num(
-      i.totalBuyDays5
+      i?.totalBuyDays5
     );
 
 
@@ -1897,15 +1921,9 @@ function scoreInstitutional(
   if (!hasData) {
 
     return {
-
-      available:
-        false,
-
-      score:
-        null,
-
-      reasons:
-        []
+      available: false,
+      score: null,
+      reasons: []
     };
   }
 
@@ -1916,8 +1934,7 @@ function scoreInstitutional(
 
 
   if (
-    Number(foreign5) >
-    0
+    Number(foreign5) > 0
   ) {
 
     score += 3;
@@ -1927,8 +1944,7 @@ function scoreInstitutional(
     );
 
   } else if (
-    Number(foreign5) <
-    0
+    Number(foreign5) < 0
   ) {
 
     score -= 2;
@@ -1936,8 +1952,7 @@ function scoreInstitutional(
 
 
   if (
-    Number(trust5) >
-    0
+    Number(trust5) > 0
   ) {
 
     score += 3;
@@ -1947,8 +1962,7 @@ function scoreInstitutional(
     );
 
   } else if (
-    Number(trust5) <
-    0
+    Number(trust5) < 0
   ) {
 
     score -= 2;
@@ -1956,8 +1970,7 @@ function scoreInstitutional(
 
 
   if (
-    Number(total5) >
-    0
+    Number(total5) > 0
   ) {
 
     score += 2;
@@ -1967,8 +1980,7 @@ function scoreInstitutional(
     );
 
   } else if (
-    Number(total5) <
-    0
+    Number(total5) < 0
   ) {
 
     score -= 2;
@@ -1976,25 +1988,25 @@ function scoreInstitutional(
 
 
   if (
-    Number(foreign10) >
-    0
+    Number(foreign10) > 0
   ) {
+
     score += 1;
   }
 
 
   if (
-    Number(trust10) >
-    0
+    Number(trust10) > 0
   ) {
+
     score += 1;
   }
 
 
   if (
-    Number(total10) >
-    0
+    Number(total10) > 0
   ) {
+
     score += 1;
   }
 
@@ -2038,8 +2050,7 @@ function scoreInstitutional(
 
 
   if (
-    Number(dealer5) >
-    0
+    Number(dealer5) > 0
   ) {
 
     score += 0.5;
@@ -2074,7 +2085,7 @@ function scoreInstitutional(
 
 
 /* =========================================================
-   基本面 0 ~ 20
+   基本面 0～20
 ========================================================= */
 
 function scoreFundamental(
@@ -2094,37 +2105,37 @@ function scoreFundamental(
 
 
   const revenueAvailable =
-    revenue.available !==
+    revenue?.available !==
       false &&
     (
       Number.isFinite(
         num(
-          revenue.yoy
+          revenue?.yoy
         )
       ) ||
       Number.isFinite(
         num(
-          revenue.mom
+          revenue?.mom
         )
       )
     );
 
 
   const financialAvailable =
-    financial.available !==
+    financial?.available !==
       false &&
     (
       Number.isFinite(
         num(
-          financial.eps
+          financial?.eps
         )
       ) ||
       Number.isFinite(
         num(
-          financial.incomeAfterTaxes
+          financial?.incomeAfterTaxes
         )
       ) ||
-      typeof financial.profitable ===
+      typeof financial?.profitable ===
         "boolean"
     );
 
@@ -2135,15 +2146,9 @@ function scoreFundamental(
   ) {
 
     return {
-
-      available:
-        false,
-
-      score:
-        null,
-
-      reasons:
-        []
+      available: false,
+      score: null,
+      reasons: []
     };
   }
 
@@ -2160,16 +2165,14 @@ function scoreFundamental(
 
     possible += 8;
 
-
     const yoy =
       num(
-        revenue.yoy
+        revenue?.yoy
       );
-
 
     const mom =
       num(
-        revenue.mom
+        revenue?.mom
       );
 
 
@@ -2236,27 +2239,24 @@ function scoreFundamental(
 
     possible += 12;
 
-
     const eps =
       num(
-        financial.eps
+        financial?.eps
       );
-
 
     const epsGrowth =
       num(
-        financial.epsGrowth
+        financial?.epsGrowth
       );
-
 
     const netIncomeGrowth =
       num(
-        financial.netIncomeGrowth
+        financial?.netIncomeGrowth
       );
 
 
     if (
-      financial.profitable ===
+      financial?.profitable ===
         true ||
       (
         Number.isFinite(eps) &&
@@ -2282,7 +2282,6 @@ function scoreFundamental(
 
         score += 2;
       }
-
 
       if (
         eps >= 2
@@ -2350,7 +2349,8 @@ function scoreFundamental(
               (
                 score /
                 possible
-              ) * 20
+              ) *
+              20
             ),
             0,
             20
@@ -2363,34 +2363,27 @@ function scoreFundamental(
 
 
 /* =========================================================
-   新聞 0 ~ 20
+   新聞 0～20
 ========================================================= */
 
 function scoreNews(news) {
 
   if (
     !news ||
-    news.available ===
+    news?.available ===
       false ||
     !Array.isArray(
-      news.news
+      news?.news
     ) ||
     !news.news.length
   ) {
 
     return {
-
-      available:
-        false,
-
-      score:
-        null,
-
+      available: false,
+      score: null,
       overall:
         "資料不足",
-
-      reasons:
-        []
+      reasons: []
     };
   }
 
@@ -2398,7 +2391,7 @@ function scoreNews(news) {
   const overall =
     clamp(
       Number(
-        news.overallScore ||
+        news?.overallScore ||
         0
       ),
       -10,
@@ -2414,19 +2407,17 @@ function scoreNews(news) {
     score:
       clamp(
         Math.round(
-          10 +
-          overall
+          10 + overall
         ),
         0,
         20
       ),
 
     overall:
-      news.overall ||
+      news?.overall ||
       "中性",
 
     reasons: [
-
       overall >= 2
         ? "近期新聞偏正向"
         : overall <= -2
@@ -2462,22 +2453,15 @@ function combineScores(
   ) {
 
     return {
-
-      score:
-        0,
-
-      completeness:
-        0
+      score: 0,
+      completeness: 0
     };
   }
 
 
   const earned =
     available.reduce(
-      (
-        sum,
-        x
-      ) =>
+      (sum, x) =>
         sum +
         Number(
           x.score
@@ -2513,7 +2497,7 @@ function combineScores(
 
 
 /* =========================================================
-   完整股票分析
+   股票完整分析
 ========================================================= */
 
 function analyzeData(
@@ -2598,14 +2582,12 @@ function analyzeData(
 
   let price =
     Number(
-      d.price
+      d?.price
     );
 
 
   if (
-    !Number.isFinite(
-      price
-    ) ||
+    !Number.isFinite(price) ||
     price <= 0
   ) {
 
@@ -2642,7 +2624,7 @@ function analyzeData(
 
   const institutional =
     scoreInstitutional(
-      d.institutional
+      d?.institutional
     );
 
 
@@ -2714,13 +2696,13 @@ function analyzeData(
 
     symbol:
       String(
-        d.symbol ||
+        d?.symbol ||
         ""
       ),
 
     name:
-      d.name ||
-      d.symbol ||
+      d?.name ||
+      d?.symbol ||
       "",
 
     price,
@@ -2757,10 +2739,7 @@ function makeSignal(a) {
   if (!a) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         "分析資料不足"
     };
@@ -2773,10 +2752,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         `綜合評分不足 ${a.score}/${MIN_SCORE}`
     };
@@ -2789,10 +2765,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         `資料完整度不足 ${a.completeness}%`
     };
@@ -2806,10 +2779,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         `技術面不足 ${a.technical?.score ?? "--"}/20`
     };
@@ -2823,10 +2793,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         `量價不足 ${a.volume?.score ?? "--"}/20`
     };
@@ -2838,10 +2805,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         "尚未進入合理進場區"
     };
@@ -2867,10 +2831,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         "交易計畫資料不足"
     };
@@ -2892,10 +2853,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         "上方沒有足夠目標空間"
     };
@@ -2915,10 +2873,7 @@ function makeSignal(a) {
   ) {
 
     return {
-
-      signal:
-        null,
-
+      signal: null,
       reason:
         `TP1 風報比不足 ${a.rr1 ?? "--"}R`
     };
@@ -2927,7 +2882,6 @@ function makeSignal(a) {
 
   const fingerprint =
     [
-
       a.symbol,
 
       Number(
@@ -2945,16 +2899,13 @@ function makeSignal(a) {
       Math.floor(
         a.score / 5
       ) * 5
-
     ].join(":");
 
 
   return {
 
     signal: {
-
       ...a,
-
       fingerprint
     },
 
@@ -2979,12 +2930,83 @@ async function fetchStock(
       await fetch(
         `${origin}/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
         {
-
           cache:
             "no-store",
 
           headers: {
+            "Cache-Control":
+              "no-cache"
+          }
+        }
+      );
 
+
+    if (
+      !response.ok
+    ) {
+
+      console.error(
+        "stock api status:",
+        symbol,
+        response.status
+      );
+
+      return null;
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (
+      !data?.ok
+    ) {
+
+      console.error(
+        "stock api error:",
+        symbol,
+        data?.error
+      );
+
+      return null;
+    }
+
+
+    return data;
+
+  } catch (error) {
+
+    console.error(
+      "fetch stock error:",
+      symbol,
+      error
+    );
+
+    return null;
+  }
+}
+
+
+/* =========================================================
+   News API
+========================================================= */
+
+async function fetchNews(
+  origin,
+  symbol
+) {
+
+  try {
+
+    const response =
+      await fetch(
+        `${origin}/api/news?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
+        {
+          cache:
+            "no-store",
+
+          headers: {
             "Cache-Control":
               "no-cache"
           }
@@ -3013,7 +3035,7 @@ async function fetchStock(
   } catch (error) {
 
     console.error(
-      "fetch stock error:",
+      "fetch news error:",
       symbol,
       error
     );
@@ -3024,53 +3046,7 @@ async function fetchStock(
 
 
 /* =========================================================
-   News API
-========================================================= */
-
-async function fetchNews(
-  origin,
-  symbol
-) {
-
-  try {
-
-    const response =
-      await fetch(
-        `${origin}/api/news?symbol=${encodeURIComponent(symbol)}`,
-        {
-          cache:
-            "no-store"
-        }
-      );
-
-
-    if (
-      !response.ok
-    ) {
-
-      return null;
-    }
-
-
-    const data =
-      await response.json();
-
-
-    return (
-      data?.ok
-        ? data
-        : null
-    );
-
-  } catch (_) {
-
-    return null;
-  }
-}
-
-
-/* =========================================================
-   新聞只抓強勢候選
+   新聞只抓候選股票
 ========================================================= */
 
 function shouldFetchNews(a) {
@@ -3134,6 +3110,20 @@ function buildNotification(
   }
 
 
+  if (
+    Number.isFinite(
+      Number(
+        signal.tp3
+      )
+    )
+  ) {
+
+    targets.push(
+      `TP3 ${formatPrice(signal.tp3)}`
+    );
+  }
+
+
   return {
 
     title:
@@ -3141,7 +3131,6 @@ function buildNotification(
 
     body:
       [
-
         `現價 ${formatPrice(signal.price)}`,
 
         `進場 ${entry}`,
@@ -3155,7 +3144,6 @@ function buildNotification(
         `完整度 ${signal.completeness}%`,
 
         `技術 ${signal.technical?.score ?? "--"}｜量價 ${signal.volume?.score ?? "--"}｜法人 ${signal.institutional?.score ?? "--"}｜基本 ${signal.fundamental?.score ?? "--"}｜新聞 ${signal.news?.score ?? "--"}`
-
       ]
         .filter(Boolean)
         .join("\n"),
@@ -3164,7 +3152,7 @@ function buildNotification(
       `entry-${signal.symbol}`,
 
     url:
-      `/?stock=${encodeURIComponent(signal.symbol)}`
+      `/?symbol=${encodeURIComponent(signal.symbol)}`
   };
 }
 
@@ -3223,26 +3211,17 @@ async function handler(
 
 
   /* =======================================================
-     TEST MODE
-
-     這一段一定要在 CRON_SECRET 前面。
-
-     /api/monitor?test=1
-     可以直接用 Safari 開。
+     ★ 先判斷 testMode
+     ★ 一定放在 CRON_SECRET 前
   ======================================================= */
 
   const testMode =
-    String(
-      req.query?.test ||
-      ""
-    ) === "1";
+    getTestMode(req);
 
 
   /* =======================================================
-     CRON SECRET
-
-     正式 Cron 才檢查。
-     test=1 完全跳過。
+     ★ 正式模式才檢查 CRON_SECRET
+     ★ ?test=1 完全跳過
   ======================================================= */
 
   if (
@@ -3262,10 +3241,10 @@ async function handler(
       return res
         .status(401)
         .json({
-
-          ok:
-            false,
-
+          ok: false,
+          engine:
+            "Stock Analysis Monitor 6.3",
+          testMode,
           error:
             "Unauthorized"
         });
@@ -3299,9 +3278,7 @@ async function handler(
 
 
     /* =====================================================
-       正式 Cron 時段限制
-
-       test=1 不受限制。
+       正式模式才限制市場時間
     ===================================================== */
 
     if (
@@ -3312,12 +3289,10 @@ async function handler(
       return res
         .status(200)
         .json({
-
-          ok:
-            true,
+          ok: true,
 
           engine:
-            "Stock Analysis Monitor 6.2",
+            "Stock Analysis Monitor 6.3",
 
           skipped:
             true,
@@ -3335,7 +3310,7 @@ async function handler(
 
 
     /* =====================================================
-       取得所有 Push 裝置
+       裝置
     ===================================================== */
 
     const deviceIds =
@@ -3395,7 +3370,6 @@ async function handler(
         ) {
 
           devices.push({
-
             ...device,
 
             deviceId:
@@ -3433,40 +3407,30 @@ async function handler(
       return res
         .status(200)
         .json({
-
-          ok:
-            true,
+          ok: true,
 
           engine:
-            "Stock Analysis Monitor 6.2",
+            "Stock Analysis Monitor 6.3",
 
           testMode,
 
           marketTime:
             isMarketTime(),
 
-          devices:
-            0,
-
-          stocks:
-            0,
-
-          signals:
-            0,
-
-          sent:
-            0,
-
-          failed:
-            0,
-
-          removed:
-            0,
-
-          deduped:
-            0,
+          devices: 0,
+          stocks: 0,
+          signals: 0,
+          sent: 0,
+          failed: 0,
+          removed: 0,
+          deduped: 0,
 
           checkedStocks:
+            testMode
+              ? []
+              : undefined,
+
+          pushResults:
             testMode
               ? []
               : undefined
@@ -3475,7 +3439,7 @@ async function handler(
 
 
     /* =====================================================
-       合併所有裝置監控股票
+       所有裝置股票合併
     ===================================================== */
 
     const symbols =
@@ -3517,8 +3481,7 @@ async function handler(
        每批 3 檔
     ===================================================== */
 
-    const batchSize =
-      3;
+    const batchSize = 3;
 
 
     for (
@@ -3565,15 +3528,9 @@ async function handler(
         if (!data) {
 
           checkedStocks.push({
-
             symbol,
-
-            api:
-              false,
-
-            signal:
-              false,
-
+            api: false,
+            signal: false,
             reason:
               "股票資料取得失敗"
           });
@@ -3583,8 +3540,8 @@ async function handler(
 
 
         /* =================================================
-           第一階段：
-           不抓新聞先評分
+           第一階段
+           不抓新聞先分析
         ================================================= */
 
         const preliminary =
@@ -3599,7 +3556,6 @@ async function handler(
         ) {
 
           checkedStocks.push({
-
             symbol,
 
             name:
@@ -3621,8 +3577,7 @@ async function handler(
 
 
         /* =================================================
-           第二階段：
-           只有夠強的股票才抓新聞
+           強勢候選才抓新聞
         ================================================= */
 
         let newsData =
@@ -3665,7 +3620,6 @@ async function handler(
 
 
         checkedStocks.push({
-
           symbol,
 
           name:
@@ -3752,9 +3706,7 @@ async function handler(
         });
 
 
-        if (
-          signal
-        ) {
+        if (signal) {
 
           signalMap.set(
             symbol,
@@ -3775,9 +3727,7 @@ async function handler(
     let deduped = 0;
 
 
-    const pushResults =
-      [];
-
+    const pushResults = [];
 
     const deadDevices =
       new Set();
@@ -3825,10 +3775,7 @@ async function handler(
           );
 
 
-        if (
-          !signal
-        ) {
-
+        if (!signal) {
           continue;
         }
 
@@ -3837,13 +3784,13 @@ async function handler(
           null;
 
 
-        /* =================================================
-           正式 Cron：
-           6 小時防重複
+        /*
+          test=1：
+          不防重複
 
-           test=1：
-           不防重複
-        ================================================= */
+          正式 Cron：
+          6 小時防重複
+        */
 
         if (
           !testMode
@@ -3891,14 +3838,12 @@ async function handler(
 
 
           pushResults.push({
-
             deviceId:
               device.deviceId,
 
             symbol,
 
-            ok:
-              true,
+            ok: true,
 
             statusCode:
               response?.statusCode ||
@@ -3924,9 +3869,7 @@ async function handler(
           const body =
             typeof error?.body ===
               "string"
-
               ? error.body
-
               : JSON.stringify(
                   error?.body ||
                   ""
@@ -3934,15 +3877,12 @@ async function handler(
 
 
           const expired =
-            statusCode ===
-              404 ||
-            statusCode ===
-              410;
+            statusCode === 404 ||
+            statusCode === 410;
 
 
           const vapidMismatch =
-            statusCode ===
-              400 &&
+            statusCode === 400 &&
             body.includes(
               "VapidPkHashMismatch"
             );
@@ -3963,12 +3903,9 @@ async function handler(
               );
 
 
-            if (
-              deleted
-            ) {
+            if (deleted) {
 
               removed++;
-
 
               deadDevices.add(
                 device.deviceId
@@ -3981,9 +3918,9 @@ async function handler(
 
 
             /*
-              真正發送失敗，
-              刪掉 dedupe，
-              下一輪可以再試。
+              真正發送失敗時
+              刪除 dedupe
+              讓下一輪可以重試
             */
 
             if (
@@ -4003,14 +3940,12 @@ async function handler(
 
 
           pushResults.push({
-
             deviceId:
               device.deviceId,
 
             symbol,
 
-            ok:
-              false,
+            ok: false,
 
             statusCode,
 
@@ -4034,12 +3969,10 @@ async function handler(
     return res
       .status(200)
       .json({
-
-        ok:
-          true,
+        ok: true,
 
         engine:
-          "Stock Analysis Monitor 6.2",
+          "Stock Analysis Monitor 6.3",
 
         strategy:
           "技術＋量價＋法人＋基本面＋新聞",
@@ -4104,12 +4037,10 @@ async function handler(
     return res
       .status(500)
       .json({
-
-        ok:
-          false,
+        ok: false,
 
         engine:
-          "Stock Analysis Monitor 6.2",
+          "Stock Analysis Monitor 6.3",
 
         testMode,
 
