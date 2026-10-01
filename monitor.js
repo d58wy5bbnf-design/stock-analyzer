@@ -1,36 +1,37 @@
 const webpush = require("web-push");
 
 /* =========================================================
-   波段分析 Monitor 8.0
+   波段分析｜Monitor 8.0
 
    核心交易流程：
 
-   現價
-   ↓
-   現價附近最佳限價 Entry
+   現價附近最佳 Entry
    ↓
    結構失效 SL
    ↓
    關鍵突破位
    ↓
-   TP1 = 突破後第一有效壓力
+   TP1 = 突破後第一有效歷史壓力
    ↓
    TP2
    ↓
    TP3
    ↓
-   R:R
+   RR
 
-   正式 Push：
+   正式 Push 條件：
 
    綜合評分 >= 75
    資料完整度 >= 60%
    技術面 >= 12/20
    量價 >= 10/20
-   必須進入最佳 Entry 區
-   SL 必須有效
-   TP1 必須存在
+   價格進入最佳 Entry 區
+   SL 有效
+   TP1 存在
    TP1 >= 1.3R
+
+   test=1：
+   強制跳過台股交易時段限制
 ========================================================= */
 
 const DEFAULT_SYMBOLS = [
@@ -114,7 +115,7 @@ function send(
 
   res.setHeader(
     "Cache-Control",
-    "no-store"
+    "no-store, no-cache, must-revalidate"
   );
 
   res.end(
@@ -136,6 +137,7 @@ async function redis(command) {
   const token =
     REDIS_TOKEN();
 
+
   if (
     !url ||
     !token
@@ -147,12 +149,12 @@ async function redis(command) {
 
   }
 
+
   const response =
     await fetch(
       url,
       {
-        method:
-          "POST",
+        method: "POST",
 
         headers: {
 
@@ -204,6 +206,7 @@ async function getDeviceIds() {
       DEVICE_SET_KEY
     ]);
 
+
   return Array.isArray(result)
     ?
     result
@@ -223,9 +226,11 @@ async function getDevice(
       `swing:push:device:${deviceId}`
     ]);
 
+
   if (!raw) {
     return null;
   }
+
 
   try {
 
@@ -264,7 +269,7 @@ async function removeDevice(
 
 
 /* =========================================================
-   PUSH CONFIG
+   PUSH
 ========================================================= */
 
 function configurePush() {
@@ -343,13 +348,25 @@ function configurePush() {
 
 /* =========================================================
    TEST MODE
+
+   支援三種：
+   ?test=1
+   req.query.test=1
+   x-monitor-test: 1
 ========================================================= */
 
 function getTestMode(req) {
 
-  const header =
+  const headerTest =
     String(
       req.headers?.["x-monitor-test"] ||
+      ""
+    ) === "1";
+
+
+  const queryTest =
+    String(
+      req.query?.test ||
       ""
     ) === "1";
 
@@ -357,17 +374,21 @@ function getTestMode(req) {
   let urlTest =
     false;
 
+
   try {
 
     const host =
       req.headers?.host ||
       "localhost";
 
+
     const url =
       new URL(
-        req.url,
+        req.url ||
+        "/api/monitor",
         `https://${host}`
       );
+
 
     urlTest =
       url.searchParams.get("test")
@@ -378,17 +399,10 @@ function getTestMode(req) {
   catch {}
 
 
-  const queryTest =
-    String(
-      req.query?.test ||
-      ""
-    ) === "1";
-
-
   return (
-    header ||
-    urlTest ||
-    queryTest
+    headerTest ||
+    queryTest ||
+    urlTest
   );
 
 }
@@ -473,16 +487,16 @@ function isMarketMonitoringTime() {
   }
 
 
-  const now =
+  const minutes =
     hour * 60 +
     minute;
 
 
   return (
-    now >=
+    minutes >=
     8 * 60 + 55
     &&
-    now <=
+    minutes <=
     13 * 60 + 40
   );
 
@@ -498,6 +512,7 @@ function num(v) {
   const n =
     Number(v);
 
+
   return Number.isFinite(n)
     ?
     n
@@ -512,6 +527,7 @@ function avg(arr) {
   if (!arr.length) {
     return 0;
   }
+
 
   return (
     arr.reduce(
@@ -531,6 +547,11 @@ function sma(
   period
 ) {
 
+  if (!values.length) {
+    return 0;
+  }
+
+
   if (
     values.length <
     period
@@ -539,6 +560,7 @@ function sma(
     return avg(values);
 
   }
+
 
   return avg(
     values.slice(-period)
@@ -674,7 +696,8 @@ function atr(
     const row =
       rows[i];
 
-    const prevClose =
+
+    const previousClose =
       num(
         rows[i - 1].close
       );
@@ -688,12 +711,12 @@ function atr(
 
         Math.abs(
           num(row.high) -
-          prevClose
+          previousClose
         ),
 
         Math.abs(
           num(row.low) -
-          prevClose
+          previousClose
         )
 
       )
@@ -760,6 +783,10 @@ function fmtPrice(value) {
 
 /* =========================================================
    PIVOTS
+
+   正確判斷：
+   Pivot Low 必須不高於左右低點
+   Pivot High 必須不低於左右高點
 ========================================================= */
 
 function pivots(
@@ -779,8 +806,11 @@ function pivots(
     i++
   ) {
 
-    let isLow = true;
-    let isHigh = true;
+    let isLow =
+      true;
+
+    let isHigh =
+      true;
 
 
     for (
@@ -794,7 +824,8 @@ function pivots(
         num(rows[i - j].low)
       ) {
 
-        isLow = false;
+        isLow =
+          false;
 
       }
 
@@ -804,7 +835,8 @@ function pivots(
         num(rows[i - j].high)
       ) {
 
-        isHigh = false;
+        isHigh =
+          false;
 
       }
 
@@ -822,7 +854,8 @@ function pivots(
         num(rows[i + j].low)
       ) {
 
-        isLow = false;
+        isLow =
+          false;
 
       }
 
@@ -832,7 +865,8 @@ function pivots(
         num(rows[i + j].high)
       ) {
 
-        isHigh = false;
+        isHigh =
+          false;
 
       }
 
@@ -878,7 +912,7 @@ function pivots(
 
 
 /* =========================================================
-   CLUSTER
+   LEVEL CLUSTER
 ========================================================= */
 
 function clusterLevels(
@@ -960,7 +994,8 @@ function clusterLevels(
           Number(item.value)
         ],
 
-        count: 1,
+        count:
+          1,
 
         latest:
           Number(item.i) || 0
@@ -1009,7 +1044,7 @@ function buildTradePlan(
 
 
   /* =======================================================
-     SUPPORT
+     SUPPORT CANDIDATES
   ======================================================= */
 
   const supportRaw = [];
@@ -1089,6 +1124,10 @@ function buildTradePlan(
   }
 
 
+  /* =======================================================
+     10 / 20 / 60 日低點
+  ======================================================= */
+
   for (
     const period
     of [
@@ -1140,10 +1179,9 @@ function buildTradePlan(
   }
 
 
-  /*
-    已經突破過的前高，
-    也可作為支撐候選。
-  */
+  /* =======================================================
+     已突破前高 → 支撐候選
+  ======================================================= */
 
   for (
     const x
@@ -1235,9 +1273,10 @@ function buildTradePlan(
 
 
   /* =======================================================
-     BEST ENTRY SUPPORT
+     現價附近最佳 ENTRY
 
-     只接受現價附近約 4.5% 內的有效支撐。
+     只接受現價約 4.5% 內的有效支撐。
+     不再拿離現價很遠的深支撐當 Entry。
   ======================================================= */
 
   const MAX_ENTRY_DISTANCE =
@@ -1245,31 +1284,35 @@ function buildTradePlan(
 
 
   const nearbySupports =
-    supportGroups.filter(
-      x => {
+    supportGroups
+      .filter(
+        x => {
 
-        const distance =
-          (
-            price -
-            x.value
-          )
-          /
-          price;
-
-
-        return (
-          distance >=
-          -0.012
-          &&
-          distance <=
-          MAX_ENTRY_DISTANCE
-        );
-
-      }
-    );
+          const distance =
+            (
+              price -
+              x.value
+            )
+            /
+            price;
 
 
-  let bestSupport = null;
+          return (
+            distance >=
+            -0.012
+            &&
+            distance <=
+            MAX_ENTRY_DISTANCE
+          );
+
+        }
+      );
+
+
+  let bestSupport =
+    null;
+
+
   let bestSupportScore =
     -Infinity;
 
@@ -1349,8 +1392,8 @@ function buildTradePlan(
   /* =======================================================
      RESISTANCE
 
-     保留現價上下的歷史壓力，
-     避免突破後原壓力直接消失。
+     不能只保留現價上方壓力。
+     剛突破的舊壓力也必須保留。
   ======================================================= */
 
   const pressureRaw = [];
@@ -1383,6 +1426,10 @@ function buildTradePlan(
 
   }
 
+
+  /* =======================================================
+     Rolling High
+  ======================================================= */
 
   for (
     let end = 20;
@@ -1457,6 +1504,10 @@ function buildTradePlan(
     );
 
 
+  /* =======================================================
+     KEY BREAKOUT
+  ======================================================= */
+
   const abovePressures =
     allPressureGroups
       .filter(
@@ -1508,6 +1559,11 @@ function buildTradePlan(
     "BELOW";
 
 
+  /*
+    如果價格剛突破某個歷史壓力，
+    保留該位置作為關鍵突破確認。
+  */
+
   if (
     crossedResistance
   ) {
@@ -1544,17 +1600,22 @@ function buildTradePlan(
   let planType =
     "WAIT";
 
+
   let entryLow =
     null;
+
 
   let entryHigh =
     null;
 
+
   let entryMid =
     null;
 
+
   let sl =
     null;
+
 
   let entryReady =
     false;
@@ -1588,6 +1649,10 @@ function buildTradePlan(
       );
 
 
+    /*
+      Entry 上緣不能高於現價太多。
+    */
+
     entryHigh =
       Math.min(
         entryHigh,
@@ -1605,7 +1670,7 @@ function buildTradePlan(
 
 
     /* =====================================================
-       SL
+       STRUCTURAL SL
     ===================================================== */
 
     const lowerStructures =
@@ -1654,6 +1719,10 @@ function buildTradePlan(
       );
 
 
+    /*
+      SL 一定要在 Entry 下方。
+    */
+
     if (
       sl >=
       entryLow
@@ -1668,6 +1737,13 @@ function buildTradePlan(
 
     }
 
+
+    /* =====================================================
+       ENTRY READY
+
+       允許少量 ATR 誤差，
+       避免差一個 tick 完全不通知。
+    ===================================================== */
 
     const readyTolerance =
       Math.max(
@@ -1689,9 +1765,10 @@ function buildTradePlan(
 
 
   /* =======================================================
-     TARGET
+     TP
 
-     breakout 本身不是 TP1。
+     關鍵：
+     breakout 不是 TP1。
 
      TP1 =
      breakout 上方第一個有效歷史壓力。
@@ -1700,11 +1777,14 @@ function buildTradePlan(
   let tp1 =
     null;
 
+
   let tp2 =
     null;
 
+
   let tp3 =
     null;
+
 
   let tp3Source =
     "";
@@ -1713,7 +1793,7 @@ function buildTradePlan(
   if (
     Number.isFinite(entryMid)
     &&
-    breakout
+    Number.isFinite(breakout)
   ) {
 
     const targetPressures =
@@ -1733,6 +1813,11 @@ function buildTradePlan(
             a - b
         );
 
+
+    /*
+      避免同一壓力區因多個 Pivot
+      被算成 TP1、TP2。
+    */
 
     const cleanTargets = [];
 
@@ -1810,8 +1895,11 @@ function buildTradePlan(
 
 
     /*
-      只有 TP1、TP2 已經存在，
-      TP3 才允許使用延伸。
+      TP1 絕對不使用延伸。
+
+      只有 TP1、TP2 都已經存在，
+      但沒有第三層歷史壓力，
+      TP3 才能使用 Fib 延伸。
     */
 
     if (
@@ -1904,8 +1992,10 @@ function buildTradePlan(
   const rr1 =
     rr(tp1);
 
+
   const rr2 =
     rr(tp2);
+
 
   const rr3 =
     rr(tp3);
@@ -1938,6 +2028,10 @@ function buildTradePlan(
       :
       null;
 
+
+  /* =======================================================
+     VALID PLAN
+  ======================================================= */
 
   const validPlan =
     planType ===
@@ -2091,7 +2185,10 @@ function analyzeStock(
         false,
 
       reason:
-        "歷史資料不足"
+        "歷史資料不足",
+
+      rows:
+        rows.length
 
     };
 
@@ -2183,6 +2280,7 @@ function analyzeStock(
               i + 1
             );
 
+
           return (
             ema(
               part,
@@ -2252,10 +2350,11 @@ function analyzeStock(
 
 
   /* =======================================================
-     TECHNICAL 20
+     1. TECHNICAL 20
   ======================================================= */
 
-  let technical = 0;
+  let technical =
+    0;
 
 
   if (
@@ -2263,7 +2362,8 @@ function analyzeStock(
     m20
   ) {
 
-    technical += 4;
+    technical +=
+      4;
 
   }
 
@@ -2273,7 +2373,8 @@ function analyzeStock(
     m60
   ) {
 
-    technical += 5;
+    technical +=
+      5;
 
   }
 
@@ -2283,7 +2384,8 @@ function analyzeStock(
     m120 * 0.985
   ) {
 
-    technical += 3;
+    technical +=
+      3;
 
   }
 
@@ -2294,7 +2396,8 @@ function analyzeStock(
     R <= 75
   ) {
 
-    technical += 3;
+    technical +=
+      3;
 
   }
 
@@ -2304,7 +2407,8 @@ function analyzeStock(
     signal
   ) {
 
-    technical += 3;
+    technical +=
+      3;
 
   }
 
@@ -2314,7 +2418,8 @@ function analyzeStock(
     high20 * 0.96
   ) {
 
-    technical += 2;
+    technical +=
+      2;
 
   }
 
@@ -2328,31 +2433,35 @@ function analyzeStock(
 
 
   /* =======================================================
-     VOLUME PRICE 20
+     2. VOLUME / PRICE 20
   ======================================================= */
 
-  let volumeScore = 0;
+  let volumeScore =
+    0;
 
 
   if (
     vr >= 1
   ) {
 
-    volumeScore += 6;
+    volumeScore +=
+      6;
 
   }
   else if (
     vr >= 0.8
   ) {
 
-    volumeScore += 4;
+    volumeScore +=
+      4;
 
   }
   else if (
     vr >= 0.6
   ) {
 
-    volumeScore += 2;
+    volumeScore +=
+      2;
 
   }
 
@@ -2369,19 +2478,22 @@ function analyzeStock(
     vr >= 1
   ) {
 
-    volumeScore += 5;
+    volumeScore +=
+      5;
 
   }
   else if (
     changePercent >= 0
   ) {
 
-    volumeScore += 3;
+    volumeScore +=
+      3;
 
   }
 
 
-  let upVolumeDays = 0;
+  let upVolumeDays =
+    0;
 
 
   const last10 =
@@ -2425,7 +2537,8 @@ function analyzeStock(
     1.1
   ) {
 
-    volumeScore += 4;
+    volumeScore +=
+      4;
 
   }
 
@@ -2439,10 +2552,11 @@ function analyzeStock(
 
 
   /* =======================================================
-     INSTITUTIONAL 20
+     3. INSTITUTIONAL 20
   ======================================================= */
 
-  let chipScore = 0;
+  let chipScore =
+    0;
 
 
   const inst =
@@ -2451,37 +2565,49 @@ function analyzeStock(
 
 
   if (
-    num(inst.total5) > 0
+    num(
+      inst.total5
+    ) > 0
   ) {
 
-    chipScore += 5;
+    chipScore +=
+      5;
 
   }
 
 
   if (
-    num(inst.foreign5) > 0
+    num(
+      inst.foreign5
+    ) > 0
   ) {
 
-    chipScore += 4;
+    chipScore +=
+      4;
 
   }
 
 
   if (
-    num(inst.trust5) > 0
+    num(
+      inst.trust5
+    ) > 0
   ) {
 
-    chipScore += 4;
+    chipScore +=
+      4;
 
   }
 
 
   if (
-    num(inst.total10) > 0
+    num(
+      inst.total10
+    ) > 0
   ) {
 
-    chipScore += 3;
+    chipScore +=
+      3;
 
   }
 
@@ -2492,7 +2618,8 @@ function analyzeStock(
     ) >= 3
   ) {
 
-    chipScore += 2;
+    chipScore +=
+      2;
 
   }
 
@@ -2503,7 +2630,8 @@ function analyzeStock(
     ) >= 3
   ) {
 
-    chipScore += 2;
+    chipScore +=
+      2;
 
   }
 
@@ -2517,7 +2645,7 @@ function analyzeStock(
 
 
   /* =======================================================
-     FUNDAMENTAL 20
+     4. FUNDAMENTAL 20
   ======================================================= */
 
   const fundamental =
@@ -2551,7 +2679,8 @@ function analyzeStock(
     fundAvailable
   ) {
 
-    fundScore = 0;
+    fundScore =
+      0;
 
 
     if (
@@ -2559,7 +2688,8 @@ function analyzeStock(
       true
     ) {
 
-      fundScore += 6;
+      fundScore +=
+        6;
 
     }
     else if (
@@ -2570,7 +2700,8 @@ function analyzeStock(
       null
     ) {
 
-      fundScore += 3;
+      fundScore +=
+        3;
 
     }
 
@@ -2587,7 +2718,8 @@ function analyzeStock(
       ) > 0
     ) {
 
-      fundScore += 4;
+      fundScore +=
+        4;
 
     }
 
@@ -2604,7 +2736,8 @@ function analyzeStock(
       ) > 0
     ) {
 
-      fundScore += 3;
+      fundScore +=
+        3;
 
     }
 
@@ -2623,7 +2756,8 @@ function analyzeStock(
         ) > 10
       ) {
 
-        fundScore += 4;
+        fundScore +=
+          4;
 
       }
       else if (
@@ -2632,7 +2766,8 @@ function analyzeStock(
         ) > 0
       ) {
 
-        fundScore += 3;
+        fundScore +=
+          3;
 
       }
 
@@ -2651,7 +2786,8 @@ function analyzeStock(
       ) > 0
     ) {
 
-      fundScore += 3;
+      fundScore +=
+        3;
 
     }
 
@@ -2667,7 +2803,7 @@ function analyzeStock(
 
 
   /* =======================================================
-     NEWS 20
+     5. NEWS 20
   ======================================================= */
 
   let newsScore =
@@ -2765,7 +2901,7 @@ function analyzeStock(
 
 
   /* =======================================================
-     FORMAL PUSH CONDITIONS
+     PUSH FILTER
   ======================================================= */
 
   let eligible =
@@ -2833,7 +2969,7 @@ function analyzeStock(
       false;
 
     reason =
-      "現價附近沒有合理限價 Entry";
+      "現價附近沒有合理 Entry";
 
   }
   else if (
@@ -2844,7 +2980,7 @@ function analyzeStock(
       false;
 
     reason =
-      "交易計畫成立，但目前尚未進入最佳 Entry 區";
+      "尚未進入最佳 Entry 區";
 
   }
   else if (
@@ -2855,7 +2991,7 @@ function analyzeStock(
       false;
 
     reason =
-      "Entry / SL / 突破位 / TP1 尚未形成完整交易計畫";
+      "Entry、SL、突破位或 TP1 尚未形成完整交易計畫";
 
   }
   else if (
@@ -2942,6 +3078,9 @@ function analyzeStock(
 
     volumeRatio:
       vr,
+
+    rows:
+      rows.length,
 
     ...plan
 
@@ -3160,7 +3299,8 @@ async function mapLimit(
     );
 
 
-  let cursor = 0;
+  let cursor =
+    0;
 
 
   async function runner() {
@@ -3331,9 +3471,7 @@ async function acquireNotificationLock(
     測試模式不做 6 小時去重。
   */
 
-  if (
-    testMode
-  ) {
+  if (testMode) {
 
     return true;
 
@@ -3378,7 +3516,7 @@ async function acquireNotificationLock(
 
 
 /* =========================================================
-   PAYLOAD
+   PUSH PAYLOAD
 ========================================================= */
 
 function buildPayload(
@@ -3490,9 +3628,7 @@ async function sendPush(
     );
 
 
-  if (
-    !locked
-  ) {
+  if (!locked) {
 
     return {
 
@@ -3571,10 +3707,7 @@ async function sendPush(
    AUTH
 ========================================================= */
 
-function authorized(
-  req,
-  testMode
-) {
+function authorized(req) {
 
   const secret =
     process.env.CRON_SECRET;
@@ -3587,21 +3720,13 @@ function authorized(
   }
 
 
-  const auth =
-    req.headers.authorization
-    ||
+  const authorization =
+    req.headers?.authorization ||
     "";
 
 
-  /*
-    monitor-test bridge
-    一樣會帶 Authorization。
-
-    正式 cron 也使用同一組 CRON_SECRET。
-  */
-
   return (
-    auth ===
+    authorization ===
     `Bearer ${secret}`
   );
 
@@ -3633,37 +3758,65 @@ async function handler(
       res,
       405,
       {
+
         ok:
           false,
 
+        engine:
+          "Stock Analysis Monitor 8.0",
+
         error:
           "Method Not Allowed"
+
       }
     );
 
   }
 
 
+  /* =======================================================
+     ★ TEST MODE 一進來就先判斷
+
+     monitor-test.js 注入的：
+     x-monitor-test: 1
+
+     或直接：
+     ?test=1
+
+     都會變成 true。
+  ======================================================= */
+
   const testMode =
     getTestMode(req);
 
 
+  /* =======================================================
+     AUTH
+
+     不論正式或測試，
+     都必須帶 CRON_SECRET。
+  ======================================================= */
+
   if (
-    !authorized(
-      req,
-      testMode
-    )
+    !authorized(req)
   ) {
 
     return send(
       res,
       401,
       {
+
         ok:
           false,
 
+        engine:
+          "Stock Analysis Monitor 8.0",
+
+        testMode,
+
         error:
           "Unauthorized"
+
       }
     );
 
@@ -3676,13 +3829,15 @@ async function handler(
 
 
     /* =====================================================
-       MARKET TIME
+       ★ 最重要的地方
 
-       正式模式：
-       08:55～13:40
+       只有：
+       testMode === false
 
-       test=1：
-       可跳過時間限制。
+       才檢查台股交易時間。
+
+       testMode === true
+       凌晨也直接往下執行。
     ===================================================== */
 
     if (
@@ -3701,6 +3856,9 @@ async function handler(
 
           engine:
             "Stock Analysis Monitor 8.0",
+
+          testMode:
+            false,
 
           skipped:
             true,
@@ -3740,6 +3898,8 @@ async function handler(
           engine:
             "Stock Analysis Monitor 8.0",
 
+          testMode,
+
           skipped:
             true,
 
@@ -3770,16 +3930,17 @@ async function handler(
 
 
     const devices =
-      devicesRaw.filter(
-        x =>
-          x
-          &&
-          !x.error
-          &&
-          x.device
-          &&
-          x.device.subscription
-      );
+      devicesRaw
+        .filter(
+          x =>
+            x
+            &&
+            !x.error
+            &&
+            x.device
+            &&
+            x.device.subscription
+        );
 
 
     if (
@@ -3797,6 +3958,8 @@ async function handler(
           engine:
             "Stock Analysis Monitor 8.0",
 
+          testMode,
+
           skipped:
             true,
 
@@ -3810,12 +3973,12 @@ async function handler(
 
 
     /* =====================================================
-       SYMBOLS
+       SYMBOL UNIVERSE
 
-       仍然只有：
-       DEFAULT 12 + 使用者自選
+       只監控：
+       DEFAULT 12 + 自選
 
-       不把全市場 Radar 全塞進 Push。
+       Radar 全市場候選不直接加入 Push。
     ===================================================== */
 
     const allSymbols =
@@ -3837,12 +4000,6 @@ async function handler(
 
     /* =====================================================
        STOCK ANALYSIS
-
-       第一階段：
-       先抓 Stock。
-
-       只有初步條件不差的股票，
-       才抓新聞。
     ===================================================== */
 
     const stockResults =
@@ -3859,7 +4016,7 @@ async function handler(
 
 
           /*
-            先不帶新聞分析一次。
+            第一輪先不抓新聞。
           */
 
           const preliminary =
@@ -3870,12 +4027,11 @@ async function handler(
 
 
           /*
-            新聞不是每一檔都硬抓。
+            初步條件還可以，
+            才抓新聞。
 
-            初步：
-            技術 >= 10
-            量價 >= 8
-            才補新聞。
+            避免每 5 分鐘對所有股票
+            都打新聞 API。
           */
 
           let newsData =
@@ -3949,26 +4105,12 @@ async function handler(
 
 
     /* =====================================================
-       PUSH
+       CHECKED STOCKS
     ===================================================== */
 
-    let eligibleCount = 0;
-    let pushSent = 0;
-    let duplicateCount = 0;
-    let pushErrors = 0;
+    const checkedStocks =
+      [];
 
-
-    const signals = [];
-
-
-    const checkedStocks = [];
-
-
-    /*
-      測試模式時，
-      回傳分析結果，
-      方便直接看 Monitor 到底算了什麼。
-    */
 
     for (
       const symbol
@@ -3995,6 +4137,7 @@ async function handler(
 
         });
 
+
         continue;
 
       }
@@ -4010,6 +4153,9 @@ async function handler(
 
         name:
           a.name,
+
+        rows:
+          a.rows,
 
         price:
           a.price,
@@ -4047,11 +4193,20 @@ async function handler(
         bestSupport:
           a.bestSupport,
 
+        bestSupportStrength:
+          a.bestSupportStrength,
+
         entryLow:
           a.entryLow,
 
         entryHigh:
           a.entryHigh,
+
+        entryMid:
+          a.entryMid,
+
+        entryDistance:
+          a.entryDistance,
 
         entryReady:
           a.entryReady,
@@ -4059,11 +4214,17 @@ async function handler(
         sl:
           a.sl,
 
+        riskPct:
+          a.riskPct,
+
         breakout:
           a.breakout,
 
         breakoutState:
           a.breakoutState,
+
+        breakoutDistance:
+          a.breakoutDistance,
 
         tp1:
           a.tp1,
@@ -4074,11 +4235,20 @@ async function handler(
         tp3:
           a.tp3,
 
+        tp3Source:
+          a.tp3Source,
+
         rr1:
           a.rr1,
 
-        riskPct:
-          a.riskPct,
+        rr2:
+          a.rr2,
+
+        rr3:
+          a.rr3,
+
+        validPlan:
+          a.validPlan,
 
         eligible:
           a.eligible,
@@ -4089,6 +4259,34 @@ async function handler(
       });
 
     }
+
+
+    /* =====================================================
+       PUSH
+    ===================================================== */
+
+    let eligibleCount =
+      0;
+
+
+    let pushSent =
+      0;
+
+
+    let duplicateCount =
+      0;
+
+
+    let pushErrors =
+      0;
+
+
+    const signals =
+      [];
+
+
+    const pushResults =
+      [];
 
 
     for (
@@ -4192,6 +4390,18 @@ async function handler(
             );
 
 
+          pushResults.push({
+
+            deviceId:
+              item.deviceId,
+
+            symbol,
+
+            ...result
+
+          });
+
+
           if (
             result.ok
           ) {
@@ -4211,6 +4421,23 @@ async function handler(
         catch (error) {
 
           pushErrors++;
+
+
+          pushResults.push({
+
+            deviceId:
+              item.deviceId,
+
+            symbol,
+
+            ok:
+              false,
+
+            error:
+              error?.message ||
+              String(error)
+
+          });
 
 
           console.error(
@@ -4269,10 +4496,13 @@ async function handler(
         strategy:
           "NEAR_PRICE_LIMIT_ENTRY",
 
+        testMode,
+
+        skipped:
+          false,
+
         marketWindow:
           "Asia/Taipei 08:55-13:40",
-
-        testMode,
 
         monitoredDevices:
           devices.length,
@@ -4298,6 +4528,13 @@ async function handler(
             ?
             checkedStocks
             :
+            undefined,
+
+        pushResults:
+          testMode
+            ?
+            pushResults
+            :
             undefined
 
       }
@@ -4307,7 +4544,7 @@ async function handler(
   catch (error) {
 
     console.error(
-      "monitor error:",
+      "Monitor 8.0 error:",
       error
     );
 
@@ -4322,6 +4559,8 @@ async function handler(
 
         engine:
           "Stock Analysis Monitor 8.0",
+
+        testMode,
 
         error:
           error?.message ||
