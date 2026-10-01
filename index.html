@@ -583,6 +583,7 @@ let detailTimer=null;
 let radarTimer=null;
 let searchTimer=null;
 let selectedSearchSymbol='';
+let watchSyncReady=false;
 
 const $=id=>document.getElementById(id);
 
@@ -600,7 +601,6 @@ maximumFractionDigits:d
 '--';
 
 const pressureFmt=n=>{
-
 if(
 n===null ||
 n===undefined ||
@@ -610,13 +610,10 @@ n==='' ||
 ){
 return '上方暫無有效壓力';
 }
-
 return fmt(n);
-
 };
 
 const planFmt=n=>{
-
 if(
 n===null ||
 n===undefined ||
@@ -626,9 +623,7 @@ n==='' ||
 ){
 return '無有效結構';
 }
-
 return fmt(n);
-
 };
 
 const esc=s=>
@@ -648,9 +643,7 @@ a.reduce((x,y)=>x+y,0)/a.length
 const sma=(a,n)=>avg(a.slice(-n));
 
 function ema(a,n){
-
 if(!a.length)return 0;
-
 let e=a[0];
 const k=2/(n+1);
 
@@ -662,14 +655,12 @@ return e;
 }
 
 function rsi(a,n=14){
-
 if(a.length<=n)return 50;
 
 let g=0;
 let l=0;
 
 for(let i=a.length-n;i<a.length;i++){
-
 const d=a[i]-a[i-1];
 
 if(d>0){
@@ -677,7 +668,6 @@ g+=d;
 }else{
 l-=d;
 }
-
 }
 
 if(l===0)return 100;
@@ -686,7 +676,6 @@ return 100-100/(1+(g/n)/(l/n));
 }
 
 function atr(rows,n=14){
-
 const v=[];
 
 for(
@@ -694,7 +683,6 @@ let i=Math.max(1,rows.length-n);
 i<rows.length;
 i++
 ){
-
 const x=rows[i];
 const p=rows[i-1].close;
 
@@ -705,7 +693,6 @@ Math.abs(x.high-p),
 Math.abs(x.low-p)
 )
 );
-
 }
 
 return avg(v);
@@ -713,7 +700,47 @@ return avg(v);
 
 
 /* =========================================================
-   自選
+   Device ID
+========================================================= */
+
+function getDeviceId(){
+
+let id=
+localStorage.getItem(
+PUSH_DEVICE_KEY
+);
+
+if(!id){
+
+if(
+window.crypto &&
+crypto.randomUUID
+){
+id=crypto.randomUUID();
+}
+else{
+id=
+'device-'+
+Date.now()+
+'-'+
+Math.random()
+.toString(36)
+.slice(2);
+}
+
+localStorage.setItem(
+PUSH_DEVICE_KEY,
+id
+);
+
+}
+
+return id;
+}
+
+
+/* =========================================================
+   自選：Local Storage
 ========================================================= */
 
 const watch=()=>{
@@ -725,25 +752,247 @@ JSON.parse(
 localStorage.getItem(WATCH_KEY)||'[]'
 );
 
-return Array.isArray(x)?x:[];
+return Array.isArray(x)
+?
+[
+...new Set(
+x
+.map(v=>String(v||'').trim())
+.filter(v=>/^\d{4,6}$/.test(v))
+)
+]
+:
+[];
 
-}catch{
-
+}
+catch{
 return [];
-
 }
 
 };
 
-function saveWatch(a){
+function saveWatchLocal(a){
+
+const clean=
+[
+...new Set(
+(Array.isArray(a)?a:[])
+.map(x=>String(x||'').trim())
+.filter(x=>/^\d{4,6}$/.test(x))
+)
+];
 
 localStorage.setItem(
 WATCH_KEY,
-JSON.stringify([...new Set(a)])
+JSON.stringify(clean)
 );
+
+return clean;
+}
+
+
+/* =========================================================
+   自選：雲端 API
+========================================================= */
+
+async function getCloudWatch(){
+
+const deviceId=
+getDeviceId();
+
+const r=
+await fetch(
+'/api/watchlist?deviceId='+
+encodeURIComponent(deviceId)+
+'&t='+
+Date.now(),
+{
+cache:'no-store'
+}
+);
+
+let d;
+
+try{
+d=await r.json();
+}
+catch{
+throw Error('雲端自選資料格式錯誤');
+}
+
+if(!r.ok||!d.ok){
+throw Error(
+d.error||
+'讀取雲端自選失敗'
+);
+}
+
+return Array.isArray(d.symbols)
+?
+[
+...new Set(
+d.symbols
+.map(x=>String(x||'').trim())
+.filter(x=>/^\d{4,6}$/.test(x))
+)
+]
+:
+[];
+
+}
+
+
+async function saveCloudWatch(symbols){
+
+const clean=
+[
+...new Set(
+(Array.isArray(symbols)?symbols:[])
+.map(x=>String(x||'').trim())
+.filter(x=>/^\d{4,6}$/.test(x))
+)
+];
+
+const r=
+await fetch(
+'/api/watchlist',
+{
+method:'POST',
+
+headers:{
+'Content-Type':'application/json'
+},
+
+body:
+JSON.stringify({
+deviceId:getDeviceId(),
+symbols:clean
+})
+}
+);
+
+let d;
+
+try{
+d=await r.json();
+}
+catch{
+throw Error('雲端自選儲存格式錯誤');
+}
+
+if(!r.ok||!d.ok){
+throw Error(
+d.error||
+'雲端自選儲存失敗'
+);
+}
+
+return clean;
+}
+
+
+/* =========================================================
+   啟動時同步雲端自選
+
+   規則：
+   1. 雲端有資料 -> 雲端為主
+   2. 雲端是空的，但本機有舊自選 -> 將舊自選上傳
+   3. API 暫時失敗 -> 繼續使用本機資料
+========================================================= */
+
+async function loadWatchlist(){
+
+const local=
+watch();
+
+try{
+
+const cloud=
+await getCloudWatch();
+
+if(cloud.length){
+
+saveWatchLocal(cloud);
+
+console.log(
+'已載入雲端自選',
+cloud
+);
+
+}
+else if(local.length){
+
+await saveCloudWatch(local);
+
+console.log(
+'已將本機舊自選上傳雲端',
+local
+);
+
+}
+else{
+
+saveWatchLocal([]);
+
+}
+
+watchSyncReady=true;
+
+return watch();
+
+}
+catch(e){
+
+console.warn(
+'雲端自選讀取失敗，使用本機備援',
+e
+);
+
+watchSyncReady=true;
+
+return local;
+
+}
+
+}
+
+
+/* =========================================================
+   儲存自選
+
+   先存本機，畫面立即更新。
+   再同步 Redis。
+========================================================= */
+
+async function saveWatch(a){
+
+const clean=
+saveWatchLocal(a);
+
+renderHome();
 
 syncPushSymbols();
 
+try{
+
+await saveCloudWatch(clean);
+
+console.log(
+'雲端自選已同步',
+clean
+);
+
+}
+catch(e){
+
+console.warn(
+'雲端自選同步失敗',
+e
+);
+
+}
+
+return clean;
 }
 
 
@@ -762,10 +1011,9 @@ localStorage.getItem(HISTORY_KEY)||'[]'
 
 return Array.isArray(x)?x:[];
 
-}catch{
-
+}
+catch{
 return [];
-
 }
 
 };
@@ -776,7 +1024,9 @@ if(!a?.symbol)return;
 
 let h=
 searchHistory()
-.filter(x=>x.symbol!==a.symbol);
+.filter(
+x=>x.symbol!==a.symbol
+);
 
 h.unshift({
 symbol:String(a.symbol),
@@ -813,7 +1063,8 @@ let d;
 
 try{
 d=await r.json();
-}catch{
+}
+catch{
 throw Error('股票資料格式錯誤');
 }
 
@@ -868,23 +1119,19 @@ hi=false;
 }
 
 if(lo){
-
 lows.push({
 i,
 value:rows[i].low,
 row:rows[i]
 });
-
 }
 
 if(hi){
-
 highs.push({
 i,
 value:rows[i].high,
 row:rows[i]
 });
-
 }
 
 }
@@ -898,11 +1145,9 @@ const after=
 rows.slice(zone.i+1);
 
 if(bullish){
-
 return !after.some(
 x=>x.close<zone.low
 );
-
 }
 
 return !after.some(
@@ -939,9 +1184,7 @@ const supports=[];
 const pressures=[];
 
 
-/* =========================================================
-   Order Block
-========================================================= */
+/* Order Block */
 
 for(
 let i=2;
@@ -968,50 +1211,28 @@ A*.35,
 price*.004
 );
 
-
-/* Bullish OB */
-
 if(
 x.close<x.open &&
 displacementUp
 ){
 
 const z={
-
 type:'Bullish OB',
-
 i,
-
 low:x.low,
-
-high:
-Math.max(
-x.open,
-x.close
-),
-
+high:Math.max(x.open,x.close),
 score:5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-true
-)
+zoneValid(z,recent,true)
 &&
 z.low<price
 ){
-
 supports.push(z);
-
 }
 
 }
-
-
-/* Bearish OB */
 
 if(
 x.close>x.open &&
@@ -1019,35 +1240,19 @@ displacementDown
 ){
 
 const z={
-
 type:'Bearish OB / Supply',
-
 i,
-
-low:
-Math.min(
-x.open,
-x.close
-),
-
+low:Math.min(x.open,x.close),
 high:x.high,
-
 score:5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-false
-)
+zoneValid(z,recent,false)
 &&
 z.high>price
 ){
-
 pressures.push(z);
-
 }
 
 }
@@ -1055,9 +1260,7 @@ pressures.push(z);
 }
 
 
-/* =========================================================
-   FVG
-========================================================= */
+/* FVG */
 
 for(
 let i=1;
@@ -1065,14 +1268,8 @@ i<recent.length-1;
 i++
 ){
 
-const left=
-recent[i-1];
-
-const right=
-recent[i+1];
-
-
-/* Bullish FVG */
+const left=recent[i-1];
+const right=recent[i+1];
 
 if(
 right.low>
@@ -1080,51 +1277,34 @@ left.high
 ){
 
 const gap=
-right.low-
-left.high;
+right.low-left.high;
 
 if(
-gap>=
-Math.max(
+gap>=Math.max(
 A*.12,
 price*.0015
 )
 ){
 
 const z={
-
 type:'Bullish FVG',
-
 i,
-
 low:left.high,
-
 high:right.low,
-
 score:3.5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-true
-)
+zoneValid(z,recent,true)
 &&
 z.low<price
 ){
-
 supports.push(z);
-
 }
 
 }
 
 }
-
-
-/* Bearish FVG */
 
 if(
 right.high<
@@ -1132,43 +1312,29 @@ left.low
 ){
 
 const gap=
-left.low-
-right.high;
+left.low-right.high;
 
 if(
-gap>=
-Math.max(
+gap>=Math.max(
 A*.12,
 price*.0015
 )
 ){
 
 const z={
-
 type:'Bearish FVG',
-
 i,
-
 low:right.high,
-
 high:left.low,
-
 score:3.5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-false
-)
+zoneValid(z,recent,false)
 &&
 z.high>price
 ){
-
 pressures.push(z);
-
 }
 
 }
@@ -1178,16 +1344,12 @@ pressures.push(z);
 }
 
 
-/* =========================================================
-   BOS / Breaker / Liquidity
-========================================================= */
+/* BOS / Breaker / Liquidity */
 
 for(const h of S.highs){
 
 const later=
-recent.slice(
-h.i+1
-);
+recent.slice(h.i+1);
 
 const broken=
 later.some(
@@ -1206,21 +1368,11 @@ h.value<price
 ){
 
 supports.push({
-
 type:'BOS / Breaker',
-
 i:h.i,
-
-low:
-h.value-
-A*.15,
-
-high:
-h.value+
-A*.15,
-
+low:h.value-A*.15,
+high:h.value+A*.15,
 score:6
-
 });
 
 }
@@ -1234,21 +1386,11 @@ price*.0015
 ){
 
 pressures.push({
-
 type:'Swing High / Liquidity',
-
 i:h.i,
-
-low:
-h.value-
-A*.08,
-
-high:
-h.value+
-A*.08,
-
+low:h.value-A*.08,
+high:h.value+A*.08,
 score:4.5
-
 });
 
 }
@@ -1261,22 +1403,11 @@ for(const l of S.lows){
 if(l.value<price){
 
 supports.push({
-
-type:
-'Sell-side Liquidity / Demand',
-
+type:'Sell-side Liquidity / Demand',
 i:l.i,
-
-low:
-l.value-
-A*.10,
-
-high:
-l.value+
-A*.12,
-
+low:l.value-A*.10,
+high:l.value+A*.12,
 score:3.8
-
 });
 
 }
@@ -1284,9 +1415,7 @@ score:3.8
 }
 
 
-/* =========================================================
-   Liquidity Sweep
-========================================================= */
+/* Liquidity Sweep */
 
 for(
 let i=8;
@@ -1314,8 +1443,7 @@ Math.max(
 ...before.map(x=>x.high)
 );
 
-const x=
-recent[i];
+const x=recent[i];
 
 if(
 x.low<prevLow &&
@@ -1323,33 +1451,20 @@ x.close>prevLow
 ){
 
 const z={
-
 type:'Liquidity Sweep',
-
 i,
-
 low:x.low,
-
 high:prevLow,
-
 score:5.5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-true
-)
+zoneValid(z,recent,true)
 ){
-
 supports.push(z);
-
 }
 
 }
-
 
 if(
 x.high>prevHigh &&
@@ -1357,29 +1472,17 @@ x.close<prevHigh
 ){
 
 const z={
-
 type:'Liquidity Sweep / Supply',
-
 i,
-
 low:prevHigh,
-
 high:x.high,
-
 score:5.5
-
 };
 
 if(
-zoneValid(
-z,
-recent,
-false
-)
+zoneValid(z,recent,false)
 ){
-
 pressures.push(z);
-
 }
 
 }
@@ -1387,103 +1490,75 @@ pressures.push(z);
 }
 
 
-/* =========================================================
-   Volume Quality
-========================================================= */
+/* Volume Quality */
 
 for(
-const z
-of [
+const z of [
 ...supports,
 ...pressures
 ]
 ){
 
-const r=
-recent[z.i];
+const r=recent[z.i];
 
 if(
 r &&
 volBase>0 &&
 r.volume>=volBase*1.35
 ){
-
 z.score+=1.5;
-
 }
 
 const middle=
 (z.low+z.high)/2;
 
 const distance=
-Math.abs(
-price-middle
-)/price;
+Math.abs(price-middle)/price;
 
-z.score-=
-distance*12;
+z.score-=distance*12;
 
 }
 
 
-/* =========================================================
-   法人
-========================================================= */
+/* 法人 */
 
-const chip=
-inst||{};
+const chip=inst||{};
 
 const chip5=
-Number(
-chip.total5||0
-);
+Number(chip.total5||0);
 
 const foreign5=
-Number(
-chip.foreign5||0
-);
+Number(chip.foreign5||0);
 
 const trust5=
-Number(
-chip.trust5||0
-);
+Number(chip.trust5||0);
 
 if(chip5>0){
-
 supports.forEach(
 z=>z.score+=.7
 );
-
 }
 
 if(chip5<0){
-
 pressures.forEach(
 z=>z.score+=.7
 );
-
 }
 
 if(foreign5>0){
-
 supports.forEach(
 z=>z.score+=.3
 );
-
 }
 
 if(trust5>0){
-
 supports.forEach(
 z=>z.score+=.3
 );
-
 }
 
 
-/* =========================================================
-   Valid Supports
-========================================================= */
+/* Valid Supports */
 
 const validS=
 supports
@@ -1512,13 +1587,10 @@ const distancePct=
 distance/price;
 
 return {
-
 ...z,
-
 finalScore:
 z.score-
 distancePct*12
-
 };
 
 }
@@ -1531,8 +1603,7 @@ price-z.high
 )
 .sort(
 (a,b)=>
-b.finalScore-
-a.finalScore
+b.finalScore-a.finalScore
 );
 
 
@@ -1567,12 +1638,7 @@ null;
 }
 
 
-/* =========================================================
-   壓力共振
-
-   把非常接近的小壓力合併，
-   避免被誤判成 TP1 / TP2 / TP3。
-========================================================= */
+/* 壓力共振 */
 
 const rawPressure=
 pressures
@@ -1591,11 +1657,8 @@ price*.0015
 )
 .map(
 z=>({
-
 ...z,
-
 target:z.low
-
 })
 )
 .sort(
@@ -1622,8 +1685,7 @@ pressureGroups.length-1
 if(
 last &&
 Math.abs(
-z.target-
-last.target
+z.target-last.target
 )<=mergeDistance
 ){
 
@@ -1634,16 +1696,12 @@ z.score
 );
 
 const totalWeight=
-last.weight+
-weight;
+last.weight+weight;
 
 last.target=
 (
-last.target*
-last.weight
-+
-z.target*
-weight
+last.target*last.weight+
+z.target*weight
 )/
 totalWeight;
 
@@ -1676,29 +1734,14 @@ z.type
 else{
 
 pressureGroups.push({
-
 type:z.type,
-
-types:[
-z.type
-],
-
+types:[z.type],
 i:z.i,
-
 low:z.low,
-
 high:z.high,
-
 target:z.target,
-
 score:z.score,
-
-weight:
-Math.max(
-.1,
-z.score
-)
-
+weight:Math.max(.1,z.score)
 });
 
 }
@@ -1709,9 +1752,7 @@ for(const z of pressureGroups){
 
 z.types=
 [
-...new Set(
-z.types
-)
+...new Set(z.types)
 ];
 
 z.type=
@@ -1720,12 +1761,7 @@ z.types.join(' + ');
 }
 
 
-/* =========================================================
-   關鍵突破位
-
-   注意：
-   這不是 TP1。
-========================================================= */
+/* 關鍵突破 */
 
 const breakoutZone=
 pressureGroups.find(
@@ -1750,8 +1786,6 @@ breakoutZone.target
 :
 null;
 
-
-/* 顯示用壓力 */
 
 const p1=
 breakoutZone;
@@ -1800,9 +1834,7 @@ null;
 }
 
 
-/* =========================================================
-   ENTRY
-========================================================= */
+/* ENTRY */
 
 let entryLow=null;
 let entryHigh=null;
@@ -1828,11 +1860,7 @@ entryHigh
 }
 
 
-/* =========================================================
-   SL
-
-   結構下緣 + 0.70 ATR / 0.8%
-========================================================= */
+/* SL */
 
 let sl=null;
 let risk=null;
@@ -1868,8 +1896,7 @@ price*.007
 }
 
 risk=
-entryMid-
-sl;
+entryMid-sl;
 
 if(
 Number.isFinite(risk)
@@ -1890,9 +1917,7 @@ riskPct>5;
 }
 
 
-/* =========================================================
-   Entry Ready
-========================================================= */
+/* Entry Ready */
 
 let entryReady=false;
 
@@ -1924,9 +1949,7 @@ tolerance;
 }
 
 
-/* =========================================================
-   TP Engine
-========================================================= */
+/* TP Engine */
 
 let tp1=null;
 let tp2=null;
@@ -1943,7 +1966,6 @@ let rr3=null;
 let rewardPct1=null;
 let targetSpaceEnough=false;
 
-
 if(
 s1 &&
 Number.isFinite(entryMid)
@@ -1954,8 +1976,6 @@ Number.isFinite(risk)
 &&
 risk>0
 ){
-
-/* R */
 
 const target15R=
 entryMid+
@@ -1968,9 +1988,6 @@ risk*2.5;
 const target35R=
 entryMid+
 risk*3.5;
-
-
-/* ATR */
 
 const atrTP1=
 entryMid+
@@ -2010,10 +2027,7 @@ Number.isFinite(
 candidate.value
 )
 ){
-
-swingLow=
-candidate.value;
-
+swingLow=candidate.value;
 }
 
 }
@@ -2022,8 +2036,7 @@ candidate.value;
 const swingHighs=
 S.highs.filter(
 x=>
-x.value>
-swingLow
+x.value>swingLow
 );
 
 let swingHigh=
@@ -2061,13 +2074,10 @@ break;
 
 
 let swingRange=
-swingHigh-
-swingLow;
+swingHigh-swingLow;
 
 if(
-!Number.isFinite(
-swingRange
-)
+!Number.isFinite(swingRange)
 ||
 swingRange<=0
 ){
@@ -2090,12 +2100,7 @@ swingLow+
 swingRange*1.618;
 
 
-/* =========================================================
-   TP1
-
-   必須在突破位上方，
-   不再把最近壓力直接當 TP1。
-========================================================= */
+/* TP1 */
 
 const breakoutFloor=
 breakout
@@ -2108,7 +2113,6 @@ price*.004
 :
 entryMid;
 
-
 const minTP1=
 Math.max(
 target15R,
@@ -2116,13 +2120,11 @@ atrTP1,
 breakoutFloor
 );
 
-
 const structureTP1=
 pressureGroups.find(
 z=>
 z.target>=minTP1
 );
-
 
 if(structureTP1){
 
@@ -2145,9 +2147,7 @@ tp1Source=
 }
 
 
-/* =========================================================
-   TP2
-========================================================= */
+/* TP2 */
 
 const minTP2=
 Math.max(
@@ -2161,7 +2161,6 @@ A
 )
 );
 
-
 const structureTP2=
 pressureGroups.find(
 z=>
@@ -2174,7 +2173,6 @@ A*.35,
 price*.004
 )
 );
-
 
 if(structureTP2){
 
@@ -2197,9 +2195,7 @@ tp2Source=
 }
 
 
-/* =========================================================
-   TP3
-========================================================= */
+/* TP3 */
 
 const minTP3=
 Math.max(
@@ -2213,7 +2209,6 @@ A*1.25
 )
 );
 
-
 const structureTP3=
 pressureGroups.find(
 z=>
@@ -2226,7 +2221,6 @@ A*.40,
 price*.004
 )
 );
-
 
 if(structureTP3){
 
@@ -2248,8 +2242,6 @@ tp3Source=
 
 }
 
-
-/* RR */
 
 rr1=
 (tp1-entryMid)/
@@ -2769,6 +2761,7 @@ ${a.passed}/8 · ${a.score}%
 
 }
 
+
 function renderHome(){
 
 let list=
@@ -2797,9 +2790,9 @@ if(tab==='watch'){
 const w=watch();
 
 list=
-list.filter(
-x=>w.includes(x.symbol)
-);
+w
+.map(symbol=>cache[symbol])
+.filter(Boolean);
 
 }
 
@@ -2810,6 +2803,23 @@ list.sort(
 ((b.score||0)-(a.score||0))
 );
 
+if(
+tab==='watch' &&
+watch().length &&
+!list.length
+){
+
+$('homeList').innerHTML=
+`
+<div class="card loader">
+正在載入我的自選...
+</div>
+`;
+
+return;
+
+}
+
 $('homeList').innerHTML=
 list.length
 ?
@@ -2817,7 +2827,13 @@ list.map(renderCard).join('')
 :
 `
 <div class="empty">
-目前沒有符合這個分類的股票。
+${
+tab==='watch'
+?
+'目前還沒有加入自選股票。搜尋股票後，進入分析頁按「加入自選」即可。'
+:
+'目前沒有符合這個分類的股票。'
+}
 </div>
 `;
 
@@ -3055,7 +3071,6 @@ Number.isFinite(+a.support2High)
 
 <div class="levels">
 
-
 <div class="level breakout full">
 
 <span>
@@ -3136,7 +3151,6 @@ Number.isFinite(+a.pressure2)
 </div>
 
 <div class="levels">
-
 
 <div class="level entry full">
 
@@ -3371,13 +3385,18 @@ ${has?'移除自選':'加入自選'}
 
 
 $('fav').onclick=
-()=>{
+async()=>{
+
+$('fav').disabled=true;
 
 let x=
 watch();
 
+const currentlyHas=
+x.includes(a.symbol);
+
 x=
-has
+currentlyHas
 ?
 x.filter(
 s=>s!==a.symbol
@@ -3388,7 +3407,55 @@ s=>s!==a.symbol
 a.symbol
 ];
 
-saveWatch(x);
+saveWatchLocal(x);
+
+/* 立即更新畫面 */
+
+renderDetail(a);
+renderHome();
+
+/* Push 同步 */
+
+syncPushSymbols();
+
+/* 雲端同步 */
+
+try{
+
+await saveCloudWatch(x);
+
+console.log(
+currentlyHas
+?
+'已從雲端自選移除'
+:
+'已加入雲端自選',
+a.symbol
+);
+
+}
+catch(e){
+
+console.warn(
+'雲端自選同步失敗',
+e
+);
+
+alert(
+'自選已先儲存在這台裝置，但雲端同步失敗：'+
+(e?.message||'未知錯誤')
+);
+
+}
+
+/*
+加入自選後確保 cache 已經有這檔。
+目前正在看的股票本身就已經存在 cache。
+*/
+
+if(!currentlyHas){
+cache[a.symbol]=a;
+}
 
 renderDetail(a);
 renderHome();
@@ -3481,6 +3548,87 @@ renderDetail(a);
 
 }
 catch{}
+
+}
+
+
+/* =========================================================
+   強制載入所有自選股票
+
+   這段很重要：
+   即使自選股沒有進入 radar 候選，
+   也會獨立呼叫 /api/stock。
+========================================================= */
+
+async function loadWatchStocks(){
+
+const symbols=
+watch();
+
+if(!symbols.length){
+return;
+}
+
+const BATCH_SIZE=6;
+
+for(
+let i=0;
+i<symbols.length;
+i+=BATCH_SIZE
+){
+
+const batch=
+symbols.slice(
+i,
+i+BATCH_SIZE
+);
+
+const results=
+await Promise.allSettled(
+batch.map(
+async symbol=>{
+
+const d=
+await getStock(symbol);
+
+const a=
+analyzeData(d);
+
+return {
+symbol,
+data:a
+};
+
+}
+)
+);
+
+for(const result of results){
+
+if(
+result.status==='fulfilled'
+){
+
+cache[
+result.value.symbol
+]=
+result.value.data;
+
+}
+else{
+
+console.warn(
+'自選股票載入失敗',
+result.reason
+);
+
+}
+
+}
+
+renderHome();
+
+}
 
 }
 
@@ -3714,6 +3862,13 @@ renderHome();
 }
 
 
+/*
+再保險一次：
+雷達跑完後，獨立確認所有自選都有載入。
+*/
+
+await loadWatchStocks();
+
 renderHome();
 
 
@@ -3735,6 +3890,9 @@ radarData?.strategyReadyCount||0,
 
 frontendAnalyzed:
 Object.keys(cache).length,
+
+watchCount:
+watch().length,
 
 strong:
 Object.values(cache)
@@ -4291,7 +4449,7 @@ document
 .forEach(
 x=>
 x.onclick=
-()=>{
+async()=>{
 
 hideSuggestions();
 
@@ -4308,6 +4466,31 @@ y===x
 )
 );
 
+if(tab==='watch'){
+
+$('homeList').innerHTML=
+`
+<div class="card loader">
+正在載入我的自選...
+</div>
+`;
+
+try{
+
+await loadWatchStocks();
+
+}
+catch(e){
+
+console.warn(
+'我的自選重新載入失敗',
+e
+);
+
+}
+
+}
+
 renderHome();
 
 }
@@ -4316,9 +4499,6 @@ renderHome();
 
 /* =========================================================
    Web Push
-
-   維持：
-   DEFAULT 12 + 我的自選
 ========================================================= */
 
 function pushSymbols(){
@@ -4331,48 +4511,6 @@ return [
 ]
 )
 ];
-
-}
-
-
-function getDeviceId(){
-
-let id=
-localStorage.getItem(
-PUSH_DEVICE_KEY
-);
-
-if(!id){
-
-if(
-window.crypto &&
-crypto.randomUUID
-){
-
-id=
-crypto.randomUUID();
-
-}
-else{
-
-id=
-'device-'+
-Date.now()+
-'-'+
-Math.random()
-.toString(36)
-.slice(2);
-
-}
-
-localStorage.setItem(
-PUSH_DEVICE_KEY,
-id
-);
-
-}
-
-return id;
 
 }
 
@@ -4542,9 +4680,7 @@ return d;
 }
 
 
-/* =========================================================
-   Push 股票同步
-========================================================= */
+/* Push 股票同步 */
 
 async function syncPushSymbols(){
 
@@ -4611,9 +4747,7 @@ if(
 in window
 )
 ){
-
 return;
-
 }
 
 if(
@@ -4638,9 +4772,7 @@ if(
 in navigator
 )
 ){
-
 return;
-
 }
 
 const registration=
@@ -4684,9 +4816,7 @@ catch{}
 }
 
 
-/* =========================================================
-   開啟 Push
-========================================================= */
+/* 開啟 Push */
 
 async function enablePush(){
 
@@ -4834,9 +4964,7 @@ return true;
 }
 
 
-/* =========================================================
-   通知按鈕
-========================================================= */
+/* 通知按鈕 */
 
 $('notify').onclick=
 async()=>{
@@ -4952,10 +5080,45 @@ hideSuggestions();
 $('homeList').innerHTML=
 `
 <div class="card loader">
-正在啟動全市場雷達...
+正在同步我的自選...
 </div>
 `;
 
+
+/*
+第一步：
+先建立/讀取固定 deviceId。
+*/
+
+getDeviceId();
+
+
+/*
+第二步：
+先同步雲端自選。
+這一步必須放在 radar() 前面，
+否則雷達不知道要保留哪些自選股票。
+*/
+
+try{
+
+await loadWatchlist();
+
+}
+catch(e){
+
+console.warn(
+'自選初始化失敗',
+e
+);
+
+}
+
+
+/*
+第三步：
+註冊 Service Worker。
+*/
 
 if(
 'serviceWorker'
@@ -4989,6 +5152,28 @@ e
 updatePushButton();
 
 
+/*
+雲端自選讀取完成後，
+同步一次 Push 股票清單。
+*/
+
+syncPushSymbols();
+
+
+$('homeList').innerHTML=
+`
+<div class="card loader">
+正在啟動全市場雷達...
+</div>
+`;
+
+
+/*
+第四步：
+跑全市場雷達。
+radar() 本身會把 watch() 全部納入。
+*/
+
 try{
 
 await radar();
@@ -4998,6 +5183,26 @@ catch(e){
 
 console.warn(
 '第一次全市場雷達掃描失敗',
+e
+);
+
+}
+
+
+/*
+第五步：
+再確認一次自選股票全部載入。
+*/
+
+try{
+
+await loadWatchStocks();
+
+}
+catch(e){
+
+console.warn(
+'自選股票載入失敗',
 e
 );
 
@@ -5035,6 +5240,8 @@ e
 300000
 );
 
+
+/* Push 點擊後開啟指定股票 */
 
 try{
 
