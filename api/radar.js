@@ -1,9 +1,16 @@
 // api/radar.js
-// 妖子平台 5.0
-// 全市場台股雷達
-// FinMind Snapshot 全市場初篩
-// → 日 K 波段快篩
-// → 回傳首頁候選池
+// 波段分析 Radar 6.0 FAST
+//
+// 全市場 Snapshot
+// → Snapshot 高速初篩
+// → Top 60 才抓日 K
+// → 技術 + 量價二次篩選
+// → Top 40 回傳首頁做完整分析
+//
+// 目的：
+// 大幅減少 FinMind API 次數
+// 不在 Radar 階段抓法人 / 基本面 / 新聞
+// 完整 100 分分析交給首頁候選股處理
 
 const SNAPSHOT_URL =
   "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
@@ -11,404 +18,400 @@ const SNAPSHOT_URL =
 const DATA_URL =
   "https://api.finmindtrade.com/api/v4/data";
 
-/*
-  ============================================================
-  全市場雷達設定
-  ============================================================
-*/
 
-const STRATEGY_SCAN_LIMIT = 180;
-const STRATEGY_BATCH_SIZE = 6;
-const DAILY_TIMEOUT_MS = 5000;
-const FRONTEND_CANDIDATE_LIMIT = 80;
+/* =========================================================
+   高速設定
+========================================================= */
+
+const KLINE_SCAN_LIMIT = 60;
+
+const KLINE_BATCH_SIZE = 12;
+
+const DAILY_TIMEOUT_MS = 4500;
+
+const FRONTEND_LIMIT = 40;
 
 
-/* ============================================================
-   基礎工具
-============================================================ */
+/* =========================================================
+   基本工具
+========================================================= */
 
 function num(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+
+  const n =
+    Number(v);
+
+  return Number.isFinite(n)
+    ? n
+    : 0;
 }
 
+
 function round(v, d = 2) {
-  const p = 10 ** d;
+
+  const n =
+    Number(v);
+
+  if (!Number.isFinite(n)) {
+    return null;
+  }
+
+  const p =
+    10 ** d;
 
   return (
     Math.round(
-      (num(v) + Number.EPSILON) * p
+      (n + Number.EPSILON) *
+      p
     ) / p
   );
 }
 
-function clamp(v, min, max) {
+
+function clamp(
+  v,
+  min,
+  max
+) {
+
   return Math.min(
     max,
-    Math.max(min, v)
+    Math.max(
+      min,
+      v
+    )
   );
 }
+
+
+function avg(arr) {
+
+  const values =
+    arr.filter(
+      Number.isFinite
+    );
+
+  if (!values.length) {
+    return 0;
+  }
+
+  return (
+    values.reduce(
+      (a, b) =>
+        a + b,
+      0
+    ) /
+    values.length
+  );
+}
+
 
 function isNormalTaiwanStock(id) {
+
   return /^\d{4}$/.test(
-    String(id || "")
+    String(
+      id || ""
+    )
   );
 }
 
-function dateString(daysAgo = 0) {
-  const d = new Date();
+
+function dateString(
+  daysAgo = 0
+) {
+
+  const d =
+    new Date();
 
   d.setDate(
-    d.getDate() - daysAgo
+    d.getDate() -
+    daysAgo
   );
 
   return d
     .toISOString()
-    .slice(0, 10);
+    .slice(
+      0,
+      10
+    );
 }
 
+
 function getTaipeiTime() {
+
   return new Intl.DateTimeFormat(
     "zh-TW",
     {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false
+      timeZone:
+        "Asia/Taipei",
+
+      year:
+        "numeric",
+
+      month:
+        "2-digit",
+
+      day:
+        "2-digit",
+
+      hour:
+        "2-digit",
+
+      minute:
+        "2-digit",
+
+      second:
+        "2-digit",
+
+      hour12:
+        false
     }
-  ).format(new Date());
-}
-
-
-/* ============================================================
-   技術指標
-============================================================ */
-
-function SMA(arr, p) {
-  if (arr.length < p) {
-    return NaN;
-  }
-
-  return (
-    arr
-      .slice(-p)
-      .reduce(
-        (a, b) =>
-          a + Number(b),
-        0
-      ) / p
+  ).format(
+    new Date()
   );
 }
 
-function EMA(arr, p) {
-  if (arr.length < p) {
+
+/* =========================================================
+   技術指標
+========================================================= */
+
+function SMA(
+  arr,
+  period
+) {
+
+  if (
+    !Array.isArray(arr) ||
+    arr.length < period
+  ) {
+
     return NaN;
   }
 
-  let e =
+  return avg(
     arr
-      .slice(0, p)
-      .reduce(
-        (a, b) =>
-          a + Number(b),
-        0
-      ) / p;
+      .slice(-period)
+      .map(Number)
+  );
+}
+
+
+function EMA(
+  arr,
+  period
+) {
+
+  if (
+    !Array.isArray(arr) ||
+    arr.length < period
+  ) {
+
+    return NaN;
+  }
+
+
+  let value =
+    avg(
+      arr
+        .slice(
+          0,
+          period
+        )
+        .map(Number)
+    );
+
 
   const k =
-    2 / (p + 1);
+    2 /
+    (period + 1);
+
 
   for (
-    let i = p;
+    let i = period;
     i < arr.length;
     i++
   ) {
-    e =
-      Number(arr[i]) * k +
-      e * (1 - k);
+
+    value =
+      Number(arr[i]) *
+      k +
+      value *
+      (1 - k);
   }
 
-  return e;
+
+  return value;
 }
 
-function RSI(arr, p = 14) {
-  if (arr.length <= p) {
+
+function RSI(
+  arr,
+  period = 14
+) {
+
+  if (
+    !Array.isArray(arr) ||
+    arr.length <= period
+  ) {
+
     return NaN;
   }
 
-  const r =
+
+  const values =
     arr.slice(
-      -(p + 1)
+      -(period + 1)
     );
+
 
   let gain = 0;
   let loss = 0;
 
+
   for (
     let i = 1;
-    i < r.length;
+    i < values.length;
     i++
   ) {
-    const d =
-      Number(r[i]) -
-      Number(r[i - 1]);
 
-    if (d > 0) {
-      gain += d;
+    const diff =
+      Number(values[i]) -
+      Number(
+        values[i - 1]
+      );
+
+
+    if (diff > 0) {
+
+      gain += diff;
+
     } else {
-      loss += Math.abs(d);
+
+      loss +=
+        Math.abs(diff);
     }
   }
 
-  gain /= p;
-  loss /= p;
+
+  gain /= period;
+
+  loss /= period;
+
 
   if (loss === 0) {
     return 100;
   }
 
+
+  const rs =
+    gain / loss;
+
+
   return (
     100 -
     100 /
-      (
-        1 +
-        gain / loss
-      )
+    (1 + rs)
   );
 }
 
-function ATR(rows, p = 14) {
-  if (rows.length <= p) {
+
+function ATR(
+  rows,
+  period = 14
+) {
+
+  if (
+    !Array.isArray(rows) ||
+    rows.length <= period
+  ) {
+
     return NaN;
   }
 
-  const values = [];
+
+  const tr = [];
+
 
   for (
     let i = 1;
     i < rows.length;
     i++
   ) {
-    const h =
-      num(rows[i].high);
 
-    const l =
-      num(rows[i].low);
-
-    const pc =
+    const high =
       num(
-        rows[i - 1].close
+        rows[i].high
       );
 
-    values.push(
+    const low =
+      num(
+        rows[i].low
+      );
+
+    const previousClose =
+      num(
+        rows[
+          i - 1
+        ].close
+      );
+
+
+    tr.push(
       Math.max(
-        h - l,
-        Math.abs(h - pc),
-        Math.abs(l - pc)
+        high - low,
+
+        Math.abs(
+          high -
+          previousClose
+        ),
+
+        Math.abs(
+          low -
+          previousClose
+        )
       )
     );
   }
 
+
   return SMA(
-    values,
-    p
+    tr,
+    period
   );
 }
 
 
-/* ============================================================
-   高週期 Swing 結構
-============================================================ */
-
-function findHTFSwingStructure(rows) {
-  const data =
-    rows.slice(-120);
-
-  const pivots = [];
-
-  if (data.length < 30) {
-    return {
-      low: NaN,
-      type: "NONE"
-    };
-  }
-
-  for (
-    let i = 3;
-    i < data.length - 3;
-    i++
-  ) {
-    const low =
-      num(data[i].low);
-
-    const pivot =
-      low <
-        num(data[i - 1].low) &&
-      low <
-        num(data[i - 2].low) &&
-      low <
-        num(data[i - 3].low) &&
-      low <=
-        num(data[i + 1].low) &&
-      low <=
-        num(data[i + 2].low) &&
-      low <=
-        num(data[i + 3].low);
-
-    if (!pivot) {
-      continue;
-    }
-
-    const before =
-      data.slice(
-        Math.max(
-          0,
-          i - 20
-        ),
-        i
-      );
-
-    const after =
-      data.slice(
-        i + 1,
-        Math.min(
-          data.length,
-          i + 25
-        )
-      );
-
-    if (
-      !before.length ||
-      !after.length
-    ) {
-      continue;
-    }
-
-    const priorHigh =
-      Math.max(
-        ...before.map(
-          x =>
-            num(x.high)
-        )
-      );
-
-    const afterHigh =
-      Math.max(
-        ...after.map(
-          x =>
-            num(x.high)
-        )
-      );
-
-    pivots.push({
-      low,
-
-      confirmed:
-        afterHigh >
-        priorHigh,
-
-      date:
-        data[i].date ||
-        ""
-    });
-  }
-
-  const confirmed =
-    pivots.filter(
-      x => x.confirmed
-    );
-
-  if (confirmed.length) {
-    const last =
-      confirmed[
-        confirmed.length - 1
-      ];
-
-    const previous =
-      confirmed.length > 1
-        ? confirmed[
-            confirmed.length - 2
-          ]
-        : null;
-
-    return {
-      low:
-        last.low,
-
-      type:
-        previous &&
-        last.low >
-          previous.low
-          ? "HL"
-          : "SWING_LOW",
-
-      date:
-        last.date
-    };
-  }
-
-  if (pivots.length) {
-    const last =
-      pivots[
-        pivots.length - 1
-      ];
-
-    return {
-      low:
-        last.low,
-
-      type:
-        "SWING_LOW",
-
-      date:
-        last.date
-    };
-  }
-
-  return {
-    low:
-      Math.min(
-        ...data
-          .slice(-20)
-          .map(
-            x =>
-              num(x.low)
-          )
-      ),
-
-    type:
-      "FALLBACK"
-  };
-}
-
-
-/* ============================================================
+/* =========================================================
    股票名稱
-============================================================ */
+========================================================= */
 
 async function fetchTaiwanStockNames(
   token
 ) {
+
   try {
+
     const controller =
       new AbortController();
+
 
     const timer =
       setTimeout(
         () =>
           controller.abort(),
-        5000
+        4500
       );
 
+
     try {
+
       const response =
         await fetch(
           `${DATA_URL}?dataset=TaiwanStockInfo`,
           {
             headers: {
+
               Authorization:
                 `Bearer ${token}`,
 
@@ -421,327 +424,355 @@ async function fetchTaiwanStockNames(
           }
         );
 
+
       if (!response.ok) {
         return {};
       }
 
+
       const body =
         await response.json();
+
 
       if (
         !Array.isArray(
           body?.data
         )
       ) {
+
         return {};
       }
 
+
       const names = {};
 
+
       for (
-        const stock
-        of body.data
+        const stock of
+        body.data
       ) {
+
+        const id =
+          String(
+            stock?.stock_id ||
+            ""
+          );
+
+
         if (
-          stock?.stock_id &&
+          id &&
           stock?.stock_name
         ) {
-          names[
-            String(
-              stock.stock_id
-            )
-          ] =
+
+          names[id] =
             String(
               stock.stock_name
             );
         }
       }
 
+
       return names;
 
+
     } finally {
-      clearTimeout(timer);
+
+      clearTimeout(
+        timer
+      );
     }
 
-  } catch {
+
+  } catch (_) {
+
     return {};
   }
 }
 
 
-/* ============================================================
-   Snapshot 快速分數
-============================================================ */
+/* =========================================================
+   Snapshot 第一階段高速評分
+========================================================= */
 
-function scoreStock(x) {
+function scoreSnapshot(x) {
+
+  const symbol =
+    String(
+      x.stock_id ||
+      ""
+    );
+
+
   const price =
-    num(x.close);
+    num(
+      x.close
+    );
+
 
   const open =
-    num(x.open);
+    num(
+      x.open
+    );
+
 
   const high =
-    num(x.high);
+    num(
+      x.high
+    );
+
 
   const low =
-    num(x.low);
+    num(
+      x.low
+    );
 
-  if (price <= 0) {
+
+  if (
+    !symbol ||
+    price <= 0
+  ) {
+
     return null;
   }
 
-  const changeRate =
-    num(x.change_rate);
+
+  const change =
+    num(
+      x.change_rate
+    );
+
 
   const volumeRatio =
-    num(x.volume_ratio);
+    num(
+      x.volume_ratio
+    );
+
 
   const totalVolume =
-    num(x.total_volume);
+    num(
+      x.total_volume
+    );
+
 
   const buyVolume =
-    num(x.buy_volume);
+    num(
+      x.buy_volume
+    );
+
 
   const sellVolume =
-    num(x.sell_volume);
-
-  let score = 0;
-
-  const reasons = [];
-  const warnings = [];
-
-
-  /* 漲跌幅 */
-
-  if (
-    changeRate >= 0.5 &&
-    changeRate <= 2
-  ) {
-    score += 12;
-
-    reasons.push(
-      "價格開始轉強"
+    num(
+      x.sell_volume
     );
 
-  } else if (
-    changeRate > 2 &&
-    changeRate <= 4
-  ) {
-    score += 18;
-
-    reasons.push(
-      "價格動能轉強"
-    );
-
-  } else if (
-    changeRate > 4 &&
-    changeRate <= 6.5
-  ) {
-    score += 14;
-
-    reasons.push(
-      "強勢上漲"
-    );
-
-  } else if (
-    changeRate > 6.5
-  ) {
-    score += 3;
-
-    warnings.push(
-      "今日漲幅偏大"
-    );
-
-  } else if (
-    changeRate >= -1.5
-  ) {
-    score += 6;
-
-    reasons.push(
-      "價格維持整理"
-    );
-
-  } else if (
-    changeRate < -3
-  ) {
-    score -= 15;
-  }
-
-
-  /* 量比 */
-
-  if (
-    volumeRatio >= 3
-  ) {
-    score += 28;
-
-    reasons.push(
-      `爆量 ${round(
-        volumeRatio,
-        1
-      )}x`
-    );
-
-  } else if (
-    volumeRatio >= 2
-  ) {
-    score += 24;
-
-  } else if (
-    volumeRatio >= 1.5
-  ) {
-    score += 18;
-
-  } else if (
-    volumeRatio >= 1.1
-  ) {
-    score += 10;
-
-  } else if (
-    volumeRatio >= 0.8
-  ) {
-    score += 4;
-  }
-
-
-  /* K 棒位置 */
 
   const range =
     high - low;
 
-  const position =
+
+  const dayPosition =
     range > 0
-      ? clamp(
-          (price - low) /
-            range,
-          0,
-          1
-        )
-      : 0.5;
+      ?
+      clamp(
+        (
+          price - low
+        ) /
+        range,
+        0,
+        1
+      )
+      :
+      0.5;
 
-  if (
-    position >= 0.85
-  ) {
-    score += 18;
-
-  } else if (
-    position >= 0.65
-  ) {
-    score += 12;
-
-  } else if (
-    position >= 0.5
-  ) {
-    score += 5;
-  }
-
-
-  /* 紅 K */
-
-  if (
-    open > 0 &&
-    price > open
-  ) {
-    score += 7;
-  }
-
-
-  /* 買賣力 */
 
   const orderTotal =
     buyVolume +
     sellVolume;
 
-  if (orderTotal > 0) {
-    const buyStrength =
+
+  const buyStrength =
+    orderTotal > 0
+      ?
       buyVolume /
-      orderTotal;
-
-    if (
-      buyStrength >= 0.62
-    ) {
-      score += 10;
-
-    } else if (
-      buyStrength <= 0.35
-    ) {
-      score -= 5;
-    }
-  }
+      orderTotal
+      :
+      0.5;
 
 
-  /* 流動性 */
+  let score = 0;
+
+
+  /* =======================================================
+     價格動能
+  ======================================================= */
 
   if (
-    totalVolume >= 5000
+    change >= 0.5 &&
+    change <= 4
   ) {
-    score += 7;
+
+    score += 20;
 
   } else if (
-    totalVolume >= 1500
+    change > 4 &&
+    change <= 6.5
   ) {
-    score += 5;
+
+    score += 15;
 
   } else if (
-    totalVolume >= 500
+    change >= -1
   ) {
-    score += 2;
+
+    score += 9;
 
   } else if (
-    totalVolume > 0 &&
-    totalVolume < 200
+    change < -3
   ) {
+
     score -= 15;
   }
 
 
-  score =
-    clamp(
-      Math.round(score),
-      0,
-      100
-    );
-
-
-  let longStatus =
-    "暫不列入";
-
+  /* =======================================================
+     量比
+  ======================================================= */
 
   if (
-    score >= 65 &&
-    changeRate >= -0.5 &&
-    changeRate <= 6.5 &&
-    position >= 0.60
+    volumeRatio >= 2
   ) {
-    longStatus =
-      "優先觀察";
+
+    score += 25;
 
   } else if (
-    score >= 40 &&
-    changeRate > -2.5
+    volumeRatio >= 1.5
   ) {
-    longStatus =
-      "等待確認";
+
+    score += 20;
+
+  } else if (
+    volumeRatio >= 1.1
+  ) {
+
+    score += 14;
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+
+    score += 7;
   }
 
 
+  /* =======================================================
+     K 棒位置
+  ======================================================= */
+
   if (
-    changeRate > 7
+    dayPosition >= 0.8
   ) {
-    longStatus =
-      "漲幅偏大不追";
+
+    score += 18;
+
+  } else if (
+    dayPosition >= 0.6
+  ) {
+
+    score += 12;
+
+  } else if (
+    dayPosition >= 0.45
+  ) {
+
+    score += 5;
+  }
+
+
+  /* =======================================================
+     紅 K
+  ======================================================= */
+
+  if (
+    open > 0 &&
+    price >= open
+  ) {
+
+    score += 7;
+  }
+
+
+  /* =======================================================
+     買盤
+  ======================================================= */
+
+  if (
+    buyStrength >= 0.62
+  ) {
+
+    score += 10;
+
+  } else if (
+    buyStrength >= 0.52
+  ) {
+
+    score += 5;
+
+  } else if (
+    buyStrength <= 0.35
+  ) {
+
+    score -= 5;
+  }
+
+
+  /* =======================================================
+     流動性
+  ======================================================= */
+
+  if (
+    totalVolume >= 5000
+  ) {
+
+    score += 10;
+
+  } else if (
+    totalVolume >= 1500
+  ) {
+
+    score += 7;
+
+  } else if (
+    totalVolume >= 500
+  ) {
+
+    score += 3;
+
+  } else if (
+    totalVolume < 200
+  ) {
+
+    score -= 20;
+  }
+
+
+  /*
+    避免已經噴太遠的股票
+  */
+
+  if (
+    change > 7
+  ) {
+
+    score -= 25;
   }
 
 
   return {
-    symbol:
-      String(
-        x.stock_id
-      ),
 
-    name: "",
+    symbol,
 
-    score,
+    name:
+      "",
 
     price:
       round(price),
@@ -756,9 +787,7 @@ function scoreStock(x) {
       round(low),
 
     changePercent:
-      round(
-        changeRate
-      ),
+      round(change),
 
     volumeRatio:
       round(
@@ -770,37 +799,40 @@ function scoreStock(x) {
 
     dayPosition:
       round(
-        position * 100,
+        dayPosition *
+        100,
         1
       ),
 
-    longStatus,
-
-    reasons:
-      reasons.slice(
-        0,
-        5
+    buyStrength:
+      round(
+        buyStrength *
+        100,
+        1
       ),
 
-    warnings:
-      warnings.slice(
+    snapshotScore:
+      clamp(
+        Math.round(score),
         0,
-        3
+        100
       )
   };
 }
 
 
-/* ============================================================
-   抓日 K
-============================================================ */
+/* =========================================================
+   日 K
+========================================================= */
 
 async function fetchDailyRows(
   token,
   symbol
 ) {
+
   const controller =
     new AbortController();
+
 
   const timer =
     setTimeout(
@@ -809,22 +841,27 @@ async function fetchDailyRows(
       DAILY_TIMEOUT_MS
     );
 
+
   try {
+
+    /*
+      220 天足夠 MA60 / 趨勢 / ATR，
+      不再抓 260 天。
+    */
+
     const url =
       `${DATA_URL}` +
       `?dataset=TaiwanStockPrice` +
-      `&data_id=${encodeURIComponent(
-        symbol
-      )}` +
-      `&start_date=${dateString(
-        260
-      )}`;
+      `&data_id=${encodeURIComponent(symbol)}` +
+      `&start_date=${dateString(220)}`;
+
 
     const response =
       await fetch(
         url,
         {
           headers: {
+
             Authorization:
               `Bearer ${token}`,
 
@@ -837,29 +874,38 @@ async function fetchDailyRows(
         }
       );
 
+
     if (!response.ok) {
       return [];
     }
 
+
     const body =
       await response.json();
+
 
     if (
       !Array.isArray(
         body?.data
       )
     ) {
+
       return [];
     }
+
 
     return body.data
       .map(
         x => ({
+
           date:
-            x.date,
+            x.date ||
+            "",
 
           open:
-            num(x.open),
+            num(
+              x.open
+            ),
 
           high:
             num(
@@ -899,42 +945,70 @@ async function fetchDailyRows(
             )
       );
 
-  } catch {
+
+  } catch (_) {
+
     return [];
 
+
   } finally {
-    clearTimeout(timer);
+
+    clearTimeout(
+      timer
+    );
   }
 }
 
 
-/* ============================================================
-   日 K 波段策略快篩
-============================================================ */
+/* =========================================================
+   第二階段：
+   技術 + 量價快速分析
+========================================================= */
 
-function calculateStrategyScores(
+function analyzeKline(
   stock,
   rows
 ) {
+
   if (
     !Array.isArray(rows) ||
-    rows.length < 70
+    rows.length < 65
   ) {
+
     return null;
   }
+
 
   const closes =
     rows.map(
       x =>
-        num(x.close)
+        x.close
     );
+
 
   const price =
     stock.price > 0
-      ? stock.price
-      : closes[
-          closes.length - 1
-        ];
+      ?
+      stock.price
+      :
+      closes[
+        closes.length - 1
+      ];
+
+
+  const ma5 =
+    SMA(
+      closes,
+      5
+    );
+
+
+  const ma10 =
+    SMA(
+      closes,
+      10
+    );
+
 
   const ma20 =
     SMA(
@@ -942,13 +1016,15 @@ function calculateStrategyScores(
       20
     );
 
+
   const ma60 =
     SMA(
       closes,
       60
     );
 
-  const old20 =
+
+  const previousMA20 =
     SMA(
       closes.slice(
         0,
@@ -957,20 +1033,13 @@ function calculateStrategyScores(
       20
     );
 
-  const old60 =
-    SMA(
-      closes.slice(
-        0,
-        -10
-      ),
-      60
-    );
 
   const rsi =
     RSI(
       closes,
       14
     );
+
 
   const macd =
     EMA(
@@ -982,19 +1051,26 @@ function calculateStrategyScores(
       26
     );
 
+
   let atr =
     ATR(
       rows,
       14
     );
 
-  if (!(atr > 0)) {
+
+  if (
+    !(atr > 0)
+  ) {
+
     atr =
       Math.max(
-        price * 0.02,
+        price *
+        0.015,
         0.01
       );
   }
+
 
   const previous20 =
     rows.slice(
@@ -1002,421 +1078,333 @@ function calculateStrategyScores(
       -1
     );
 
-  if (!previous20.length) {
-    return null;
-  }
 
-  const resistance =
+  const resistance20 =
     Math.max(
       ...previous20.map(
         x =>
-          num(x.high)
+          x.high
       )
     );
 
-  const low10 =
+
+  const low20 =
     Math.min(
       ...rows
-        .slice(-10)
+        .slice(-20)
         .map(
           x =>
-            num(x.low)
+            x.low
         )
     );
 
-  const support =
-    Math.max(
-      low10,
 
-      Math.min(
-        ma20,
-        price
-      ) -
-        atr * 0.5
-    );
-
-  const structure =
-    findHTFSwingStructure(
+  const avgVolume20 =
+    avg(
       rows
+        .slice(
+          -21,
+          -1
+        )
+        .map(
+          x =>
+            x.volume
+        )
     );
 
-  const structureLow =
-    num(
-      structure.low
-    );
 
-  const structureStop =
-    structureLow -
-    atr * 0.15;
-
-  const structureValid =
-    structureLow > 0 &&
-    price >
-      structureStop;
-
-  const ma20Up =
-    Number.isFinite(
-      old20
-    ) &&
-    ma20 >
-      old20;
-
-  const ma60Up =
-    Number.isFinite(
-      old60
-    ) &&
-    ma60 >
-      old60;
-
-  const breakoutDistance =
-    (
-      price -
-      resistance
-    ) /
-    atr;
-
-  const aboveMA20 =
-    (
-      price -
-      ma20
-    ) /
-    atr;
-
-  const entryLow =
-    Math.max(
-      support,
-
-      ma20 -
-        atr * 0.5
-    );
-
-  const entryHigh =
-    ma20 +
-    atr * 0.35;
+  const latestVolume =
+    rows[
+      rows.length - 1
+    ].volume;
 
 
-  /* 支撐回踩 */
+  /*
+    Snapshot 量比優先。
+    若 Snapshot 沒資料，
+    才使用日 K 計算。
+  */
 
-  let pullback = 0;
+  const volumeRatio =
+    stock.volumeRatio > 0
+      ?
+      stock.volumeRatio
+      :
+      avgVolume20 > 0
+      ?
+      latestVolume /
+      avgVolume20
+      :
+      0;
+
+
+  /* =======================================================
+     技術 20 分
+  ======================================================= */
+
+  let technical = 0;
+
 
   if (
-    price >
-    ma60
+    price > ma20
   ) {
-    pullback += 10;
+    technical += 4;
   }
+
 
   if (
-    ma20 >
-    ma60
+    ma20 > ma60
   ) {
-    pullback += 20;
+    technical += 5;
   }
 
-  if (ma20Up) {
-    pullback += 10;
+
+  if (
+    price > ma5 &&
+    ma5 >= ma10
+  ) {
+    technical += 3;
   }
+
+
+  if (
+    Number.isFinite(
+      previousMA20
+    ) &&
+    ma20 >
+    previousMA20
+  ) {
+    technical += 3;
+  }
+
+
+  if (
+    rsi >= 45 &&
+    rsi <= 72
+  ) {
+    technical += 3;
+  }
+
 
   if (
     macd >= 0
   ) {
-    pullback += 10;
+    technical += 2;
   }
+
+
+  /* =======================================================
+     量價 20 分
+  ======================================================= */
+
+  let volumePrice = 0;
+
 
   if (
-    rsi >= 40 &&
-    rsi <= 70
+    volumeRatio >= 1.5
   ) {
-    pullback += 10;
-  }
 
-  if (
-    price >=
-      entryLow -
-        atr * 0.25 &&
-    price <=
-      entryHigh +
-        atr * 0.35
-  ) {
-    pullback += 25;
-  }
-
-  if (
-    structureValid
-  ) {
-    pullback += 10;
-  }
-
-  if (
-    stock.changePercent >= -2 &&
-    stock.changePercent <= 5
-  ) {
-    pullback += 5;
-  }
-
-
-  /* 高 R */
-
-  let highR = 0;
-
-  if (
-    price >
-      ma20 &&
-    ma20 >
-      ma60
-  ) {
-    highR += 20;
-  }
-
-  if (ma20Up) {
-    highR += 10;
-  }
-
-  if (
-    macd > 0
-  ) {
-    highR += 10;
-  }
-
-  if (
-    rsi >= 48 &&
-    rsi <= 74
-  ) {
-    highR += 10;
-  }
-
-  if (
-    breakoutDistance >= -0.4 &&
-    breakoutDistance <= 1
-  ) {
-    highR += 20;
-  }
-
-  if (
-    price >=
-      resistance
-  ) {
-    highR += 10;
-  }
-
-  if (
-    aboveMA20 <= 3
-  ) {
-    highR += 5;
-  }
-
-  if (
-    structureValid
-  ) {
-    highR += 10;
-  }
-
-  if (
-    stock.volumeRatio >= 1
-  ) {
-    highR += 5;
-  }
-
-
-  /* 強勢續攻 */
-
-  let surge = 0;
-
-  if (
-    price >
-      ma20 &&
-    ma20 >
-      ma60
-  ) {
-    surge += 20;
-  }
-
-  if (
-    ma20Up &&
-    ma60Up
-  ) {
-    surge += 15;
-  }
-
-  if (
-    macd > 0
-  ) {
-    surge += 10;
-  }
-
-  if (
-    rsi >= 52 &&
-    rsi <= 76
-  ) {
-    surge += 10;
-  }
-
-  if (
-    breakoutDistance >= -0.2 &&
-    breakoutDistance <= 1.1
-  ) {
-    surge += 15;
-  }
-
-  if (
-    stock.volumeRatio >= 1.5
-  ) {
-    surge += 15;
+    volumePrice += 7;
 
   } else if (
-    stock.volumeRatio >= 1
+    volumeRatio >= 1.1
   ) {
-    surge += 8;
+
+    volumePrice += 5;
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+
+    volumePrice += 2;
   }
+
+
+  if (
+    stock.changePercent >= 0 &&
+    stock.changePercent <= 5
+  ) {
+
+    volumePrice += 4;
+
+  } else if (
+    stock.changePercent >= -1.5
+  ) {
+
+    volumePrice += 2;
+  }
+
 
   if (
     stock.dayPosition >= 65
   ) {
-    surge += 10;
-  }
 
-  if (
-    structureValid
-  ) {
-    surge += 5;
-  }
-
-  if (
-    stock.changePercent > 7
-  ) {
-    surge -= 20;
-  }
-
-
-  pullback =
-    clamp(
-      Math.round(
-        pullback
-      ),
-      0,
-      100
-    );
-
-  highR =
-    clamp(
-      Math.round(
-        highR
-      ),
-      0,
-      100
-    );
-
-  surge =
-    clamp(
-      Math.round(
-        surge
-      ),
-      0,
-      100
-    );
-
-
-  const strategies = [
-    {
-      key:
-        "PULLBACK",
-
-      name:
-        "支撐回踩",
-
-      emoji:
-        "🟢",
-
-      score:
-        pullback
-    },
-
-    {
-      key:
-        "HIGH_R",
-
-      name:
-        "高 R",
-
-      emoji:
-        "🟣",
-
-      score:
-        highR
-    },
-
-    {
-      key:
-        "SURGE",
-
-      name:
-        "強勢續攻",
-
-      emoji:
-        "🔥",
-
-      score:
-        surge
-    }
-  ].sort(
-    (a, b) =>
-      b.score -
-      a.score
-  );
-
-
-  const best =
-    strategies[0];
-
-  let grade =
-    "條件偏低";
-
-  if (
-    best.score >= 85
-  ) {
-    grade =
-      "高符合";
+    volumePrice += 4;
 
   } else if (
-    best.score >= 75
+    stock.dayPosition >= 50
   ) {
-    grade =
-      "條件符合";
+
+    volumePrice += 2;
+  }
+
+
+  const breakoutDistance =
+    (
+      price -
+      resistance20
+    ) /
+    atr;
+
+
+  if (
+    breakoutDistance >= -0.6 &&
+    breakoutDistance <= 1.2
+  ) {
+
+    volumePrice += 3;
+  }
+
+
+  if (
+    stock.buyStrength >= 52
+  ) {
+
+    volumePrice += 2;
+  }
+
+
+  technical =
+    clamp(
+      technical,
+      0,
+      20
+    );
+
+
+  volumePrice =
+    clamp(
+      volumePrice,
+      0,
+      20
+    );
+
+
+  /*
+    雷達分數只負責找候選股，
+    不是最終 100 分。
+  */
+
+  const fastScore =
+    Math.round(
+      technical *
+      2.3 +
+
+      volumePrice *
+      2.1 +
+
+      stock.snapshotScore *
+      0.12
+    );
+
+
+  const support =
+    Math.max(
+      low20,
+      ma20 -
+      atr *
+      0.7
+    );
+
+
+  const distanceMA20 =
+    atr > 0
+      ?
+      (
+        price -
+        ma20
+      ) /
+      atr
+      :
+      0;
+
+
+  /*
+    過度乖離扣分
+  */
+
+  let adjustedScore =
+    fastScore;
+
+
+  if (
+    distanceMA20 > 3
+  ) {
+
+    adjustedScore -= 10;
+  }
+
+
+  if (
+    stock.changePercent > 6.5
+  ) {
+
+    adjustedScore -= 10;
+  }
+
+
+  adjustedScore =
+    clamp(
+      adjustedScore,
+      0,
+      100
+    );
+
+
+  let status =
+    "等待";
+
+
+  if (
+    adjustedScore >= 70
+  ) {
+
+    status =
+      "優先分析";
 
   } else if (
-    best.score >= 55
+    adjustedScore >= 55
   ) {
-    grade =
-      "接近條件";
+
+    status =
+      "值得觀察";
   }
 
 
   return {
+
     ...stock,
 
+    score:
+      adjustedScore,
+
     entryScore:
-      best.score,
+      adjustedScore,
 
-    recommendedStrategy:
-      best.name,
+    fastScore:
+      adjustedScore,
 
-    strategyEmoji:
-      best.emoji,
+    technicalScore:
+      technical,
 
-    strategyKey:
-      best.key,
+    volumePriceScore:
+      volumePrice,
 
-    strategyGrade:
-      grade,
+    ma5:
+      round(ma5),
 
-    pullbackScore:
-      pullback,
-
-    highRScore:
-      highR,
-
-    surgeScore:
-      surge,
+    ma10:
+      round(ma10),
 
     ma20:
       round(ma20),
@@ -1439,58 +1427,121 @@ function calculateStrategyScores(
     atr:
       round(atr),
 
-    resistance:
-      round(
-        resistance
-      ),
-
     support:
       round(
         support
       ),
 
+    resistance:
+      round(
+        resistance20
+      ),
+
+    volumeRatio:
+      round(
+        volumeRatio,
+        2
+      ),
+
+    status,
+
+    /*
+      保留舊前端可能讀取的欄位，
+      避免 index.html 因欄位不存在壞掉。
+    */
+
+    recommendedStrategy:
+      "波段候選",
+
+    strategyEmoji:
+      "📊",
+
+    strategyKey:
+      "SWING",
+
+    strategyGrade:
+      adjustedScore >= 70
+        ?
+        "優先分析"
+        :
+        adjustedScore >= 55
+        ?
+        "值得觀察"
+        :
+        "等待",
+
+    pullbackScore:
+      adjustedScore,
+
+    highRScore:
+      adjustedScore,
+
+    surgeScore:
+      adjustedScore,
+
     structureLow:
       round(
-        structureLow
+        support
       ),
 
     structureStop:
       round(
-        structureStop
+        support -
+        atr *
+        0.35
       ),
 
-    structureValid,
+    structureValid:
+      price >
+      support -
+      atr *
+      0.35,
 
     entryLow:
       round(
-        entryLow
+        Math.max(
+          support,
+          ma20 -
+          atr *
+          0.5
+        )
       ),
 
     entryHigh:
       round(
-        entryHigh
+        ma20 +
+        atr *
+        0.5
       )
   };
 }
 
 
-/* ============================================================
+/* =========================================================
    API
-============================================================ */
+========================================================= */
 
 export default async function handler(
   req,
   res
 ) {
+
+  const startedAt =
+    Date.now();
+
+
   try {
+
     if (
-      req.method !==
-      "GET"
+      req.method !== "GET"
     ) {
+
       return res
         .status(405)
         .json({
-          ok: false,
+
+          ok:
+            false,
 
           error:
             "Method Not Allowed"
@@ -1504,10 +1555,13 @@ export default async function handler(
 
 
     if (!token) {
+
       return res
         .status(500)
         .json({
-          ok: false,
+
+          ok:
+            false,
 
           error:
             "Vercel 尚未設定 FINMIND_TOKEN"
@@ -1515,12 +1569,13 @@ export default async function handler(
     }
 
 
-    /* ========================================================
-       全市場 Snapshot
-    ======================================================== */
+    /* =====================================================
+       Snapshot + 股票名稱同時抓
+    ===================================================== */
 
     const snapshotController =
       new AbortController();
+
 
     const snapshotTimer =
       setTimeout(
@@ -1529,27 +1584,44 @@ export default async function handler(
         7000
       );
 
+
     let snapshotResponse;
+    let stockNames;
+
 
     try {
-      snapshotResponse =
-        await fetch(
-          SNAPSHOT_URL,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
 
-              Accept:
-                "application/json"
-            },
+      [
+        snapshotResponse,
+        stockNames
+      ] =
+        await Promise.all([
 
-            signal:
-              snapshotController.signal
-          }
-        );
+          fetch(
+            SNAPSHOT_URL,
+            {
+              headers: {
+
+                Authorization:
+                  `Bearer ${token}`,
+
+                Accept:
+                  "application/json"
+              },
+
+              signal:
+                snapshotController.signal
+            }
+          ),
+
+          fetchTaiwanStockNames(
+            token
+          )
+        ]);
+
 
     } finally {
+
       clearTimeout(
         snapshotTimer
       );
@@ -1565,6 +1637,7 @@ export default async function handler(
       !snapshotResponse.ok ||
       body?.status !== 200
     ) {
+
       return res
         .status(
           snapshotResponse
@@ -1572,7 +1645,9 @@ export default async function handler(
           502
         )
         .json({
-          ok: false,
+
+          ok:
+            false,
 
           error:
             body?.msg ||
@@ -1581,26 +1656,19 @@ export default async function handler(
     }
 
 
-    const stockNames =
-      await fetchTaiwanStockNames(
-        token
-      );
-
-
     const snapshots =
       Array.isArray(
-        body.data
+        body?.data
       )
-        ? body.data
-        : [];
+        ?
+        body.data
+        :
+        [];
 
 
-    /*
-      stocks = 全市場 4 碼普通股票
-
-      所以 scanned 就會告訴你
-      Snapshot 實際掃到多少檔。
-    */
+    /* =====================================================
+       全市場 Snapshot
+    ===================================================== */
 
     const stocks =
       snapshots
@@ -1613,13 +1681,14 @@ export default async function handler(
         )
 
         .map(
-          scoreStock
+          scoreSnapshot
         )
 
         .filter(Boolean)
 
         .map(
           stock => ({
+
             ...stock,
 
             name:
@@ -1631,58 +1700,41 @@ export default async function handler(
         )
 
         .filter(
-          x =>
-            x.price > 0
+          stock =>
+            stock.price > 3 &&
+            stock.totalVolume >= 200
         );
 
 
-    /* ========================================================
-       第一層：
-       全市場快速初篩
+    /* =====================================================
+       Snapshot 第一階段
 
-       從全部 stocks 挑最多 180 檔。
-    ======================================================== */
+       只留下最值得抓 K 線的 Top 60
+    ===================================================== */
 
     const candidatePool =
       [...stocks]
 
         .filter(
-          x =>
-            x.totalVolume >= 200 &&
+          stock =>
 
-            x.changePercent > -4 &&
+            stock.changePercent >
+              -3.5 &&
 
-            x.changePercent <= 7.5 &&
-
-            x.price > 3 &&
+            stock.changePercent <=
+              7.5 &&
 
             (
-              x.score >= 20 ||
+              stock.snapshotScore >=
+                25 ||
 
-              x.volumeRatio >= 0.8 ||
-
-              x.longStatus ===
-                "優先觀察" ||
-
-              x.longStatus ===
-                "等待確認"
+              stock.volumeRatio >=
+                1
             )
         )
 
         .sort(
           (a, b) => {
-            const volumeBonusA =
-              Math.min(
-                a.volumeRatio * 7,
-                22
-              );
-
-            const volumeBonusB =
-              Math.min(
-                b.volumeRatio * 7,
-                22
-              );
-
 
             const liquidityA =
               Math.min(
@@ -1691,9 +1743,11 @@ export default async function handler(
                     a.totalVolume,
                     1
                   )
-                ) * 3,
-                15
+                ) *
+                2,
+                10
               );
+
 
             const liquidityB =
               Math.min(
@@ -1702,89 +1756,84 @@ export default async function handler(
                     b.totalVolume,
                     1
                   )
-                ) * 3,
-                15
+                ) *
+                2,
+                10
               );
 
 
-            const positionA =
-              a.dayPosition >= 50
-                ? 5
-                : 0;
-
-            const positionB =
-              b.dayPosition >= 50
-                ? 5
-                : 0;
+            const aRank =
+              a.snapshotScore +
+              liquidityA;
 
 
-            const aa =
-              a.score +
-              volumeBonusA +
-              liquidityA +
-              positionA;
-
-            const bb =
-              b.score +
-              volumeBonusB +
-              liquidityB +
-              positionB;
+            const bRank =
+              b.snapshotScore +
+              liquidityB;
 
 
-            return bb - aa;
+            return (
+              bRank -
+              aRank
+            );
           }
         )
 
         .slice(
           0,
-          STRATEGY_SCAN_LIMIT
+          KLINE_SCAN_LIMIT
         );
 
 
-    /* ========================================================
-       第二層：
-       180 檔分批抓日 K
-    ======================================================== */
+    /* =====================================================
+       第二階段 K 線
 
-    const strategyStocks = [];
+       60 檔
+       每批 12 檔
+       = 最多 5 批
+    ===================================================== */
+
+    const analyzed = [];
 
 
     for (
       let i = 0;
       i < candidatePool.length;
-      i +=
-        STRATEGY_BATCH_SIZE
+      i += KLINE_BATCH_SIZE
     ) {
+
       const batch =
         candidatePool.slice(
           i,
           i +
-            STRATEGY_BATCH_SIZE
+          KLINE_BATCH_SIZE
         );
 
 
       const results =
         await Promise.allSettled(
+
           batch.map(
             async stock => {
+
               const rows =
                 await fetchDailyRows(
                   token,
                   stock.symbol
                 );
 
+
               if (
-                rows.length <
-                70
+                rows.length < 65
               ) {
+
                 return null;
               }
 
-              return (
-                calculateStrategyScores(
-                  stock,
-                  rows
-                )
+
+              return analyzeKline(
+                stock,
+                rows
               );
             }
           )
@@ -1792,15 +1841,17 @@ export default async function handler(
 
 
       for (
-        const result
-        of results
+        const result of
+        results
       ) {
+
         if (
           result.status ===
             "fulfilled" &&
           result.value
         ) {
-          strategyStocks.push(
+
+          analyzed.push(
             result.value
           );
         }
@@ -1808,118 +1859,101 @@ export default async function handler(
     }
 
 
-    /* ========================================================
-       第三層：
-       回傳首頁候選
+    /* =====================================================
+       最終候選
 
-       55 分故意比較寬鬆。
-
-       因為真正的：
-       5/8 接近形成
-       6/8 策略成立
-       7～8/8 強勢成立
-
-       最後還是由 index.html 的
-       完整策略重新判斷。
-    ======================================================== */
+       首頁只需要完整分析前 40
+    ===================================================== */
 
     const strategyReady =
-      strategyStocks
+      [...analyzed]
 
         .filter(
-          x =>
-            x.entryScore >= 55
+          stock =>
+            stock.fastScore >=
+            45
         )
 
         .sort(
-          (a, b) => {
-            if (
-              b.entryScore !==
-              a.entryScore
-            ) {
-              return (
-                b.entryScore -
-                a.entryScore
-              );
-            }
-
-            return (
-              b.score -
-              a.score
-            );
-          }
+          (a, b) =>
+            b.fastScore -
+            a.fastScore
         )
 
         .slice(
           0,
-          FRONTEND_CANDIDATE_LIMIT
+          FRONTEND_LIMIT
         );
 
 
-    /* 一般異動 Radar */
+    /*
+      如果行情很弱，
+      至少回傳已分析排名最高股票。
+    */
+
+    const finalCandidates =
+      strategyReady.length
+        ?
+        strategyReady
+        :
+        [...analyzed]
+          .sort(
+            (a, b) =>
+              b.fastScore -
+              a.fastScore
+          )
+          .slice(
+            0,
+            Math.min(
+              20,
+              FRONTEND_LIMIT
+            )
+          );
+
+
+    /* =====================================================
+       Snapshot 排行
+    ===================================================== */
 
     const radar =
       [...stocks]
 
-        .filter(
-          x =>
-            x.score >= 35
-        )
-
         .sort(
           (a, b) =>
-            b.score -
-            a.score
+            b.snapshotScore -
+            a.snapshotScore
         )
 
         .slice(
           0,
           30
+        )
+
+        .map(
+          stock => ({
+
+            ...stock,
+
+            score:
+              stock.snapshotScore,
+
+            longStatus:
+              stock.snapshotScore >= 55
+                ?
+                "優先觀察"
+                :
+                "等待確認"
+          })
         );
 
-
-    const finalRadar =
-      radar.length
-        ? radar
-        : [...stocks]
-            .sort(
-              (a, b) =>
-                b.score -
-                a.score
-            )
-            .slice(
-              0,
-              20
-            );
-
-
-    /* 多方觀察 */
 
     const longWatch =
-      [...stocks]
-
-        .filter(
-          x =>
-            x.longStatus ===
-              "優先觀察" ||
-
-            x.longStatus ===
-              "等待確認"
-        )
-
-        .sort(
-          (a, b) =>
-            b.score -
-            a.score
-        )
-
+      finalCandidates
         .slice(
           0,
           30
         );
 
-
-    /* 爆量排行 */
 
     const volumeLeaders =
       [...stocks]
@@ -1941,8 +1975,6 @@ export default async function handler(
         );
 
 
-    /* 動能排行 */
-
     const momentumLeaders =
       [...stocks]
 
@@ -1963,22 +1995,29 @@ export default async function handler(
         );
 
 
+    const elapsedMs =
+      Date.now() -
+      startedAt;
+
+
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=60, stale-while-revalidate=120"
+      "public, s-maxage=60, stale-while-revalidate=180"
     );
 
 
     return res
       .status(200)
       .json({
-        ok: true,
+
+        ok:
+          true,
 
         platform:
-          "妖子平台 5.0",
+          "波段分析 Radar 6.0",
 
-        mode:
-          "全市場 Snapshot＋日K波段雷達",
+        engine:
+          "FAST_TWO_STAGE",
 
         market:
           "TW",
@@ -1993,48 +2032,46 @@ export default async function handler(
         taipeiTime:
           getTaipeiTime(),
 
+        elapsedMs,
+
         /*
-          全市場 Snapshot
-          實際掃描股票數
+          全市場 Snapshot 股票數
         */
 
         scanned:
           stocks.length,
 
         /*
-          進入日 K 掃描數
-          最多 180
+          真正需要打日 K API 的數量
         */
 
         strategyCandidateCount:
           candidatePool.length,
 
         /*
-          成功取得日 K
-          並完成策略計算
+          成功完成 K 線分析
         */
 
         strategyScannedCount:
-          strategyStocks.length,
+          analyzed.length,
 
         /*
-          最後回傳首頁
-          最多 80
+          回傳首頁完整分析的候選數
         */
 
         strategyReadyCount:
-          strategyReady.length,
+          finalCandidates.length,
 
         found:
-          finalRadar.length,
+          radar.length,
 
         longWatchCount:
           longWatch.length,
 
-        strategyReady,
+        strategyReady:
+          finalCandidates,
 
-        radar:
-          finalRadar,
+        radar,
 
         longWatch,
 
@@ -2043,32 +2080,39 @@ export default async function handler(
         momentumLeaders,
 
         notice:
-          "全市場 Snapshot 掃描後，最多 180 檔進入日 K 波段快篩，再回傳最多 80 檔候選給首頁做完整 8 條件與 SMC 分析。"
+          "高速兩階段雷達：全市場 Snapshot 初篩 → Top 60 抓日 K → Top 40 交由首頁做技術、量價、法人、基本面、新聞完整分析。"
       });
 
 
   } catch (error) {
+
     console.error(
       "Radar server error:",
       error
     );
+
 
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
 
+
     return res
       .status(500)
       .json({
-        ok: false,
+
+        ok:
+          false,
 
         error:
           error?.name ===
           "AbortError"
-            ? "FinMind 連線逾時，請重新掃描"
-            : error?.message ||
-              "Radar server error"
+            ?
+            "FinMind 連線逾時，請重新掃描"
+            :
+            error?.message ||
+            "Radar server error"
       });
   }
 }
