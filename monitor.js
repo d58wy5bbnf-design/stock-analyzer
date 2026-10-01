@@ -1,411 +1,343 @@
+const webpush = require("web-push");
+
 /* =========================================================
-   api/monitor.js
-   Stock Analysis Monitor 7.0
+   波段分析 Monitor 8.0
 
-   交易模式：
-   1. PULLBACK 回檔型
-   2. BREAKOUT 突破型
-   3. WAIT 等待
+   核心交易流程：
 
-   正式 Push 條件：
-   1. 綜合評分 >= 75
-   2. 資料完整度 >= 60%
-   3. 技術面 >= 12 / 20
-   4. 量價 >= 10 / 20
-   5. 已真正進入合理進場區
-   6. 有有效 SL / TP1
-   7. TP1 RR >= 1.3
+   現價
+   ↓
+   現價附近最佳限價 Entry
+   ↓
+   結構失效 SL
+   ↓
+   關鍵突破位
+   ↓
+   TP1 = 突破後第一有效壓力
+   ↓
+   TP2
+   ↓
+   TP3
+   ↓
+   R:R
 
-   支援：
-   - iPhone / iPad 多裝置
-   - Redis
-   - Vercel Cron
-   - 正式監控 08:55～13:40
-   - 6 小時同 Setup 防重複
-   - 失效 Push 自動清除
+   正式 Push：
+
+   綜合評分 >= 75
+   資料完整度 >= 60%
+   技術面 >= 12/20
+   量價 >= 10/20
+   必須進入最佳 Entry 區
+   SL 必須有效
+   TP1 必須存在
+   TP1 >= 1.3R
 ========================================================= */
 
-const webpush = require("web-push");
+const DEFAULT_SYMBOLS = [
+  "2330",
+  "2317",
+  "2454",
+  "2308",
+  "2382",
+  "3231",
+  "2881",
+  "2882",
+  "2891",
+  "2886",
+  "2603",
+  "2615"
+];
+
+const DEVICE_SET_KEY =
+  "swing:push:devices";
 
 
 /* =========================================================
    ENV
 ========================================================= */
 
-const REDIS_URL =
-  process.env.KV_REST_API_URL ||
-  process.env.UPSTASH_REDIS_REST_URL;
+function env(name, ...fallbacks) {
 
-const REDIS_TOKEN =
-  process.env.KV_REST_API_TOKEN ||
-  process.env.UPSTASH_REDIS_REST_TOKEN;
+  for (
+    const key
+    of [
+      name,
+      ...fallbacks
+    ]
+  ) {
 
-const VAPID_PUBLIC_KEY =
-  process.env.VAPID_PUBLIC_KEY;
+    const value =
+      process.env[key];
 
-const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY;
+    if (value) {
+      return value;
+    }
 
-const VAPID_SUBJECT =
-  process.env.VAPID_SUBJECT ||
-  "mailto:liaozhanxjie@gmail.com";
+  }
+
+  return "";
+
+}
+
+
+const REDIS_URL = () =>
+  env(
+    "UPSTASH_REDIS_REST_URL",
+    "KV_REST_API_URL"
+  );
+
+
+const REDIS_TOKEN = () =>
+  env(
+    "UPSTASH_REDIS_REST_TOKEN",
+    "KV_REST_API_TOKEN"
+  );
 
 
 /* =========================================================
-   設定
+   RESPONSE
 ========================================================= */
 
-const MIN_SCORE = 75;
-const MIN_COMPLETENESS = 60;
-const MIN_TECHNICAL = 12;
-const MIN_VOLUME = 10;
-const MIN_RR = 1.3;
+function send(
+  res,
+  status,
+  data
+) {
 
-const DEDUPE_SECONDS = 21600;
+  res.statusCode =
+    status;
+
+  res.setHeader(
+    "Content-Type",
+    "application/json; charset=utf-8"
+  );
+
+  res.setHeader(
+    "Cache-Control",
+    "no-store"
+  );
+
+  res.end(
+    JSON.stringify(data)
+  );
+
+}
 
 
 /* =========================================================
-   Redis
+   REDIS
 ========================================================= */
 
 async function redis(command) {
 
-  if (!REDIS_URL || !REDIS_TOKEN) {
-    throw new Error("Redis 環境變數尚未設定");
-  }
+  const url =
+    REDIS_URL();
 
-  const controller = new AbortController();
+  const token =
+    REDIS_TOKEN();
 
-  const timer =
-    setTimeout(
-      () => controller.abort(),
-      8000
+  if (
+    !url ||
+    !token
+  ) {
+
+    throw new Error(
+      "Redis 環境變數不存在"
     );
 
-  try {
-
-    const response =
-      await fetch(
-        REDIS_URL,
-        {
-          method: "POST",
-
-          headers: {
-            Authorization:
-              `Bearer ${REDIS_TOKEN}`,
-
-            "Content-Type":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify(command),
-
-          signal:
-            controller.signal
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if (
-      !response.ok ||
-      data?.error
-    ) {
-
-      throw new Error(
-        data?.error ||
-        "Redis request failed"
-      );
-    }
-
-    return data.result;
-
-  } finally {
-
-    clearTimeout(timer);
   }
+
+  const response =
+    await fetch(
+      url,
+      {
+        method:
+          "POST",
+
+        headers: {
+
+          Authorization:
+            `Bearer ${token}`,
+
+          "Content-Type":
+            "application/json"
+
+        },
+
+        body:
+          JSON.stringify(command)
+      }
+    );
+
+
+  const json =
+    await response
+      .json()
+      .catch(
+        () => ({})
+      );
+
+
+  if (
+    !response.ok ||
+    json.error
+  ) {
+
+    throw new Error(
+      json.error ||
+      `Redis HTTP ${response.status}`
+    );
+
+  }
+
+
+  return json.result;
+
 }
 
 
-async function deleteDevice(deviceId) {
+async function getDeviceIds() {
 
-  try {
-
+  const result =
     await redis([
-      "DEL",
+      "SMEMBERS",
+      DEVICE_SET_KEY
+    ]);
+
+  return Array.isArray(result)
+    ?
+    result
+    :
+    [];
+
+}
+
+
+async function getDevice(
+  deviceId
+) {
+
+  const raw =
+    await redis([
+      "GET",
       `swing:push:device:${deviceId}`
     ]);
 
-    await redis([
-      "SREM",
-      "swing:push:devices",
-      deviceId
-    ]);
-
-    return true;
-
-  } catch (error) {
-
-    console.error(
-      "delete device error:",
-      deviceId,
-      error
-    );
-
-    return false;
+  if (!raw) {
+    return null;
   }
+
+  try {
+
+    return JSON.parse(raw);
+
+  }
+  catch {
+
+    return null;
+
+  }
+
+}
+
+
+async function removeDevice(
+  deviceId
+) {
+
+  await Promise.allSettled([
+
+    redis([
+      "DEL",
+      `swing:push:device:${deviceId}`
+    ]),
+
+    redis([
+      "SREM",
+      DEVICE_SET_KEY,
+      deviceId
+    ])
+
+  ]);
+
 }
 
 
 /* =========================================================
-   基本工具
+   PUSH CONFIG
 ========================================================= */
 
-function num(v) {
+function configurePush() {
 
-  const n = Number(v);
-
-  return Number.isFinite(n)
-    ? n
-    : null;
-}
-
-
-function avg(a) {
-
-  const values =
-    (Array.isArray(a) ? a : [])
-      .map(Number)
-      .filter(Number.isFinite);
-
-  if (!values.length) {
-    return 0;
-  }
-
-  return (
-    values.reduce(
-      (x, y) => x + y,
-      0
-    ) /
-    values.length
-  );
-}
+  const publicKey =
+    String(
+      process.env.VAPID_PUBLIC_KEY ||
+      ""
+    ).trim();
 
 
-function sma(a, n) {
-
-  if (
-    !Array.isArray(a) ||
-    a.length < n
-  ) {
-    return null;
-  }
-
-  return avg(
-    a.slice(-n)
-  );
-}
+  const privateKey =
+    String(
+      process.env.VAPID_PRIVATE_KEY ||
+      ""
+    ).trim();
 
 
-function emaSeries(values, period) {
-
-  if (
-    !Array.isArray(values) ||
-    !values.length
-  ) {
-    return [];
-  }
-
-  const k =
-    2 / (period + 1);
-
-  const result = [];
-
-  let e =
-    Number(values[0]);
-
-  result.push(e);
-
-  for (
-    let i = 1;
-    i < values.length;
-    i++
-  ) {
-
-    e =
-      Number(values[i]) *
-      k +
-      e *
-      (1 - k);
-
-    result.push(e);
-  }
-
-  return result;
-}
+  let subject =
+    String(
+      process.env.VAPID_SUBJECT ||
+      ""
+    ).trim();
 
 
-function rsi(values, n = 14) {
+  if (!publicKey) {
 
-  if (
-    !Array.isArray(values) ||
-    values.length <= n
-  ) {
-    return 50;
-  }
-
-  let gain = 0;
-  let loss = 0;
-
-  for (
-    let i =
-      values.length - n;
-    i < values.length;
-    i++
-  ) {
-
-    const d =
-      Number(values[i]) -
-      Number(values[i - 1]);
-
-    if (d > 0) {
-      gain += d;
-    } else {
-      loss += Math.abs(d);
-    }
-  }
-
-  if (loss === 0) {
-    return 100;
-  }
-
-  const rs =
-    (gain / n) /
-    (loss / n);
-
-  return (
-    100 -
-    100 /
-    (1 + rs)
-  );
-}
-
-
-function atr(rows, n = 14) {
-
-  if (
-    !Array.isArray(rows) ||
-    rows.length < 2
-  ) {
-    return 0;
-  }
-
-  const values = [];
-
-  for (
-    let i =
-      Math.max(
-        1,
-        rows.length - n
-      );
-    i < rows.length;
-    i++
-  ) {
-
-    const x =
-      rows[i];
-
-    const previous =
-      rows[i - 1].close;
-
-    values.push(
-      Math.max(
-        x.high - x.low,
-        Math.abs(
-          x.high - previous
-        ),
-        Math.abs(
-          x.low - previous
-        )
-      )
+    throw new Error(
+      "缺少 VAPID_PUBLIC_KEY"
     );
+
   }
 
-  return avg(values);
-}
+
+  if (!privateKey) {
+
+    throw new Error(
+      "缺少 VAPID_PRIVATE_KEY"
+    );
+
+  }
 
 
-function unique(list) {
+  if (!subject) {
 
-  return [
-    ...new Set(
-      (Array.isArray(list) ? list : [])
-        .map(
-          x =>
-            String(x).trim()
-        )
-        .filter(Boolean)
-    )
-  ];
-}
+    throw new Error(
+      "缺少 VAPID_SUBJECT"
+    );
 
+  }
 
-function round(v, digits = 2) {
-
-  const n =
-    Number(v);
 
   if (
-    !Number.isFinite(n)
+    !subject
+      .toLowerCase()
+      .startsWith("mailto:")
+    &&
+    !/^https?:\/\//i
+      .test(subject)
   ) {
-    return null;
+
+    subject =
+      `mailto:${subject}`;
+
   }
 
-  const p =
-    10 ** digits;
 
-  return (
-    Math.round(
-      n * p
-    ) / p
+  webpush.setVapidDetails(
+    subject,
+    publicKey,
+    privateKey
   );
-}
 
-
-function clamp(v, min, max) {
-
-  return Math.min(
-    max,
-    Math.max(
-      min,
-      v
-    )
-  );
-}
-
-
-function formatPrice(v) {
-
-  const n =
-    Number(v);
-
-  if (
-    !Number.isFinite(n)
-  ) {
-    return "--";
-  }
-
-  if (n >= 1000) {
-    return n.toFixed(0);
-  }
-
-  if (n >= 100) {
-    return n.toFixed(1);
-  }
-
-  return n.toFixed(2);
 }
 
 
@@ -415,15 +347,15 @@ function formatPrice(v) {
 
 function getTestMode(req) {
 
-  if (
+  const header =
     String(
-      req.headers?.[
-        "x-monitor-test"
-      ] || ""
-    ) === "1"
-  ) {
-    return true;
-  }
+      req.headers?.["x-monitor-test"] ||
+      ""
+    ) === "1";
+
+
+  let urlTest =
+    false;
 
   try {
 
@@ -431,56 +363,39 @@ function getTestMode(req) {
       req.headers?.host ||
       "localhost";
 
-    const protocol =
-      req.headers?.[
-        "x-forwarded-proto"
-      ] ||
-      "https";
-
     const url =
       new URL(
-        req.url || "/",
-        `${protocol}://${host}`
+        req.url,
+        `https://${host}`
       );
 
-    if (
-      url.searchParams.get(
-        "test"
-      ) === "1"
-    ) {
-      return true;
-    }
+    urlTest =
+      url.searchParams.get("test")
+      ===
+      "1";
 
-  } catch (error) {
-
-    console.error(
-      "URL parse error:",
-      error
-    );
   }
+  catch {}
+
 
   const queryTest =
-    req.query?.test;
+    String(
+      req.query?.test ||
+      ""
+    ) === "1";
 
-  if (
-    queryTest === "1"
-  ) {
-    return true;
-  }
 
-  if (
-    Array.isArray(queryTest) &&
-    queryTest.includes("1")
-  ) {
-    return true;
-  }
+  return (
+    header ||
+    urlTest ||
+    queryTest
+  );
 
-  return false;
 }
 
 
 /* =========================================================
-   台北時間
+   TAIPEI TIME
 ========================================================= */
 
 function taipeiParts() {
@@ -501,20 +416,22 @@ function taipeiParts() {
         minute:
           "2-digit",
 
-        hour12:
-          false
+        hourCycle:
+          "h23"
       }
     )
-      .formatToParts(
-        new Date()
-      );
+    .formatToParts(
+      new Date()
+    );
+
 
   const get =
     type =>
       parts.find(
-        p =>
-          p.type === type
+        x =>
+          x.type === type
       )?.value;
+
 
   return {
 
@@ -530,127 +447,341 @@ function taipeiParts() {
       Number(
         get("minute")
       )
+
   };
+
 }
 
 
-function isMarketTime() {
+function isMarketMonitoringTime() {
 
-  const t =
+  const {
+    weekday,
+    hour,
+    minute
+  } =
     taipeiParts();
 
+
   if (
-    ![
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri"
-    ].includes(
-      t.weekday
-    )
+    weekday === "Sat" ||
+    weekday === "Sun"
   ) {
+
     return false;
+
   }
 
-  const minutes =
-    t.hour * 60 +
-    t.minute;
+
+  const now =
+    hour * 60 +
+    minute;
+
 
   return (
-    minutes >=
-      8 * 60 + 55 &&
-    minutes <=
-      13 * 60 + 40
+    now >=
+    8 * 60 + 55
+    &&
+    now <=
+    13 * 60 + 40
   );
+
 }
 
 
 /* =========================================================
-   MACD
+   MATH
 ========================================================= */
 
-function getMACD(closes) {
+function num(v) {
 
-  if (
-    closes.length < 35
-  ) {
+  const n =
+    Number(v);
 
-    return {
-      macd: 0,
-      signal: 0,
-      histogram: 0
-    };
+  return Number.isFinite(n)
+    ?
+    n
+    :
+    0;
+
+}
+
+
+function avg(arr) {
+
+  if (!arr.length) {
+    return 0;
   }
 
-  const fast =
-    emaSeries(
-      closes,
-      12
+  return (
+    arr.reduce(
+      (sum, x) =>
+        sum + num(x),
+      0
+    )
+    /
+    arr.length
+  );
+
+}
+
+
+function sma(
+  values,
+  period
+) {
+
+  if (
+    values.length <
+    period
+  ) {
+
+    return avg(values);
+
+  }
+
+  return avg(
+    values.slice(-period)
+  );
+
+}
+
+
+function ema(
+  values,
+  period
+) {
+
+  if (!values.length) {
+    return 0;
+  }
+
+
+  let result =
+    num(values[0]);
+
+
+  const k =
+    2 /
+    (
+      period + 1
     );
 
-  const slow =
-    emaSeries(
-      closes,
-      26
+
+  for (
+    let i = 1;
+    i < values.length;
+    i++
+  ) {
+
+    result =
+      num(values[i]) * k +
+      result * (1 - k);
+
+  }
+
+
+  return result;
+
+}
+
+
+function rsi(
+  values,
+  period = 14
+) {
+
+  if (
+    values.length <=
+    period
+  ) {
+
+    return 50;
+
+  }
+
+
+  let gains = 0;
+  let losses = 0;
+
+
+  for (
+    let i =
+      values.length - period;
+    i < values.length;
+    i++
+  ) {
+
+    const diff =
+      num(values[i]) -
+      num(values[i - 1]);
+
+
+    if (diff > 0) {
+
+      gains += diff;
+
+    }
+    else {
+
+      losses -= diff;
+
+    }
+
+  }
+
+
+  if (
+    losses === 0
+  ) {
+
+    return 100;
+
+  }
+
+
+  return (
+    100 -
+    100 /
+    (
+      1 +
+      (gains / period) /
+      (losses / period)
+    )
+  );
+
+}
+
+
+function atr(
+  rows,
+  period = 14
+) {
+
+  const values = [];
+
+
+  for (
+    let i =
+      Math.max(
+        1,
+        rows.length - period
+      );
+    i < rows.length;
+    i++
+  ) {
+
+    const row =
+      rows[i];
+
+    const prevClose =
+      num(
+        rows[i - 1].close
+      );
+
+
+    values.push(
+      Math.max(
+
+        num(row.high) -
+        num(row.low),
+
+        Math.abs(
+          num(row.high) -
+          prevClose
+        ),
+
+        Math.abs(
+          num(row.low) -
+          prevClose
+        )
+
+      )
     );
 
-  const macdSeries =
-    closes.map(
-      (_, i) =>
-        (fast[i] || 0) -
-        (slow[i] || 0)
-    );
+  }
 
-  const signalSeries =
-    emaSeries(
-      macdSeries,
-      9
-    );
 
-  const macd =
-    macdSeries[
-      macdSeries.length - 1
-    ] || 0;
+  return avg(values);
 
-  const signal =
-    signalSeries[
-      signalSeries.length - 1
-    ] || 0;
+}
 
-  return {
 
-    macd,
+function clamp(
+  value,
+  min,
+  max
+) {
 
-    signal,
+  return Math.min(
+    max,
+    Math.max(
+      min,
+      value
+    )
+  );
 
-    histogram:
-      macd - signal
-  };
+}
+
+
+function fmtPrice(value) {
+
+  const n =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(n)
+  ) {
+
+    return "-";
+
+  }
+
+
+  if (n >= 1000) {
+
+    return n.toFixed(0);
+
+  }
+
+
+  if (n >= 100) {
+
+    return n.toFixed(1);
+
+  }
+
+
+  return n.toFixed(2);
+
 }
 
 
 /* =========================================================
-   Swing High / Low
+   PIVOTS
 ========================================================= */
 
-function getSwings(
+function pivots(
   rows,
   left = 3,
   right = 3
 ) {
 
-  const highs = [];
   const lows = [];
+  const highs = [];
+
 
   for (
     let i = left;
-    i < rows.length - right;
+    i <
+    rows.length - right;
     i++
   ) {
 
-    let isHigh = true;
     let isLow = true;
+    let isHigh = true;
+
 
     for (
       let j = 1;
@@ -659,19 +790,26 @@ function getSwings(
     ) {
 
       if (
-        rows[i].high >
-        rows[i - j].high
+        num(rows[i].low) >
+        num(rows[i - j].low)
       ) {
-        isHigh = false;
+
+        isLow = false;
+
       }
 
+
       if (
-        rows[i].low <
-        rows[i - j].low
+        num(rows[i].high) <
+        num(rows[i - j].high)
       ) {
-        isLow = false;
+
+        isHigh = false;
+
       }
+
     }
+
 
     for (
       let j = 1;
@@ -680,52 +818,67 @@ function getSwings(
     ) {
 
       if (
-        rows[i].high >
-        rows[i + j].high
+        num(rows[i].low) >
+        num(rows[i + j].low)
       ) {
-        isHigh = false;
+
+        isLow = false;
+
       }
+
 
       if (
-        rows[i].low <
-        rows[i + j].low
+        num(rows[i].high) <
+        num(rows[i + j].high)
       ) {
-        isLow = false;
+
+        isHigh = false;
+
       }
+
     }
 
-    if (isHigh) {
-
-      highs.push({
-        index: i,
-        price:
-          rows[i].high,
-        date:
-          rows[i].date
-      });
-    }
 
     if (isLow) {
 
       lows.push({
-        index: i,
-        price:
-          rows[i].low,
-        date:
-          rows[i].date
+
+        i,
+
+        value:
+          num(rows[i].low)
+
       });
+
     }
+
+
+    if (isHigh) {
+
+      highs.push({
+
+        i,
+
+        value:
+          num(rows[i].high)
+
+      });
+
+    }
+
   }
 
+
   return {
-    highs,
-    lows
+    lows,
+    highs
   };
+
 }
 
 
 /* =========================================================
-   壓力／支撐合併
+   CLUSTER
 ========================================================= */
 
 function clusterLevels(
@@ -734,25 +887,28 @@ function clusterLevels(
 ) {
 
   const sorted =
-    (items || [])
+    items
       .filter(
         x =>
           Number.isFinite(
-            Number(x.price)
-          ) &&
-          Number(x.price) > 0
+            Number(x.value)
+          )
+          &&
+          Number(x.value) > 0
       )
       .sort(
         (a, b) =>
-          Number(a.price) -
-          Number(b.price)
+          Number(a.value) -
+          Number(b.value)
       );
+
 
   const groups = [];
 
+
   for (
-    const item of
-    sorted
+    const item
+    of sorted
   ) {
 
     const last =
@@ -760,90 +916,90 @@ function clusterLevels(
         groups.length - 1
       ];
 
+
     if (
-      last &&
+      last
+      &&
       Math.abs(
-        Number(item.price) -
-        last.price
-      ) <= distance
+        Number(item.value) -
+        last.value
+      )
+      <=
+      distance
     ) {
 
       last.values.push(
-        Number(item.price)
+        Number(item.value)
       );
 
-      last.price =
+
+      last.value =
         avg(
           last.values
         );
 
-      last.count += 1;
 
-    } else {
+      last.count++;
+
+
+      last.latest =
+        Math.max(
+          last.latest,
+          Number(item.i) || 0
+        );
+
+    }
+    else {
 
       groups.push({
-        price:
-          Number(item.price),
+
+        value:
+          Number(item.value),
 
         values: [
-          Number(item.price)
+          Number(item.value)
         ],
 
-        count: 1
+        count: 1,
+
+        latest:
+          Number(item.i) || 0
+
       });
+
     }
+
   }
 
+
   return groups;
+
 }
 
 
 /* =========================================================
-   Entry / SL / TP 7.0
-
-   PULLBACK：
-   現價接近有效支撐
-
-   BREAKOUT：
-   現價已離支撐太遠，
-   但距上方壓力不遠
-
-   WAIT：
-   不硬給 Entry
+   TRADE PLAN 8.0
 ========================================================= */
 
 function buildTradePlan(
   rows,
   price,
-  A
+  A,
+  m20,
+  m60
 ) {
 
   const recent =
     rows.slice(-240);
 
-  const closes =
-    recent.map(
-      x => x.close
-    );
 
-  const m20 =
-    sma(
-      closes,
-      20
-    );
-
-  const m60 =
-    sma(
-      closes,
-      60
-    );
-
-  const swings =
-    getSwings(
+  const P =
+    pivots(
       recent,
       3,
       3
     );
+
 
   const mergeDistance =
     Math.max(
@@ -853,88 +1009,186 @@ function buildTradePlan(
 
 
   /* =======================================================
-     支撐
+     SUPPORT
   ======================================================= */
 
   const supportRaw = [];
 
 
   for (
-    const x of
-    swings.lows
+    const x
+    of P.lows
   ) {
 
     if (
-      x.price <=
-        price * 1.01 &&
-      x.price >=
-        price * 0.75
+      x.value <=
+      price * 1.012
+      &&
+      x.value >=
+      price * 0.82
     ) {
 
       supportRaw.push({
-        price:
-          x.price
+
+        value:
+          x.value,
+
+        i:
+          x.i
+
       });
+
     }
+
   }
 
 
   if (
-    Number.isFinite(m20) &&
+    Number.isFinite(m20)
+    &&
     m20 <=
-      price * 1.01 &&
+    price * 1.012
+    &&
     m20 >=
-      price * 0.75
+    price * 0.82
   ) {
 
     supportRaw.push({
-      price: m20
+
+      value:
+        m20,
+
+      i:
+        recent.length + 5
+
     });
+
   }
 
 
   if (
-    Number.isFinite(m60) &&
+    Number.isFinite(m60)
+    &&
     m60 <=
-      price * 1.01 &&
+    price * 1.012
+    &&
     m60 >=
-      price * 0.75
+    price * 0.82
   ) {
 
     supportRaw.push({
-      price: m60
+
+      value:
+        m60,
+
+      i:
+        recent.length + 4
+
     });
+
   }
 
 
-  const low20 =
-    Math.min(
-      ...rows
-        .slice(-20)
-        .map(
-          x => x.low
+  for (
+    const period
+    of [
+      10,
+      20,
+      60
+    ]
+  ) {
+
+    const part =
+      rows.slice(-period);
+
+
+    if (!part.length) {
+      continue;
+    }
+
+
+    const low =
+      Math.min(
+        ...part.map(
+          x =>
+            num(x.low)
         )
-    );
+      );
 
 
-  const low60 =
-    Math.min(
-      ...rows
-        .slice(-60)
-        .map(
-          x => x.low
-        )
-    );
+    if (
+      low <=
+      price * 1.012
+      &&
+      low >=
+      price * 0.82
+    ) {
+
+      supportRaw.push({
+
+        value:
+          low,
+
+        i:
+          recent.length +
+          period
+
+      });
+
+    }
+
+  }
 
 
-  supportRaw.push({
-    price: low20
-  });
+  /*
+    已經突破過的前高，
+    也可作為支撐候選。
+  */
+
+  for (
+    const x
+    of P.highs
+  ) {
+
+    if (
+      x.value >=
+      price * 0.88
+      &&
+      x.value <
+      price
+    ) {
+
+      const after =
+        recent.slice(
+          x.i + 1
+        );
 
 
-  supportRaw.push({
-    price: low60
-  });
+      const broken =
+        after.some(
+          row =>
+            num(row.close) >
+            x.value * 1.004
+        );
+
+
+      if (broken) {
+
+        supportRaw.push({
+
+          value:
+            x.value,
+
+          i:
+            x.i
+
+        });
+
+      }
+
+    }
+
+  }
 
 
   const supportGroups =
@@ -942,88 +1196,207 @@ function buildTradePlan(
       supportRaw,
       mergeDistance
     )
-      .filter(
-        x =>
-          x.price <=
-            price * 1.01 &&
-          x.price >=
-            price * 0.75
-      )
-      .sort(
-        (a, b) =>
-          b.price -
-          a.price
-      );
+    .filter(
+      x =>
+        x.value <=
+        price * 1.012
+        &&
+        x.value >=
+        price * 0.82
+    )
+    .sort(
+      (a, b) =>
+        b.value -
+        a.value
+    );
 
 
   const support1 =
     supportGroups[0]
-      ?.price ??
-    (
-      Number.isFinite(m20)
-        ? Math.min(
-            price,
-            m20
-          )
-        : price - A
-    );
+      ?
+      supportGroups[0].value
+      :
+      null;
 
 
   const support2 =
-    supportGroups.find(
-      x =>
-        x.price <
-        support1 -
-        mergeDistance
-    )?.price ??
-    (
-      Number.isFinite(m60) &&
-      m60 < support1
-        ? m60
-        : null
-    );
+    support1
+      ?
+      supportGroups.find(
+        x =>
+          x.value <
+          support1 -
+          mergeDistance * 0.75
+      )?.value
+      ||
+      null
+      :
+      null;
 
 
   /* =======================================================
-     壓力
+     BEST ENTRY SUPPORT
+
+     只接受現價附近約 4.5% 內的有效支撐。
+  ======================================================= */
+
+  const MAX_ENTRY_DISTANCE =
+    0.045;
+
+
+  const nearbySupports =
+    supportGroups.filter(
+      x => {
+
+        const distance =
+          (
+            price -
+            x.value
+          )
+          /
+          price;
+
+
+        return (
+          distance >=
+          -0.012
+          &&
+          distance <=
+          MAX_ENTRY_DISTANCE
+        );
+
+      }
+    );
+
+
+  let bestSupport = null;
+  let bestSupportScore =
+    -Infinity;
+
+
+  for (
+    const x
+    of nearbySupports
+  ) {
+
+    const distance =
+      Math.max(
+        0,
+        (
+          price -
+          x.value
+        )
+        /
+        price
+      );
+
+
+    const distanceScore =
+      Math.max(
+        0,
+        1 -
+        distance /
+        MAX_ENTRY_DISTANCE
+      )
+      *
+      45;
+
+
+    const clusterScore =
+      Math.min(
+        x.count,
+        4
+      )
+      *
+      10;
+
+
+    const recentScore =
+      recent.length
+        ?
+        (
+          x.latest /
+          recent.length
+        )
+        *
+        15
+        :
+        0;
+
+
+    const score =
+      distanceScore +
+      clusterScore +
+      recentScore;
+
+
+    if (
+      score >
+      bestSupportScore
+    ) {
+
+      bestSupportScore =
+        score;
+
+      bestSupport =
+        x;
+
+    }
+
+  }
+
+
+  /* =======================================================
+     RESISTANCE
+
+     保留現價上下的歷史壓力，
+     避免突破後原壓力直接消失。
   ======================================================= */
 
   const pressureRaw = [];
 
 
   for (
-    const x of
-    swings.highs
+    const x
+    of P.highs
   ) {
 
     if (
-      x.price >
-      price +
-        mergeDistance *
-        0.20
+      x.value >=
+      price * 0.90
+      &&
+      x.value <=
+      price * 1.35
     ) {
 
       pressureRaw.push({
-        price:
-          x.price
+
+        value:
+          x.value,
+
+        i:
+          x.i
+
       });
+
     }
+
   }
 
 
   for (
-    let i = 20;
-    i < recent.length;
-    i += 10
+    let end = 20;
+    end <= recent.length;
+    end += 10
   ) {
 
     const block =
       recent.slice(
         Math.max(
           0,
-          i - 20
+          end - 20
         ),
-        i + 1
+        end
       );
 
 
@@ -1035,147 +1408,190 @@ function buildTradePlan(
     const high =
       Math.max(
         ...block.map(
-          x => x.high
+          x =>
+            num(x.high)
         )
       );
 
 
     if (
-      high >
-      price +
-        mergeDistance *
-        0.20
+      high >=
+      price * 0.90
+      &&
+      high <=
+      price * 1.35
     ) {
 
       pressureRaw.push({
-        price: high
+
+        value:
+          high,
+
+        i:
+          end
+
       });
+
     }
+
   }
 
 
-  const pressureGroups =
+  const allPressureGroups =
     clusterLevels(
       pressureRaw,
       mergeDistance
     )
+    .filter(
+      x =>
+        x.value >=
+        price * 0.90
+        &&
+        x.value <=
+        price * 1.35
+    )
+    .sort(
+      (a, b) =>
+        a.value -
+        b.value
+    );
+
+
+  const abovePressures =
+    allPressureGroups
       .filter(
         x =>
-          x.price >
+          x.value >
           price +
-            mergeDistance *
-            0.20
-      )
-      .sort(
-        (a, b) =>
-          a.price -
-          b.price
+          mergeDistance * 0.15
       );
 
 
-  const breakout =
-    pressureGroups[0]
-      ?.price ??
-    null;
+  const recentlyCrossed =
+    allPressureGroups
+      .filter(
+        x =>
+          x.value <=
+          price
+          &&
+          x.value >=
+          price * 0.98
+      )
+      .sort(
+        (a, b) =>
+          b.value -
+          a.value
+      );
+
+
+  const nextResistance =
+    abovePressures[0]
+      ?
+      abovePressures[0].value
+      :
+      null;
+
+
+  const crossedResistance =
+    recentlyCrossed[0]
+      ?
+      recentlyCrossed[0].value
+      :
+      null;
+
+
+  let breakout =
+    nextResistance;
+
+
+  let breakoutState =
+    "BELOW";
+
+
+  if (
+    crossedResistance
+  ) {
+
+    const crossedDistance =
+      (
+        price -
+        crossedResistance
+      )
+      /
+      price;
+
+
+    if (
+      crossedDistance <=
+      0.02
+    ) {
+
+      breakout =
+        crossedResistance;
+
+      breakoutState =
+        "BROKEN";
+
+    }
+
+  }
 
 
   /* =======================================================
-     判斷模式
+     ENTRY
   ======================================================= */
-
-  const supportDistance =
-    support1 > 0
-      ? (
-          price -
-          support1
-        ) /
-        price
-      : 999;
-
-
-  const breakoutDistance =
-    breakout
-      ? (
-          breakout -
-          price
-        ) /
-        price
-      : 999;
-
 
   let planType =
     "WAIT";
 
+  let entryLow =
+    null;
 
-  /*
-    現價離第一支撐 5% 內：
-    回檔型
-  */
+  let entryHigh =
+    null;
+
+  let entryMid =
+    null;
+
+  let sl =
+    null;
+
+  let entryReady =
+    false;
+
 
   if (
-    supportDistance >=
-      -0.01 &&
-    supportDistance <=
-      0.05
+    bestSupport
   ) {
 
     planType =
-      "PULLBACK";
-  }
+      "LIMIT";
 
 
-  /*
-    已離支撐超過 5%，
-    但距上方突破位 <= 3.5%
-  */
+    const base =
+      bestSupport.value;
 
-  else if (
-    breakout &&
-    breakoutDistance >= 0 &&
-    breakoutDistance <=
-      0.035 &&
-    supportDistance >
-      0.05
-  ) {
-
-    planType =
-      "BREAKOUT";
-  }
-
-
-  /* =======================================================
-     Entry / SL
-  ======================================================= */
-
-  let entryLow = null;
-  let entryHigh = null;
-  let entryMid = null;
-
-  let sl = null;
-
-
-  /* =======================================================
-     PULLBACK
-  ======================================================= */
-
-  if (
-    planType ===
-    "PULLBACK"
-  ) {
 
     entryLow =
-      support1 -
+      base -
       Math.max(
-        A * 0.20,
-        price * 0.0025
+        A * 0.18,
+        price * 0.002
       );
 
 
     entryHigh =
-      support1 +
+      base +
       Math.max(
-        A * 0.35,
-        price * 0.004
+        A * 0.30,
+        price * 0.0035
+      );
+
+
+    entryHigh =
+      Math.min(
+        entryHigh,
+        price * 1.006
       );
 
 
@@ -1183,36 +1599,50 @@ function buildTradePlan(
       (
         entryLow +
         entryHigh
-      ) / 2;
+      )
+      /
+      2;
 
 
-    const structuralLows =
-      swings.lows
-        .map(
-          x => x.price
-        )
-        .filter(
+    /* =====================================================
+       SL
+    ===================================================== */
+
+    const lowerStructures =
+      [
+        ...P.lows.map(
           x =>
-            x <
-              support1 -
-              mergeDistance *
-              0.20 &&
-            x >=
-              entryMid *
-              0.90
+            x.value
+        ),
+
+        ...supportGroups.map(
+          x =>
+            x.value
         )
-        .sort(
-          (a, b) =>
-            b - a
-        );
+      ]
+      .filter(
+        value =>
+          value <
+          base -
+          mergeDistance * 0.20
+          &&
+          value >=
+          base * 0.90
+      )
+      .sort(
+        (a, b) =>
+          b - a
+      );
 
 
     const invalidation =
-      structuralLows[0] ||
-      support2 ||
+      lowerStructures[0]
+      ||
+      support2
+      ||
       (
-        support1 -
-        A * 0.8
+        base -
+        A * 0.80
       );
 
 
@@ -1225,1621 +1655,491 @@ function buildTradePlan(
 
 
     if (
-      sl >= entryLow
+      sl >=
+      entryLow
     ) {
 
       sl =
         entryLow -
         Math.max(
-          A * 0.40,
-          price * 0.0045
-        );
-    }
-  }
-
-
-  /* =======================================================
-     BREAKOUT
-  ======================================================= */
-
-  else if (
-    planType ===
-    "BREAKOUT"
-  ) {
-
-    /*
-      Entry 直接改成突破位附近。
-
-      例如：
-      現價 1215
-      壓力 1230
-
-      不會再叫它等 1020。
-    */
-
-    entryLow =
-      breakout -
-      Math.max(
-        A * 0.18,
-        breakout * 0.002
-      );
-
-
-    entryHigh =
-      breakout +
-      Math.max(
-        A * 0.35,
-        breakout * 0.004
-      );
-
-
-    entryMid =
-      (
-        entryLow +
-        entryHigh
-      ) / 2;
-
-
-    /*
-      突破型 SL：
-      放突破失敗區。
-
-      不使用很遠的舊支撐。
-    */
-
-    sl =
-      breakout -
-      Math.max(
-        A * 0.75,
-        breakout * 0.012
-      );
-
-
-    if (
-      sl >= entryLow
-    ) {
-
-      sl =
-        entryLow -
-        Math.max(
-          A * 0.40,
+          A * 0.45,
           price * 0.005
         );
+
     }
-  }
 
 
-  /* =======================================================
-     Risk
-  ======================================================= */
-
-  let risk = null;
-  let riskPct = null;
-
-
-  if (
-    Number.isFinite(
-      entryMid
-    ) &&
-    Number.isFinite(sl) &&
-    entryMid > sl
-  ) {
-
-    risk =
-      entryMid -
-      sl;
-
-
-    riskPct =
-      risk /
-      entryMid *
-      100;
-  }
-
-
-  /* =======================================================
-     TP
-
-     PULLBACK：
-     第一個高於 Entry 的真實壓力即可當 TP1。
-
-     BREAKOUT：
-     breakout 本身就是 Entry 依據，
-     所以 TP1 必須在 breakout 上方。
-  ======================================================= */
-
-  const targetBase =
-    Number.isFinite(
-      entryHigh
-    )
-      ? entryHigh
-      : price;
-
-
-  const targets =
-    pressureGroups
-      .map(
-        x => x.price
-      )
-      .filter(
-        value =>
-          value >
-          targetBase +
-            mergeDistance *
-            0.25
+    const readyTolerance =
+      Math.max(
+        A * 0.25,
+        price * 0.0035
       );
 
 
+    entryReady =
+      price >=
+      entryLow -
+      readyTolerance
+      &&
+      price <=
+      entryHigh +
+      readyTolerance;
+
+  }
+
+
+  /* =======================================================
+     TARGET
+
+     breakout 本身不是 TP1。
+
+     TP1 =
+     breakout 上方第一個有效歷史壓力。
+  ======================================================= */
+
   let tp1 =
-    targets[0] ??
     null;
 
-
   let tp2 =
-    tp1
-      ? (
-          targets.find(
-            value =>
-              value >
-              tp1 +
-              mergeDistance
-          ) ??
-          null
-        )
-      : null;
-
+    null;
 
   let tp3 =
-    tp2
-      ? (
-          targets.find(
-            value =>
-              value >
-              tp2 +
-              mergeDistance
-          ) ??
-          null
-        )
-      : null;
-
-
-  let tp1Source =
-    tp1
-      ? "歷史壓力"
-      : "";
-
-
-  let tp2Source =
-    tp2
-      ? "更高歷史壓力"
-      : "";
-
+    null;
 
   let tp3Source =
-    tp3
-      ? "更高一層歷史壓力"
-      : "";
+    "";
 
-
-  /*
-    只有已經找到 TP1、TP2，
-    但缺 TP3 時，
-    才允許 TP3 做延伸。
-
-    不硬生 ATR TP1。
-  */
 
   if (
-    !tp3 &&
-    tp2 &&
-    tp1
+    Number.isFinite(entryMid)
+    &&
+    breakout
   ) {
 
-    const base =
-      support2 ||
-      support1;
+    const targetPressures =
+      allPressureGroups
+        .map(
+          x =>
+            x.value
+        )
+        .filter(
+          value =>
+            value >
+            breakout +
+            mergeDistance * 0.55
+        )
+        .sort(
+          (a, b) =>
+            a - b
+        );
+
+
+    const cleanTargets = [];
+
+
+    for (
+      const value
+      of targetPressures
+    ) {
+
+      const last =
+        cleanTargets[
+          cleanTargets.length - 1
+        ];
+
+
+      if (
+        !last
+        ||
+        value -
+        last >
+        mergeDistance * 0.75
+      ) {
+
+        cleanTargets.push(
+          value
+        );
+
+      }
+
+    }
+
+
+    tp1 =
+      cleanTargets[0]
+      ||
+      null;
+
+
+    tp2 =
+      tp1
+        ?
+        cleanTargets.find(
+          value =>
+            value >
+            tp1 +
+            mergeDistance
+        )
+        ||
+        null
+        :
+        null;
 
 
     tp3 =
-      tp2 +
-      Math.max(
-        tp2 - base,
-        A * 3
-      ) *
-      0.618;
+      tp2
+        ?
+        cleanTargets.find(
+          value =>
+            value >
+            tp2 +
+            mergeDistance
+        )
+        ||
+        null
+        :
+        null;
 
 
-    tp3Source =
-      "歷史壓力不足，Fib 0.618 延伸";
+    if (tp3) {
+
+      tp3Source =
+        "第三層歷史壓力";
+
+    }
+
+
+    /*
+      只有 TP1、TP2 已經存在，
+      TP3 才允許使用延伸。
+    */
+
+    if (
+      !tp3
+      &&
+      tp1
+      &&
+      tp2
+    ) {
+
+      const extensionBase =
+        support2
+        ||
+        support1
+        ||
+        entryMid;
+
+
+      tp3 =
+        tp2 +
+        Math.max(
+          tp2 -
+          extensionBase,
+          A * 3
+        )
+        *
+        0.618;
+
+
+      tp3Source =
+        "歷史壓力不足，Fib 0.618 延伸";
+
+    }
+
   }
 
 
   /* =======================================================
-     RR
+     RISK / RR
   ======================================================= */
 
-  function getRR(target) {
+  const risk =
+    Number.isFinite(entryMid)
+    &&
+    Number.isFinite(sl)
+    &&
+    entryMid > sl
+      ?
+      entryMid -
+      sl
+      :
+      null;
+
+
+  const riskPct =
+    risk
+      ?
+      risk /
+      entryMid *
+      100
+      :
+      null;
+
+
+  function rr(target) {
 
     if (
-      !Number.isFinite(
-        target
-      ) ||
-      !Number.isFinite(
-        risk
-      ) ||
+      !Number.isFinite(target)
+      ||
+      !risk
+      ||
       risk <= 0
     ) {
+
       return null;
+
     }
 
 
     return (
       target -
       entryMid
-    ) /
+    )
+    /
     risk;
+
   }
 
 
   const rr1 =
-    getRR(tp1);
-
+    rr(tp1);
 
   const rr2 =
-    getRR(tp2);
-
+    rr(tp2);
 
   const rr3 =
-    getRR(tp3);
+    rr(tp3);
 
 
-  /* =======================================================
-     Entry Ready
-  ======================================================= */
+  const entryDistance =
+    bestSupport
+      ?
+      (
+        price -
+        bestSupport.value
+      )
+      /
+      price *
+      100
+      :
+      null;
 
-  let entryReady =
-    false;
+
+  const breakoutDistance =
+    breakout
+      ?
+      (
+        breakout -
+        price
+      )
+      /
+      price *
+      100
+      :
+      null;
 
 
-  /*
-    回檔型：
-    現價真的靠近 Entry。
-  */
-
-  if (
+  const validPlan =
     planType ===
-    "PULLBACK" &&
+    "LIMIT"
+    &&
     Number.isFinite(
       entryLow
-    ) &&
+    )
+    &&
     Number.isFinite(
       entryHigh
     )
-  ) {
-
-    entryReady =
-      price >=
-        entryLow -
-        Math.max(
-          A * 0.25,
-          price * 0.004
-        )
-      &&
-      price <=
-        entryHigh +
-        Math.max(
-          A * 0.35,
-          price * 0.006
-        );
-  }
-
-
-  /*
-    突破型：
-
-    靠近突破位不算。
-
-    必須：
-    現價 >= breakout
-
-    才允許正式 Push。
-  */
-
-  if (
-    planType ===
-      "BREAKOUT" &&
+    &&
+    Number.isFinite(
+      sl
+    )
+    &&
+    sl <
+    entryLow
+    &&
     Number.isFinite(
       breakout
-    ) &&
-    Number.isFinite(
-      entryHigh
     )
-  ) {
-
-    entryReady =
-      price >= breakout &&
-      price <=
-        entryHigh +
-        Math.max(
-          A * 0.20,
-          price * 0.003
-        );
-  }
+    &&
+    Number.isFinite(
+      tp1
+    )
+    &&
+    tp1 >
+    breakout;
 
 
   return {
 
+    support1,
+    support2,
+
+    bestSupport:
+      bestSupport
+        ?
+        bestSupport.value
+        :
+        null,
+
+    bestSupportStrength:
+      bestSupport
+        ?
+        bestSupport.count
+        :
+        0,
+
+    breakout,
+    breakoutState,
+
+    nextResistance,
+    crossedResistance,
+
     planType,
 
-    support1:
-      round(
-        support1
-      ),
+    entryLow,
+    entryHigh,
+    entryMid,
 
-    support2:
-      round(
-        support2
-      ),
+    sl,
 
-    breakout:
-      round(
-        breakout
-      ),
+    risk,
+    riskPct,
 
-    supportDistance:
-      supportDistance === 999
-        ? null
-        : round(
-            supportDistance *
-            100
-          ),
-
-    breakoutDistance:
-      breakoutDistance === 999
-        ? null
-        : round(
-            breakoutDistance *
-            100
-          ),
-
-    entryLow:
-      round(
-        entryLow
-      ),
-
-    entryHigh:
-      round(
-        entryHigh
-      ),
-
-    entryMid:
-      round(
-        entryMid
-      ),
-
-    sl:
-      round(sl),
-
-    risk:
-      round(risk),
-
-    riskPct:
-      round(
-        riskPct
-      ),
-
-    tp1:
-      round(tp1),
-
-    tp2:
-      round(tp2),
-
-    tp3:
-      round(tp3),
-
-    tp1Source,
-
-    tp2Source,
+    tp1,
+    tp2,
+    tp3,
 
     tp3Source,
 
-    rr1:
-      round(rr1),
+    rr1,
+    rr2,
+    rr3,
 
-    rr2:
-      round(rr2),
+    entryReady,
+    validPlan,
 
-    rr3:
-      round(rr3),
+    entryDistance,
+    breakoutDistance,
 
-    entryReady
+    pressureCount:
+      allPressureGroups.length
+
   };
+
 }
 
 
 /* =========================================================
-   技術面 0～20
+   FIVE CATEGORY ANALYSIS
 ========================================================= */
 
-function scoreTechnical(
-  rows,
-  price
+function analyzeStock(
+  data,
+  newsData = null
 ) {
+
+  const rows =
+    Array.isArray(
+      data.rows
+    )
+      ?
+      data.rows
+        .map(
+          x => ({
+
+            date:
+              x.date || "",
+
+            open:
+              num(x.open),
+
+            high:
+              num(x.high),
+
+            low:
+              num(x.low),
+
+            close:
+              num(x.close),
+
+            volume:
+              num(x.volume)
+
+          })
+        )
+        .filter(
+          x =>
+            x.close > 0
+            &&
+            x.high > 0
+            &&
+            x.low > 0
+        )
+      :
+      [];
+
+
+  if (
+    rows.length <
+    60
+  ) {
+
+    return {
+
+      eligible:
+        false,
+
+      reason:
+        "歷史資料不足"
+
+    };
+
+  }
+
+
+  let price =
+    num(
+      data.price
+    );
+
+
+  if (!price) {
+
+    price =
+      rows[
+        rows.length - 1
+      ].close;
+
+  }
+
 
   const closes =
     rows.map(
-      x => x.close
+      x =>
+        x.close
     );
 
-  const ma20 =
+
+  const m20 =
     sma(
       closes,
       20
     );
 
-  const ma60 =
+
+  const m60 =
     sma(
       closes,
       60
     );
 
 
-  const ma20Prev =
-    rows.length >= 25
-      ? avg(
-          closes.slice(
-            -25,
-            -5
-          )
-        )
-      : ma20;
-
-
-  const R =
-    rsi(
+  const m120 =
+    sma(
       closes,
-      14
+      120
     );
-
-
-  const macd =
-    getMACD(
-      closes
-    );
-
-
-  const previous20 =
-    rows.slice(
-      -21,
-      -1
-    );
-
-
-  const previousHigh20 =
-    previous20.length
-      ? Math.max(
-          ...previous20.map(
-            x => x.high
-          )
-        )
-      : null;
-
-
-  let score = 0;
-
-  const reasons = [];
-
-
-  if (
-    Number.isFinite(ma20) &&
-    price > ma20
-  ) {
-
-    score += 4;
-
-    reasons.push(
-      "股價站上 MA20"
-    );
-  }
-
-
-  if (
-    Number.isFinite(ma20) &&
-    Number.isFinite(ma60) &&
-    ma20 > ma60
-  ) {
-
-    score += 4;
-
-    reasons.push(
-      "MA20 高於 MA60"
-    );
-  }
-
-
-  if (
-    Number.isFinite(ma20) &&
-    Number.isFinite(ma20Prev) &&
-    ma20 > ma20Prev
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "MA20 趨勢向上"
-    );
-  }
-
-
-  if (
-    R >= 50 &&
-    R <= 70
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "RSI 動能健康"
-    );
-
-  } else if (
-    R > 45 &&
-    R < 75
-  ) {
-
-    score += 1;
-  }
-
-
-  if (
-    macd.macd >
-    macd.signal
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "MACD 位於訊號線上方"
-    );
-
-  } else if (
-    macd.histogram > 0
-  ) {
-
-    score += 2;
-  }
-
-
-  if (
-    Number.isFinite(
-      previousHigh20
-    ) &&
-    price >=
-      previousHigh20 *
-      0.985
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      price >
-        previousHigh20
-        ? "突破近期高點"
-        : "接近近期突破區"
-    );
-  }
-
-
-  return {
-
-    available:
-      true,
-
-    score:
-      clamp(
-        Math.round(score),
-        0,
-        20
-      ),
-
-    ma20:
-      round(ma20),
-
-    ma60:
-      round(ma60),
-
-    rsi:
-      round(R),
-
-    macd:
-      round(
-        macd.macd,
-        4
-      ),
-
-    macdSignal:
-      round(
-        macd.signal,
-        4
-      ),
-
-    previousHigh20:
-      round(
-        previousHigh20
-      ),
-
-    reasons
-  };
-}
-
-
-/* =========================================================
-   量價 0～20
-========================================================= */
-
-function scoreVolume(
-  rows,
-  price
-) {
-
-  if (
-    rows.length < 22
-  ) {
-
-    return {
-
-      available:
-        false,
-
-      score:
-        null,
-
-      reasons:
-        []
-    };
-  }
-
-
-  const last =
-    rows[
-      rows.length - 1
-    ];
-
-  const previous =
-    rows[
-      rows.length - 2
-    ];
-
-
-  const volumeAvg20 =
-    avg(
-      rows
-        .slice(
-          -21,
-          -1
-        )
-        .map(
-          x => x.volume
-        )
-    );
-
-
-  const volumeRatio =
-    volumeAvg20 > 0
-      ? last.volume /
-        volumeAvg20
-      : 0;
-
-
-  const previous20 =
-    rows.slice(
-      -21,
-      -1
-    );
-
-
-  const high20 =
-    Math.max(
-      ...previous20.map(
-        x => x.high
-      )
-    );
-
-
-  const recent5Avg =
-    avg(
-      rows
-        .slice(-5)
-        .map(
-          x => x.volume
-        )
-    );
-
-
-  const previous15Avg =
-    avg(
-      rows
-        .slice(
-          -20,
-          -5
-        )
-        .map(
-          x => x.volume
-        )
-    );
-
-
-  let score = 0;
-
-  const reasons = [];
-
-
-  if (
-    volumeRatio >= 1.5
-  ) {
-
-    score += 6;
-
-    reasons.push(
-      "成交量明顯放大"
-    );
-
-  } else if (
-    volumeRatio >= 1.15
-  ) {
-
-    score += 5;
-
-    reasons.push(
-      "成交量高於均量"
-    );
-
-  } else if (
-    volumeRatio >= 0.8
-  ) {
-
-    score += 3;
-
-  } else {
-
-    score += 1;
-  }
-
-
-  if (
-    price >
-      previous.close &&
-    volumeRatio >= 1
-  ) {
-
-    score += 5;
-
-    reasons.push(
-      "價漲量增"
-    );
-  }
-
-
-  if (
-    price > high20 &&
-    volumeRatio >= 1.2
-  ) {
-
-    score += 5;
-
-    reasons.push(
-      "帶量突破近期高點"
-    );
-
-  } else if (
-    price >=
-      high20 * 0.985 &&
-    volumeRatio >= 1
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "接近突破且量能配合"
-    );
-  }
-
-
-  if (
-    recent5Avg > 0 &&
-    previous15Avg > 0 &&
-    recent5Avg <
-      previous15Avg * 0.8 &&
-    price >=
-      rows[
-        Math.max(
-          0,
-          rows.length - 10
-        )
-      ].close *
-      0.98
-  ) {
-
-    score += 4;
-
-    reasons.push(
-      "整理期間量縮"
-    );
-  }
-
-
-  return {
-
-    available:
-      true,
-
-    score:
-      clamp(
-        Math.round(score),
-        0,
-        20
-      ),
-
-    volume:
-      last.volume,
-
-    volumeAvg20:
-      round(
-        volumeAvg20,
-        0
-      ),
-
-    volumeRatio:
-      round(
-        volumeRatio
-      ),
-
-    reasons
-  };
-}
-
-
-/* =========================================================
-   法人籌碼 0～20
-========================================================= */
-
-function scoreInstitutional(
-  i = {}
-) {
-
-  if (
-    i?.available ===
-    false
-  ) {
-
-    return {
-      available: false,
-      score: null,
-      reasons: []
-    };
-  }
-
-
-  const foreign5 =
-    num(i?.foreign5);
-
-  const foreign10 =
-    num(i?.foreign10);
-
-  const trust5 =
-    num(i?.trust5);
-
-  const trust10 =
-    num(i?.trust10);
-
-  const dealer5 =
-    num(i?.dealer5);
-
-  const total5 =
-    num(i?.total5);
-
-  const total10 =
-    num(i?.total10);
-
-  const foreignBuyDays5 =
-    num(
-      i?.foreignBuyDays5
-    );
-
-  const trustBuyDays5 =
-    num(
-      i?.trustBuyDays5
-    );
-
-  const totalBuyDays5 =
-    num(
-      i?.totalBuyDays5
-    );
-
-
-  const hasData =
-    [
-      foreign5,
-      foreign10,
-      trust5,
-      trust10,
-      dealer5,
-      total5,
-      total10
-    ].some(
-      Number.isFinite
-    );
-
-
-  if (!hasData) {
-
-    return {
-      available: false,
-      score: null,
-      reasons: []
-    };
-  }
-
-
-  let score = 8;
-
-  const reasons = [];
-
-
-  if (
-    Number(foreign5) > 0
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "外資近 5 日買超"
-    );
-
-  } else if (
-    Number(foreign5) < 0
-  ) {
-
-    score -= 2;
-  }
-
-
-  if (
-    Number(trust5) > 0
-  ) {
-
-    score += 3;
-
-    reasons.push(
-      "投信近 5 日買超"
-    );
-
-  } else if (
-    Number(trust5) < 0
-  ) {
-
-    score -= 2;
-  }
-
-
-  if (
-    Number(total5) > 0
-  ) {
-
-    score += 2;
-
-    reasons.push(
-      "三大法人近 5 日合計買超"
-    );
-
-  } else if (
-    Number(total5) < 0
-  ) {
-
-    score -= 2;
-  }
-
-
-  if (
-    Number(foreign10) > 0
-  ) {
-    score += 1;
-  }
-
-
-  if (
-    Number(trust10) > 0
-  ) {
-    score += 1;
-  }
-
-
-  if (
-    Number(total10) > 0
-  ) {
-    score += 1;
-  }
-
-
-  if (
-    Number(
-      foreignBuyDays5
-    ) >= 3
-  ) {
-
-    score += 1;
-
-    reasons.push(
-      "外資買盤具連續性"
-    );
-  }
-
-
-  if (
-    Number(
-      trustBuyDays5
-    ) >= 3
-  ) {
-
-    score += 1;
-
-    reasons.push(
-      "投信買盤具連續性"
-    );
-  }
-
-
-  if (
-    Number(
-      totalBuyDays5
-    ) >= 3
-  ) {
-    score += 1;
-  }
-
-
-  if (
-    Number(dealer5) > 0
-  ) {
-    score += 0.5;
-  }
-
-
-  return {
-
-    available:
-      true,
-
-    score:
-      clamp(
-        Math.round(score),
-        0,
-        20
-      ),
-
-    foreign5,
-
-    trust5,
-
-    dealer5,
-
-    total5,
-
-    total10,
-
-    reasons
-  };
-}
-
-
-/* =========================================================
-   基本面 0～20
-========================================================= */
-
-function scoreFundamental(
-  data
-) {
-
-  const revenue =
-    data?.revenue ||
-    data?.fundamental?.revenue ||
-    {};
-
-
-  const financial =
-    data?.financial ||
-    data?.fundamental?.financial ||
-    {};
-
-
-  const revenueAvailable =
-    revenue?.available !==
-      false &&
-    (
-      Number.isFinite(
-        num(
-          revenue?.yoy
-        )
-      ) ||
-      Number.isFinite(
-        num(
-          revenue?.mom
-        )
-      )
-    );
-
-
-  const financialAvailable =
-    financial?.available !==
-      false &&
-    (
-      Number.isFinite(
-        num(
-          financial?.eps
-        )
-      ) ||
-      Number.isFinite(
-        num(
-          financial?.incomeAfterTaxes
-        )
-      ) ||
-      typeof financial?.profitable ===
-        "boolean"
-    );
-
-
-  if (
-    !revenueAvailable &&
-    !financialAvailable
-  ) {
-
-    return {
-      available: false,
-      score: null,
-      reasons: []
-    };
-  }
-
-
-  let score = 0;
-  let possible = 0;
-
-  const reasons = [];
-
-
-  if (
-    revenueAvailable
-  ) {
-
-    possible += 8;
-
-    const yoy =
-      num(
-        revenue?.yoy
-      );
-
-    const mom =
-      num(
-        revenue?.mom
-      );
-
-
-    if (
-      Number.isFinite(yoy)
-    ) {
-
-      if (
-        yoy >= 20
-      ) {
-
-        score += 5;
-
-        reasons.push(
-          "營收年增超過 20%"
-        );
-
-      } else if (
-        yoy > 0
-      ) {
-
-        score += 4;
-
-        reasons.push(
-          "營收維持年增"
-        );
-
-      } else if (
-        yoy > -5
-      ) {
-
-        score += 2;
-      }
-    }
-
-
-    if (
-      Number.isFinite(mom)
-    ) {
-
-      if (
-        mom > 0
-      ) {
-
-        score += 3;
-
-        reasons.push(
-          "營收月增"
-        );
-
-      } else if (
-        mom > -5
-      ) {
-
-        score += 1;
-      }
-    }
-  }
-
-
-  if (
-    financialAvailable
-  ) {
-
-    possible += 12;
-
-    const eps =
-      num(
-        financial?.eps
-      );
-
-    const epsGrowth =
-      num(
-        financial?.epsGrowth
-      );
-
-    const netIncomeGrowth =
-      num(
-        financial?.netIncomeGrowth
-      );
-
-
-    if (
-      financial?.profitable ===
-        true ||
-      (
-        Number.isFinite(eps) &&
-        eps > 0
-      )
-    ) {
-
-      score += 4;
-
-      reasons.push(
-        "公司維持獲利"
-      );
-    }
-
-
-    if (
-      Number.isFinite(eps)
-    ) {
-
-      if (
-        eps > 0
-      ) {
-        score += 2;
-      }
-
-      if (
-        eps >= 2
-      ) {
-        score += 1;
-      }
-    }
-
-
-    if (
-      Number.isFinite(
-        epsGrowth
-      )
-    ) {
-
-      if (
-        epsGrowth > 20
-      ) {
-
-        score += 3;
-
-        reasons.push(
-          "EPS 成長明顯"
-        );
-
-      } else if (
-        epsGrowth > 0
-      ) {
-
-        score += 2;
-
-        reasons.push(
-          "EPS 成長"
-        );
-      }
-    }
-
-
-    if (
-      Number.isFinite(
-        netIncomeGrowth
-      ) &&
-      netIncomeGrowth > 0
-    ) {
-
-      score += 2;
-
-      reasons.push(
-        "稅後獲利成長"
-      );
-    }
-  }
-
-
-  return {
-
-    available:
-      possible > 0,
-
-    score:
-      possible > 0
-        ? clamp(
-            Math.round(
-              (
-                score /
-                possible
-              ) *
-              20
-            ),
-            0,
-            20
-          )
-        : null,
-
-    reasons
-  };
-}
-
-
-/* =========================================================
-   新聞 0～20
-========================================================= */
-
-function scoreNews(news) {
-
-  if (
-    !news ||
-    news?.available ===
-      false ||
-    !Array.isArray(
-      news?.news
-    ) ||
-    !news.news.length
-  ) {
-
-    return {
-      available: false,
-      score: null,
-      overall:
-        "資料不足",
-      reasons: []
-    };
-  }
-
-
-  const overall =
-    clamp(
-      Number(
-        news?.overallScore ||
-        0
-      ),
-      -10,
-      10
-    );
-
-
-  return {
-
-    available:
-      true,
-
-    score:
-      clamp(
-        Math.round(
-          10 + overall
-        ),
-        0,
-        20
-      ),
-
-    overall:
-      news?.overall ||
-      "中性",
-
-    reasons: [
-      overall >= 2
-        ? "近期新聞偏正向"
-        : overall <= -2
-        ? "近期新聞偏負向"
-        : "近期新聞影響中性"
-    ]
-  };
-}
-
-
-/* =========================================================
-   綜合評分
-========================================================= */
-
-function combineScores(
-  sections
-) {
-
-  const available =
-    sections.filter(
-      x =>
-        x?.available &&
-        Number.isFinite(
-          Number(
-            x.score
-          )
-        )
-    );
-
-
-  if (
-    !available.length
-  ) {
-
-    return {
-      score: 0,
-      completeness: 0
-    };
-  }
-
-
-  const earned =
-    available.reduce(
-      (sum, x) =>
-        sum +
-        Number(
-          x.score
-        ),
-      0
-    );
-
-
-  return {
-
-    score:
-      Math.round(
-        (
-          earned /
-          (
-            available.length *
-            20
-          )
-        ) *
-        100
-      ),
-
-    completeness:
-      Math.round(
-        (
-          available.length /
-          5
-        ) *
-        100
-      )
-  };
-}
-
-
-/* =========================================================
-   股票完整分析
-========================================================= */
-
-function analyzeData(
-  d,
-  newsData = null
-) {
-
-  if (
-    !Array.isArray(
-      d?.rows
-    ) ||
-    d.rows.length < 60
-  ) {
-    return null;
-  }
-
-
-  const rows =
-    d.rows
-      .map(
-        x => ({
-
-          date:
-            String(
-              x.date ||
-              ""
-            ),
-
-          open:
-            Number(
-              x.open
-            ),
-
-          high:
-            Number(
-              x.high
-            ),
-
-          low:
-            Number(
-              x.low
-            ),
-
-          close:
-            Number(
-              x.close
-            ),
-
-          volume:
-            Number(
-              x.volume ||
-              0
-            )
-        })
-      )
-      .filter(
-        x =>
-          Number.isFinite(
-            x.open
-          ) &&
-          Number.isFinite(
-            x.high
-          ) &&
-          Number.isFinite(
-            x.low
-          ) &&
-          Number.isFinite(
-            x.close
-          ) &&
-          x.close > 0
-      );
-
-
-  if (
-    rows.length < 60
-  ) {
-    return null;
-  }
-
-
-  let price =
-    Number(
-      d?.price
-    );
-
-
-  if (
-    !Number.isFinite(price) ||
-    price <= 0
-  ) {
-
-    price =
-      rows[
-        rows.length - 1
-      ].close;
-  }
 
 
   const A =
@@ -2852,384 +2152,853 @@ function analyzeData(
     );
 
 
-  const technical =
-    scoreTechnical(
-      rows,
-      price
+  const R =
+    rsi(
+      closes,
+      14
     );
 
 
-  const volume =
-    scoreVolume(
-      rows,
-      price
+  const macd =
+    ema(
+      closes.slice(-120),
+      12
+    )
+    -
+    ema(
+      closes.slice(-120),
+      26
     );
 
 
-  const institutional =
-    scoreInstitutional(
-      d?.institutional
+  const macdSeries =
+    closes
+      .slice(-120)
+      .map(
+        (_, i, arr) => {
+
+          const part =
+            arr.slice(
+              0,
+              i + 1
+            );
+
+          return (
+            ema(
+              part,
+              12
+            )
+            -
+            ema(
+              part,
+              26
+            )
+          );
+
+        }
+      );
+
+
+  const signal =
+    ema(
+      macdSeries,
+      9
     );
 
+
+  const currentVolume =
+    num(
+      data.volume
+    )
+    ||
+    rows[
+      rows.length - 1
+    ].volume;
+
+
+  const volumeAverage =
+    avg(
+      rows
+        .slice(-21, -1)
+        .map(
+          x =>
+            x.volume
+        )
+        .filter(
+          x =>
+            x > 0
+        )
+    );
+
+
+  const vr =
+    volumeAverage
+      ?
+      currentVolume /
+      volumeAverage
+      :
+      0;
+
+
+  const high20 =
+    Math.max(
+      ...rows
+        .slice(-20)
+        .map(
+          x =>
+            x.high
+        )
+    );
+
+
+  /* =======================================================
+     TECHNICAL 20
+  ======================================================= */
+
+  let technical = 0;
+
+
+  if (
+    price >=
+    m20
+  ) {
+
+    technical += 4;
+
+  }
+
+
+  if (
+    m20 >
+    m60
+  ) {
+
+    technical += 5;
+
+  }
+
+
+  if (
+    m60 >=
+    m120 * 0.985
+  ) {
+
+    technical += 3;
+
+  }
+
+
+  if (
+    R >= 45
+    &&
+    R <= 75
+  ) {
+
+    technical += 3;
+
+  }
+
+
+  if (
+    macd >=
+    signal
+  ) {
+
+    technical += 3;
+
+  }
+
+
+  if (
+    price >=
+    high20 * 0.96
+  ) {
+
+    technical += 2;
+
+  }
+
+
+  technical =
+    clamp(
+      technical,
+      0,
+      20
+    );
+
+
+  /* =======================================================
+     VOLUME PRICE 20
+  ======================================================= */
+
+  let volumeScore = 0;
+
+
+  if (
+    vr >= 1
+  ) {
+
+    volumeScore += 6;
+
+  }
+  else if (
+    vr >= 0.8
+  ) {
+
+    volumeScore += 4;
+
+  }
+  else if (
+    vr >= 0.6
+  ) {
+
+    volumeScore += 2;
+
+  }
+
+
+  const changePercent =
+    num(
+      data.changePercent
+    );
+
+
+  if (
+    changePercent > 0
+    &&
+    vr >= 1
+  ) {
+
+    volumeScore += 5;
+
+  }
+  else if (
+    changePercent >= 0
+  ) {
+
+    volumeScore += 3;
+
+  }
+
+
+  let upVolumeDays = 0;
+
+
+  const last10 =
+    rows.slice(-10);
+
+
+  for (
+    let i = 1;
+    i < last10.length;
+    i++
+  ) {
+
+    if (
+      last10[i].close >
+      last10[i - 1].close
+      &&
+      last10[i].volume >=
+      volumeAverage * 0.8
+    ) {
+
+      upVolumeDays++;
+
+    }
+
+  }
+
+
+  volumeScore +=
+    clamp(
+      upVolumeDays,
+      0,
+      5
+    );
+
+
+  if (
+    price >=
+    high20 * 0.98
+    &&
+    vr >=
+    1.1
+  ) {
+
+    volumeScore += 4;
+
+  }
+
+
+  volumeScore =
+    clamp(
+      volumeScore,
+      0,
+      20
+    );
+
+
+  /* =======================================================
+     INSTITUTIONAL 20
+  ======================================================= */
+
+  let chipScore = 0;
+
+
+  const inst =
+    data.institutional ||
+    {};
+
+
+  if (
+    num(inst.total5) > 0
+  ) {
+
+    chipScore += 5;
+
+  }
+
+
+  if (
+    num(inst.foreign5) > 0
+  ) {
+
+    chipScore += 4;
+
+  }
+
+
+  if (
+    num(inst.trust5) > 0
+  ) {
+
+    chipScore += 4;
+
+  }
+
+
+  if (
+    num(inst.total10) > 0
+  ) {
+
+    chipScore += 3;
+
+  }
+
+
+  if (
+    num(
+      inst.totalBuyDays5
+    ) >= 3
+  ) {
+
+    chipScore += 2;
+
+  }
+
+
+  if (
+    num(
+      inst.foreignBuyDays5
+    ) >= 3
+  ) {
+
+    chipScore += 2;
+
+  }
+
+
+  chipScore =
+    clamp(
+      chipScore,
+      0,
+      20
+    );
+
+
+  /* =======================================================
+     FUNDAMENTAL 20
+  ======================================================= */
 
   const fundamental =
-    scoreFundamental(
-      d
+    data.fundamental ||
+    {};
+
+
+  const revenue =
+    fundamental.revenue ||
+    {};
+
+
+  const financial =
+    fundamental.financial ||
+    {};
+
+
+  const fundAvailable =
+    !!(
+      revenue.available
+      ||
+      financial.available
     );
 
 
-  const news =
-    scoreNews(
-      newsData
-    );
+  let fundScore =
+    null;
 
 
-  const combined =
-    combineScores([
+  if (
+    fundAvailable
+  ) {
+
+    fundScore = 0;
+
+
+    if (
+      financial.profitable ===
+      true
+    ) {
+
+      fundScore += 6;
+
+    }
+    else if (
+      financial.profitable ===
+      undefined
+      ||
+      financial.profitable ===
+      null
+    ) {
+
+      fundScore += 3;
+
+    }
+
+
+    if (
+      Number.isFinite(
+        Number(
+          financial.eps
+        )
+      )
+      &&
+      Number(
+        financial.eps
+      ) > 0
+    ) {
+
+      fundScore += 4;
+
+    }
+
+
+    if (
+      Number.isFinite(
+        Number(
+          financial.epsGrowth
+        )
+      )
+      &&
+      Number(
+        financial.epsGrowth
+      ) > 0
+    ) {
+
+      fundScore += 3;
+
+    }
+
+
+    if (
+      Number.isFinite(
+        Number(
+          revenue.yoy
+        )
+      )
+    ) {
+
+      if (
+        Number(
+          revenue.yoy
+        ) > 10
+      ) {
+
+        fundScore += 4;
+
+      }
+      else if (
+        Number(
+          revenue.yoy
+        ) > 0
+      ) {
+
+        fundScore += 3;
+
+      }
+
+    }
+
+
+    if (
+      Number.isFinite(
+        Number(
+          revenue.mom
+        )
+      )
+      &&
+      Number(
+        revenue.mom
+      ) > 0
+    ) {
+
+      fundScore += 3;
+
+    }
+
+
+    fundScore =
+      clamp(
+        fundScore,
+        0,
+        20
+      );
+
+  }
+
+
+  /* =======================================================
+     NEWS 20
+  ======================================================= */
+
+  let newsScore =
+    null;
+
+
+  if (
+    newsData?.available
+  ) {
+
+    newsScore =
+      clamp(
+        Math.round(
+          10 +
+          Number(
+            newsData.overallScore ||
+            0
+          )
+        ),
+        0,
+        20
+      );
+
+  }
+
+
+  /* =======================================================
+     NORMALIZED SCORE
+  ======================================================= */
+
+  const availableScores =
+    [
       technical,
-      volume,
-      institutional,
-      fundamental,
-      news
-    ]);
+      volumeScore,
+      chipScore,
+      fundScore,
+      newsScore
+    ]
+    .filter(
+      x =>
+        x !== null
+        &&
+        Number.isFinite(
+          Number(x)
+        )
+    );
 
+
+  const completeness =
+    availableScores.length
+      /
+      5
+      *
+      100;
+
+
+  const score =
+    availableScores.length
+      ?
+      clamp(
+        Math.round(
+          availableScores.reduce(
+            (sum, x) =>
+              sum +
+              Number(x),
+            0
+          )
+          /
+          (
+            availableScores.length *
+            20
+          )
+          *
+          100
+        ),
+        0,
+        100
+      )
+      :
+      0;
+
+
+  /* =======================================================
+     TRADE PLAN
+  ======================================================= */
 
   const plan =
     buildTradePlan(
       rows,
       price,
-      A
+      A,
+      m20,
+      m60
     );
 
 
-  let classification =
-    "偏弱／觀望";
+  /* =======================================================
+     FORMAL PUSH CONDITIONS
+  ======================================================= */
+
+  let eligible =
+    true;
+
+
+  let reason =
+    "符合正式進場條件";
 
 
   if (
-    combined.score >= 80
+    score <
+    75
   ) {
 
-    classification =
-      "偏多波段";
+    eligible =
+      false;
 
-  } else if (
-    combined.score >= 70
+    reason =
+      `綜合評分 ${score}，未達 75`;
+
+  }
+  else if (
+    completeness <
+    60
   ) {
 
-    classification =
-      "偏多觀察";
+    eligible =
+      false;
 
-  } else if (
-    combined.score >= 60
+    reason =
+      `資料完整度 ${completeness.toFixed(0)}%，不足 60%`;
+
+  }
+  else if (
+    technical <
+    12
   ) {
 
-    classification =
-      "中性偏多";
+    eligible =
+      false;
 
-  } else if (
-    combined.score >= 45
+    reason =
+      `技術面 ${technical}/20，未達 12`;
+
+  }
+  else if (
+    volumeScore <
+    10
   ) {
 
-    classification =
-      "中性";
+    eligible =
+      false;
+
+    reason =
+      `量價 ${volumeScore}/20，未達 10`;
+
+  }
+  else if (
+    plan.planType !==
+    "LIMIT"
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      "現價附近沒有合理限價 Entry";
+
+  }
+  else if (
+    !plan.entryReady
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      "交易計畫成立，但目前尚未進入最佳 Entry 區";
+
+  }
+  else if (
+    !plan.validPlan
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      "Entry / SL / 突破位 / TP1 尚未形成完整交易計畫";
+
+  }
+  else if (
+    !Number.isFinite(
+      plan.riskPct
+    )
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      "無法計算停損風險";
+
+  }
+  else if (
+    plan.riskPct >
+    5
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      `停損風險 ${plan.riskPct.toFixed(2)}%，超過 5%`;
+
+  }
+  else if (
+    !Number.isFinite(
+      plan.rr1
+    )
+    ||
+    plan.rr1 <
+    1.3
+  ) {
+
+    eligible =
+      false;
+
+    reason =
+      "TP1 風報比未達 1.3R";
+
   }
 
 
   return {
 
+    eligible,
+    reason,
+
     symbol:
       String(
-        d?.symbol ||
+        data.symbol ||
         ""
       ),
 
     name:
-      d?.name ||
-      d?.symbol ||
-      "",
+      data.name
+      ||
+      data.symbol
+      ||
+      "台股",
 
     price,
 
-    score:
-      combined.score,
-
-    completeness:
-      combined.completeness,
-
-    classification,
+    score,
+    completeness,
 
     technical,
+    volumeScore,
+    chipScore,
+    fundScore,
+    newsScore,
 
-    volume,
+    m20,
+    m60,
+    m120,
 
-    institutional,
+    RSI:
+      R,
 
-    fundamental,
+    ATR:
+      A,
 
-    news,
+    volumeRatio:
+      vr,
 
     ...plan
+
   };
+
 }
 
 
 /* =========================================================
-   正式 Push 判斷
+   ORIGIN
 ========================================================= */
 
-function makeSignal(a) {
+function getOrigin(req) {
 
-  if (!a) {
-
-    return {
-      signal: null,
-      reason:
-        "分析資料不足"
-    };
-  }
+  const host =
+    req.headers[
+      "x-forwarded-host"
+    ]
+    ||
+    req.headers.host;
 
 
-  if (
-    a.score <
-    MIN_SCORE
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        `綜合評分不足 ${a.score}/${MIN_SCORE}`
-    };
-  }
+  const proto =
+    req.headers[
+      "x-forwarded-proto"
+    ]
+    ||
+    "https";
 
 
-  if (
-    a.completeness <
-    MIN_COMPLETENESS
-  ) {
+  return (
+    `${proto}://${host}`
+  );
 
-    return {
-      signal: null,
-      reason:
-        `資料完整度不足 ${a.completeness}%`
-    };
-  }
-
-
-  if (
-    !a.technical?.available ||
-    a.technical.score <
-      MIN_TECHNICAL
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        `技術面不足 ${a.technical?.score ?? "--"}/20`
-    };
-  }
-
-
-  if (
-    !a.volume?.available ||
-    a.volume.score <
-      MIN_VOLUME
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        `量價不足 ${a.volume?.score ?? "--"}/20`
-    };
-  }
-
-
-  /*
-    WAIT 永遠不 Push
-  */
-
-  if (
-    a.planType ===
-    "WAIT"
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        "目前沒有合理進場位置"
-    };
-  }
-
-
-  /*
-    BREAKOUT：
-    沒有真的突破不能 Push。
-  */
-
-  if (
-    a.planType ===
-      "BREAKOUT" &&
-    Number(a.price) <
-      Number(a.breakout)
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        `等待突破 ${formatPrice(a.breakout)}`
-    };
-  }
-
-
-  if (
-    !a.entryReady
-  ) {
-
-    return {
-      signal: null,
-
-      reason:
-        a.planType ===
-        "BREAKOUT"
-
-          ? "尚未完成突破確認"
-
-          : "尚未進入回檔進場區"
-    };
-  }
-
-
-  if (
-    !Number.isFinite(
-      Number(
-        a.entryLow
-      )
-    ) ||
-    !Number.isFinite(
-      Number(
-        a.entryHigh
-      )
-    ) ||
-    !Number.isFinite(
-      Number(
-        a.sl
-      )
-    )
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        "交易計畫資料不足"
-    };
-  }
-
-
-  if (
-    Number(a.sl) >=
-    Number(a.entryLow)
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        "停損位置無效"
-    };
-  }
-
-
-  if (
-    !Number.isFinite(
-      Number(
-        a.tp1
-      )
-    ) ||
-    Number(
-      a.tp1
-    ) <=
-      Number(
-        a.entryHigh
-      )
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        "上方沒有足夠歷史目標空間"
-    };
-  }
-
-
-  if (
-    !Number.isFinite(
-      Number(
-        a.rr1
-      )
-    ) ||
-    Number(
-      a.rr1
-    ) <
-      MIN_RR
-  ) {
-
-    return {
-      signal: null,
-      reason:
-        `TP1 風報比不足 ${a.rr1 ?? "--"}R`
-    };
-  }
-
-
-  const fingerprint =
-    [
-      a.symbol,
-
-      a.planType,
-
-      Number(
-        a.entryLow
-      ).toFixed(2),
-
-      Number(
-        a.entryHigh
-      ).toFixed(2),
-
-      Number(
-        a.sl
-      ).toFixed(2),
-
-      Math.floor(
-        a.score / 5
-      ) * 5
-    ].join(":");
-
-
-  return {
-
-    signal: {
-      ...a,
-      fingerprint
-    },
-
-    reason:
-      a.planType ===
-      "BREAKOUT"
-
-        ? "符合突破型正式進場通知條件"
-
-        : "符合回檔型正式進場通知條件"
-  };
 }
 
 
 /* =========================================================
-   Stock API
+   FETCH STOCK
 ========================================================= */
 
 async function fetchStock(
   origin,
   symbol
 ) {
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      () =>
+        controller.abort(),
+      22000
+    );
+
 
   try {
 
@@ -3240,10 +3009,8 @@ async function fetchStock(
           cache:
             "no-store",
 
-          headers: {
-            "Cache-Control":
-              "no-cache"
-          }
+          signal:
+            controller.signal
         }
       );
 
@@ -3252,57 +3019,64 @@ async function fetchStock(
       !response.ok
     ) {
 
-      console.error(
-        "stock api status:",
-        symbol,
-        response.status
+      throw new Error(
+        `stock ${symbol} HTTP ${response.status}`
       );
 
-      return null;
     }
 
 
-    const data =
+    const json =
       await response.json();
 
 
     if (
-      !data?.ok
+      !json ||
+      json.ok === false
     ) {
 
-      console.error(
-        "stock api error:",
-        symbol,
-        data?.error
+      throw new Error(
+        json?.error ||
+        `stock ${symbol} failed`
       );
 
-      return null;
     }
 
 
-    return data;
+    return json;
 
-  } catch (error) {
+  }
+  finally {
 
-    console.error(
-      "fetch stock error:",
-      symbol,
-      error
+    clearTimeout(
+      timer
     );
 
-    return null;
   }
+
 }
 
 
 /* =========================================================
-   News API
+   FETCH NEWS
 ========================================================= */
 
 async function fetchNews(
   origin,
   symbol
 ) {
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      () =>
+        controller.abort(),
+      10000
+    );
+
 
   try {
 
@@ -3313,10 +3087,8 @@ async function fetchNews(
           cache:
             "no-store",
 
-          headers: {
-            "Cache-Control":
-              "no-cache"
-          }
+          signal:
+            controller.signal
         }
       );
 
@@ -3324,198 +3096,520 @@ async function fetchNews(
     if (
       !response.ok
     ) {
-      return null;
+
+      return {
+        available:
+          false
+      };
+
     }
 
 
-    const data =
+    const json =
       await response.json();
 
 
-    return (
-      data?.ok
-        ? data
-        : null
-    );
+    if (
+      !json ||
+      json.ok === false
+    ) {
 
-  } catch (error) {
+      return {
+        available:
+          false
+      };
 
-    console.error(
-      "fetch news error:",
-      symbol,
-      error
-    );
+    }
 
-    return null;
+
+    return json;
+
   }
+  catch {
+
+    return {
+      available:
+        false
+    };
+
+  }
+  finally {
+
+    clearTimeout(
+      timer
+    );
+
+  }
+
 }
 
 
 /* =========================================================
-   新聞只抓候選股票
+   CONCURRENCY
 ========================================================= */
 
-function shouldFetchNews(a) {
-
-  return !!(
-    a &&
-    a.completeness >= 60 &&
-    a.score >= 65 &&
-    (
-      a.technical?.score ??
-      0
-    ) >= 10 &&
-    (
-      a.volume?.score ??
-      0
-    ) >= 8
-  );
-}
-
-
-/* =========================================================
-   Push Notification
-========================================================= */
-
-function buildNotification(
-  signal
+async function mapLimit(
+  items,
+  limit,
+  worker
 ) {
 
-  const entry =
-    `${formatPrice(signal.entryLow)}～${formatPrice(signal.entryHigh)}`;
+  const result =
+    new Array(
+      items.length
+    );
 
 
-  const targets = [];
+  let cursor = 0;
+
+
+  async function runner() {
+
+    while (true) {
+
+      const index =
+        cursor++;
+
+
+      if (
+        index >=
+        items.length
+      ) {
+
+        break;
+
+      }
+
+
+      try {
+
+        result[index] =
+          await worker(
+            items[index],
+            index
+          );
+
+      }
+      catch (error) {
+
+        result[index] = {
+
+          error:
+            error?.message ||
+            String(error)
+
+        };
+
+      }
+
+    }
+
+  }
+
+
+  await Promise.all(
+    Array.from(
+      {
+        length:
+          Math.min(
+            limit,
+            items.length
+          )
+      },
+      () =>
+        runner()
+    )
+  );
+
+
+  return result;
+
+}
+
+
+/* =========================================================
+   DEVICE SYMBOLS
+========================================================= */
+
+function normalizeSymbols(
+  symbols
+) {
+
+  const list =
+    Array.isArray(symbols)
+      ?
+      symbols
+      :
+      [];
+
+
+  return [
+    ...new Set(
+      list
+        .map(
+          x =>
+            String(x)
+              .trim()
+        )
+        .filter(
+          x =>
+            /^\d{4,6}$/
+              .test(x)
+        )
+    )
+  ];
+
+}
+
+
+function symbolsForDevice(
+  device
+) {
+
+  const saved =
+    normalizeSymbols(
+      device?.symbols
+    );
+
+
+  return [
+    ...new Set([
+      ...DEFAULT_SYMBOLS,
+      ...saved
+    ])
+  ];
+
+}
+
+
+/* =========================================================
+   DEDUPE
+========================================================= */
+
+function setupFingerprint(
+  symbol,
+  analysis
+) {
+
+  return [
+
+    symbol,
+
+    fmtPrice(
+      analysis.bestSupport
+    ),
+
+    fmtPrice(
+      analysis.entryLow
+    ),
+
+    fmtPrice(
+      analysis.entryHigh
+    ),
+
+    fmtPrice(
+      analysis.breakout
+    ),
+
+    fmtPrice(
+      analysis.tp1
+    )
+
+  ].join(":");
+
+}
+
+
+async function acquireNotificationLock(
+  deviceId,
+  symbol,
+  analysis,
+  testMode = false
+) {
+
+  /*
+    測試模式不做 6 小時去重。
+  */
+
+  if (
+    testMode
+  ) {
+
+    return true;
+
+  }
+
+
+  const fingerprint =
+    setupFingerprint(
+      symbol,
+      analysis
+    );
+
+
+  const safeFingerprint =
+    fingerprint.replace(
+      /[^a-zA-Z0-9:._-]/g,
+      "_"
+    );
+
+
+  const key =
+    `swing:push:sent:${deviceId}:${safeFingerprint}`;
+
+
+  const result =
+    await redis([
+      "SET",
+      key,
+      "1",
+      "NX",
+      "EX",
+      "21600"
+    ]);
+
+
+  return (
+    result ===
+    "OK"
+  );
+
+}
+
+
+/* =========================================================
+   PAYLOAD
+========================================================= */
+
+function buildPayload(
+  stock,
+  analysis
+) {
+
+  const title =
+    `📈 ${analysis.name} ${stock.symbol} 最佳進場區`;
+
+
+  const parts = [
+
+    `評分 ${analysis.score}/100`,
+
+    `現價 ${fmtPrice(analysis.price)}`,
+
+    `Entry ${fmtPrice(analysis.entryLow)}～${fmtPrice(analysis.entryHigh)}`,
+
+    `SL ${fmtPrice(analysis.sl)}`,
+
+    `突破 ${fmtPrice(analysis.breakout)}`,
+
+    `TP1 ${fmtPrice(analysis.tp1)}`,
+
+    `${analysis.rr1.toFixed(2)}R`
+
+  ];
 
 
   if (
-    Number.isFinite(
-      Number(
-        signal.tp1
-      )
-    )
+    analysis.tp2
   ) {
 
-    targets.push(
-      `TP1 ${formatPrice(signal.tp1)}`
+    parts.push(
+      `TP2 ${fmtPrice(analysis.tp2)}`
     );
+
   }
 
 
   if (
-    Number.isFinite(
-      Number(
-        signal.tp2
-      )
-    )
+    analysis.tp3
   ) {
 
-    targets.push(
-      `TP2 ${formatPrice(signal.tp2)}`
+    parts.push(
+      `TP3 ${fmtPrice(analysis.tp3)}`
     );
+
   }
 
 
-  if (
-    Number.isFinite(
-      Number(
-        signal.tp3
-      )
-    )
-  ) {
+  return JSON.stringify({
 
-    targets.push(
-      `TP3 ${formatPrice(signal.tp3)}`
-    );
-  }
-
-
-  const mode =
-    signal.planType ===
-    "BREAKOUT"
-
-      ? "突破進場"
-
-      : "回檔進場";
-
-
-  return {
-
-    title:
-      `📈 ${signal.name} ${signal.symbol}｜${mode}｜${signal.score} 分`,
+    title,
 
     body:
-      [
-        `現價 ${formatPrice(signal.price)}`,
-
-        signal.planType ===
-        "BREAKOUT"
-          ? `突破位 ${formatPrice(signal.breakout)}`
-          : `支撐 ${formatPrice(signal.support1)}`,
-
-        `進場 ${entry}`,
-
-        `SL ${formatPrice(signal.sl)}`,
-
-        targets.join("｜"),
-
-        `RR ${Number(signal.rr1).toFixed(2)}R`,
-
-        `完整度 ${signal.completeness}%`,
-
-        `技術 ${signal.technical?.score ?? "--"}｜量價 ${signal.volume?.score ?? "--"}｜法人 ${signal.institutional?.score ?? "--"}｜基本 ${signal.fundamental?.score ?? "--"}｜新聞 ${signal.news?.score ?? "--"}`
-      ]
-        .filter(Boolean)
-        .join("\n"),
+      parts.join("｜"),
 
     tag:
-      `entry-${signal.symbol}-${signal.planType}`,
+      `entry-${stock.symbol}`,
 
     url:
-      `/?symbol=${encodeURIComponent(signal.symbol)}`
-  };
-}
+      `/?symbol=${encodeURIComponent(stock.symbol)}`,
 
+    symbol:
+      stock.symbol
 
-async function sendPush(
-  device,
-  signal
-) {
+  });
 
-  const subscription =
-    device.subscription ||
-    device.pushSubscription;
-
-
-  if (
-    !subscription?.endpoint
-  ) {
-
-    throw new Error(
-      "Push Subscription 格式錯誤"
-    );
-  }
-
-
-  return webpush
-    .sendNotification(
-      subscription,
-
-      JSON.stringify(
-        buildNotification(
-          signal
-        )
-      ),
-
-      {
-        TTL: 120
-      }
-    );
 }
 
 
 /* =========================================================
-   Handler
+   SEND PUSH
+========================================================= */
+
+async function sendPush(
+  deviceId,
+  device,
+  stock,
+  analysis,
+  testMode = false
+) {
+
+  if (
+    !device?.subscription
+  ) {
+
+    return {
+
+      ok:
+        false,
+
+      reason:
+        "device 沒有 subscription"
+
+    };
+
+  }
+
+
+  const locked =
+    await acquireNotificationLock(
+      deviceId,
+      stock.symbol,
+      analysis,
+      testMode
+    );
+
+
+  if (
+    !locked
+  ) {
+
+    return {
+
+      ok:
+        false,
+
+      duplicate:
+        true,
+
+      reason:
+        "同一訊號已通知"
+
+    };
+
+  }
+
+
+  const payload =
+    buildPayload(
+      stock,
+      analysis
+    );
+
+
+  try {
+
+    await webpush
+      .sendNotification(
+        device.subscription,
+        payload,
+        {
+          TTL:
+            120,
+
+          urgency:
+            "high"
+        }
+      );
+
+
+    return {
+      ok:
+        true
+    };
+
+  }
+  catch (error) {
+
+    const status =
+      error?.statusCode
+      ||
+      error?.status;
+
+
+    if (
+      status === 404
+      ||
+      status === 410
+    ) {
+
+      await removeDevice(
+        deviceId
+      );
+
+    }
+
+
+    throw error;
+
+  }
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+function authorized(
+  req,
+  testMode
+) {
+
+  const secret =
+    process.env.CRON_SECRET;
+
+
+  if (!secret) {
+
+    return false;
+
+  }
+
+
+  const auth =
+    req.headers.authorization
+    ||
+    "";
+
+
+  /*
+    monitor-test bridge
+    一樣會帶 Authorization。
+
+    正式 cron 也使用同一組 CRON_SECRET。
+  */
+
+  return (
+    auth ===
+    `Bearer ${secret}`
+  );
+
+}
+
+
+/* =========================================================
+   MAIN
 ========================================================= */
 
 module.exports =
@@ -3524,862 +3618,693 @@ async function handler(
   res
 ) {
 
-  res.setHeader(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate"
-  );
+  if (
+    req.method !==
+    "GET"
+  ) {
+
+    res.setHeader(
+      "Allow",
+      "GET"
+    );
+
+
+    return send(
+      res,
+      405,
+      {
+        ok:
+          false,
+
+        error:
+          "Method Not Allowed"
+      }
+    );
+
+  }
 
 
   const testMode =
     getTestMode(req);
 
 
-  const internalTest =
-    String(
-      req.headers?.[
-        "x-monitor-test"
-      ] || ""
-    ) === "1";
-
-
   if (
-    process.env.CRON_SECRET &&
-    !(
-      testMode &&
-      !internalTest
+    !authorized(
+      req,
+      testMode
     )
   ) {
 
-    const expected =
-      `Bearer ${process.env.CRON_SECRET}`;
+    return send(
+      res,
+      401,
+      {
+        ok:
+          false,
 
+        error:
+          "Unauthorized"
+      }
+    );
 
-    if (
-      req.headers.authorization !==
-      expected
-    ) {
-
-      return res
-        .status(401)
-        .json({
-          ok: false,
-
-          engine:
-            "Stock Analysis Monitor 7.0",
-
-          testMode,
-
-          internalTest,
-
-          error:
-            "Unauthorized"
-        });
-    }
   }
 
 
   try {
 
-    /* =====================================================
-       VAPID
-    ===================================================== */
-
-    if (
-      !VAPID_PUBLIC_KEY ||
-      !VAPID_PRIVATE_KEY ||
-      !VAPID_SUBJECT
-    ) {
-
-      throw new Error(
-        "VAPID 環境變數尚未設定"
-      );
-    }
-
-
-    webpush.setVapidDetails(
-      VAPID_SUBJECT,
-      VAPID_PUBLIC_KEY,
-      VAPID_PRIVATE_KEY
-    );
+    configurePush();
 
 
     /* =====================================================
-       正式模式 08:55～13:40
-       Test Mode 跳過
+       MARKET TIME
+
+       正式模式：
+       08:55～13:40
+
+       test=1：
+       可跳過時間限制。
     ===================================================== */
 
     if (
-      !testMode &&
-      !isMarketTime()
+      !testMode
+      &&
+      !isMarketMonitoringTime()
     ) {
 
-      return res
-        .status(200)
-        .json({
-          ok: true,
+      return send(
+        res,
+        200,
+        {
+
+          ok:
+            true,
 
           engine:
-            "Stock Analysis Monitor 7.0",
+            "Stock Analysis Monitor 8.0",
 
           skipped:
             true,
 
-          testMode:
-            false,
-
-          marketTime:
-            false,
-
           reason:
-            "非台股監控時段"
-        });
+            "目前非台股監控時段",
+
+          marketWindow:
+            "Asia/Taipei 08:55-13:40"
+
+        }
+      );
+
     }
 
 
     /* =====================================================
-       裝置
+       DEVICES
     ===================================================== */
 
     const deviceIds =
-      await redis([
-        "SMEMBERS",
-        "swing:push:devices"
-      ]) || [];
+      await getDeviceIds();
 
 
-    const devices = [];
-
-
-    for (
-      const deviceId of
-      deviceIds
+    if (
+      !deviceIds.length
     ) {
 
-      const raw =
-        await redis([
-          "GET",
-          `swing:push:device:${deviceId}`
-        ]);
+      return send(
+        res,
+        200,
+        {
 
+          ok:
+            true,
 
-      if (!raw) {
+          engine:
+            "Stock Analysis Monitor 8.0",
 
-        await redis([
-          "SREM",
-          "swing:push:devices",
-          deviceId
-        ]);
+          skipped:
+            true,
 
-        continue;
-      }
+          reason:
+            "目前沒有 Push 訂閱裝置"
 
-
-      try {
-
-        const device =
-          typeof raw ===
-            "string"
-            ? JSON.parse(raw)
-            : raw;
-
-
-        const subscription =
-          device.subscription ||
-          device.pushSubscription;
-
-
-        if (
-          subscription?.endpoint &&
-          Array.isArray(
-            device.symbols
-          ) &&
-          device.symbols.length
-        ) {
-
-          devices.push({
-            ...device,
-
-            deviceId:
-              device.deviceId ||
-              deviceId,
-
-            subscription,
-
-            symbols:
-              unique(
-                device.symbols
-              )
-          });
         }
+      );
 
-      } catch (error) {
-
-        console.error(
-          "device parse error:",
-          deviceId,
-          error
-        );
-      }
     }
 
 
-    /* =====================================================
-       沒裝置
-    ===================================================== */
+    const devicesRaw =
+      await mapLimit(
+        deviceIds,
+        5,
+        async deviceId => ({
+
+          deviceId,
+
+          device:
+            await getDevice(
+              deviceId
+            )
+
+        })
+      );
+
+
+    const devices =
+      devicesRaw.filter(
+        x =>
+          x
+          &&
+          !x.error
+          &&
+          x.device
+          &&
+          x.device.subscription
+      );
+
 
     if (
       !devices.length
     ) {
 
-      return res
-        .status(200)
-        .json({
-          ok: true,
+      return send(
+        res,
+        200,
+        {
+
+          ok:
+            true,
 
           engine:
-            "Stock Analysis Monitor 7.0",
+            "Stock Analysis Monitor 8.0",
 
-          testMode,
+          skipped:
+            true,
 
-          marketTime:
-            isMarketTime(),
+          reason:
+            "沒有有效 Push subscription"
 
-          devices: 0,
-          stocks: 0,
-          signals: 0,
-          sent: 0,
-          failed: 0,
-          removed: 0,
-          deduped: 0,
+        }
+      );
 
-          checkedStocks:
-            testMode
-              ? []
-              : undefined,
-
-          pushResults:
-            testMode
-              ? []
-              : undefined
-        });
     }
 
 
     /* =====================================================
-       所有裝置股票合併
+       SYMBOLS
+
+       仍然只有：
+       DEFAULT 12 + 使用者自選
+
+       不把全市場 Radar 全塞進 Push。
     ===================================================== */
 
-    const symbols =
-      unique(
-        devices.flatMap(
-          d =>
-            d.symbols
+    const allSymbols =
+      [
+        ...new Set(
+          devices.flatMap(
+            x =>
+              symbolsForDevice(
+                x.device
+              )
+          )
         )
-      );
-
-
-    const host =
-      req.headers[
-        "x-forwarded-host"
-      ] ||
-      req.headers.host;
-
-
-    const proto =
-      req.headers[
-        "x-forwarded-proto"
-      ] ||
-      "https";
+      ];
 
 
     const origin =
-      `${proto}://${host}`;
-
-
-    const signalMap =
-      new Map();
-
-
-    const checkedStocks =
-      [];
+      getOrigin(req);
 
 
     /* =====================================================
-       每批 3 檔
+       STOCK ANALYSIS
+
+       第一階段：
+       先抓 Stock。
+
+       只有初步條件不差的股票，
+       才抓新聞。
     ===================================================== */
 
-    const batchSize = 3;
+    const stockResults =
+      await mapLimit(
+        allSymbols,
+        3,
+        async symbol => {
+
+          const data =
+            await fetchStock(
+              origin,
+              symbol
+            );
+
+
+          /*
+            先不帶新聞分析一次。
+          */
+
+          const preliminary =
+            analyzeStock(
+              data,
+              null
+            );
+
+
+          /*
+            新聞不是每一檔都硬抓。
+
+            初步：
+            技術 >= 10
+            量價 >= 8
+            才補新聞。
+          */
+
+          let newsData =
+            null;
+
+
+          if (
+            preliminary.technical >=
+            10
+            &&
+            preliminary.volumeScore >=
+            8
+          ) {
+
+            newsData =
+              await fetchNews(
+                origin,
+                symbol
+              );
+
+          }
+
+
+          const analysis =
+            analyzeStock(
+              data,
+              newsData
+            );
+
+
+          return {
+
+            symbol,
+            data,
+            analysis
+
+          };
+
+        }
+      );
+
+
+    const stockMap =
+      new Map();
 
 
     for (
       let i = 0;
-      i < symbols.length;
-      i += batchSize
+      i < allSymbols.length;
+      i++
     ) {
 
-      const batch =
-        symbols.slice(
-          i,
-          i + batchSize
-        );
+      const result =
+        stockResults[i];
 
 
-      const results =
-        await Promise.all(
-          batch.map(
-            symbol =>
-              fetchStock(
-                origin,
-                symbol
-              )
-          )
-        );
-
-
-      for (
-        let j = 0;
-        j < results.length;
-        j++
+      if (
+        result
+        &&
+        !result.error
       ) {
 
-        const symbol =
-          String(
-            batch[j]
-          );
+        stockMap.set(
+          allSymbols[i],
+          result
+        );
 
-
-        const data =
-          results[j];
-
-
-        if (!data) {
-
-          checkedStocks.push({
-            symbol,
-            api: false,
-            signal: false,
-            reason:
-              "股票資料取得失敗"
-          });
-
-          continue;
-        }
-
-
-        /* =================================================
-           第一階段：不抓新聞
-        ================================================= */
-
-        const preliminary =
-          analyzeData(
-            data,
-            null
-          );
-
-
-        if (
-          !preliminary
-        ) {
-
-          checkedStocks.push({
-            symbol,
-
-            name:
-              data.name ||
-              "",
-
-            api:
-              true,
-
-            signal:
-              false,
-
-            reason:
-              "歷史資料不足"
-          });
-
-          continue;
-        }
-
-
-        /* =================================================
-           候選才抓新聞
-        ================================================= */
-
-        let newsData =
-          null;
-
-
-        if (
-          shouldFetchNews(
-            preliminary
-          )
-        ) {
-
-          newsData =
-            await fetchNews(
-              origin,
-              symbol
-            );
-        }
-
-
-        /* =================================================
-           最終分析
-        ================================================= */
-
-        const analysis =
-          analyzeData(
-            data,
-            newsData
-          );
-
-
-        const result =
-          makeSignal(
-            analysis
-          );
-
-
-        const signal =
-          result.signal;
-
-
-        checkedStocks.push({
-          symbol,
-
-          name:
-            analysis?.name ||
-            data.name ||
-            "",
-
-          api:
-            true,
-
-          price:
-            analysis?.price ??
-            null,
-
-          score:
-            analysis?.score ??
-            null,
-
-          completeness:
-            analysis?.completeness ??
-            null,
-
-          classification:
-            analysis?.classification ??
-            null,
-
-          technical:
-            analysis?.technical?.score ??
-            null,
-
-          volume:
-            analysis?.volume?.score ??
-            null,
-
-          institutional:
-            analysis?.institutional?.score ??
-            null,
-
-          fundamental:
-            analysis?.fundamental?.score ??
-            null,
-
-          news:
-            analysis?.news?.score ??
-            null,
-
-          planType:
-            analysis?.planType ??
-            "WAIT",
-
-          support1:
-            analysis?.support1 ??
-            null,
-
-          support2:
-            analysis?.support2 ??
-            null,
-
-          breakout:
-            analysis?.breakout ??
-            null,
-
-          supportDistance:
-            analysis?.supportDistance ??
-            null,
-
-          breakoutDistance:
-            analysis?.breakoutDistance ??
-            null,
-
-          entryReady:
-            analysis?.entryReady ??
-            false,
-
-          entryLow:
-            analysis?.entryLow ??
-            null,
-
-          entryHigh:
-            analysis?.entryHigh ??
-            null,
-
-          sl:
-            analysis?.sl ??
-            null,
-
-          tp1:
-            analysis?.tp1 ??
-            null,
-
-          tp2:
-            analysis?.tp2 ??
-            null,
-
-          tp3:
-            analysis?.tp3 ??
-            null,
-
-          rr1:
-            analysis?.rr1 ??
-            null,
-
-          signal:
-            !!signal,
-
-          reason:
-            result.reason
-        });
-
-
-        if (signal) {
-
-          signalMap.set(
-            symbol,
-            signal
-          );
-        }
       }
+
     }
 
 
     /* =====================================================
-       Push
+       PUSH
     ===================================================== */
 
-    let sent = 0;
-    let failed = 0;
-    let removed = 0;
-    let deduped = 0;
+    let eligibleCount = 0;
+    let pushSent = 0;
+    let duplicateCount = 0;
+    let pushErrors = 0;
 
 
-    const pushResults = [];
+    const signals = [];
 
-    const deadDevices =
-      new Set();
 
+    const checkedStocks = [];
+
+
+    /*
+      測試模式時，
+      回傳分析結果，
+      方便直接看 Monitor 到底算了什麼。
+    */
 
     for (
-      const device of
-      devices
+      const symbol
+      of allSymbols
     ) {
 
-      if (
-        deadDevices.has(
-          device.deviceId
-        )
-      ) {
+      const stock =
+        stockMap.get(
+          symbol
+        );
+
+
+      if (!stock) {
+
+        checkedStocks.push({
+
+          symbol,
+
+          ok:
+            false,
+
+          reason:
+            "股票資料取得失敗"
+
+        });
+
         continue;
+
       }
 
 
+      const a =
+        stock.analysis;
+
+
+      checkedStocks.push({
+
+        symbol,
+
+        name:
+          a.name,
+
+        price:
+          a.price,
+
+        score:
+          a.score,
+
+        completeness:
+          a.completeness,
+
+        technical:
+          a.technical,
+
+        volumeScore:
+          a.volumeScore,
+
+        chipScore:
+          a.chipScore,
+
+        fundScore:
+          a.fundScore,
+
+        newsScore:
+          a.newsScore,
+
+        planType:
+          a.planType,
+
+        support1:
+          a.support1,
+
+        support2:
+          a.support2,
+
+        bestSupport:
+          a.bestSupport,
+
+        entryLow:
+          a.entryLow,
+
+        entryHigh:
+          a.entryHigh,
+
+        entryReady:
+          a.entryReady,
+
+        sl:
+          a.sl,
+
+        breakout:
+          a.breakout,
+
+        breakoutState:
+          a.breakoutState,
+
+        tp1:
+          a.tp1,
+
+        tp2:
+          a.tp2,
+
+        tp3:
+          a.tp3,
+
+        rr1:
+          a.rr1,
+
+        riskPct:
+          a.riskPct,
+
+        eligible:
+          a.eligible,
+
+        reason:
+          a.reason
+
+      });
+
+    }
+
+
+    for (
+      const item
+      of devices
+    ) {
+
+      const symbols =
+        symbolsForDevice(
+          item.device
+        );
+
+
       for (
-        const rawSymbol of
-        device.symbols
+        const symbol
+        of symbols
       ) {
 
-        if (
-          deadDevices.has(
-            device.deviceId
-          )
-        ) {
-          break;
-        }
-
-
-        const symbol =
-          String(
-            rawSymbol
-          );
-
-
-        const signal =
-          signalMap.get(
+        const stock =
+          stockMap.get(
             symbol
           );
 
 
-        if (!signal) {
+        if (!stock) {
           continue;
         }
 
 
-        let dedupeKey =
-          null;
+        const analysis =
+          stock.analysis;
 
-
-        /*
-          Test：
-          不防重複
-
-          正式：
-          6 小時同 Setup 防重複
-        */
 
         if (
-          !testMode
+          !analysis?.eligible
         ) {
 
-          dedupeKey =
-            `swing:push:sent:${device.deviceId}:${signal.fingerprint}`;
+          continue;
 
-
-          const acquired =
-            await redis([
-              "SET",
-              dedupeKey,
-              "1",
-              "NX",
-              "EX",
-              String(
-                DEDUPE_SECONDS
-              )
-            ]);
-
-
-          if (
-            acquired !==
-            "OK"
-          ) {
-
-            deduped++;
-
-            continue;
-          }
         }
+
+
+        eligibleCount++;
+
+
+        signals.push({
+
+          symbol,
+
+          name:
+            analysis.name,
+
+          score:
+            analysis.score,
+
+          price:
+            analysis.price,
+
+          bestSupport:
+            analysis.bestSupport,
+
+          entryLow:
+            analysis.entryLow,
+
+          entryHigh:
+            analysis.entryHigh,
+
+          sl:
+            analysis.sl,
+
+          breakout:
+            analysis.breakout,
+
+          tp1:
+            analysis.tp1,
+
+          tp2:
+            analysis.tp2,
+
+          tp3:
+            analysis.tp3,
+
+          rr1:
+            analysis.rr1
+
+        });
 
 
         try {
 
-          const response =
+          const result =
             await sendPush(
-              device,
-              signal
+              item.deviceId,
+              item.device,
+              {
+                ...stock.data,
+                symbol
+              },
+              analysis,
+              testMode
             );
-
-
-          sent++;
-
-
-          pushResults.push({
-            deviceId:
-              device.deviceId,
-
-            symbol,
-
-            planType:
-              signal.planType,
-
-            ok: true,
-
-            statusCode:
-              response?.statusCode ||
-              201
-          });
-
-
-        } catch (error) {
-
-          console.error(
-            "push error:",
-            device.deviceId,
-            symbol,
-            error
-          );
-
-
-          const statusCode =
-            error?.statusCode ||
-            null;
-
-
-          const body =
-            typeof error?.body ===
-              "string"
-              ? error.body
-              : JSON.stringify(
-                  error?.body ||
-                  ""
-                );
-
-
-          const expired =
-            statusCode === 404 ||
-            statusCode === 410;
-
-
-          const vapidMismatch =
-            statusCode === 400 &&
-            body.includes(
-              "VapidPkHashMismatch"
-            );
-
-
-          let deleted =
-            false;
 
 
           if (
-            expired ||
-            vapidMismatch
+            result.ok
           ) {
 
-            deleted =
-              await deleteDevice(
-                device.deviceId
-              );
+            pushSent++;
 
+          }
+          else if (
+            result.duplicate
+          ) {
 
-            if (deleted) {
+            duplicateCount++;
 
-              removed++;
-
-              deadDevices.add(
-                device.deviceId
-              );
-            }
-
-          } else {
-
-            failed++;
-
-
-            if (
-              dedupeKey
-            ) {
-
-              try {
-
-                await redis([
-                  "DEL",
-                  dedupeKey
-                ]);
-
-              } catch (_) {}
-            }
           }
 
-
-          pushResults.push({
-            deviceId:
-              device.deviceId,
-
-            symbol,
-
-            planType:
-              signal.planType,
-
-            ok: false,
-
-            statusCode,
-
-            message:
-              error?.message ||
-              "Push 發送失敗",
-
-            body,
-
-            deleted
-          });
         }
+        catch (error) {
+
+          pushErrors++;
+
+
+          console.error(
+            `push ${symbol} error:`,
+            error?.message ||
+            error
+          );
+
+        }
+
       }
+
     }
 
 
     /* =====================================================
-       RESULT
+       FAILED STOCKS
     ===================================================== */
 
-    return res
-      .status(200)
-      .json({
-        ok: true,
+    const failedStocks =
+      stockResults
+        .map(
+          (x, i) =>
+            x?.error
+              ?
+              {
+
+                symbol:
+                  allSymbols[i],
+
+                error:
+                  x.error
+
+              }
+              :
+              null
+        )
+        .filter(Boolean);
+
+
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
+
+    return send(
+      res,
+      200,
+      {
+
+        ok:
+          true,
 
         engine:
-          "Stock Analysis Monitor 7.0",
-
-        tradePlan:
-          "PULLBACK / BREAKOUT / WAIT",
+          "Stock Analysis Monitor 8.0",
 
         strategy:
-          "技術＋量價＋法人＋基本面＋新聞",
+          "NEAR_PRICE_LIMIT_ENTRY",
 
-        pushThreshold:
-          MIN_SCORE,
-
-        minimumCompleteness:
-          MIN_COMPLETENESS,
-
-        minimumTechnical:
-          MIN_TECHNICAL,
-
-        minimumVolume:
-          MIN_VOLUME,
-
-        minimumRR:
-          MIN_RR,
+        marketWindow:
+          "Asia/Taipei 08:55-13:40",
 
         testMode,
 
-        internalTest,
-
-        marketTime:
-          isMarketTime(),
-
-        devices:
+        monitoredDevices:
           devices.length,
 
-        stocks:
-          symbols.length,
+        monitoredSymbols:
+          allSymbols.length,
 
-        signals:
-          signalMap.size,
+        eligibleSignals:
+          eligibleCount,
 
-        sent,
+        pushSent,
 
-        failed,
+        duplicateCount,
 
-        removed,
+        pushErrors,
 
-        deduped,
+        failedStocks,
+
+        signals,
 
         checkedStocks:
           testMode
-            ? checkedStocks
-            : undefined,
+            ?
+            checkedStocks
+            :
+            undefined
 
-        pushResults:
-          testMode
-            ? pushResults
-            : undefined
-      });
+      }
+    );
 
-
-  } catch (error) {
+  }
+  catch (error) {
 
     console.error(
       "monitor error:",
@@ -4387,19 +4312,24 @@ async function handler(
     );
 
 
-    return res
-      .status(500)
-      .json({
-        ok: false,
+    return send(
+      res,
+      500,
+      {
+
+        ok:
+          false,
 
         engine:
-          "Stock Analysis Monitor 7.0",
-
-        testMode,
+          "Stock Analysis Monitor 8.0",
 
         error:
           error?.message ||
-          "背景監控失敗"
-      });
+          "Monitor failed"
+
+      }
+    );
+
   }
+
 };
