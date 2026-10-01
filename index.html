@@ -413,7 +413,7 @@ margin-right:5px
 
 <div class="brand">
 波段分析
-<small>台股即時策略</small>
+<small>台股全市場策略雷達</small>
 </div>
 
 <button id="notify" class="icon" aria-label="進場通知">
@@ -463,12 +463,12 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 
 <div id="homeList">
 <div class="card loader">
-正在掃描策略...
+正在掃描全市場策略...
 </div>
 </div>
 
 <div class="note">
-7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點加 ATR 緩衝；TP 結合 SMC 壓力、風險報酬、ATR 與 Fibonacci 波段延伸。
+全市場雷達先掃描台股 Snapshot，再由候選池進行日 K 快篩與完整 8 條件／SMC 分析。7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點加 ATR 緩衝；TP 結合 SMC 壓力、風險報酬、ATR 與 Fibonacci 波段延伸。
 </div>
 
 </main>
@@ -491,6 +491,13 @@ const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
 const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
 
+/*
+  DEFAULT 現在只作為：
+  1. /api/radar 失敗時的備援
+  2. Push 原本的預設監控股票
+
+  首頁不再只掃這 12 檔。
+*/
 const DEFAULT=[
 '2330','2317','2454','2308','2382','3231',
 '2881','2882','2891','2886','2603','2615'
@@ -659,6 +666,7 @@ JSON.stringify([...new Set(a)])
 );
 
 syncPushSymbols();
+
 }
 
 
@@ -1231,12 +1239,6 @@ if(s1){
 entryLow=Math.max(0,s1.low);
 entryHigh=s1.high;
 
-/*
-  波段 SL：
-  SMC 結構低點下方
-  至少保留 0.70 ATR 或 0.8% 緩衝。
-*/
-
 const slBuffer=
 Math.max(
 A*.70,
@@ -1307,16 +1309,7 @@ tolerance;
 
 
 /* =========================================================
-   TP 系統
-
-   TP1：
-   >= 1.5R / 2 ATR
-
-   TP2：
-   >= 2.5R / 3.5 ATR / Fib 1.272
-
-   TP3：
-   >= 3.5R / 5 ATR / Fib 1.618
+   TP
 ========================================================= */
 
 let tp1=null;
@@ -1342,8 +1335,6 @@ entryMid-sl;
 
 if(risk>0){
 
-/* R 倍數 */
-
 const target15R=
 entryMid+
 risk*1.5;
@@ -1356,9 +1347,6 @@ const target35R=
 entryMid+
 risk*3.5;
 
-
-/* ATR 波段延伸 */
-
 const atrTP1=
 entryMid+
 A*2;
@@ -1370,9 +1358,6 @@ A*3.5;
 const atrTP3=
 entryMid+
 A*5;
-
-
-/* 最近有效 Swing Low */
 
 const swingLows=
 S.lows.filter(
@@ -1401,9 +1386,6 @@ candidate.value;
 }
 
 }
-
-
-/* 最近有效 Swing High */
 
 const swingHighs=
 S.highs.filter(
@@ -1437,9 +1419,6 @@ break;
 
 }
 
-
-/* Swing Range */
-
 let swingRange=
 swingHigh-
 swingLow;
@@ -1457,9 +1436,6 @@ risk*2
 
 }
 
-
-/* Fibonacci Extension */
-
 const fib1272=
 swingLow+
 swingRange*1.272;
@@ -1467,9 +1443,6 @@ swingRange*1.272;
 const fib1618=
 swingLow+
 swingRange*1.618;
-
-
-/* 所有 SMC 上方壓力 */
 
 const smcTargets=
 validP
@@ -1490,9 +1463,7 @@ a.price-b.price
 );
 
 
-/* =========================================================
-   TP1
-========================================================= */
+/* TP1 */
 
 const minTP1=
 Math.max(
@@ -1527,9 +1498,7 @@ tp1Source=
 }
 
 
-/* =========================================================
-   TP2
-========================================================= */
+/* TP2 */
 
 const minTP2=
 Math.max(
@@ -1578,9 +1547,7 @@ tp2Source=
 }
 
 
-/* =========================================================
-   TP3
-========================================================= */
+/* TP3 */
 
 const minTP3=
 Math.max(
@@ -1631,11 +1598,6 @@ tp3Source=
 }
 
 }
-
-
-/* =========================================================
-   回傳
-========================================================= */
 
 return {
 
@@ -2670,12 +2632,152 @@ catch{}
 
 
 /* =========================================================
-   雷達
+   全市場雷達
 ========================================================= */
 
 async function radar(){
 
-const symbols=
+let radarData=null;
+
+try{
+
+const r=
+await fetch(
+'/api/radar?t='+
+Date.now(),
+{
+cache:'no-store'
+}
+);
+
+let d;
+
+try{
+d=await r.json();
+}
+catch{
+throw Error('雷達資料格式錯誤');
+}
+
+if(
+!r.ok ||
+!d.ok
+){
+
+throw Error(
+d.error||
+'全市場雷達取得失敗'
+);
+
+}
+
+radarData=d;
+
+}
+catch(e){
+
+console.warn(
+'全市場雷達失敗，使用備援股票池',
+e
+);
+
+}
+
+
+/* =========================================================
+   取得後端全市場候選
+========================================================= */
+
+let marketSymbols=[];
+
+if(
+radarData &&
+Array.isArray(
+radarData.strategyReady
+)
+){
+
+marketSymbols.push(
+...radarData
+.strategyReady
+.map(
+x=>
+String(
+x.symbol||
+''
+).trim()
+)
+.filter(
+x=>
+/^\d{4,6}$/.test(x)
+)
+);
+
+}
+
+
+/*
+  strategyReady 不足時，
+  把一般 radar 名單一起補進來。
+*/
+
+if(
+radarData &&
+Array.isArray(
+radarData.radar
+)
+){
+
+marketSymbols.push(
+...radarData
+.radar
+.map(
+x=>
+String(
+x.symbol||
+''
+).trim()
+)
+.filter(
+x=>
+/^\d{4,6}$/.test(x)
+)
+);
+
+}
+
+
+/*
+  =========================================================
+  最終前端完整策略分析股票池
+
+  全市場候選
+  +
+  自選股
+
+  去除重複代號。
+=========================================================
+*/
+
+let symbols=
+[
+...new Set(
+[
+...marketSymbols,
+...watch()
+]
+)
+];
+
+
+/*
+  /api/radar 暫時失敗時，
+  才退回原本 12 檔 + 自選。
+*/
+
+if(!symbols.length){
+
+symbols=
 [
 ...new Set(
 [
@@ -2685,19 +2787,86 @@ const symbols=
 )
 ];
 
+}
+
+
+/*
+  清掉上一輪不是這次候選的市場股票，
+  但保留自選與目前開啟的個股。
+*/
+
+const keep=
+new Set(
+[
+...symbols,
+...watch(),
+current
+].filter(Boolean)
+);
+
+for(
+const symbol
+of Object.keys(cache)
+){
+
+if(
+!keep.has(symbol)
+){
+
+delete cache[symbol];
+
+}
+
+}
+
+
+/* =========================================================
+   掃描提示
+========================================================= */
+
+$('homeList').innerHTML=
+`
+<div class="card loader">
+正在分析 ${symbols.length} 檔全市場候選...
+</div>
+`;
+
+
+/* =========================================================
+   分批完整分析
+
+   每批 6 檔，避免一次大量呼叫 /api/stock。
+========================================================= */
+
+const BATCH_SIZE=6;
+
+let completed=0;
+
+for(
+let i=0;
+i<symbols.length;
+i+=BATCH_SIZE
+){
+
+const batch=
+symbols.slice(
+i,
+i+BATCH_SIZE
+);
+
 const results=
 await Promise.allSettled(
-symbols.map(
-async s=>{
+batch.map(
+async symbol=>{
 
 const d=
-await getStock(s);
+await getStock(symbol);
 
 const a=
 analyzeData(d);
 
 return {
-symbol:s,
+symbol,
 data:a
 };
 
@@ -2705,10 +2874,14 @@ data:a
 )
 );
 
-for(const result of results){
+for(
+const result
+of results
+){
 
 if(
-result.status==='fulfilled'
+result.status===
+'fulfilled'
 ){
 
 cache[
@@ -2720,7 +2893,67 @@ result.value.data;
 
 }
 
+completed+=batch.length;
+
+
+/*
+  每完成一批就更新畫面，
+  不需要等 80 檔全部分析完。
+*/
+
 renderHome();
+
+}
+
+
+/* =========================================================
+   完成
+========================================================= */
+
+renderHome();
+
+console.log(
+'全市場雷達完成',
+{
+
+snapshotScanned:
+radarData?.scanned||0,
+
+candidateCount:
+radarData?.strategyCandidateCount||0,
+
+dailyScanned:
+radarData?.strategyScannedCount||0,
+
+backendReady:
+radarData?.strategyReadyCount||0,
+
+frontendAnalyzed:
+Object.keys(cache).length,
+
+strong:
+Object.values(cache)
+.filter(
+x=>x.passed>=7
+)
+.length,
+
+signal:
+Object.values(cache)
+.filter(
+x=>x.passed===6
+)
+.length,
+
+near:
+Object.values(cache)
+.filter(
+x=>x.passed===5
+)
+.length
+
+}
+);
 
 }
 
@@ -3228,6 +3461,14 @@ renderHome();
 /* =========================================================
    Web Push
 ========================================================= */
+
+/*
+  Push 暫時維持：
+  原本 12 檔 + 我的自選。
+
+  不把全市場 80 檔直接塞進每一台裝置，
+  避免目前已正常的 monitor / Push 負載突然暴增。
+*/
 
 function pushSymbols(){
 
@@ -3827,7 +4068,7 @@ hideSuggestions();
 $('homeList').innerHTML=
 `
 <div class="card loader">
-正在掃描策略...
+正在啟動全市場雷達...
 </div>
 `;
 
@@ -3869,7 +4110,7 @@ await radar();
 catch(e){
 
 console.warn(
-'第一次雷達掃描失敗',
+'第一次全市場雷達掃描失敗',
 e
 );
 
@@ -3880,6 +4121,15 @@ renderHome();
 clearInterval(
 radarTimer
 );
+
+
+/*
+  全市場版改成每 5 分鐘重新掃描。
+
+  原本 60 秒是給 12 檔使用，
+  現在候選池可能有數十檔，
+  不再每分鐘重跑。
+*/
 
 radarTimer=
 setInterval(
@@ -3893,14 +4143,14 @@ await radar();
 catch(e){
 
 console.warn(
-'雷達更新失敗',
+'全市場雷達更新失敗',
 e
 );
 
 }
 
 },
-60000
+300000
 );
 
 try{
