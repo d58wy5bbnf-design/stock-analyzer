@@ -1,15 +1,3 @@
-import { Redis } from '@upstash/redis';
-
-const redis = new Redis({
-  url:
-    process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.KV_REST_API_URL,
-
-  token:
-    process.env.UPSTASH_REDIS_REST_TOKEN ||
-    process.env.KV_REST_API_TOKEN
-});
-
 function cleanDeviceId(value) {
   return String(value || '')
     .trim()
@@ -29,6 +17,82 @@ function cleanSymbols(value) {
   ].slice(0, 200);
 }
 
+
+/* =========================================================
+   Redis REST
+========================================================= */
+
+function getRedisConfig() {
+
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL;
+
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN;
+
+  if (!url || !token) {
+    throw new Error('缺少 Upstash Redis 環境變數');
+  }
+
+  return {
+    url: url.replace(/\/+$/, ''),
+    token
+  };
+}
+
+
+async function redisCommand(command) {
+
+  const { url, token } =
+    getRedisConfig();
+
+  const r =
+    await fetch(url, {
+      method: 'POST',
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+
+      body:
+        JSON.stringify(command)
+    });
+
+  let data;
+
+  try {
+    data = await r.json();
+  }
+  catch {
+    throw new Error(
+      'Redis 回傳格式錯誤'
+    );
+  }
+
+  if (!r.ok) {
+    throw new Error(
+      data?.error ||
+      `Redis HTTP ${r.status}`
+    );
+  }
+
+  if (data?.error) {
+    throw new Error(
+      data.error
+    );
+  }
+
+  return data?.result;
+}
+
+
+/* =========================================================
+   API
+========================================================= */
+
 export default async function handler(req, res) {
 
   res.setHeader(
@@ -36,45 +100,59 @@ export default async function handler(req, res) {
     'no-store, no-cache, must-revalidate'
   );
 
+  res.setHeader(
+    'Content-Type',
+    'application/json; charset=utf-8'
+  );
+
   try {
 
-    /* ==============================
-       GET：取得雲端自選
-    ============================== */
+    /* =====================================================
+       GET
+       取得自選
+    ===================================================== */
 
     if (req.method === 'GET') {
 
       const deviceId =
-        cleanDeviceId(req.query?.deviceId);
+        cleanDeviceId(
+          req.query?.deviceId
+        );
 
       if (!deviceId) {
+
         return res.status(400).json({
           ok: false,
           error: '缺少 deviceId'
         });
+
       }
 
       const key =
         `watchlist:${deviceId}`;
 
       const saved =
-        await redis.get(key);
+        await redisCommand([
+          'GET',
+          key
+        ]);
 
       let symbols = [];
 
-      if (Array.isArray(saved)) {
-        symbols = cleanSymbols(saved);
-      }
-      else if (typeof saved === 'string') {
+      if (saved) {
 
         try {
+
           symbols =
             cleanSymbols(
               JSON.parse(saved)
             );
+
         }
         catch {
+
           symbols = [];
+
         }
 
       }
@@ -82,15 +160,17 @@ export default async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         deviceId,
-        symbols
+        symbols,
+        count: symbols.length
       });
 
     }
 
 
-    /* ==============================
-       POST：儲存雲端自選
-    ============================== */
+    /* =====================================================
+       POST
+       儲存自選
+    ===================================================== */
 
     if (req.method === 'POST') {
 
@@ -105,19 +185,22 @@ export default async function handler(req, res) {
         );
 
       if (!deviceId) {
+
         return res.status(400).json({
           ok: false,
           error: '缺少 deviceId'
         });
+
       }
 
       const key =
         `watchlist:${deviceId}`;
 
-      await redis.set(
+      await redisCommand([
+        'SET',
         key,
-        symbols
-      );
+        JSON.stringify(symbols)
+      ]);
 
       return res.status(200).json({
         ok: true,
@@ -128,6 +211,10 @@ export default async function handler(req, res) {
 
     }
 
+
+    /* =====================================================
+       其他 Method
+    ===================================================== */
 
     res.setHeader(
       'Allow',
@@ -143,7 +230,7 @@ export default async function handler(req, res) {
   catch (error) {
 
     console.error(
-      'watchlist api error',
+      'watchlist error:',
       error
     );
 
@@ -151,7 +238,7 @@ export default async function handler(req, res) {
       ok: false,
       error:
         error?.message ||
-        '自選同步失敗'
+        '雲端自選同步失敗'
     });
 
   }
