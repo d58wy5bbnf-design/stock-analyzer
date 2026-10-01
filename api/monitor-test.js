@@ -1,200 +1,251 @@
 /* =========================================================
    api/monitor-test.js
-   Monitor 7.1 Force Test Bridge
+   Monitor 8.0 Direct Force Test
 
    用途：
    - Safari 直接開啟即可測試
+   - 直接執行 monitor.js
+   - 強制 x-monitor-test = 1
+   - 強制 test = 1
    - 自動帶入 CRON_SECRET
-   - 強制啟用 test=1
-   - 不受 08:55～13:40 限制
+   - 凌晨也可以測試
    - 不修改正式 Cron
-   - 正式 /api/monitor 仍維持 CRON_SECRET 保護
 ========================================================= */
 
-module.exports = async function handler(req, res) {
+const monitor =
+  require("./monitor.js");
+
+
+module.exports =
+async function handler(
+  req,
+  res
+) {
 
   res.setHeader(
     "Cache-Control",
     "no-store, no-cache, must-revalidate"
   );
 
+
   try {
 
     /* =====================================================
-       取得目前網站網址
-    ===================================================== */
-
-    const host =
-      req.headers["x-forwarded-host"] ||
-      req.headers.host;
-
-    const proto =
-      req.headers["x-forwarded-proto"] ||
-      "https";
-
-    if (!host) {
-
-      return res.status(500).json({
-        ok: false,
-        engine: "Monitor Test Bridge 1.1",
-        error: "無法取得網站 Host"
-      });
-    }
-
-    const origin =
-      `${proto}://${host}`;
-
-
-    /* =====================================================
-       CRON_SECRET
+       CRON SECRET
     ===================================================== */
 
     const secret =
       process.env.CRON_SECRET;
 
+
     if (!secret) {
 
-      return res.status(500).json({
-        ok: false,
-        engine: "Monitor Test Bridge 1.1",
-        error: "CRON_SECRET 尚未設定"
-      });
+      return res
+        .status(500)
+        .json({
+
+          ok:
+            false,
+
+          bridgeEngine:
+            "Monitor Test Bridge 8.0",
+
+          error:
+            "CRON_SECRET 尚未設定"
+
+        });
+
     }
 
 
     /* =====================================================
-       Timeout
+       保存原始 request
     ===================================================== */
 
-    const controller =
-      new AbortController();
+    const originalUrl =
+      req.url;
 
-    const timer =
-      setTimeout(
-        () => {
-          controller.abort();
-        },
-        290000
-      );
 
+    const originalQuery =
+      req.query;
+
+
+    const originalAuthorization =
+      req.headers.authorization;
+
+
+    const originalTestHeader =
+      req.headers["x-monitor-test"];
+
+
+    /* =====================================================
+       強制 TEST MODE
+    ===================================================== */
+
+    req.query = {
+
+      ...(req.query || {}),
+
+      test:
+        "1"
+
+    };
+
+
+    /*
+      monitor.js 的 getTestMode()
+      會同時檢查：
+
+      x-monitor-test
+      query.test
+      URL ?test=1
+
+      三個全部強制設成 1。
+    */
+
+    req.headers.authorization =
+      `Bearer ${secret}`;
+
+
+    req.headers["x-monitor-test"] =
+      "1";
+
+
+    const separator =
+      String(req.url || "")
+        .includes("?")
+        ?
+        "&"
+        :
+        "?";
+
+
+    req.url =
+      `${req.url || "/api/monitor-test"}${separator}test=1&t=${Date.now()}`;
+
+
+    /* =====================================================
+       標記 Bridge
+    ===================================================== */
+
+    res.setHeader(
+      "X-Monitor-Test-Bridge",
+      "8.0"
+    );
+
+
+    /*
+      直接執行正式 monitor。
+
+      不再 fetch /api/monitor，
+      所以不會出現：
+
+      bridge forceTest = true
+      但 monitor testMode = false
+
+      的狀況。
+    */
 
     try {
 
-      /* ===================================================
-         ★ 重點
-         ★ 正式 monitor 加上 ?test=1
-         ★ 同時保留 Authorization
-      =================================================== */
+      return await monitor(
+        req,
+        res
+      );
 
-      const monitorUrl =
-        `${origin}/api/monitor?test=1&t=${Date.now()}`;
+    }
+    finally {
 
+      /*
+        還原 request。
+        雖然 Serverless request 通常只使用一次，
+        仍保持乾淨。
+      */
 
-      const response =
-        await fetch(
-          monitorUrl,
-          {
-            method: "GET",
-
-            headers: {
-
-              Authorization:
-                `Bearer ${secret}`,
-
-              "Cache-Control":
-                "no-cache",
-
-              "x-monitor-test":
-                "1"
-            },
-
-            cache:
-              "no-store",
-
-            signal:
-              controller.signal
-          }
-        );
+      req.url =
+        originalUrl;
 
 
-      /* ===================================================
-         讀取 Monitor 回傳
-      =================================================== */
+      req.query =
+        originalQuery;
 
-      const text =
-        await response.text();
 
-      let data;
+      if (
+        originalAuthorization ===
+        undefined
+      ) {
 
-      try {
+        delete req.headers.authorization;
 
-        data =
-          JSON.parse(text);
+      }
+      else {
 
-      } catch {
+        req.headers.authorization =
+          originalAuthorization;
 
-        data = {
-          raw: text
-        };
       }
 
 
-      /* ===================================================
-         回傳 Safari
-      =================================================== */
+      if (
+        originalTestHeader ===
+        undefined
+      ) {
 
-      return res
-        .status(response.status)
-        .json({
+        delete req.headers["x-monitor-test"];
 
-          bridgeOk:
-            response.ok,
+      }
+      else {
 
-          bridgeEngine:
-            "Monitor Test Bridge 1.1",
+        req.headers["x-monitor-test"] =
+          originalTestHeader;
 
-          forceTest:
-            true,
+      }
 
-          monitorStatus:
-            response.status,
-
-          monitorUrl:
-            "/api/monitor?test=1",
-
-          result:
-            data
-        });
-
-
-    } finally {
-
-      clearTimeout(timer);
     }
 
 
-  } catch (error) {
+  }
+  catch (error) {
 
     console.error(
-      "monitor-test bridge error:",
+      "Monitor Test Bridge 8.0 error:",
       error
     );
+
+
+    /*
+      如果 monitor 已經送出 response，
+      不能再送第二次。
+    */
+
+    if (
+      res.headersSent
+    ) {
+
+      return;
+
+    }
 
 
     return res
       .status(500)
       .json({
 
-        ok: false,
+        ok:
+          false,
 
-        engine:
-          "Monitor Test Bridge 1.1",
+        bridgeEngine:
+          "Monitor Test Bridge 8.0",
+
+        forceTest:
+          true,
 
         error:
-          error?.name === "AbortError"
-            ? "Monitor 測試超過 290 秒"
-            : error?.message ||
-              "Monitor 測試失敗"
+          error?.message ||
+          "Monitor 測試失敗"
+
       });
+
   }
+
 };
