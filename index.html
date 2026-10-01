@@ -3,15 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="波段分析">
-
 <meta name="theme-color" content="#f6f7f9">
-
 <link rel="manifest" href="/manifest.json">
-
 <title>波段分析</title>
 
 <style>
@@ -31,7 +27,7 @@ margin:0 auto;
 padding-top:calc(env(safe-area-inset-top,0px) + 22px);
 padding-right:max(16px,env(safe-area-inset-right,0px));
 padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));
-padding-left:max(16px,env(safe-area-inset-left,0px));
+padding-left:max(16px,env(safe-area-inset-left,0px))
 }
 
 .top{
@@ -43,10 +39,7 @@ min-height:62px;
 margin:0 0 22px
 }
 
-.brand{
-font-size:25px;
-font-weight:900
-}
+.brand{font-size:25px;font-weight:900}
 
 .brand small{
 display:block;
@@ -133,26 +126,11 @@ text-align:left;
 color:#17202a
 }
 
-.suggestion:last-child{
-border-bottom:0
-}
-
-.suggestion-main{
-font-weight:850;
-font-size:15px
-}
-
-.suggestion-code{
-font-size:12px;
-color:#7d8793;
-margin-top:3px
-}
-
-.suggestion-market{
-font-size:11px;
-color:#7d8793;
-white-space:nowrap
-}
+.suggestion:last-child{border-bottom:0}
+.suggestion-main{font-weight:850;font-size:15px}
+.suggestion-code,.suggestion-market{font-size:11px;color:#7d8793}
+.suggestion-code{margin-top:3px}
+.suggestion-market{white-space:nowrap}
 
 .tabs{
 display:flex;
@@ -177,9 +155,7 @@ color:#fff;
 border-color:#17202a
 }
 
-.muted{
-color:#7d8793
-}
+.muted{color:#7d8793}
 
 .empty,.card{
 background:#fff;
@@ -207,10 +183,7 @@ gap:12px;
 align-items:flex-start
 }
 
-.symbol{
-font-size:17px;
-font-weight:900
-}
+.symbol{font-size:17px;font-weight:900}
 
 .name{
 font-size:12px;
@@ -244,25 +217,10 @@ font-weight:800;
 margin-top:10px
 }
 
-.green{
-background:#e9f8ef;
-color:#148244
-}
-
-.blue{
-background:#eaf3ff;
-color:#1769e0
-}
-
-.yellow{
-background:#fff5d8;
-color:#a06a00
-}
-
-.gray{
-background:#f0f2f4;
-color:#6f7882
-}
+.green{background:#e9f8ef;color:#148244}
+.blue{background:#eaf3ff;color:#1769e0}
+.yellow{background:#fff5d8;color:#a06a00}
+.gray{background:#f0f2f4;color:#6f7882}
 
 .score{
 font-size:11px;
@@ -270,9 +228,7 @@ color:#65717d;
 margin-top:9px
 }
 
-.hero{
-padding:18px
-}
+.hero{padding:18px}
 
 .hero-price{
 font-size:34px;
@@ -297,15 +253,8 @@ justify-content:space-between;
 align-items:center
 }
 
-.strategy-title{
-font-size:20px;
-font-weight:950
-}
-
-.bigscore{
-font-size:29px;
-font-weight:950
-}
+.strategy-title{font-size:20px;font-weight:950}
+.bigscore{font-size:29px;font-weight:950}
 
 .section-title{
 font-size:16px;
@@ -314,71 +263,36 @@ margin-top:19px;
 margin-bottom:8px
 }
 
-.score-grid{
+.score-grid,.levels,.chip-grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:8px;
-margin-top:12px
+gap:8px
 }
 
-.score-box{
+.score-grid,.levels{margin-top:12px}
+
+.score-box,.level{
 padding:13px;
 border-radius:13px;
 background:#f7f8fa;
 border:1px solid #e7eaee
 }
 
-.score-box span{
+.level.full{grid-column:1/-1}
+
+.score-box span,.level span,.chip-item span{
 display:block;
 font-size:10px;
 color:#7c8793
 }
 
-.score-box strong{
+.score-box strong,.level strong{
 display:block;
 font-size:17px;
 margin-top:4px
 }
 
-.score-box small{
-display:block;
-font-size:10px;
-line-height:1.45;
-color:#7c8793;
-margin-top:5px
-}
-
-.levels{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px;
-margin-top:12px
-}
-
-.level{
-padding:13px;
-border-radius:13px;
-background:#f7f8fa;
-border:1px solid #e7eaee
-}
-
-.level.full{
-grid-column:1/-1
-}
-
-.level span{
-display:block;
-font-size:10px;
-color:#7c8793
-}
-
-.level strong{
-display:block;
-font-size:17px;
-margin-top:4px
-}
-
-.level small{
+.score-box small,.level small{
 display:block;
 font-size:10px;
 line-height:1.45;
@@ -416,6 +330,11 @@ background:#fff5ed;
 border-color:#f2dccb
 }
 
+.wait{
+background:#f5f5f5;
+border-color:#e0e3e7
+}
+
 .chip{
 margin-top:12px;
 padding:14px;
@@ -424,24 +343,13 @@ border-radius:14px;
 background:#fafbfc
 }
 
-.chip-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px;
-margin-top:10px
-}
+.chip-grid{margin-top:10px}
 
 .chip-item{
 padding:10px;
 background:#fff;
 border:1px solid #eceff2;
 border-radius:11px
-}
-
-.chip-item span{
-display:block;
-font-size:10px;
-color:#7c8793
 }
 
 .chip-item strong{
@@ -498,13 +406,8 @@ font-weight:800;
 margin-top:13px
 }
 
-.back{
-margin-bottom:12px
-}
-
-.hidden{
-display:none!important
-}
+.back{margin-bottom:12px}
+.hidden{display:none!important}
 
 .note{
 font-size:11px;
@@ -534,20 +437,16 @@ margin-right:5px
 <div class="app">
 
 <header class="top">
-
 <div class="brand">
 波段分析
 <small>台股全市場股票分析雷達</small>
 </div>
-
 <button id="notify" class="icon">🔔</button>
-
 </header>
 
 <main id="home">
 
 <div class="search">
-
 <div class="search-box">
 
 <input
@@ -562,15 +461,12 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <button id="go" class="primary">分析</button>
-
 </div>
 
 <div class="tabs">
-
 <button class="tab on" data-tab="signal">高分股票</button>
 <button class="tab" data-tab="near">觀察名單</button>
 <button class="tab" data-tab="watch">我的自選</button>
-
 </div>
 
 <div id="homeList">
@@ -578,17 +474,14 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <div class="note">
-新版採一般股票波段分析：技術面、量價、法人籌碼、基本面與新聞事件。Entry、SL、TP 依均線、前低、整理平台、前高與歷史壓力建立，不再使用 SMC／OB／FVG。
+新版採一般股票波段分析：技術面、量價、法人籌碼、基本面與新聞事件。交易規劃會依現價自動判斷「回檔進場／突破進場／等待」，避免現價已遠離支撐時仍給出不實用的深度回檔 Entry。
 </div>
 
 </main>
 
 <main id="detail" class="hidden">
-
 <button id="back" class="icon back">← 返回</button>
-
 <div id="detailBody"></div>
-
 </main>
 
 </div>
@@ -656,6 +549,7 @@ return 0;
 }
 
 let e=a[0];
+
 const k=2/(n+1);
 
 for(let i=1;i<a.length;i++){
@@ -810,7 +704,10 @@ return Array.isArray(x)
 ...new Set(
 x
 .map(String)
-.filter(v=>/^\d{4,6}$/.test(v))
+.filter(
+v=>
+/^\d{4,6}$/.test(v)
+)
 )
 ]
 :
@@ -832,7 +729,10 @@ const clean=
 ...new Set(
 (a||[])
 .map(String)
-.filter(v=>/^\d{4,6}$/.test(v))
+.filter(
+v=>
+/^\d{4,6}$/.test(v)
+)
 )
 ];
 
@@ -850,7 +750,9 @@ async function getCloudWatch(){
 const r=
 await fetch(
 '/api/watchlist?deviceId='+
-encodeURIComponent(getDeviceId())+
+encodeURIComponent(
+getDeviceId()
+)+
 '&t='+
 Date.now(),
 {
@@ -867,7 +769,10 @@ catch{
 throw Error('雲端自選資料格式錯誤');
 }
 
-if(!r.ok || !d.ok){
+if(
+!r.ok ||
+!d.ok
+){
 
 throw Error(
 d.error||
@@ -880,7 +785,10 @@ return Array.isArray(d.symbols)
 ?
 d.symbols
 .map(String)
-.filter(v=>/^\d{4,6}$/.test(v))
+.filter(
+v=>
+/^\d{4,6}$/.test(v)
+)
 :
 [];
 
@@ -896,7 +804,8 @@ method:'POST',
 headers:{
 'Content-Type':'application/json'
 },
-body:JSON.stringify({
+body:
+JSON.stringify({
 deviceId:getDeviceId(),
 symbols
 })
@@ -912,7 +821,10 @@ catch{
 throw Error('雲端自選儲存格式錯誤');
 }
 
-if(!r.ok || !d.ok){
+if(
+!r.ok ||
+!d.ok
+){
 
 throw Error(
 d.error||
@@ -982,7 +894,9 @@ x
 
 }
 catch{
+
 return [];
+
 }
 
 }
@@ -996,7 +910,8 @@ return;
 let h=
 searchHistory()
 .filter(
-x=>x.symbol!==a.symbol
+x=>
+x.symbol!==a.symbol
 );
 
 h.unshift({
@@ -1007,7 +922,9 @@ time:Date.now()
 
 localStorage.setItem(
 HISTORY_KEY,
-JSON.stringify(h.slice(0,10))
+JSON.stringify(
+h.slice(0,10)
+)
 );
 
 }
@@ -1038,7 +955,10 @@ catch{
 throw Error('股票資料格式錯誤');
 }
 
-if(!r.ok || !d.ok){
+if(
+!r.ok ||
+!d.ok
+){
 
 throw Error(
 d.error||
@@ -1069,8 +989,13 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(r.ok && d.ok){
+if(
+r.ok &&
+d.ok
+){
+
 return d;
+
 }
 
 }
@@ -1093,7 +1018,7 @@ news:[]
 }
 
 /* =========================================================
-   Pivot
+   PIVOT
 ========================================================= */
 
 function pivots(
@@ -1212,10 +1137,14 @@ last.value
 )<=distance
 ){
 
-last.values.push(item.value);
+last.values.push(
+item.value
+);
 
 last.value=
-avg(last.values);
+avg(
+last.values
+);
 
 last.count++;
 
@@ -1244,7 +1173,8 @@ return groups;
 }
 
 /* =========================================================
-   一般股票結構
+   交易規劃 7.0
+   回檔 / 突破 / 等待
 ========================================================= */
 
 function buildTradePlan(
@@ -1271,13 +1201,17 @@ A*.45,
 price*.005
 );
 
+/* ========================
+   支撐
+======================== */
+
 const supportRaw=[];
 
 for(const x of P.lows){
 
 if(
 x.value<=price*1.01 &&
-x.value>=price*.80
+x.value>=price*.75
 ){
 
 supportRaw.push({
@@ -1290,8 +1224,9 @@ i:x.i
 }
 
 if(
+Number.isFinite(m20) &&
 m20<=price*1.01 &&
-m20>=price*.80
+m20>=price*.75
 ){
 
 supportRaw.push({
@@ -1302,8 +1237,9 @@ i:recent.length+1
 }
 
 if(
+Number.isFinite(m60) &&
 m60<=price*1.01 &&
-m60>=price*.80
+m60>=price*.75
 ){
 
 supportRaw.push({
@@ -1317,14 +1253,18 @@ const low20=
 Math.min(
 ...rows
 .slice(-20)
-.map(x=>x.low)
+.map(
+x=>x.low
+)
 );
 
 const low60=
 Math.min(
 ...rows
 .slice(-60)
-.map(x=>x.low)
+.map(
+x=>x.low
+)
 );
 
 supportRaw.push({
@@ -1344,9 +1284,8 @@ mergeDistance
 )
 .filter(
 x=>
-x.value<=price*1.01
-&&
-x.value>=price*.80
+x.value<=price*1.01 &&
+x.value>=price*.75
 )
 .sort(
 (a,b)=>
@@ -1358,9 +1297,12 @@ supportGroups[0]
 ?
 supportGroups[0].value
 :
-Math.min(
-price,
-m20
+(
+Number.isFinite(m20)
+?
+Math.min(price,m20)
+:
+price-A
 );
 
 const support2=
@@ -1372,126 +1314,17 @@ mergeDistance
 )?.value
 ||
 (
-m60<
-support1
+Number.isFinite(m60) &&
+m60<support1
 ?
 m60
 :
 null
 );
 
-/* Entry */
-
-let entryLow=
-support1-
-Math.max(
-A*.15,
-price*.002
-);
-
-let entryHigh=
-support1+
-Math.max(
-A*.30,
-price*.004
-);
-
-entryHigh=
-Math.min(
-entryHigh,
-price*1.01
-);
-
-entryLow=
-Math.max(
-0,
-entryLow
-);
-
-if(
-entryHigh<
-entryLow
-){
-
-const temp=
-entryHigh;
-
-entryHigh=
-entryLow;
-
-entryLow=
-temp;
-
-}
-
-const entryMid=
-(
-entryLow+
-entryHigh
-)/2;
-
-/* SL */
-
-const structuralLows=
-P.lows
-.map(x=>x.value)
-.filter(
-x=>
-x<
-support1-
-mergeDistance*.25
-&&
-x>=entryMid*.87
-)
-.sort(
-(a,b)=>
-b-a
-);
-
-let invalidation=
-structuralLows[0]
-||
-support2
-||
-(
-support1-
-A*.75
-);
-
-let sl=
-invalidation-
-Math.max(
-A*.18,
-price*.0025
-);
-
-if(
-sl>=entryLow
-){
-
-sl=
-entryLow-
-Math.max(
-A*.40,
-price*.0045
-);
-
-}
-
-const risk=
-entryMid-
-sl;
-
-const riskPct=
-risk>0
-?
-risk/
-entryMid*
-100
-:
-null;
-
-/* 壓力 */
+/* ========================
+   壓力
+======================== */
 
 const pressureRaw=[];
 
@@ -1500,7 +1333,7 @@ for(const x of P.highs){
 if(
 x.value>
 price+
-mergeDistance*.30
+mergeDistance*.20
 ){
 
 pressureRaw.push({
@@ -1520,7 +1353,10 @@ i+=10
 
 const block=
 recent.slice(
-Math.max(0,i-20),
+Math.max(
+0,
+i-20
+),
 i+1
 );
 
@@ -1530,13 +1366,15 @@ continue;
 
 const high=
 Math.max(
-...block.map(x=>x.high)
+...block.map(
+x=>x.high
+)
 );
 
 if(
 high>
 price+
-mergeDistance*.30
+mergeDistance*.20
 ){
 
 pressureRaw.push({
@@ -1557,7 +1395,7 @@ mergeDistance
 x=>
 x.value>
 price+
-mergeDistance*.30
+mergeDistance*.20
 )
 .sort(
 (a,b)=>
@@ -1571,60 +1409,293 @@ pressureGroups[0].value
 :
 null;
 
-const tp1Group=
+/* ========================
+   判斷策略
+======================== */
+
+const supportDistance=
+support1>0
+?
+(
+price-support1
+)/
+price
+:
+999;
+
+const breakoutDistance=
 breakout
 ?
-pressureGroups.find(
-x=>
-x.value>
-breakout+
-mergeDistance
+(
+breakout-price
+)/
+price
+:
+999;
+
+let planType=
+'WAIT';
+
+/*
+離有效支撐 5% 內：
+回檔型
+*/
+
+if(
+supportDistance>=-.01 &&
+supportDistance<=.05
+){
+
+planType=
+'PULLBACK';
+
+}
+
+/*
+離支撐超過 5%，
+但距離上方突破位 3.5% 內：
+改成突破型。
+*/
+
+else if(
+breakout &&
+breakoutDistance>=0 &&
+breakoutDistance<=.035 &&
+supportDistance>.05
+){
+
+planType=
+'BREAKOUT';
+
+}
+
+/* ========================
+   ENTRY / SL
+======================== */
+
+let entryLow=null;
+let entryHigh=null;
+let entryMid=null;
+let sl=null;
+
+/* 回檔型 */
+
+if(
+planType===
+'PULLBACK'
+){
+
+entryLow=
+support1-
+Math.max(
+A*.20,
+price*.0025
+);
+
+entryHigh=
+support1+
+Math.max(
+A*.35,
+price*.004
+);
+
+entryMid=
+(
+entryLow+
+entryHigh
+)/2;
+
+const structuralLows=
+P.lows
+.map(
+x=>x.value
 )
+.filter(
+x=>
+x<
+support1-
+mergeDistance*.20
+&&
+x>=entryMid*.90
+)
+.sort(
+(a,b)=>
+b-a
+);
+
+const invalidation=
+structuralLows[0]
+||
+support2
+||
+(
+support1-
+A*.8
+);
+
+sl=
+invalidation-
+Math.max(
+A*.25,
+price*.003
+);
+
+if(
+sl>=entryLow
+){
+
+sl=
+entryLow-
+Math.max(
+A*.40,
+price*.0045
+);
+
+}
+
+}
+
+/* 突破型 */
+
+else if(
+planType===
+'BREAKOUT'
+){
+
+/*
+Entry 改放在突破位附近。
+
+不是叫使用者現在追價，
+而是等待突破確認。
+*/
+
+entryLow=
+breakout-
+Math.max(
+A*.18,
+breakout*.002
+);
+
+entryHigh=
+breakout+
+Math.max(
+A*.35,
+breakout*.004
+);
+
+entryMid=
+(
+entryLow+
+entryHigh
+)/2;
+
+/*
+突破失敗停損。
+
+不再使用很遠的舊支撐當 SL。
+*/
+
+sl=
+breakout-
+Math.max(
+A*.75,
+breakout*.012
+);
+
+if(
+sl>=entryLow
+){
+
+sl=
+entryLow-
+Math.max(
+A*.40,
+price*.005
+);
+
+}
+
+}
+
+const risk=
+Number.isFinite(entryMid) &&
+Number.isFinite(sl) &&
+entryMid>sl
+?
+entryMid-sl
 :
 null;
+
+const riskPct=
+risk
+?
+risk/
+entryMid*
+100
+:
+null;
+
+/* ========================
+   TP
+======================== */
+
+/*
+TP 必須高於實際 Entry。
+
+突破型時，
+breakout 本身是 Entry 依據，
+不能又拿 breakout 當 TP1。
+*/
+
+const targetBase=
+Number.isFinite(entryHigh)
+?
+entryHigh
+:
+price;
+
+const targets=
+pressureGroups
+.map(
+x=>x.value
+)
+.filter(
+v=>
+v>
+targetBase+
+mergeDistance*.25
+);
 
 const tp1=
-tp1Group
-?
-tp1Group.value
-:
-null;
-
-const tp2Group=
-tp1
-?
-pressureGroups.find(
-x=>
-x.value>
-tp1+
-mergeDistance
-)
-:
+targets[0]
+||
 null;
 
 const tp2=
-tp2Group
+tp1
 ?
-tp2Group.value
-:
-null;
-
-const tp3Group=
-tp2
-?
-pressureGroups.find(
-x=>
-x.value>
-tp2+
+targets.find(
+v=>
+v>
+tp1+
 mergeDistance
 )
+||
+null
 :
 null;
 
 let tp3=
-tp3Group
+tp2
 ?
-tp3Group.value
+targets.find(
+v=>
+v>
+tp2+
+mergeDistance
+)
+||
+null
 :
 null;
 
@@ -1641,33 +1712,36 @@ tp2 &&
 tp1
 ){
 
-const baseLow=
+const base=
 support2||
 support1;
 
-const range=
-Math.max(
-tp2-baseLow,
-A*3
-);
-
 tp3=
 tp2+
-range*.618;
+Math.max(
+tp2-base,
+A*3
+)*.618;
 
 tp3Source=
 '歷史壓力不足，Fib 0.618 延伸';
 
 }
 
+/* ========================
+   R:R
+======================== */
+
 function rr(target){
 
 if(
-!target ||
-!Number.isFinite(risk) ||
+!Number.isFinite(target) ||
+!risk ||
 risk<=0
 ){
+
 return null;
+
 }
 
 return (
@@ -1678,53 +1752,122 @@ risk;
 
 }
 
-const rr1=rr(tp1);
-const rr2=rr(tp2);
-const rr3=rr(tp3);
+const rr1=
+rr(tp1);
 
-const entryReady=
+const rr2=
+rr(tp2);
+
+const rr3=
+rr(tp3);
+
+/* ========================
+   是否真正進場
+======================== */
+
+let entryReady=
+false;
+
+/*
+回檔型：
+價格真的進入支撐 Entry 區附近。
+*/
+
+if(
+planType===
+'PULLBACK'
+){
+
+entryReady=
 price>=
 entryLow-
 Math.max(
-A*.30,
+A*.25,
 price*.004
 )
 &&
 price<=
 entryHigh+
 Math.max(
-A*.60,
-price*.008
+A*.35,
+price*.006
 );
+
+}
+
+/*
+突破型：
+一定要真的突破 breakout。
+
+只是靠近壓力，
+不算 entryReady。
+*/
+
+if(
+planType===
+'BREAKOUT'
+){
+
+entryReady=
+price>=breakout
+&&
+price<=
+entryHigh+
+Math.max(
+A*.20,
+price*.003
+);
+
+}
 
 return {
 
 support1,
 support2,
+
+breakout,
+
+planType,
+
 entryLow,
 entryHigh,
 entryMid,
+
 sl,
+
 risk,
 riskPct,
-breakout,
+
 tp1,
 tp2,
 tp3,
 tp3Source,
+
 rr1,
 rr2,
 rr3,
+
 entryReady,
+
 pressureCount:
-pressureGroups.length
+pressureGroups.length,
+
+supportDistance:
+supportDistance*100,
+
+breakoutDistance:
+breakoutDistance===999
+?
+null
+:
+breakoutDistance*100
 
 };
 
 }
 
 /* =========================================================
-   股票五大分析
+   五大分析
 ========================================================= */
 
 function analyzeData(
@@ -1882,8 +2025,6 @@ let newsScore=null;
 
 const conditions=[];
 
-/* 技術面 */
-
 function techCondition(
 name,
 ok,
@@ -1966,18 +2107,23 @@ volumeScore+=2;
 }
 
 const changePercent=
-+d.changePercent||0;
++d.changePercent||
+0;
 
 if(
 changePercent>0 &&
 vr>=1
 ){
+
 volumeScore+=5;
+
 }
 else if(
 changePercent>=0
 ){
+
 volumeScore+=3;
+
 }
 
 let upVolumeDays=0;
@@ -2092,50 +2238,72 @@ fundScore=0;
 if(
 financial.profitable===true
 ){
+
 fundScore+=6;
+
 }
 else if(
 financial.profitable===undefined ||
 financial.profitable===null
 ){
+
 fundScore+=3;
+
 }
 
 if(
-Number.isFinite(+financial.eps)
+Number.isFinite(
++financial.eps
+)
 &&
 +financial.eps>0
 ){
+
 fundScore+=4;
+
 }
 
 if(
-Number.isFinite(+financial.epsGrowth)
+Number.isFinite(
++financial.epsGrowth
+)
 &&
 +financial.epsGrowth>0
 ){
+
 fundScore+=3;
+
 }
 
 if(
-Number.isFinite(+revenue.yoy)
+Number.isFinite(
++revenue.yoy
+)
 ){
 
 if(+revenue.yoy>10){
+
 fundScore+=4;
+
 }
 else if(+revenue.yoy>0){
+
 fundScore+=3;
+
 }
 
 }
 
 if(
-Number.isFinite(+revenue.mom)
+Number.isFinite(
++revenue.mom
+)
 &&
 +revenue.mom>0
 ){
+
 fundScore+=3;
+
 }
 
 fundScore=
@@ -2153,17 +2321,14 @@ if(
 newsData?.available
 ){
 
-const sentiment=
-Number(
-newsData.overallScore||
-0
-);
-
 newsScore=
 clamp(
 Math.round(
 10+
-sentiment
+Number(
+newsData.overallScore||
+0
+)
 ),
 0,
 20
@@ -2204,7 +2369,9 @@ availableScores.length*
 
 const score=
 clamp(
-Math.round(normalized),
+Math.round(
+normalized
+),
 0,
 100
 );
@@ -2221,21 +2388,29 @@ m60
 return {
 
 ...d,
+
 newsData,
+
 price,
+
 m20,
 m60,
 m120,
+
 A,
 R,
 vr,
+
 technical,
 volumeScore,
 chipScore,
 fundScore,
 newsScore,
+
 score,
+
 conditions,
+
 ...plan
 
 };
@@ -2273,7 +2448,8 @@ function renderCard(a){
 const [
 label,
 cls
-]=statusOf(a);
+]=
+statusOf(a);
 
 const cp=
 +a.changePercent||
@@ -2329,28 +2505,36 @@ ${label}
 }
 
 /* =========================================================
-   首頁排序
+   首頁
 ========================================================= */
 
 function renderHome(){
 
 let list=
-Object.values(cache);
+Object.values(
+cache
+);
 
-if(tab==='signal'){
+if(
+tab==='signal'
+){
 
 list=
 list.filter(
-x=>x.score>=70
+x=>
+x.score>=70
 );
 
 list.sort(
-(a,b)=>b.score-a.score
+(a,b)=>
+b.score-a.score
 );
 
 }
 
-if(tab==='near'){
+if(
+tab==='near'
+){
 
 list=
 list.filter(
@@ -2360,12 +2544,15 @@ x.score<70
 );
 
 list.sort(
-(a,b)=>b.score-a.score
+(a,b)=>
+b.score-a.score
 );
 
 }
 
-if(tab==='watch'){
+if(
+tab==='watch'
+){
 
 const w=
 watch();
@@ -2373,7 +2560,8 @@ watch();
 list=
 w
 .map(
-symbol=>cache[symbol]
+symbol=>
+cache[symbol]
 )
 .filter(Boolean);
 
@@ -2399,7 +2587,11 @@ return;
 $('homeList').innerHTML=
 list.length
 ?
-list.map(renderCard).join('')
+list
+.map(
+renderCard
+)
+.join('')
 :
 `
 <div class="empty">
@@ -2414,14 +2606,19 @@ tab==='watch'
 `;
 
 document
-.querySelectorAll('.stock-card')
+.querySelectorAll(
+'.stock-card'
+)
 .forEach(
 x=>
 x.onclick=
 ()=>{
 
 hideSuggestions();
-openStock(x.dataset.symbol);
+
+openStock(
+x.dataset.symbol
+);
 
 }
 );
@@ -2429,7 +2626,7 @@ openStock(x.dataset.symbol);
 }
 
 /* =========================================================
-   分數 BOX
+   SCORE BOX
 ========================================================= */
 
 function scoreBox(
@@ -2497,38 +2694,28 @@ return `
 
 <div class="chip">
 
-<b>
-法人籌碼
-</b>
+<b>法人籌碼</b>
 
 <div class="chip-grid">
 
 <div class="chip-item">
 <span>外資近 5 日</span>
-<strong>
-${sign(i.foreign5)}${fmt(i.foreign5,0)}
-</strong>
+<strong>${sign(i.foreign5)}${fmt(i.foreign5,0)}</strong>
 </div>
 
 <div class="chip-item">
 <span>投信近 5 日</span>
-<strong>
-${sign(i.trust5)}${fmt(i.trust5,0)}
-</strong>
+<strong>${sign(i.trust5)}${fmt(i.trust5,0)}</strong>
 </div>
 
 <div class="chip-item">
 <span>三大法人近 5 日</span>
-<strong>
-${sign(i.total5)}${fmt(i.total5,0)}
-</strong>
+<strong>${sign(i.total5)}${fmt(i.total5,0)}</strong>
 </div>
 
 <div class="chip-item">
 <span>三大法人近 20 日</span>
-<strong>
-${sign(i.total20)}${fmt(i.total20,0)}
-</strong>
+<strong>${sign(i.total20)}${fmt(i.total20,0)}</strong>
 </div>
 
 </div>
@@ -2561,18 +2748,12 @@ return `
 
 <div class="chip">
 
-<b>
-公司基本面
-</b>
+<b>公司基本面</b>
 
 <div class="chip-grid">
 
 <div class="chip-item">
-
-<span>
-最新 EPS
-</span>
-
+<span>最新 EPS</span>
 <strong>
 ${
 x.eps===null ||
@@ -2583,15 +2764,10 @@ x.eps===undefined
 fmt(x.eps)
 }
 </strong>
-
 </div>
 
 <div class="chip-item">
-
-<span>
-公司獲利
-</span>
-
+<span>公司獲利</span>
 <strong>
 ${
 x.profitable===true
@@ -2605,15 +2781,10 @@ x.profitable===false
 '資料不足'
 }
 </strong>
-
 </div>
 
 <div class="chip-item">
-
-<span>
-月營收 YoY
-</span>
-
+<span>月營收 YoY</span>
 <strong>
 ${
 r.yoy===null ||
@@ -2632,15 +2803,10 @@ fmt(r.yoy)+
 '%'
 }
 </strong>
-
 </div>
 
 <div class="chip-item">
-
-<span>
-月營收 MoM
-</span>
-
+<span>月營收 MoM</span>
 <strong>
 ${
 r.mom===null ||
@@ -2659,7 +2825,6 @@ fmt(r.mom)+
 '%'
 }
 </strong>
-
 </div>
 
 </div>
@@ -2676,15 +2841,15 @@ fmt(r.mom)+
 
 function newsHTML(n){
 
-if(!n?.available){
+if(
+!n?.available
+){
 
 return `
 
 <div class="chip">
 
-<b>
-近期新聞
-</b>
+<b>近期新聞</b>
 
 <div class="muted">
 目前沒有足夠新聞資料，不硬判斷利多利空。
@@ -2750,14 +2915,39 @@ function renderDetail(a){
 const [
 label,
 cls
-]=statusOf(a);
+]=
+statusOf(a);
 
 const has=
 watch()
-.includes(a.symbol);
+.includes(
+a.symbol
+);
 
 const news=
 a.newsData;
+
+const planLabel=
+a.planType==='PULLBACK'
+?
+'回檔型進場'
+:
+a.planType==='BREAKOUT'
+?
+'突破型進場'
+:
+'等待較佳位置';
+
+const planText=
+a.planType==='PULLBACK'
+?
+'現價接近有效支撐，Entry 以支撐區規劃。'
+:
+a.planType==='BREAKOUT'
+?
+`現價已遠離下方支撐，改觀察 ${fmt(a.breakout)} 突破確認，不再要求深跌回第一支撐。`
+:
+'目前既不靠近支撐，也沒有進入合理突破區，不硬給進場價。';
 
 $('detailBody').innerHTML=`
 
@@ -2913,7 +3103,7 @@ fmt(a.breakout)
 </strong>
 
 <small>
-最近的前高或歷史壓力。這是突破確認位置，不直接當成 TP1。
+最近的前高或歷史壓力；突破型策略會直接使用這個位置做確認。
 </small>
 
 </div>
@@ -2926,7 +3116,6 @@ fmt(a.breakout)
 
 <div class="levels">
 
-<!-- 新增：現價 -->
 <div class="level current-price">
 
 <span>
@@ -2943,24 +3132,22 @@ ${a.realtime?'目前即時成交價':'目前最新報價'}
 
 </div>
 
-<!-- SL -->
-<div class="level sl">
+<div class="level ${a.planType==='WAIT'?'wait':'entry'}">
 
 <span>
-停損 SL
+策略
 </span>
 
 <strong>
-${fmt(a.sl)}
+${planLabel}
 </strong>
 
 <small>
-跌破實際支撐／前低失效點後再留波動緩衝。距進場中位約 ${fmt(a.riskPct)}%。
+${planText}
 </small>
 
 </div>
 
-<!-- Entry -->
 <div class="level entry full">
 
 <span>
@@ -2968,24 +3155,64 @@ ${fmt(a.sl)}
 </span>
 
 <strong>
-${fmt(a.entryLow)}
-～
-${fmt(a.entryHigh)}
+${
+a.entryLow!==null &&
+a.entryHigh!==null
+?
+`${fmt(a.entryLow)} ～ ${fmt(a.entryHigh)}`
+:
+'目前不給 Entry'
+}
 </strong>
 
 <small>
 ${
+a.planType==='WAIT'
+?
+'等待價格靠近有效支撐，或靠近關鍵壓力形成突破機會。'
+:
 a.entryReady
 ?
-'目前已進入或接近合理支撐區，可繼續觀察量價與突破狀況。'
+'目前已符合此策略的進場確認區。'
 :
-'目前價格離理想支撐仍有距離，不追價。'
+a.planType==='BREAKOUT'
+?
+'尚未真正突破，不提前把「靠近壓力」當成已進場。'
+:
+'目前尚未進入支撐 Entry 區。'
 }
 </small>
 
 </div>
 
-<!-- TP1 -->
+<div class="level sl">
+
+<span>
+停損 SL
+</span>
+
+<strong>
+${
+a.sl!==null
+?
+fmt(a.sl)
+:
+'等待 Entry'
+}
+</strong>
+
+<small>
+${
+a.sl!==null
+?
+`依目前 ${planLabel} 的結構失效點設定${a.riskPct?`｜距進場中位約 ${fmt(a.riskPct)}%`:''}`
+:
+'尚未形成有效 Entry，因此不硬給停損。'
+}
+</small>
+
+</div>
+
 <div class="level tp">
 
 <span>
@@ -3006,15 +3233,14 @@ fmt(a.tp1)
 ${
 a.tp1
 ?
-`突破關鍵壓力後的下一層真實歷史壓力${a.rr1?`｜約 ${fmt(a.rr1)}R`:''}`
+`進場後第一層有效歷史壓力${a.rr1?`｜約 ${fmt(a.rr1)}R`:''}`
 :
-'目前找不到下一層有效市場壓力，不使用 1.5R 強行製造 TP1。'
+'目前沒有可確認的第一層目標。'
 }
 </small>
 
 </div>
 
-<!-- TP2 -->
 <div class="level tp">
 
 <span>
@@ -3035,15 +3261,14 @@ fmt(a.tp2)
 ${
 a.tp2
 ?
-`更高一層波段壓力${a.rr2?`｜約 ${fmt(a.rr2)}R`:''}`
+`第二層有效壓力${a.rr2?`｜約 ${fmt(a.rr2)}R`:''}`
 :
-'沒有第二層真實壓力就不亂給價位。'
+'目前沒有第二層有效壓力。'
 }
 </small>
 
 </div>
 
-<!-- TP3 -->
 <div class="level tp full">
 
 <span>
@@ -3066,7 +3291,7 @@ a.tp3
 ?
 `${esc(a.tp3Source)}${a.rr3?`｜約 ${fmt(a.rr3)}R`:''}`
 :
-'優先使用更高歷史壓力；結構不足時才考慮延伸目標。'
+'優先使用更高歷史壓力；不足時才考慮延伸。'
 }
 </small>
 
@@ -3074,7 +3299,9 @@ a.tp3
 
 </div>
 
-${chipHTML(a.institutional)}
+${chipHTML(
+a.institutional
+)}
 
 ${fundamentalHTML(a)}
 
@@ -3117,7 +3344,7 @@ ${has?'移除自選':'加入自選'}
 </button>
 
 <div class="note">
-新版不使用 SMC。綜合評分由技術面、量價、法人籌碼、基本面與新聞事件組成。Entry、SL、TP 優先依市場真實支撐與壓力建立，最後才計算風報比，而不是先用固定 R 倍數反推目標價。
+交易規劃現在會先判斷現價位置：靠近支撐採回檔型；遠離支撐但接近關鍵壓力採突破型；兩者都不符合就等待，不再為了顯示數字硬製造 Entry。
 </div>
 
 </div>
@@ -3127,19 +3354,22 @@ ${has?'移除自選':'加入自選'}
 $('fav').onclick=
 async()=>{
 
-$('fav').disabled=true;
+$('fav').disabled=
+true;
 
 let x=
 watch();
 
-const currentlyHas=
-x.includes(a.symbol);
-
-if(currentlyHas){
+if(
+x.includes(
+a.symbol
+)
+){
 
 x=
 x.filter(
-s=>s!==a.symbol
+s=>
+s!==a.symbol
 );
 
 }
@@ -3148,7 +3378,8 @@ else{
 x=[
 a.symbol,
 ...x.filter(
-s=>s!==a.symbol
+s=>
+s!==a.symbol
 )
 ];
 
@@ -3159,7 +3390,9 @@ saveWatchLocal(x);
 cache[a.symbol]=a;
 
 renderDetail(a);
+
 renderHome();
+
 syncPushSymbols();
 
 try{
@@ -3226,11 +3459,15 @@ String(symbol)
 
 $('home')
 .classList
-.add('hidden');
+.add(
+'hidden'
+);
 
 $('detail')
 .classList
-.remove('hidden');
+.remove(
+'hidden'
+);
 
 $('detailBody').innerHTML=
 `
@@ -3265,7 +3502,9 @@ ${esc(e.message)}
 
 }
 
-clearInterval(detailTimer);
+clearInterval(
+detailTimer
+);
 
 detailTimer=
 setInterval(
@@ -3556,7 +3795,9 @@ function hideSuggestions(){
 
 $('suggestions')
 .classList
-.add('hidden');
+.add(
+'hidden'
+);
 
 }
 
@@ -3601,6 +3842,7 @@ $('suggestions');
 if(!q.trim()){
 
 hideSuggestions();
+
 return;
 
 }
@@ -3664,7 +3906,9 @@ box.classList.remove(
 );
 
 box
-.querySelectorAll('.suggestion')
+.querySelectorAll(
+'.suggestion'
+)
 .forEach(
 x=>
 x.onclick=
@@ -3709,7 +3953,9 @@ if(!q){
 return;
 }
 
-if(selectedSearchSymbol){
+if(
+selectedSearchSymbol
+){
 
 openStock(
 selectedSearchSymbol
@@ -3724,6 +3970,7 @@ if(
 ){
 
 openStock(q);
+
 return;
 
 }
@@ -3821,11 +4068,15 @@ hideSuggestions();
 
 $('detail')
 .classList
-.add('hidden');
+.add(
+'hidden'
+);
 
 $('home')
 .classList
-.remove('hidden');
+.remove(
+'hidden'
+);
 
 renderHome();
 
@@ -3836,7 +4087,9 @@ renderHome();
 ========================================================= */
 
 document
-.querySelectorAll('.tab')
+.querySelectorAll(
+'.tab'
+)
 .forEach(
 x=>
 x.onclick=
@@ -3846,7 +4099,9 @@ tab=
 x.dataset.tab;
 
 document
-.querySelectorAll('.tab')
+.querySelectorAll(
+'.tab'
+)
 .forEach(
 y=>
 y.classList.toggle(
@@ -3909,11 +4164,19 @@ const base64=
 base64String+
 padding
 )
-.replace(/-/g,'+')
-.replace(/_/g,'/');
+.replace(
+/-/g,
+'+'
+)
+.replace(
+/_/g,
+'/'
+);
 
 const rawData=
-window.atob(base64);
+window.atob(
+base64
+);
 
 const outputArray=
 new Uint8Array(
@@ -3943,28 +4206,18 @@ const r=
 await fetch(
 '/api/push-subscribe',
 {
-
 method:'POST',
-
 headers:{
-'Content-Type':
-'application/json'
+'Content-Type':'application/json'
 },
-
 body:
 JSON.stringify({
-
-deviceId:
-getDeviceId(),
-
+deviceId:getDeviceId(),
 subscription:
 subscription.toJSON(),
-
 symbols:
 pushSymbols()
-
 })
-
 }
 );
 
@@ -4145,14 +4398,11 @@ const subscription=
 await registration
 .pushManager
 .subscribe({
-
 userVisibleOnly:true,
-
 applicationServerKey:
 urlBase64ToUint8Array(
 config.publicKey
 )
-
 });
 
 await savePushSubscription(
@@ -4161,7 +4411,9 @@ subscription
 
 $('notify')
 .classList
-.add('push-on');
+.add(
+'push-on'
+);
 
 }
 
