@@ -221,6 +221,7 @@ margin-top:10px
 }
 
 .green{background:#e9f8ef;color:#148244}
+.blue{background:#eaf3ff;color:#1769e0}
 .yellow{background:#fff5d8;color:#a06a00}
 .gray{background:#f0f2f4;color:#6f7882}
 
@@ -467,7 +468,7 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <div class="note">
-8 條條件負責篩選波段狀態；實際支撐、進場、停損、突破、壓力與 TP 採用 SMC 市場結構分析，並結合成交量與法人籌碼確認。
+7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。實際支撐、進場、停損與優先 TP 採用 SMC 市場結構；當上方暫無有效 SMC 壓力時，TP 會以風險報酬 R 倍數補足。
 </div>
 
 </main>
@@ -518,9 +519,6 @@ maximumFractionDigits:d
 :
 '--';
 
-
-/* 沒有有效壓力時，不顯示 0.00 */
-
 const pressureFmt=n=>{
 
 if(
@@ -530,15 +528,28 @@ n==='' ||
 !Number.isFinite(+n) ||
 +n<=0
 ){
-
 return '上方暫無有效壓力';
-
 }
 
 return fmt(n);
 
 };
 
+const planFmt=n=>{
+
+if(
+n===null ||
+n===undefined ||
+n==='' ||
+!Number.isFinite(+n) ||
++n<=0
+){
+return '無有效結構';
+}
+
+return fmt(n);
+
+};
 
 const esc=s=>
 String(s??'')
@@ -1230,6 +1241,101 @@ tolerance;
 
 }
 
+
+/* =========================================================
+   TP：
+   先使用真正 SMC 壓力。
+   不足的目標用 1R / 2R / 3R 補足。
+========================================================= */
+
+let tp1=null;
+let tp2=null;
+let tp3=null;
+
+let tp1Source='';
+let tp2Source='';
+let tp3Source='';
+
+if(
+s1 &&
+Number.isFinite(entryLow) &&
+Number.isFinite(entryHigh) &&
+Number.isFinite(sl)
+){
+
+const entryMid=
+(entryLow+entryHigh)/2;
+
+const risk=
+entryMid-sl;
+
+if(risk>0){
+
+const r1=entryMid+risk;
+const r2=entryMid+risk*2;
+const r3=entryMid+risk*3;
+
+const smcTargets=
+[
+p1?.low,
+p2?.low,
+p3?.low
+]
+.filter(
+x=>
+Number.isFinite(+x) &&
++x>entryHigh
+)
+.map(Number)
+.sort((a,b)=>a-b);
+
+if(smcTargets[0]){
+tp1=smcTargets[0];
+tp1Source='SMC 壓力';
+}
+else{
+tp1=r1;
+tp1Source='1R 風險報酬';
+}
+
+const secondSMC=
+smcTargets.find(
+x=>
+x>
+tp1+
+Math.max(A*.15,price*.0015)
+);
+
+if(secondSMC){
+tp2=secondSMC;
+tp2Source='SMC 壓力';
+}
+else{
+tp2=Math.max(r2,tp1+risk);
+tp2Source='2R 風險報酬';
+}
+
+const thirdSMC=
+smcTargets.find(
+x=>
+x>
+tp2+
+Math.max(A*.15,price*.0015)
+);
+
+if(thirdSMC){
+tp3=thirdSMC;
+tp3Source='SMC 壓力';
+}
+else{
+tp3=Math.max(r3,tp2+risk);
+tp3Source='3R 風險報酬';
+}
+
+}
+
+}
+
 return {
 
 support1:s1,
@@ -1245,9 +1351,13 @@ entryLow,
 entryHigh,
 sl,
 
-tp1:p1?p1.low:null,
-tp2:p2?p2.low:null,
-tp3:p3?p3.low:null,
+tp1,
+tp2,
+tp3,
+
+tp1Source,
+tp2Source,
+tp3Source,
 
 entryReady,
 
@@ -1443,11 +1553,14 @@ Math.round(
 passed/8*100
 ),
 
-qualified:
+strong:
 passed>=7,
 
+qualified:
+passed>=6,
+
 near:
-passed===6,
+passed===5,
 
 A,
 vr,
@@ -1531,6 +1644,10 @@ tp1:smc.tp1,
 tp2:smc.tp2,
 tp3:smc.tp3,
 
+tp1Source:smc.tp1Source,
+tp2Source:smc.tp2Source,
+tp3Source:smc.tp3Source,
+
 pressure1Type:
 smc.pressure1
 ?
@@ -1559,15 +1676,19 @@ smc.chipBias
 
 function statusOf(a){
 
-return a.qualified
-?
-['策略成立','green']
-:
-a.near
-?
-['接近形成','yellow']
-:
-['等待','gray'];
+if(a.passed>=7){
+return ['強勢成立','green'];
+}
+
+if(a.passed===6){
+return ['策略成立','blue'];
+}
+
+if(a.passed===5){
+return ['接近形成','yellow'];
+}
+
+return ['等待','gray'];
 
 }
 
@@ -1634,11 +1755,11 @@ let list=
 Object.values(cache);
 
 if(tab==='signal'){
-list=list.filter(x=>x.qualified);
+list=list.filter(x=>x.passed>=6);
 }
 
 if(tab==='near'){
-list=list.filter(x=>x.near);
+list=list.filter(x=>x.passed===5);
 }
 
 if(tab==='watch'){
@@ -1651,6 +1772,12 @@ x=>w.includes(x.symbol)
 );
 
 }
+
+list.sort(
+(a,b)=>
+(b.passed-a.passed) ||
+((b.score||0)-(a.score||0))
+);
 
 $('homeList').innerHTML=
 list.length
@@ -1762,8 +1889,6 @@ const [label,cls]=statusOf(a);
 const w=watch();
 const has=w.includes(a.symbol);
 
-const showPlan=a.passed>=6;
-
 $('detailBody').innerHTML=`
 
 <div class="card hero">
@@ -1845,6 +1970,8 @@ SMC 最近有效 Demand / OB / Breaker / Liquidity 結構
 
 <strong>
 ${
+a.support2Low!==null &&
+a.support2High!==null &&
 Number.isFinite(+a.support2Low) &&
 Number.isFinite(+a.support2High)
 ?
@@ -1880,6 +2007,7 @@ ${pressureFmt(a.breakout)}
 
 <small>
 ${
+a.breakout!==null &&
 Number.isFinite(+a.breakout) &&
 +a.breakout>0
 ?
@@ -1903,6 +2031,7 @@ ${pressureFmt(a.pressure1)}
 
 <small>
 ${
+a.pressure1!==null &&
 Number.isFinite(+a.pressure1) &&
 +a.pressure1>0
 ?
@@ -1926,6 +2055,7 @@ ${pressureFmt(a.pressure2)}
 
 <small>
 ${
+a.pressure2!==null &&
 Number.isFinite(+a.pressure2) &&
 +a.pressure2>0
 ?
@@ -1939,7 +2069,6 @@ Number.isFinite(+a.pressure2) &&
 
 </div>
 
-${showPlan?`
 
 <div class="section-title">
 交易規劃
@@ -1955,7 +2084,9 @@ SMC 觀察進場區
 
 <strong>
 ${
-a.hasRealStructure
+a.hasRealStructure &&
+a.entryLow!==null &&
+a.entryHigh!==null
 ?
 `${fmt(a.entryLow)}～${fmt(a.entryHigh)}`
 :
@@ -1964,7 +2095,19 @@ a.hasRealStructure
 </strong>
 
 <small>
-以有效 Demand / Bullish OB / Breaker 回踩區規劃，不追價
+${
+a.hasRealStructure
+?
+(
+a.entryReady
+?
+'目前價格已進入或接近 SMC 觀察進場區'
+:
+'等待價格回到有效 Demand / Bullish OB / Breaker 區，不追價'
+)
+:
+'尚未找到可用的 SMC 支撐，因此不建立虛構進場價'
+}
 </small>
 
 </div>
@@ -1976,11 +2119,17 @@ a.hasRealStructure
 </span>
 
 <strong>
-${fmt(a.sl)}
+${planFmt(a.sl)}
 </strong>
 
 <small>
-放在 SMC 結構失效點下方
+${
+a.hasRealStructure
+?
+'放在主要 SMC 結構失效點下方'
+:
+'沒有有效 SMC 結構時不建立停損價'
+}
 </small>
 
 </div>
@@ -1988,30 +2137,65 @@ ${fmt(a.sl)}
 <div class="level tp">
 
 <span>TP1</span>
-<strong>${fmt(a.tp1)}</strong>
-<small>最近上方流動性／供給</small>
+
+<strong>
+${planFmt(a.tp1)}
+</strong>
+
+<small>
+${
+a.tp1Source
+?
+esc(a.tp1Source)
+:
+'目前無法建立目標'
+}
+</small>
 
 </div>
 
 <div class="level tp">
 
 <span>TP2</span>
-<strong>${fmt(a.tp2)}</strong>
-<small>下一層 Supply / Bearish OB</small>
+
+<strong>
+${planFmt(a.tp2)}
+</strong>
+
+<small>
+${
+a.tp2Source
+?
+esc(a.tp2Source)
+:
+'目前無法建立目標'
+}
+</small>
 
 </div>
 
 <div class="level tp">
 
 <span>TP3</span>
-<strong>${fmt(a.tp3)}</strong>
-<small>更高層級 Buy-side Liquidity</small>
+
+<strong>
+${planFmt(a.tp3)}
+</strong>
+
+<small>
+${
+a.tp3Source
+?
+esc(a.tp3Source)
+:
+'目前無法建立目標'
+}
+</small>
 
 </div>
 
 </div>
 
-`:''}
 
 ${chipHTML(a.institutional)}
 
@@ -2037,7 +2221,7 @@ ${has?'移除自選':'加入自選'}
 </button>
 
 <div class="note">
-內部價位分析以 SMC 為核心，成交量用來確認 displacement、BOS、Sweep 與 Order Block 品質；法人籌碼作為方向與結構可信度加權。原本 8 條條件保留作為股票篩選器。
+7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。交易價位以 SMC 結構為核心；TP 優先使用真實上方流動性／供給結構，若上方暫無有效壓力，則依 Entry 與 SL 的風險距離，以 1R、2R、3R 補足目標。沒有有效 SMC 支撐時不會硬建立虛構 Entry、SL 或 TP。
 </div>
 
 </div>
