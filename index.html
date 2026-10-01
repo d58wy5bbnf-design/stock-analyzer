@@ -16,7 +16,13 @@
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f6f7f9;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+
+body{
+margin:0;
+background:#f6f7f9;
+color:#17202a;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
 
 .app{
 width:100%;
@@ -37,7 +43,10 @@ min-height:62px;
 margin:0 0 22px
 }
 
-.brand{font-size:25px;font-weight:900}
+.brand{
+font-size:25px;
+font-weight:900
+}
 
 .brand small{
 display:block;
@@ -127,9 +136,22 @@ color:#17202a
 .suggestion:last-child{border-bottom:0}
 .suggestion:active{background:#f4f7fa}
 
-.suggestion-main{font-weight:850;font-size:15px}
-.suggestion-code{font-size:12px;color:#7d8793;margin-top:3px}
-.suggestion-market{font-size:11px;color:#7d8793;white-space:nowrap}
+.suggestion-main{
+font-weight:850;
+font-size:15px
+}
+
+.suggestion-code{
+font-size:12px;
+color:#7d8793;
+margin-top:3px
+}
+
+.suggestion-market{
+font-size:11px;
+color:#7d8793;
+white-space:nowrap
+}
 
 .history-head{
 display:flex;
@@ -201,10 +223,28 @@ gap:12px;
 align-items:flex-start
 }
 
-.symbol{font-size:17px;font-weight:900}
-.name{font-size:12px;color:#7d8793;margin-top:3px}
-.price{text-align:right;font-size:19px;font-weight:900}
-.change{font-size:12px;font-weight:800;margin-top:3px}
+.symbol{
+font-size:17px;
+font-weight:900
+}
+
+.name{
+font-size:12px;
+color:#7d8793;
+margin-top:3px
+}
+
+.price{
+text-align:right;
+font-size:19px;
+font-weight:900
+}
+
+.change{
+font-size:12px;
+font-weight:800;
+margin-top:3px
+}
 
 .up{color:#d73a49}
 .down{color:#159447}
@@ -256,8 +296,15 @@ justify-content:space-between;
 align-items:center
 }
 
-.strategy-title{font-size:20px;font-weight:950}
-.bigscore{font-size:25px;font-weight:950}
+.strategy-title{
+font-size:20px;
+font-weight:950
+}
+
+.bigscore{
+font-size:25px;
+font-weight:950
+}
 
 .section-title{
 font-size:16px;
@@ -280,7 +327,9 @@ background:#f7f8fa;
 border:1px solid #e7eaee
 }
 
-.level.full{grid-column:1/-1}
+.level.full{
+grid-column:1/-1
+}
 
 .level span{
 display:block;
@@ -302,12 +351,40 @@ color:#7c8793;
 margin-top:5px
 }
 
-.entry{background:#edf5ff;border-color:#cfe1fa}
-.sl{background:#fff0f0;border-color:#f4d0d0}
-.tp{background:#eef9f1;border-color:#d0ebd8}
-.support{background:#ecfaf7;border-color:#cbece5}
-.breakout{background:#eef5ff;border-color:#cfe1fa}
-.pressure{background:#fff5ed;border-color:#f2dccb}
+.entry{
+background:#edf5ff;
+border-color:#cfe1fa
+}
+
+.sl{
+background:#fff0f0;
+border-color:#f4d0d0
+}
+
+.tp{
+background:#eef9f1;
+border-color:#d0ebd8
+}
+
+.support{
+background:#ecfaf7;
+border-color:#cbece5
+}
+
+.breakout{
+background:#eef5ff;
+border-color:#cfe1fa
+}
+
+.pressure{
+background:#fff5ed;
+border-color:#f2dccb
+}
+
+.warning{
+background:#fff5d8;
+border-color:#f1dfaa
+}
 
 .chip{
 margin-top:12px;
@@ -376,7 +453,10 @@ margin-top:13px
 }
 
 .back{margin-bottom:12px}
-.hidden{display:none!important}
+
+.hidden{
+display:none!important
+}
 
 .note{
 font-size:11px;
@@ -468,7 +548,7 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <div class="note">
-全市場雷達先掃描台股 Snapshot，再由候選池進行日 K 快篩與完整 8 條件／SMC 分析。7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點加 ATR 緩衝；TP 結合 SMC 壓力、風險報酬、ATR 與 Fibonacci 波段延伸。
+全市場雷達先掃描台股 Snapshot，再由候選池進行日 K 快篩與完整 8 條件／SMC 分析。關鍵突破位只代表多方需要突破的上方結構，不直接當成 TP1。交易規劃依序為 SMC 支撐、觀察進場區、結構 SL、關鍵突破、TP1、TP2、TP3。
 </div>
 
 </main>
@@ -491,13 +571,6 @@ const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
 const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
 
-/*
-  DEFAULT 現在只作為：
-  1. /api/radar 失敗時的備援
-  2. Push 原本的預設監控股票
-
-  首頁不再只掃這 12 檔。
-*/
 const DEFAULT=[
 '2330','2317','2454','2308','2382','3231',
 '2881','2882','2891','2886','2603','2615'
@@ -616,7 +689,11 @@ function atr(rows,n=14){
 
 const v=[];
 
-for(let i=Math.max(1,rows.length-n);i<rows.length;i++){
+for(
+let i=Math.max(1,rows.length-n);
+i<rows.length;
+i++
+){
 
 const x=rows[i];
 const p=rows[i-1].close;
@@ -749,7 +826,7 @@ return d;
 
 
 /* =========================================================
-   SMC
+   Swing
 ========================================================= */
 
 function swings(rows,left=2,right=2){
@@ -757,7 +834,11 @@ function swings(rows,left=2,right=2){
 const lows=[];
 const highs=[];
 
-for(let i=left;i<rows.length-right;i++){
+for(
+let i=left;
+i<rows.length-right;
+i++
+){
 
 let lo=true;
 let hi=true;
@@ -787,19 +868,23 @@ hi=false;
 }
 
 if(lo){
+
 lows.push({
 i,
 value:rows[i].low,
 row:rows[i]
 });
+
 }
 
 if(hi){
+
 highs.push({
 i,
 value:rows[i].high,
 row:rows[i]
 });
+
 }
 
 }
@@ -809,24 +894,39 @@ return {lows,highs};
 
 function zoneValid(zone,rows,bullish=true){
 
-const after=rows.slice(zone.i+1);
+const after=
+rows.slice(zone.i+1);
 
 if(bullish){
-return !after.some(x=>x.close<zone.low);
+
+return !after.some(
+x=>x.close<zone.low
+);
+
 }
 
-return !after.some(x=>x.close>zone.high);
+return !after.some(
+x=>x.close>zone.high
+);
+
 }
 
 
 /* =========================================================
-   SMC + 波段 SL / TP
+   SMC 2.0
 ========================================================= */
 
 function smcAnalysis(rows,price,A,inst){
 
-const recent=rows.slice(-140);
-const S=swings(recent,2,2);
+const recent=
+rows.slice(-160);
+
+const S=
+swings(
+recent,
+2,
+2
+);
 
 const volBase=
 avg(
@@ -839,9 +939,15 @@ const supports=[];
 const pressures=[];
 
 
-/* Bullish / Bearish OB */
+/* =========================================================
+   Order Block
+========================================================= */
 
-for(let i=2;i<recent.length-2;i++){
+for(
+let i=2;
+i<recent.length-2;
+i++
+){
 
 const x=recent[i];
 const n2=recent[i+2];
@@ -849,12 +955,21 @@ const n2=recent[i+2];
 const displacementUp=
 n2.close>
 x.high+
-Math.max(A*.35,price*.004);
+Math.max(
+A*.35,
+price*.004
+);
 
 const displacementDown=
 n2.close<
 x.low-
-Math.max(A*.35,price*.004);
+Math.max(
+A*.35,
+price*.004
+);
+
+
+/* Bullish OB */
 
 if(
 x.close<x.open &&
@@ -862,21 +977,41 @@ displacementUp
 ){
 
 const z={
+
 type:'Bullish OB',
+
 i,
+
 low:x.low,
-high:Math.max(x.open,x.close),
+
+high:
+Math.max(
+x.open,
+x.close
+),
+
 score:5
+
 };
 
 if(
-zoneValid(z,recent,true) &&
+zoneValid(
+z,
+recent,
+true
+)
+&&
 z.low<price
 ){
+
 supports.push(z);
+
 }
 
 }
+
+
+/* Bearish OB */
 
 if(
 x.close>x.open &&
@@ -884,85 +1019,185 @@ displacementDown
 ){
 
 const z={
-type:'Bearish OB',
+
+type:'Bearish OB / Supply',
+
 i,
-low:Math.min(x.open,x.close),
+
+low:
+Math.min(
+x.open,
+x.close
+),
+
 high:x.high,
+
 score:5
+
 };
 
 if(
-zoneValid(z,recent,false) &&
+zoneValid(
+z,
+recent,
+false
+)
+&&
 z.high>price
 ){
+
 pressures.push(z);
-}
 
 }
 
 }
 
+}
 
-/* FVG */
 
-for(let i=1;i<recent.length-1;i++){
+/* =========================================================
+   FVG
+========================================================= */
 
-const a=recent[i-1];
-const c=recent[i+1];
+for(
+let i=1;
+i<recent.length-1;
+i++
+){
 
-if(c.low>a.high){
+const left=
+recent[i-1];
+
+const right=
+recent[i+1];
+
+
+/* Bullish FVG */
+
+if(
+right.low>
+left.high
+){
+
+const gap=
+right.low-
+left.high;
+
+if(
+gap>=
+Math.max(
+A*.12,
+price*.0015
+)
+){
 
 const z={
+
 type:'Bullish FVG',
+
 i,
-low:a.high,
-high:c.low,
+
+low:left.high,
+
+high:right.low,
+
 score:3.5
+
 };
 
 if(
-zoneValid(z,recent,true) &&
+zoneValid(
+z,
+recent,
+true
+)
+&&
 z.low<price
 ){
+
 supports.push(z);
+
+}
+
 }
 
 }
 
-if(c.high<a.low){
+
+/* Bearish FVG */
+
+if(
+right.high<
+left.low
+){
+
+const gap=
+left.low-
+right.high;
+
+if(
+gap>=
+Math.max(
+A*.12,
+price*.0015
+)
+){
 
 const z={
+
 type:'Bearish FVG',
+
 i,
-low:c.high,
-high:a.low,
+
+low:right.high,
+
+high:left.low,
+
 score:3.5
+
 };
 
 if(
-zoneValid(z,recent,false) &&
+zoneValid(
+z,
+recent,
+false
+)
+&&
 z.high>price
 ){
+
 pressures.push(z);
-}
 
 }
 
 }
 
+}
 
-/* BOS / Breaker */
+}
+
+
+/* =========================================================
+   BOS / Breaker / Liquidity
+========================================================= */
 
 for(const h of S.highs){
 
-const later=recent.slice(h.i+1);
+const later=
+recent.slice(
+h.i+1
+);
 
 const broken=
 later.some(
 x=>
 x.close>
 h.value+
-Math.max(A*.12,h.value*.0025)
+Math.max(
+A*.12,
+h.value*.0025
+)
 );
 
 if(
@@ -971,38 +1206,77 @@ h.value<price
 ){
 
 supports.push({
+
 type:'BOS / Breaker',
+
 i:h.i,
-low:h.value-A*.15,
-high:h.value+A*.15,
+
+low:
+h.value-
+A*.15,
+
+high:
+h.value+
+A*.15,
+
 score:6
+
 });
 
 }
-else if(h.value>price){
+else if(
+h.value>
+price+
+Math.max(
+A*.12,
+price*.0015
+)
+){
 
 pressures.push({
-type:'Buy-side Liquidity',
+
+type:'Swing High / Liquidity',
+
 i:h.i,
-low:h.value-A*.08,
-high:h.value+A*.08,
+
+low:
+h.value-
+A*.08,
+
+high:
+h.value+
+A*.08,
+
 score:4.5
+
 });
 
 }
 
 }
+
 
 for(const l of S.lows){
 
 if(l.value<price){
 
 supports.push({
-type:'Sell-side Liquidity / Demand',
+
+type:
+'Sell-side Liquidity / Demand',
+
 i:l.i,
-low:l.value-A*.10,
-high:l.value+A*.12,
+
+low:
+l.value-
+A*.10,
+
+high:
+l.value+
+A*.12,
+
 score:3.8
+
 });
 
 }
@@ -1010,160 +1284,261 @@ score:3.8
 }
 
 
-/* Liquidity Sweep */
+/* =========================================================
+   Liquidity Sweep
+========================================================= */
 
-for(let i=3;i<recent.length;i++){
+for(
+let i=8;
+i<recent.length;
+i++
+){
+
+const before=
+recent.slice(
+Math.max(0,i-8),
+i
+);
+
+if(!before.length){
+continue;
+}
 
 const prevLow=
 Math.min(
-...recent
-.slice(Math.max(0,i-8),i)
-.map(x=>x.low)
+...before.map(x=>x.low)
 );
 
 const prevHigh=
 Math.max(
-...recent
-.slice(Math.max(0,i-8),i)
-.map(x=>x.high)
+...before.map(x=>x.high)
 );
 
-const x=recent[i];
+const x=
+recent[i];
 
 if(
 x.low<prevLow &&
 x.close>prevLow
 ){
 
-supports.push({
+const z={
+
 type:'Liquidity Sweep',
+
 i,
+
 low:x.low,
+
 high:prevLow,
+
 score:5.5
-});
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+true
+)
+){
+
+supports.push(z);
 
 }
+
+}
+
 
 if(
 x.high>prevHigh &&
 x.close<prevHigh
 ){
 
-pressures.push({
-type:'Liquidity Sweep',
+const z={
+
+type:'Liquidity Sweep / Supply',
+
 i,
+
 low:prevHigh,
+
 high:x.high,
+
 score:5.5
-});
+
+};
+
+if(
+zoneValid(
+z,
+recent,
+false
+)
+){
+
+pressures.push(z);
 
 }
 
 }
 
+}
 
-/* 成交量品質 */
 
-for(const z of [...supports,...pressures]){
+/* =========================================================
+   Volume Quality
+========================================================= */
 
-const r=recent[z.i];
+for(
+const z
+of [
+...supports,
+...pressures
+]
+){
+
+const r=
+recent[z.i];
 
 if(
 r &&
 volBase>0 &&
 r.volume>=volBase*1.35
 ){
+
 z.score+=1.5;
+
 }
 
-const dist=
+const middle=
+(z.low+z.high)/2;
+
+const distance=
 Math.abs(
-price-(z.low+z.high)/2
+price-middle
 )/price;
 
-z.score-=dist*12;
+z.score-=
+distance*12;
 
 }
 
 
-/* 法人 */
+/* =========================================================
+   法人
+========================================================= */
 
-const chip=inst||{};
-const chip5=Number(chip.total5||0);
+const chip=
+inst||{};
+
+const chip5=
+Number(
+chip.total5||0
+);
+
+const foreign5=
+Number(
+chip.foreign5||0
+);
+
+const trust5=
+Number(
+chip.trust5||0
+);
 
 if(chip5>0){
-supports.forEach(z=>z.score+=.7);
+
+supports.forEach(
+z=>z.score+=.7
+);
+
 }
 
 if(chip5<0){
-pressures.forEach(z=>z.score+=.7);
+
+pressures.forEach(
+z=>z.score+=.7
+);
+
 }
 
-if(Number(chip.foreign5||0)>0){
-supports.forEach(z=>z.score+=.3);
+if(foreign5>0){
+
+supports.forEach(
+z=>z.score+=.3
+);
+
 }
 
-if(Number(chip.trust5||0)>0){
-supports.forEach(z=>z.score+=.3);
+if(trust5>0){
+
+supports.forEach(
+z=>z.score+=.3
+);
+
 }
 
 
-/* 有效支撐 */
+/* =========================================================
+   Valid Supports
+========================================================= */
 
 const validS=
 supports
-.filter(z=>z.high<=price*1.012)
-.sort(
-(a,b)=>{
+.filter(
+z=>
+Number.isFinite(z.low)
+&&
+Number.isFinite(z.high)
+&&
+z.low>0
+&&
+z.high>0
+&&
+z.high<=price*1.012
+)
+.map(
+z=>{
 
-const da=(price-a.high)/price;
-const db=(price-b.high)/price;
+const distance=
+Math.max(
+0,
+price-z.high
+);
 
-return (db-da)*5+(b.score-a.score);
+const distancePct=
+distance/price;
+
+return {
+
+...z,
+
+finalScore:
+z.score-
+distancePct*12
+
+};
 
 }
-);
-
-
-/* 有效壓力 */
-
-const validP=
-pressures
-.filter(z=>z.low>price*1.001)
-.sort((a,b)=>a.low-b.low);
-
-
-/* 第一支撐 */
-
-const nearS=
-validS.filter(
-z=>(price-z.high)/price<=.10
-);
-
-let s1=
-nearS.sort(
-(a,b)=>{
-
-const da=(price-a.high)/price;
-const db=(price-b.high)/price;
-
-return (
-b.score-db*30
-)-
+)
+.filter(
+z=>
 (
-a.score-da*30
+price-z.high
+)/price<=.10
+)
+.sort(
+(a,b)=>
+b.finalScore-
+a.finalScore
 );
 
-}
-)[0]
-||
-validS[0]
-||
+
+const s1=
+validS[0]||
 null;
-
-
-/* 第二支撐 */
 
 let s2=null;
 
@@ -1173,21 +1548,213 @@ s2=
 validS
 .filter(
 z=>
-z!==s1 &&
+z!==s1
+&&
 z.high<
 s1.low-
-Math.max(A*.25,price*.003)
+Math.max(
+A*.25,
+price*.003
 )
-.sort((a,b)=>b.high-a.high)[0]
+)
+.sort(
+(a,b)=>
+b.high-a.high
+)[0]
 ||
 null;
 
 }
 
 
-/* 上方壓力 */
+/* =========================================================
+   壓力共振
 
-const p1=validP[0]||null;
+   把非常接近的小壓力合併，
+   避免被誤判成 TP1 / TP2 / TP3。
+========================================================= */
+
+const rawPressure=
+pressures
+.filter(
+z=>
+Number.isFinite(z.low)
+&&
+Number.isFinite(z.high)
+&&
+z.low>
+price+
+Math.max(
+A*.12,
+price*.0015
+)
+)
+.map(
+z=>({
+
+...z,
+
+target:z.low
+
+})
+)
+.sort(
+(a,b)=>
+a.target-b.target
+);
+
+
+const mergeDistance=
+Math.max(
+A*.35,
+price*.004
+);
+
+const pressureGroups=[];
+
+for(const z of rawPressure){
+
+const last=
+pressureGroups[
+pressureGroups.length-1
+];
+
+if(
+last &&
+Math.abs(
+z.target-
+last.target
+)<=mergeDistance
+){
+
+const weight=
+Math.max(
+.1,
+z.score
+);
+
+const totalWeight=
+last.weight+
+weight;
+
+last.target=
+(
+last.target*
+last.weight
++
+z.target*
+weight
+)/
+totalWeight;
+
+last.low=
+Math.min(
+last.low,
+z.low
+);
+
+last.high=
+Math.max(
+last.high,
+z.high
+);
+
+last.score=
+Math.max(
+last.score,
+z.score
+)+.4;
+
+last.weight=
+totalWeight;
+
+last.types.push(
+z.type
+);
+
+}
+else{
+
+pressureGroups.push({
+
+type:z.type,
+
+types:[
+z.type
+],
+
+i:z.i,
+
+low:z.low,
+
+high:z.high,
+
+target:z.target,
+
+score:z.score,
+
+weight:
+Math.max(
+.1,
+z.score
+)
+
+});
+
+}
+
+}
+
+for(const z of pressureGroups){
+
+z.types=
+[
+...new Set(
+z.types
+)
+];
+
+z.type=
+z.types.join(' + ');
+
+}
+
+
+/* =========================================================
+   關鍵突破位
+
+   注意：
+   這不是 TP1。
+========================================================= */
+
+const breakoutZone=
+pressureGroups.find(
+z=>
+z.target>
+Math.max(
+price,
+s1?.high||0
+)+
+Math.max(
+A*.15,
+price*.002
+)
+)
+||
+null;
+
+const breakout=
+breakoutZone
+?
+breakoutZone.target
+:
+null;
+
+
+/* 顯示用壓力 */
+
+const p1=
+breakoutZone;
 
 let p2=null;
 let p3=null;
@@ -1195,12 +1762,16 @@ let p3=null;
 if(p1){
 
 p2=
-validP.find(
+pressureGroups.find(
 z=>
-z!==p1 &&
-z.low>
+z!==p1
+&&
+z.target>
 p1.high+
-Math.max(A*.2,price*.002)
+Math.max(
+A*.35,
+price*.004
+)
 )
 ||
 null;
@@ -1210,13 +1781,18 @@ null;
 if(p2){
 
 p3=
-validP.find(
+pressureGroups.find(
 z=>
-z!==p1 &&
-z!==p2 &&
-z.low>
+z!==p1
+&&
+z!==p2
+&&
+z.target>
 p2.high+
-Math.max(A*.2,price*.002)
+Math.max(
+A*.35,
+price*.004
+)
 )
 ||
 null;
@@ -1225,19 +1801,50 @@ null;
 
 
 /* =========================================================
-   ENTRY + SL
+   ENTRY
 ========================================================= */
 
 let entryLow=null;
 let entryHigh=null;
-let sl=null;
-let riskPct=null;
-let riskTooWide=false;
+let entryMid=null;
 
 if(s1){
 
-entryLow=Math.max(0,s1.low);
-entryHigh=s1.high;
+entryLow=
+Math.max(
+0,
+s1.low
+);
+
+entryHigh=
+s1.high;
+
+entryMid=
+(
+entryLow+
+entryHigh
+)/2;
+
+}
+
+
+/* =========================================================
+   SL
+
+   結構下緣 + 0.70 ATR / 0.8%
+========================================================= */
+
+let sl=null;
+let risk=null;
+let riskPct=null;
+let riskTooWide=false;
+
+if(
+s1 &&
+Number.isFinite(entryMid)
+&&
+entryMid>0
+){
 
 const slBuffer=
 Math.max(
@@ -1260,17 +1867,20 @@ price*.007
 
 }
 
-const entryMid=
-(entryLow+entryHigh)/2;
+risk=
+entryMid-
+sl;
 
 if(
-Number.isFinite(entryMid) &&
-entryMid>0 &&
-Number.isFinite(sl)
+Number.isFinite(risk)
+&&
+risk>0
 ){
 
 riskPct=
-((entryMid-sl)/entryMid)*100;
+risk/
+entryMid*
+100;
 
 riskTooWide=
 riskPct>5;
@@ -1280,13 +1890,16 @@ riskPct>5;
 }
 
 
-/* Entry Ready */
+/* =========================================================
+   Entry Ready
+========================================================= */
 
 let entryReady=false;
 
 if(
 s1 &&
-Number.isFinite(entryLow) &&
+Number.isFinite(entryLow)
+&&
 Number.isFinite(entryHigh)
 ){
 
@@ -1299,7 +1912,10 @@ price*.012
 entryReady=
 price>=
 entryLow-
-Math.max(A*.15,price*.003)
+Math.max(
+A*.15,
+price*.003
+)
 &&
 price<=
 entryHigh+
@@ -1309,7 +1925,7 @@ tolerance;
 
 
 /* =========================================================
-   TP
+   TP Engine
 ========================================================= */
 
 let tp1=null;
@@ -1320,20 +1936,26 @@ let tp1Source='';
 let tp2Source='';
 let tp3Source='';
 
+let rr1=null;
+let rr2=null;
+let rr3=null;
+
+let rewardPct1=null;
+let targetSpaceEnough=false;
+
+
 if(
 s1 &&
-Number.isFinite(entryLow) &&
-Number.isFinite(entryHigh) &&
+Number.isFinite(entryMid)
+&&
 Number.isFinite(sl)
+&&
+Number.isFinite(risk)
+&&
+risk>0
 ){
 
-const entryMid=
-(entryLow+entryHigh)/2;
-
-const risk=
-entryMid-sl;
-
-if(risk>0){
+/* R */
 
 const target15R=
 entryMid+
@@ -1347,6 +1969,9 @@ const target35R=
 entryMid+
 risk*3.5;
 
+
+/* ATR */
+
 const atrTP1=
 entryMid+
 A*2;
@@ -1359,10 +1984,14 @@ const atrTP3=
 entryMid+
 A*5;
 
+
+/* Fibonacci */
+
 const swingLows=
 S.lows.filter(
 x=>
-x.value<entryMid
+x.value<
+entryMid
 );
 
 let swingLow=
@@ -1377,7 +2006,9 @@ swingLows.length-1
 
 if(
 candidate &&
-Number.isFinite(candidate.value)
+Number.isFinite(
+candidate.value
+)
 ){
 
 swingLow=
@@ -1387,14 +2018,19 @@ candidate.value;
 
 }
 
+
 const swingHighs=
 S.highs.filter(
 x=>
-x.value>swingLow
+x.value>
+swingLow
 );
 
 let swingHigh=
-price;
+Math.max(
+price,
+breakout||price
+);
 
 for(
 let i=swingHighs.length-1;
@@ -1403,13 +2039,17 @@ i--
 ){
 
 if(
-Number.isFinite(swingHighs[i].value) &&
-swingHighs[i].value>swingLow
+Number.isFinite(
+swingHighs[i].value
+)
+&&
+swingHighs[i].value>
+swingLow
 ){
 
 swingHigh=
 Math.max(
-price,
+swingHigh,
 swingHighs[i].value
 );
 
@@ -1419,12 +2059,16 @@ break;
 
 }
 
+
 let swingRange=
 swingHigh-
 swingLow;
 
 if(
-!Number.isFinite(swingRange) ||
+!Number.isFinite(
+swingRange
+)
+||
 swingRange<=0
 ){
 
@@ -1436,6 +2080,7 @@ risk*2
 
 }
 
+
 const fib1272=
 swingLow+
 swingRange*1.272;
@@ -1444,47 +2089,49 @@ const fib1618=
 swingLow+
 swingRange*1.618;
 
-const smcTargets=
-validP
-.map(
-z=>({
-price:+z.low,
-type:z.type
-})
-)
-.filter(
-x=>
-Number.isFinite(x.price) &&
-x.price>entryHigh
-)
-.sort(
-(a,b)=>
-a.price-b.price
-);
 
+/* =========================================================
+   TP1
 
-/* TP1 */
+   必須在突破位上方，
+   不再把最近壓力直接當 TP1。
+========================================================= */
+
+const breakoutFloor=
+breakout
+?
+breakout+
+Math.max(
+A*.35,
+price*.004
+)
+:
+entryMid;
+
 
 const minTP1=
 Math.max(
 target15R,
-atrTP1
+atrTP1,
+breakoutFloor
 );
 
-const smcTP1=
-smcTargets.find(
-x=>
-x.price>=minTP1
+
+const structureTP1=
+pressureGroups.find(
+z=>
+z.target>=minTP1
 );
 
-if(smcTP1){
+
+if(structureTP1){
 
 tp1=
-smcTP1.price;
+structureTP1.target;
 
 tp1Source=
-smcTP1.type+
-' / SMC';
+structureTP1.type+
+' / SMC 下一壓力';
 
 }
 else{
@@ -1493,47 +2140,20 @@ tp1=
 minTP1;
 
 tp1Source=
-'1.5R / 2ATR 波段目標';
+'1.5R / 2ATR 波段延伸';
 
 }
 
 
-/* TP2 */
+/* =========================================================
+   TP2
+========================================================= */
 
 const minTP2=
 Math.max(
 target25R,
 atrTP2,
-fib1272
-);
-
-const smcTP2=
-smcTargets.find(
-x=>
-x.price>=minTP2 &&
-x.price>
-tp1+
-Math.max(
-A*.30,
-price*.003
-)
-);
-
-if(smcTP2){
-
-tp2=
-smcTP2.price;
-
-tp2Source=
-smcTP2.type+
-' / SMC 波段壓力';
-
-}
-else{
-
-tp2=
-Math.max(
-minTP2,
+fib1272,
 tp1+
 Math.max(
 risk,
@@ -1541,48 +2161,51 @@ A
 )
 );
 
+
+const structureTP2=
+pressureGroups.find(
+z=>
+z.target>=minTP2
+&&
+z.target>
+tp1+
+Math.max(
+A*.35,
+price*.004
+)
+);
+
+
+if(structureTP2){
+
+tp2=
+structureTP2.target;
+
+tp2Source=
+structureTP2.type+
+' / SMC 波段壓力';
+
+}
+else{
+
+tp2=
+minTP2;
+
 tp2Source=
 '2.5R / Fib 1.272';
 
 }
 
 
-/* TP3 */
+/* =========================================================
+   TP3
+========================================================= */
 
 const minTP3=
 Math.max(
 target35R,
 atrTP3,
-fib1618
-);
-
-const smcTP3=
-smcTargets.find(
-x=>
-x.price>=minTP3 &&
-x.price>
-tp2+
-Math.max(
-A*.40,
-price*.004
-)
-);
-
-if(smcTP3){
-
-tp3=
-smcTP3.price;
-
-tp3Source=
-smcTP3.type+
-' / 高階 SMC 壓力';
-
-}
-else{
-
-tp3=
-Math.max(
-minTP3,
+fib1618,
 tp2+
 Math.max(
 risk,
@@ -1590,26 +2213,79 @@ A*1.25
 )
 );
 
+
+const structureTP3=
+pressureGroups.find(
+z=>
+z.target>=minTP3
+&&
+z.target>
+tp2+
+Math.max(
+A*.40,
+price*.004
+)
+);
+
+
+if(structureTP3){
+
+tp3=
+structureTP3.target;
+
+tp3Source=
+structureTP3.type+
+' / 高階 SMC 壓力';
+
+}
+else{
+
+tp3=
+minTP3;
+
 tp3Source=
 '3.5R / Fib 1.618 波段延伸';
 
 }
 
-}
+
+/* RR */
+
+rr1=
+(tp1-entryMid)/
+risk;
+
+rr2=
+(tp2-entryMid)/
+risk;
+
+rr3=
+(tp3-entryMid)/
+risk;
+
+rewardPct1=
+(
+(tp1-entryMid)/
+entryMid
+)*100;
+
+targetSpaceEnough=
+Number.isFinite(rr1)
+&&
+rr1>=1.5
+&&
+tp1>entryHigh;
 
 }
+
 
 return {
 
 support1:s1,
 support2:s2,
 
-breakout:
-p1
-?
-p1.low
-:
-null,
+breakout,
+breakoutZone,
 
 pressure1:p1,
 pressure2:p2,
@@ -1617,9 +2293,11 @@ pressure3:p3,
 
 entryLow,
 entryHigh,
+entryMid,
 
 sl,
 
+risk,
 riskPct,
 riskTooWide,
 
@@ -1630,6 +2308,14 @@ tp3,
 tp1Source,
 tp2Source,
 tp3Source,
+
+rr1,
+rr2,
+rr3,
+
+rewardPct1,
+
+targetSpaceEnough,
 
 entryReady,
 
@@ -1687,7 +2373,8 @@ if(rows.length<60){
 throw Error('有效 K 線不足');
 }
 
-const c=rows.map(x=>x.close);
+const c=
+rows.map(x=>x.close);
 
 let p=+d.price;
 
@@ -1698,8 +2385,11 @@ p<=0
 p=rows.at(-1).close;
 }
 
-const m20=sma(c,20);
-const m60=sma(c,60);
+const m20=
+sma(c,20);
+
+const m60=
+sma(c,60);
 
 const A=
 Math.max(
@@ -1707,15 +2397,25 @@ atr(rows),
 p*.006
 );
 
-const R=rsi(c);
+const R=
+rsi(c);
 
 const macd=
-ema(c.slice(-100),12)
+ema(
+c.slice(-100),
+12
+)
 -
-ema(c.slice(-100),26);
+ema(
+c.slice(-100),
+26
+);
 
-const r20=rows.slice(-20);
-const r60=rows.slice(-60);
+const r20=
+rows.slice(-20);
+
+const r60=
+rows.slice(-60);
 
 const support=
 Math.min(
@@ -1732,7 +2432,8 @@ Math.max(
 ...r60.map(x=>x.high)
 );
 
-const vol=rows.at(-1).volume;
+const vol=
+rows.at(-1).volume;
 
 const volAvg=
 avg(
@@ -1747,6 +2448,7 @@ volAvg
 vol/volAvg
 :
 0;
+
 
 const cond=[
 
@@ -1801,7 +2503,9 @@ Math.max(res,high60)>p*1.025,
 ];
 
 const passed=
-cond.filter(x=>x[1]).length;
+cond.filter(
+x=>x[1]
+).length;
 
 const smc=
 smcAnalysis(
@@ -1850,6 +2554,21 @@ smc.riskPct,
 
 riskTooWide:
 smc.riskTooWide,
+
+rr1:
+smc.rr1,
+
+rr2:
+smc.rr2,
+
+rr3:
+smc.rr3,
+
+rewardPct1:
+smc.rewardPct1,
+
+targetSpaceEnough:
+smc.targetSpaceEnough,
 
 support1Low:
 smc.support1
@@ -1905,27 +2624,44 @@ smc.sl,
 breakout:
 smc.breakout,
 
+breakoutType:
+smc.breakoutZone
+?
+smc.breakoutZone.type
+:
+'無明確突破結構',
+
 pressure1:
 smc.pressure1
 ?
-smc.pressure1.low
+smc.pressure1.target
 :
 null,
 
 pressure2:
 smc.pressure2
 ?
-smc.pressure2.low
+smc.pressure2.target
 :
 null,
 
-tp1:smc.tp1,
-tp2:smc.tp2,
-tp3:smc.tp3,
+tp1:
+smc.tp1,
 
-tp1Source:smc.tp1Source,
-tp2Source:smc.tp2Source,
-tp3Source:smc.tp3Source,
+tp2:
+smc.tp2,
+
+tp3:
+smc.tp3,
+
+tp1Source:
+smc.tp1Source,
+
+tp2Source:
+smc.tp2Source,
+
+tp3Source:
+smc.tp3Source,
 
 pressure1Type:
 smc.pressure1
@@ -1978,8 +2714,13 @@ return ['等待','gray'];
 
 function renderCard(a){
 
-const [label,cls]=statusOf(a);
-const cp=Number(a.changePercent||0);
+const [label,cls]=
+statusOf(a);
+
+const cp=
+Number(
+a.changePercent||0
+);
 
 return `
 <div
@@ -2034,11 +2775,21 @@ let list=
 Object.values(cache);
 
 if(tab==='signal'){
-list=list.filter(x=>x.passed>=6);
+
+list=
+list.filter(
+x=>x.passed>=6
+);
+
 }
 
 if(tab==='near'){
-list=list.filter(x=>x.passed===5);
+
+list=
+list.filter(
+x=>x.passed===5
+);
+
 }
 
 if(tab==='watch'){
@@ -2054,7 +2805,8 @@ x=>w.includes(x.symbol)
 
 list.sort(
 (a,b)=>
-(b.passed-a.passed) ||
+(b.passed-a.passed)
+||
 ((b.score||0)-(a.score||0))
 );
 
@@ -2158,15 +2910,37 @@ ${sign(i.total5)}${fmt(i.total5,0)}
 
 
 /* =========================================================
-   個股
+   個股畫面
 ========================================================= */
 
 function renderDetail(a){
 
-const [label,cls]=statusOf(a);
+const [label,cls]=
+statusOf(a);
 
-const w=watch();
-const has=w.includes(a.symbol);
+const w=
+watch();
+
+const has=
+w.includes(a.symbol);
+
+const validBreakout=
+a.breakout!==null
+&&
+a.breakout!==undefined
+&&
+Number.isFinite(+a.breakout)
+&&
++a.breakout>0;
+
+const validRR1=
+Number.isFinite(+a.rr1);
+
+const validRR2=
+Number.isFinite(+a.rr2);
+
+const validRR3=
+Number.isFinite(+a.rr3);
 
 $('detailBody').innerHTML=`
 
@@ -2191,6 +2965,7 @@ ${a.realtime?'即時報價':'最新報價'} · ${esc(a.updatedAt||'')}
 
 </div>
 
+
 <div class="card strategy">
 
 <div class="strategy-head">
@@ -2212,6 +2987,7 @@ ${a.score}%
 </div>
 
 </div>
+
 
 <div class="section-title">
 支撐觀察
@@ -2236,10 +3012,11 @@ a.hasRealStructure
 </strong>
 
 <small>
-SMC 最近有效 Demand / OB / Breaker / Liquidity 結構
+目前最重要的 SMC Demand / Bullish OB / Breaker / Liquidity 支撐。
 </small>
 
 </div>
+
 
 <div class="level support">
 
@@ -2249,9 +3026,12 @@ SMC 最近有效 Demand / OB / Breaker / Liquidity 結構
 
 <strong>
 ${
-a.support2Low!==null &&
-a.support2High!==null &&
-Number.isFinite(+a.support2Low) &&
+a.support2Low!==null
+&&
+a.support2High!==null
+&&
+Number.isFinite(+a.support2Low)
+&&
 Number.isFinite(+a.support2High)
 ?
 `${fmt(a.support2Low)}～${fmt(a.support2High)}`
@@ -2261,12 +3041,13 @@ Number.isFinite(+a.support2High)
 </strong>
 
 <small>
-第一結構失效後的下一層 SMC 支撐
+第一支撐失效後，下方下一層可觀察的 SMC 結構。
 </small>
 
 </div>
 
 </div>
+
 
 <div class="section-title">
 突破與壓力
@@ -2274,10 +3055,11 @@ Number.isFinite(+a.support2High)
 
 <div class="levels">
 
+
 <div class="level breakout full">
 
 <span>
-關鍵突破／壓力區
+關鍵突破位｜${esc(a.breakoutType||'SMC 壓力')}
 </span>
 
 <strong>
@@ -2286,17 +3068,16 @@ ${pressureFmt(a.breakout)}
 
 <small>
 ${
-a.breakout!==null &&
-Number.isFinite(+a.breakout) &&
-+a.breakout>0
+validBreakout
 ?
-'上方最近 Buy-side Liquidity / Bearish OB / Supply 結構'
+'這是多方需要有效突破的關鍵壓力，不是 TP1；突破後才看下一層波段目標。'
 :
-'目前股價上方尚未找到有效的 SMC 壓力結構'
+'目前股價上方尚未找到明確的 SMC 關鍵突破結構。'
 }
 </small>
 
 </div>
+
 
 <div class="level pressure">
 
@@ -2310,17 +3091,18 @@ ${pressureFmt(a.pressure1)}
 
 <small>
 ${
-a.pressure1!==null &&
-Number.isFinite(+a.pressure1) &&
-+a.pressure1>0
+a.pressure1!==null
+&&
+Number.isFinite(+a.pressure1)
 ?
-'最近一層有效 SMC 壓力'
+'目前最近的壓力共振區；它主要用來判斷是否完成突破。'
 :
-'目前上方沒有可辨識的有效壓力'
+'目前沒有可辨識的第一壓力。'
 }
 </small>
 
 </div>
+
 
 <div class="level pressure">
 
@@ -2334,13 +3116,13 @@ ${pressureFmt(a.pressure2)}
 
 <small>
 ${
-a.pressure2!==null &&
-Number.isFinite(+a.pressure2) &&
-+a.pressure2>0
+a.pressure2!==null
+&&
+Number.isFinite(+a.pressure2)
 ?
-'第一壓力突破後的下一層 SMC 壓力'
+'突破第一壓力後，下一層市場結構壓力。'
 :
-'目前沒有第二層有效壓力'
+'目前沒有第二層有效壓力。'
 }
 </small>
 
@@ -2355,6 +3137,7 @@ Number.isFinite(+a.pressure2) &&
 
 <div class="levels">
 
+
 <div class="level entry full">
 
 <span>
@@ -2363,8 +3146,10 @@ SMC 觀察進場區
 
 <strong>
 ${
-a.hasRealStructure &&
-a.entryLow!==null &&
+a.hasRealStructure
+&&
+a.entryLow!==null
+&&
 a.entryHigh!==null
 ?
 `${fmt(a.entryLow)}～${fmt(a.entryHigh)}`
@@ -2380,12 +3165,12 @@ a.hasRealStructure
 (
 a.entryReady
 ?
-'目前價格已進入或接近 SMC 觀察進場區'
+'目前價格已進入或接近有效 SMC 進場區，可進一步觀察量價與突破確認。'
 :
-'等待價格回到有效 Demand / Bullish OB / Breaker 區，不追價'
+'目前價格離結構較遠，等待回到 Demand / Bullish OB / Breaker 區，不追價。'
 )
 :
-'尚未找到可用的 SMC 支撐，因此不建立虛構進場價'
+'尚未找到有效支撐，因此不建立虛構的進場價。'
 }
 </small>
 
@@ -2409,12 +3194,12 @@ a.hasRealStructure
 (
 a.riskTooWide
 ?
-`結構停損距離約 ${fmt(a.riskPct)}%，風險偏大，較適合等待更好的進場位置`
+`距進場中位約 ${fmt(a.riskPct)}%，結構風險偏大，較適合等待更好的進場位置。`
 :
-`SMC 結構失效點下方，距進場中位約 ${fmt(a.riskPct)}%`
+`SMC 結構失效點下方，距進場中位約 ${fmt(a.riskPct)}%。`
 )
 :
-'沒有有效 SMC 結構時不建立停損價'
+'沒有有效 SMC 結構時不建立停損價。'
 }
 </small>
 
@@ -2435,9 +3220,9 @@ ${planFmt(a.tp1)}
 ${
 a.tp1Source
 ?
-esc(a.tp1Source)
+`${esc(a.tp1Source)}${validRR1?`｜約 ${fmt(a.rr1)}R`:''}`
 :
-'目前無法建立目標'
+'目前無法建立第一波段目標'
 }
 </small>
 
@@ -2458,9 +3243,9 @@ ${planFmt(a.tp2)}
 ${
 a.tp2Source
 ?
-esc(a.tp2Source)
+`${esc(a.tp2Source)}${validRR2?`｜約 ${fmt(a.rr2)}R`:''}`
 :
-'目前無法建立目標'
+'目前無法建立第二波段目標'
 }
 </small>
 
@@ -2481,9 +3266,68 @@ ${planFmt(a.tp3)}
 ${
 a.tp3Source
 ?
-esc(a.tp3Source)
+`${esc(a.tp3Source)}${validRR3?`｜約 ${fmt(a.rr3)}R`:''}`
 :
-'目前無法建立目標'
+'目前無法建立延伸目標'
+}
+</small>
+
+</div>
+
+
+<div class="level ${
+a.targetSpaceEnough
+?
+'tp'
+:
+'warning'
+} full">
+
+<span>
+目標空間判斷
+</span>
+
+<strong>
+${
+!a.hasRealStructure
+?
+'等待結構'
+:
+a.riskTooWide
+?
+'風險偏大'
+:
+!a.entryReady
+?
+'等待進場區'
+:
+a.targetSpaceEnough
+?
+'波段空間足夠'
+:
+'目標空間不足'
+}
+</strong>
+
+<small>
+${
+!a.hasRealStructure
+?
+'目前沒有有效 SMC 支撐，不建立完整交易計畫。'
+:
+a.riskTooWide
+?
+'結構停損超過約 5%，不硬縮停損，等待更好的 Entry。'
+:
+!a.entryReady
+?
+'策略可能成立，但目前價格不在理想進場位置。'
+:
+a.targetSpaceEnough
+?
+`TP1 風報比約 ${validRR1?fmt(a.rr1):'--'}R，且 TP1 位於關鍵突破區上方。`
+:
+'第一目標的有效報酬空間不足，較適合等待更好的價格或新的市場結構。'
 }
 </small>
 
@@ -2493,6 +3337,7 @@ esc(a.tp3Source)
 
 
 ${chipHTML(a.institutional)}
+
 
 <div class="section-title">
 策略條件
@@ -2511,26 +3356,32 @@ ${x[1]?'✓':'✕'} ${esc(x[0])}
 
 </div>
 
+
 <button id="fav" class="fav">
 ${has?'移除自選':'加入自選'}
 </button>
 
+
 <div class="note">
-7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點並加入 ATR／百分比緩衝，降低一般盤中震盪掃掉停損的機率。TP1 至少參考 1.5R／2ATR，TP2 結合 2.5R、3.5ATR 與 Fib 1.272，TP3 結合 3.5R、5ATR 與 Fib 1.618；若存在更合適的 SMC 壓力則優先採用市場結構。
+交易規劃採結構優先：先找有效 SMC 支撐建立 Entry，再以支撐失效點加 ATR／百分比緩衝建立 SL。最近的上方 SMC 壓力定義為「關鍵突破位」，不直接當成 TP1。TP1 至少參考 1.5R、2ATR 並位於突破區上方；TP2 結合 2.5R、3.5ATR、Fib 1.272；TP3 結合 3.5R、5ATR、Fib 1.618。若更高位置存在有效 SMC 壓力，優先使用真實市場結構。
 </div>
 
 </div>
 `;
 
+
 $('fav').onclick=
 ()=>{
 
-let x=watch();
+let x=
+watch();
 
 x=
 has
 ?
-x.filter(s=>s!==a.symbol)
+x.filter(
+s=>s!==a.symbol
+)
 :
 [
 ...x,
@@ -2600,7 +3451,9 @@ ${esc(e.message)}
 
 }
 
-clearInterval(detailTimer);
+clearInterval(
+detailTimer
+);
 
 detailTimer=
 setInterval(
@@ -2609,6 +3462,7 @@ refreshDetail,
 );
 
 }
+
 
 async function refreshDetail(){
 
@@ -2684,9 +3538,7 @@ e
 }
 
 
-/* =========================================================
-   取得後端全市場候選
-========================================================= */
+/* 後端全市場候選 */
 
 let marketSymbols=[];
 
@@ -2716,11 +3568,6 @@ x=>
 }
 
 
-/*
-  strategyReady 不足時，
-  把一般 radar 名單一起補進來。
-*/
-
 if(
 radarData &&
 Array.isArray(
@@ -2747,17 +3594,7 @@ x=>
 }
 
 
-/*
-  =========================================================
-  最終前端完整策略分析股票池
-
-  全市場候選
-  +
-  自選股
-
-  去除重複代號。
-=========================================================
-*/
+/* 全市場 + 自選 */
 
 let symbols=
 [
@@ -2769,11 +3606,6 @@ let symbols=
 )
 ];
 
-
-/*
-  /api/radar 暫時失敗時，
-  才退回原本 12 檔 + 自選。
-*/
 
 if(!symbols.length){
 
@@ -2790,10 +3622,7 @@ symbols=
 }
 
 
-/*
-  清掉上一輪不是這次候選的市場股票，
-  但保留自選與目前開啟的個股。
-*/
+/* 清理舊 cache */
 
 const keep=
 new Set(
@@ -2820,10 +3649,6 @@ delete cache[symbol];
 }
 
 
-/* =========================================================
-   掃描提示
-========================================================= */
-
 $('homeList').innerHTML=
 `
 <div class="card loader">
@@ -2832,15 +3657,9 @@ $('homeList').innerHTML=
 `;
 
 
-/* =========================================================
-   分批完整分析
-
-   每批 6 檔，避免一次大量呼叫 /api/stock。
-========================================================= */
+/* 分批完整分析 */
 
 const BATCH_SIZE=6;
-
-let completed=0;
 
 for(
 let i=0;
@@ -2874,10 +3693,7 @@ data:a
 )
 );
 
-for(
-const result
-of results
-){
+for(const result of results){
 
 if(
 result.status===
@@ -2893,24 +3709,13 @@ result.value.data;
 
 }
 
-completed+=batch.length;
-
-
-/*
-  每完成一批就更新畫面，
-  不需要等 80 檔全部分析完。
-*/
-
 renderHome();
 
 }
 
 
-/* =========================================================
-   完成
-========================================================= */
-
 renderHome();
+
 
 console.log(
 '全市場雷達完成',
@@ -2970,14 +3775,20 @@ $('suggestions')
 
 }
 
+
 function renderSearchHistory(){
 
-const h=searchHistory();
-const box=$('suggestions');
+const h=
+searchHistory();
+
+const box=
+$('suggestions');
 
 if(!h.length){
 
-box.classList.add('hidden');
+box.classList.add(
+'hidden'
+);
 
 return;
 
@@ -3033,21 +3844,30 @@ ${esc(x.symbol)}
 `
 ).join('');
 
-box.classList.remove('hidden');
+
+box.classList.remove(
+'hidden'
+);
+
 
 $('clearHistory').onclick=
 e=>{
 
 e.stopPropagation();
 
-localStorage.removeItem(HISTORY_KEY);
+localStorage.removeItem(
+HISTORY_KEY
+);
 
 hideSuggestions();
 
 };
 
+
 box
-.querySelectorAll('.suggestion')
+.querySelectorAll(
+'.suggestion'
+)
 .forEach(
 x=>
 x.onclick=
@@ -3065,6 +3885,7 @@ x.dataset.symbol
 );
 
 }
+
 
 async function searchStocks(q){
 
@@ -3098,9 +3919,11 @@ return d.items||[];
 
 }
 
+
 async function showSuggestions(q){
 
-const box=$('suggestions');
+const box=
+$('suggestions');
 
 if(!q.trim()){
 
@@ -3136,7 +3959,9 @@ box.innerHTML=
 </div>
 `;
 
-box.classList.remove('hidden');
+box.classList.remove(
+'hidden'
+);
 
 return;
 
@@ -3172,10 +3997,16 @@ ${esc(x.market||'')}
 `
 ).join('');
 
-box.classList.remove('hidden');
+
+box.classList.remove(
+'hidden'
+);
+
 
 box
-.querySelectorAll('.suggestion')
+.querySelectorAll(
+'.suggestion'
+)
 .forEach(
 x=>
 x.onclick=
@@ -3207,6 +4038,7 @@ hideSuggestions();
 
 }
 
+
 async function submitSearch(){
 
 hideSuggestions();
@@ -3228,7 +4060,9 @@ return;
 
 }
 
-if(/^\d{4,6}$/.test(q)){
+if(
+/^\d{4,6}$/.test(q)
+){
 
 openStock(q);
 
@@ -3250,18 +4084,23 @@ x[0].symbol
 }
 else{
 
-alert('找不到股票');
+alert(
+'找不到股票'
+);
 
 }
 
 }
 catch(e){
 
-alert(e.message);
+alert(
+e.message
+);
 
 }
 
 }
+
 
 $('q')
 .addEventListener(
@@ -3270,7 +4109,9 @@ e=>{
 
 selectedSearchSymbol='';
 
-clearTimeout(searchTimer);
+clearTimeout(
+searchTimer
+);
 
 searchTimer=
 setTimeout(
@@ -3286,6 +4127,7 @@ e.target.value
 
 }
 );
+
 
 $('q')
 .addEventListener(
@@ -3312,6 +4154,7 @@ $('q').value
 }
 );
 
+
 $('q')
 .addEventListener(
 'click',
@@ -3339,6 +4182,7 @@ $('q').value
 }
 );
 
+
 $('q')
 .addEventListener(
 'keydown',
@@ -3357,6 +4201,7 @@ submitSearch();
 }
 );
 
+
 $('go').onclick=
 e=>{
 
@@ -3370,16 +4215,21 @@ submitSearch();
 
 };
 
+
 document.addEventListener(
 'click',
 e=>{
 
 const searchArea=
-document.querySelector('.search');
+document.querySelector(
+'.search'
+);
 
 if(
 searchArea &&
-!searchArea.contains(e.target)
+!searchArea.contains(
+e.target
+)
 ){
 
 hideSuggestions();
@@ -3389,12 +4239,15 @@ hideSuggestions();
 }
 );
 
+
 document.addEventListener(
 'visibilitychange',
 ()=>{
 
 if(document.hidden){
+
 hideSuggestions();
+
 }
 
 }
@@ -3410,7 +4263,9 @@ $('back').onclick=
 
 current='';
 
-clearInterval(detailTimer);
+clearInterval(
+detailTimer
+);
 
 hideSuggestions();
 
@@ -3440,7 +4295,8 @@ x.onclick=
 
 hideSuggestions();
 
-tab=x.dataset.tab;
+tab=
+x.dataset.tab;
 
 document
 .querySelectorAll('.tab')
@@ -3460,15 +4316,10 @@ renderHome();
 
 /* =========================================================
    Web Push
+
+   維持：
+   DEFAULT 12 + 我的自選
 ========================================================= */
-
-/*
-  Push 暫時維持：
-  原本 12 檔 + 我的自選。
-
-  不把全市場 80 檔直接塞進每一台裝置，
-  避免目前已正常的 monitor / Push 負載突然暴增。
-*/
 
 function pushSymbols(){
 
@@ -3482,6 +4333,7 @@ return [
 ];
 
 }
+
 
 function getDeviceId(){
 
@@ -3524,11 +4376,17 @@ return id;
 
 }
 
-function urlBase64ToUint8Array(base64String){
+
+function urlBase64ToUint8Array(
+base64String
+){
 
 const padding=
 '='.repeat(
-(4-base64String.length%4)%4
+(
+4-
+base64String.length%4
+)%4
 );
 
 const base64=
@@ -3540,7 +4398,9 @@ padding
 .replace(/_/g,'/');
 
 const rawData=
-window.atob(base64);
+window.atob(
+base64
+);
 
 const outputArray=
 new Uint8Array(
@@ -3561,6 +4421,7 @@ rawData.charCodeAt(i);
 return outputArray;
 
 }
+
 
 async function getSWRegistration(){
 
@@ -3595,6 +4456,7 @@ return registration;
 
 }
 
+
 async function getPushPublicKey(){
 
 const r=
@@ -3626,7 +4488,10 @@ return d.publicKey;
 
 }
 
-async function savePushSubscription(subscription){
+
+async function savePushSubscription(
+subscription
+){
 
 const r=
 await fetch(
@@ -3689,7 +4554,8 @@ if(
 !(
 'serviceWorker'
 in navigator
-) ||
+)
+||
 !(
 'PushManager'
 in window
@@ -3705,14 +4571,18 @@ await navigator
 .serviceWorker
 .getRegistration('/');
 
-if(!registration)return;
+if(!registration){
+return;
+}
 
 const subscription=
 await registration
 .pushManager
 .getSubscription();
 
-if(!subscription)return;
+if(!subscription){
+return;
+}
 
 await savePushSubscription(
 subscription
@@ -3729,6 +4599,7 @@ e
 }
 
 }
+
 
 async function updatePushButton(){
 
@@ -3754,7 +4625,8 @@ $('notify')
 .classList
 .remove('push-on');
 
-$('notify').textContent='🔔';
+$('notify').textContent=
+'🔔';
 
 return;
 
@@ -3776,7 +4648,9 @@ await navigator
 .serviceWorker
 .getRegistration('/');
 
-if(!registration)return;
+if(!registration){
+return;
+}
 
 const subscription=
 await registration
@@ -3789,7 +4663,8 @@ $('notify')
 .classList
 .add('push-on');
 
-$('notify').textContent='🔔';
+$('notify').textContent=
+'🔔';
 
 }
 else{
@@ -3798,7 +4673,8 @@ $('notify')
 .classList
 .remove('push-on');
 
-$('notify').textContent='🔔';
+$('notify').textContent=
+'🔔';
 
 }
 
@@ -3845,7 +4721,8 @@ await Notification
 .requestPermission();
 
 if(
-permission!=='granted'
+permission!==
+'granted'
 ){
 
 throw Error(
@@ -3890,6 +4767,7 @@ e
 
 }
 
+
 let subscription;
 
 try{
@@ -3923,6 +4801,7 @@ throw Error(
 
 }
 
+
 if(
 !subscription ||
 !subscription.endpoint
@@ -3942,7 +4821,8 @@ $('notify')
 .classList
 .add('push-on');
 
-$('notify').textContent='🔔';
+$('notify').textContent=
+'🔔';
 
 console.log(
 'Push 已重新訂閱成功',
@@ -3963,14 +4843,15 @@ async()=>{
 
 hideSuggestions();
 
-$('notify').disabled=true;
+$('notify').disabled=
+true;
 
 try{
 
 await enablePush();
 
 alert(
-'進場通知已重新設定完成。\n\n已使用目前的推播金鑰重新建立訂閱，之後網站沒有開著，只要背景監控偵測到正式進場訊號，也可以推播通知你。'
+'進場通知已重新設定完成。\n\n背景監控偵測到 7/8 或 8/8、進入有效 SMC 進場區、結構風險合理且 TP1 空間足夠時，才會發送正式進場通知。'
 );
 
 }
@@ -4011,7 +4892,8 @@ e.message||
 }
 finally{
 
-$('notify').disabled=false;
+$('notify').disabled=
+false;
 
 }
 
@@ -4019,7 +4901,7 @@ $('notify').disabled=false;
 
 
 /* =========================================================
-   從 Push 通知開啟指定股票
+   Push URL 開啟股票
 ========================================================= */
 
 async function openStockFromURL(){
@@ -4041,7 +4923,9 @@ symbol &&
 /^\d{4,6}$/.test(symbol)
 ){
 
-await openStock(symbol);
+await openStock(
+symbol
+);
 
 history.replaceState(
 {},
@@ -4072,6 +4956,7 @@ $('homeList').innerHTML=
 </div>
 `;
 
+
 if(
 'serviceWorker'
 in navigator
@@ -4100,7 +4985,9 @@ e
 
 }
 
+
 updatePushButton();
+
 
 try{
 
@@ -4116,6 +5003,7 @@ e
 
 }
 
+
 renderHome();
 
 clearInterval(
@@ -4123,13 +5011,7 @@ radarTimer
 );
 
 
-/*
-  全市場版改成每 5 分鐘重新掃描。
-
-  原本 60 秒是給 12 檔使用，
-  現在候選池可能有數十檔，
-  不再每分鐘重跑。
-*/
+/* 每 5 分鐘重新掃描 */
 
 radarTimer=
 setInterval(
@@ -4153,6 +5035,7 @@ e
 300000
 );
 
+
 try{
 
 await openStockFromURL();
@@ -4169,8 +5052,10 @@ e
 
 }
 
+
 if(
-document.readyState==='loading'
+document.readyState===
+'loading'
 ){
 
 document.addEventListener(
