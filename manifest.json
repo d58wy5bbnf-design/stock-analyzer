@@ -1,6 +1,6 @@
 /* =========================================================
    api/monitor.js
-   妖子平台 Stock Analysis Monitor 6.0
+   妖子平台 Stock Analysis Monitor 6.1
 
    分析架構：
    1. 技術面      20
@@ -26,10 +26,14 @@
    - 08:55 ~ 13:40
    - 6 小時同 Setup 防重複
    - 失效 Push 自動清除
+
+   6.1 修正：
+   - ?test=1 可直接用 Safari 測試
+   - test=1 不需要 CRON_SECRET
+   - 正式 Cron 仍需 CRON_SECRET
 ========================================================= */
 
-const webpush =
-  require("web-push");
+const webpush = require("web-push");
 
 
 /* =========================================================
@@ -69,8 +73,7 @@ const MIN_VOLUME = 10;
 
 const MIN_RR = 1.3;
 
-const DEDUPE_SECONDS =
-  21600;
+const DEDUPE_SECONDS = 21600;
 
 
 /* =========================================================
@@ -79,11 +82,7 @@ const DEDUPE_SECONDS =
 
 async function redis(command) {
 
-  if (
-    !REDIS_URL ||
-    !REDIS_TOKEN
-  ) {
-
+  if (!REDIS_URL || !REDIS_TOKEN) {
     throw new Error(
       "Redis 環境變數尚未設定"
     );
@@ -94,8 +93,7 @@ async function redis(command) {
 
   const timer =
     setTimeout(
-      () =>
-        controller.abort(),
+      () => controller.abort(),
       8000
     );
 
@@ -105,8 +103,7 @@ async function redis(command) {
       await fetch(
         REDIS_URL,
         {
-          method:
-            "POST",
+          method: "POST",
 
           headers: {
             Authorization:
@@ -117,9 +114,7 @@ async function redis(command) {
           },
 
           body:
-            JSON.stringify(
-              command
-            ),
+            JSON.stringify(command),
 
           signal:
             controller.signal
@@ -133,7 +128,6 @@ async function redis(command) {
       !response.ok ||
       data?.error
     ) {
-
       throw new Error(
         data?.error ||
         "Redis request failed"
@@ -144,16 +138,12 @@ async function redis(command) {
 
   } finally {
 
-    clearTimeout(
-      timer
-    );
+    clearTimeout(timer);
   }
 }
 
 
-async function deleteDevice(
-  deviceId
-) {
+async function deleteDevice(deviceId) {
 
   try {
 
@@ -189,8 +179,7 @@ async function deleteDevice(
 
 function num(v) {
 
-  const n =
-    Number(v);
+  const n = Number(v);
 
   return Number.isFinite(n)
     ? n
@@ -198,47 +187,28 @@ function num(v) {
 }
 
 
-function clamp(
-  value,
-  min,
-  max
-) {
+function clamp(value, min, max) {
 
   return Math.min(
     max,
-    Math.max(
-      min,
-      value
-    )
+    Math.max(min, value)
   );
 }
 
 
-function round(
-  value,
-  digits = 2
-) {
+function round(value, digits = 2) {
 
-  const n =
-    Number(value);
+  const n = Number(value);
 
-  if (
-    !Number.isFinite(n)
-  ) {
-
+  if (!Number.isFinite(n)) {
     return null;
   }
 
   const p =
-    Math.pow(
-      10,
-      digits
-    );
+    Math.pow(10, digits);
 
   return (
-    Math.round(
-      n * p
-    ) / p
+    Math.round(n * p) / p
   );
 }
 
@@ -246,38 +216,25 @@ function round(
 function avg(a) {
 
   const values =
-    (Array.isArray(a)
-      ? a
-      : []
-    )
-    .map(Number)
-    .filter(
-      Number.isFinite
-    );
+    (Array.isArray(a) ? a : [])
+      .map(Number)
+      .filter(Number.isFinite);
 
   return values.length
-    ?
-    values.reduce(
-      (x, y) =>
-        x + y,
-      0
-    ) /
-    values.length
-    :
-    0;
+    ? values.reduce(
+        (x, y) => x + y,
+        0
+      ) / values.length
+    : 0;
 }
 
 
-function sma(
-  a,
-  n
-) {
+function sma(a, n) {
 
   if (
     !Array.isArray(a) ||
     a.length < n
   ) {
-
     return null;
   }
 
@@ -296,21 +253,16 @@ function emaSeries(
     !Array.isArray(values) ||
     !values.length
   ) {
-
     return [];
   }
 
   const k =
-    2 /
-    (period + 1);
+    2 / (period + 1);
 
-  const result =
-    [];
+  const result = [];
 
   let e =
-    Number(
-      values[0]
-    );
+    Number(values[0]);
 
   result.push(e);
 
@@ -342,7 +294,6 @@ function rsi(
     !Array.isArray(values) ||
     values.length <= n
   ) {
-
     return 50;
   }
 
@@ -360,9 +311,7 @@ function rsi(
       Number(values[i]) -
       Number(values[i - 1]);
 
-    if (
-      diff > 0
-    ) {
+    if (diff > 0) {
 
       gain += diff;
 
@@ -373,10 +322,7 @@ function rsi(
     }
   }
 
-  if (
-    loss === 0
-  ) {
-
+  if (loss === 0) {
     return 100;
   }
 
@@ -401,7 +347,6 @@ function atr(
     !Array.isArray(rows) ||
     rows.length < 2
   ) {
-
     return 0;
   }
 
@@ -426,15 +371,11 @@ function atr(
     values.push(
       Math.max(
         x.high - x.low,
-
         Math.abs(
-          x.high -
-          previous
+          x.high - previous
         ),
-
         Math.abs(
-          x.low -
-          previous
+          x.low - previous
         )
       )
     );
@@ -452,12 +393,12 @@ function unique(list) {
         ? list
         : []
       )
-      .map(
-        x =>
-          String(x)
-          .trim()
-      )
-      .filter(Boolean)
+        .map(
+          x =>
+            String(x)
+              .trim()
+        )
+        .filter(Boolean)
     )
   ];
 }
@@ -468,56 +409,19 @@ function formatPrice(v) {
   const n =
     Number(v);
 
-  if (
-    !Number.isFinite(n)
-  ) {
-
+  if (!Number.isFinite(n)) {
     return "--";
   }
 
-  if (
-    n >= 1000
-  ) {
-
+  if (n >= 1000) {
     return n.toFixed(0);
   }
 
-  if (
-    n >= 100
-  ) {
-
+  if (n >= 100) {
     return n.toFixed(1);
   }
 
   return n.toFixed(2);
-}
-
-
-function pct(
-  value,
-  base
-) {
-
-  if (
-    !Number.isFinite(
-      Number(value)
-    ) ||
-    !Number.isFinite(
-      Number(base)
-    ) ||
-    Number(base) === 0
-  ) {
-
-    return null;
-  }
-
-  return (
-    (
-      Number(value) -
-      Number(base)
-    ) /
-    Number(base)
-  ) * 100;
 }
 
 
@@ -547,9 +451,9 @@ function taipeiParts() {
           false
       }
     )
-    .formatToParts(
-      new Date()
-    );
+      .formatToParts(
+        new Date()
+      );
 
   const get =
     type =>
@@ -588,12 +492,10 @@ function isMarketTime() {
       "Wed",
       "Thu",
       "Fri"
-    ]
-    .includes(
+    ].includes(
       t.weekday
     )
   ) {
-
     return false;
   }
 
@@ -614,14 +516,11 @@ function isMarketTime() {
    MACD
 ========================================================= */
 
-function getMACD(
-  closes
-) {
+function getMACD(closes) {
 
   if (
     closes.length < 35
   ) {
-
     return {
       macd: 0,
       signal: 0,
@@ -644,12 +543,8 @@ function getMACD(
   const macdSeries =
     closes.map(
       (_, i) =>
-        (
-          fast[i] || 0
-        ) -
-        (
-          slow[i] || 0
-        )
+        (fast[i] || 0) -
+        (slow[i] || 0)
     );
 
   const signalSeries =
@@ -669,11 +564,8 @@ function getMACD(
     ] || 0;
 
   return {
-
     macd,
-
     signal,
-
     histogram:
       macd - signal
   };
@@ -712,7 +604,6 @@ function getSwings(
         rows[i].high <=
         rows[i - j].high
       ) {
-
         high = false;
       }
 
@@ -720,7 +611,6 @@ function getSwings(
         rows[i].low >=
         rows[i - j].low
       ) {
-
         low = false;
       }
     }
@@ -735,7 +625,6 @@ function getSwings(
         rows[i].high <=
         rows[i + j].high
       ) {
-
         high = false;
       }
 
@@ -743,13 +632,11 @@ function getSwings(
         rows[i].low >=
         rows[i + j].low
       ) {
-
         low = false;
       }
     }
 
     if (high) {
-
       highs.push({
         index: i,
         price:
@@ -760,7 +647,6 @@ function getSwings(
     }
 
     if (low) {
-
       lows.push({
         index: i,
         price:
@@ -779,7 +665,7 @@ function getSwings(
 
 
 /* =========================================================
-   支撐 / 壓力
+   支撐 / 壓力 / Entry / SL / TP
 ========================================================= */
 
 function buildTradePlan(
@@ -793,21 +679,14 @@ function buildTradePlan(
 
   const closes =
     recent.map(
-      x =>
-        x.close
+      x => x.close
     );
 
   const m20 =
-    sma(
-      closes,
-      20
-    );
+    sma(closes, 20);
 
   const m60 =
-    sma(
-      closes,
-      60
-    );
+    sma(closes, 60);
 
   const swings =
     getSwings(
@@ -816,13 +695,7 @@ function buildTradePlan(
       2
     );
 
-
-  /* =======================================================
-     支撐候選
-  ======================================================= */
-
-  const supportCandidates =
-    [];
+  const supportCandidates = [];
 
 
   if (
@@ -831,12 +704,8 @@ function buildTradePlan(
   ) {
 
     supportCandidates.push({
-      price:
-        m20,
-
-      type:
-        "MA20 支撐",
-
+      price: m20,
+      type: "MA20 支撐",
       weight: 4
     });
   }
@@ -848,12 +717,8 @@ function buildTradePlan(
   ) {
 
     supportCandidates.push({
-      price:
-        m60,
-
-      type:
-        "MA60 支撐",
-
+      price: m60,
+      type: "MA60 支撐",
       weight: 3
     });
   }
@@ -866,9 +731,9 @@ function buildTradePlan(
 
     if (
       s.price <=
-      price * 1.005 &&
+        price * 1.005 &&
       s.price >=
-      price * 0.88
+        price * 0.88
     ) {
 
       supportCandidates.push({
@@ -888,8 +753,8 @@ function buildTradePlan(
 
 
   /*
-    前高突破後回測，
-    前高可能轉為支撐。
+    前高突破後，
+    原本壓力轉成支撐。
   */
 
   for (
@@ -898,10 +763,9 @@ function buildTradePlan(
   ) {
 
     if (
-      h.price <
-      price &&
+      h.price < price &&
       h.price >=
-      price * 0.90
+        price * 0.90
     ) {
 
       const after =
@@ -913,8 +777,7 @@ function buildTradePlan(
         after.some(
           x =>
             x.close >
-            h.price *
-            1.005
+            h.price * 1.005
         );
 
       if (broken) {
@@ -943,14 +806,13 @@ function buildTradePlan(
   const volAvg20 =
     avg(
       recent
-      .slice(
-        -21,
-        -1
-      )
-      .map(
-        x =>
-          x.volume
-      )
+        .slice(
+          -21,
+          -1
+        )
+        .map(
+          x => x.volume
+        )
     );
 
 
@@ -970,12 +832,11 @@ function buildTradePlan(
     if (
       volAvg20 > 0 &&
       x.volume >=
-      volAvg20 * 1.5 &&
+        volAvg20 * 1.5 &&
       x.close > x.open &&
-      x.low <
-      price &&
+      x.low < price &&
       x.low >=
-      price * 0.90
+        price * 0.90
     ) {
 
       supportCandidates.push({
@@ -1000,63 +861,56 @@ function buildTradePlan(
   }
 
 
-  /*
-    支撐：
-    優先選離現在最近，
-    同時有結構意義的價格。
-  */
-
   const supports =
     supportCandidates
-    .filter(
-      x =>
-        Number.isFinite(
-          x.price
-        ) &&
-        x.price > 0 &&
-        x.price <=
-        price * 1.005
-    )
-    .map(
-      x => ({
-
-        ...x,
-
-        distance:
-          (
-            price -
+      .filter(
+        x =>
+          Number.isFinite(
             x.price
-          ) /
-          price
-      })
-    )
-    .filter(
-      x =>
-        x.distance >=
-          -0.005 &&
-        x.distance <=
-          0.10
-    )
-    .sort(
-      (a, b) => {
+          ) &&
+          x.price > 0 &&
+          x.price <=
+            price * 1.005
+      )
+      .map(
+        x => ({
+          ...x,
 
-        const scoreA =
-          a.weight -
-          a.distance * 25;
+          distance:
+            (
+              price -
+              x.price
+            ) /
+            price
+        })
+      )
+      .filter(
+        x =>
+          x.distance >=
+            -0.005 &&
+          x.distance <=
+            0.10
+      )
+      .sort(
+        (a, b) => {
 
-        const scoreB =
-          b.weight -
-          b.distance * 25;
+          const scoreA =
+            a.weight -
+            a.distance * 25;
 
-        return (
-          scoreB -
-          scoreA
-        );
-      }
-    );
+          const scoreB =
+            b.weight -
+            b.distance * 25;
+
+          return (
+            scoreB -
+            scoreA
+          );
+        }
+      );
 
 
-  let support1 =
+  const support1 =
     supports[0] ||
     null;
 
@@ -1069,22 +923,21 @@ function buildTradePlan(
 
     support2 =
       supports
-      .filter(
-        x =>
-          x !== support1 &&
-          x.price <
-          support1.price -
-          Math.max(
-            A * 0.4,
-            price * 0.004
-          )
-      )
-      .sort(
-        (a, b) =>
-          b.price -
-          a.price
-      )[0]
-      ||
+        .filter(
+          x =>
+            x !== support1 &&
+            x.price <
+              support1.price -
+              Math.max(
+                A * 0.4,
+                price * 0.004
+              )
+        )
+        .sort(
+          (a, b) =>
+            b.price -
+            a.price
+        )[0] ||
       null;
   }
 
@@ -1104,14 +957,14 @@ function buildTradePlan(
       Math.max(
         A * 0.30,
         support1.price *
-        0.003
+          0.003
       );
 
     entryLow =
       Math.max(
         0,
         support1.price -
-        halfWidth
+          halfWidth
       );
 
     entryHigh =
@@ -1142,33 +995,26 @@ function buildTradePlan(
     )
   ) {
 
-    /*
-      找支撐下方最近的真正 swing low。
-    */
-
     const lowerSwing =
       swings.lows
-      .filter(
-        x =>
-          x.price <
-          support1.price
-      )
-      .sort(
-        (a, b) =>
-          b.price -
-          a.price
-      )[0];
+        .filter(
+          x =>
+            x.price <
+            support1.price
+        )
+        .sort(
+          (a, b) =>
+            b.price -
+            a.price
+        )[0];
 
 
     const invalidation =
       lowerSwing &&
       lowerSwing.price >=
-      support1.price *
-      0.94
-      ?
-      lowerSwing.price
-      :
-      support1.price;
+        support1.price * 0.94
+        ? lowerSwing.price
+        : support1.price;
 
 
     const buffer =
@@ -1198,9 +1044,7 @@ function buildTradePlan(
       sl;
 
 
-    if (
-      risk > 0
-    ) {
+    if (risk > 0) {
 
       riskPct =
         risk /
@@ -1211,11 +1055,10 @@ function buildTradePlan(
 
 
   /* =======================================================
-     壓力候選
+     壓力
   ======================================================= */
 
-  const resistanceCandidates =
-    [];
+  const resistanceCandidates = [];
 
 
   for (
@@ -1225,8 +1068,7 @@ function buildTradePlan(
 
     if (
       h.price >
-      price *
-      1.003
+        price * 1.003
     ) {
 
       resistanceCandidates.push({
@@ -1243,17 +1085,9 @@ function buildTradePlan(
   }
 
 
-  /*
-    20 / 60 / 120 日高點
-  */
-
   for (
     const length of
-    [
-      20,
-      60,
-      120
-    ]
+    [20, 60, 120]
   ) {
 
     const part =
@@ -1268,16 +1102,13 @@ function buildTradePlan(
     const high =
       Math.max(
         ...part.map(
-          x =>
-            x.high
+          x => x.high
         )
       );
 
-
     if (
       high >
-      price *
-      1.003
+        price * 1.003
     ) {
 
       resistanceCandidates.push({
@@ -1291,27 +1122,21 @@ function buildTradePlan(
   }
 
 
-  /*
-    把很接近的壓力合併，
-    避免 TP1、TP2 差太小。
-  */
-
   const sortedResistance =
     resistanceCandidates
-    .filter(
-      x =>
-        Number.isFinite(
-          x.price
-        ) &&
-        x.price >
-        price *
-        1.003
-    )
-    .sort(
-      (a, b) =>
-        a.price -
-        b.price
-    );
+      .filter(
+        x =>
+          Number.isFinite(
+            x.price
+          ) &&
+          x.price >
+            price * 1.003
+      )
+      .sort(
+        (a, b) =>
+          a.price -
+          b.price
+      );
 
 
   const resistance = [];
@@ -1334,10 +1159,10 @@ function buildTradePlan(
         x.price -
         last.price
       ) <=
-      Math.max(
-        A * 0.45,
-        price * 0.005
-      )
+        Math.max(
+          A * 0.45,
+          price * 0.005
+        )
     ) {
 
       last.price =
@@ -1375,9 +1200,7 @@ function buildTradePlan(
   let tp3Extended = false;
 
 
-  if (
-    resistance[0]
-  ) {
+  if (resistance[0]) {
 
     tp1 =
       resistance[0].price;
@@ -1387,9 +1210,7 @@ function buildTradePlan(
   }
 
 
-  if (
-    resistance[1]
-  ) {
+  if (resistance[1]) {
 
     tp2 =
       resistance[1].price;
@@ -1399,9 +1220,7 @@ function buildTradePlan(
   }
 
 
-  if (
-    resistance[2]
-  ) {
+  if (resistance[2]) {
 
     tp3 =
       resistance[2].price;
@@ -1412,8 +1231,8 @@ function buildTradePlan(
 
 
   /*
-    只有沒有歷史壓力時，
-    才允許延伸目標。
+    上方沒有歷史壓力時，
+    才使用 ATR 延伸。
   */
 
   if (
@@ -1423,68 +1242,53 @@ function buildTradePlan(
   ) {
 
     if (
-      !Number.isFinite(
-        tp1
-      )
+      !Number.isFinite(tp1)
     ) {
 
       tp1 =
         Math.max(
-          price +
-          A * 2,
-          entryMid +
-          A * 2
+          price + A * 2,
+          entryMid + A * 2
         );
 
       tp1Source =
         "上方無歷史壓力／ATR 延伸";
 
-      tp1Extended =
-        true;
+      tp1Extended = true;
     }
 
 
     if (
-      !Number.isFinite(
-        tp2
-      )
+      !Number.isFinite(tp2)
     ) {
 
       tp2 =
         Math.max(
-          tp1 +
-          A * 1.5,
-          entryMid +
-          A * 3.5
+          tp1 + A * 1.5,
+          entryMid + A * 3.5
         );
 
       tp2Source =
         "ATR 波段延伸";
 
-      tp2Extended =
-        true;
+      tp2Extended = true;
     }
 
 
     if (
-      !Number.isFinite(
-        tp3
-      )
+      !Number.isFinite(tp3)
     ) {
 
       tp3 =
         Math.max(
-          tp2 +
-          A * 1.5,
-          entryMid +
-          A * 5
+          tp2 + A * 1.5,
+          entryMid + A * 5
         );
 
       tp3Source =
         "ATR 長波段延伸";
 
-      tp3Extended =
-        true;
+      tp3Extended = true;
     }
   }
 
@@ -1499,19 +1303,13 @@ function buildTradePlan(
 
 
   if (
-    Number.isFinite(
-      risk
-    ) &&
+    Number.isFinite(risk) &&
     risk > 0 &&
-    Number.isFinite(
-      entryMid
-    )
+    Number.isFinite(entryMid)
   ) {
 
     if (
-      Number.isFinite(
-        tp1
-      )
+      Number.isFinite(tp1)
     ) {
 
       rr1 =
@@ -1524,9 +1322,7 @@ function buildTradePlan(
 
 
     if (
-      Number.isFinite(
-        tp2
-      )
+      Number.isFinite(tp2)
     ) {
 
       rr2 =
@@ -1539,9 +1335,7 @@ function buildTradePlan(
 
 
     if (
-      Number.isFinite(
-        tp3
-      )
+      Number.isFinite(tp3)
     ) {
 
       rr3 =
@@ -1558,17 +1352,12 @@ function buildTradePlan(
      Entry Ready
   ======================================================= */
 
-  let entryReady =
-    false;
+  let entryReady = false;
 
 
   if (
-    Number.isFinite(
-      entryLow
-    ) &&
-    Number.isFinite(
-      entryHigh
-    )
+    Number.isFinite(entryLow) &&
+    Number.isFinite(entryHigh)
   ) {
 
     const tolerance =
@@ -1659,8 +1448,7 @@ function scoreTechnical(
 
   const closes =
     rows.map(
-      x =>
-        x.close
+      x => x.close
     );
 
   const ma20 =
@@ -1677,15 +1465,13 @@ function scoreTechnical(
 
   const ma20Prev =
     rows.length >= 25
-    ?
-    avg(
-      closes.slice(
-        -25,
-        -5
-      )
-    )
-    :
-    ma20;
+      ? avg(
+          closes.slice(
+            -25,
+            -5
+          )
+        )
+      : ma20;
 
 
   const R =
@@ -1701,9 +1487,6 @@ function scoreTechnical(
     );
 
 
-  const recent20 =
-    rows.slice(-20);
-
   const previous20 =
     rows.slice(
       -21,
@@ -1713,15 +1496,12 @@ function scoreTechnical(
 
   const previousHigh20 =
     previous20.length
-    ?
-    Math.max(
-      ...previous20.map(
-        x =>
-          x.high
-      )
-    )
-    :
-    null;
+      ? Math.max(
+          ...previous20.map(
+            x => x.high
+          )
+        )
+      : null;
 
 
   let score = 0;
@@ -1802,8 +1582,7 @@ function scoreTechnical(
     );
 
   } else if (
-    macd.histogram >
-    0
+    macd.histogram > 0
   ) {
 
     score += 2;
@@ -1823,11 +1602,9 @@ function scoreTechnical(
 
     reasons.push(
       price >
-      previousHigh20
-      ?
-      "突破近期高點"
-      :
-      "接近近期突破區"
+        previousHigh20
+        ? "突破近期高點"
+        : "接近近期突破區"
     );
   }
 
@@ -1916,24 +1693,21 @@ function scoreVolume(
   const volumeAvg20 =
     avg(
       rows
-      .slice(
-        -21,
-        -1
-      )
-      .map(
-        x =>
-          x.volume
-      )
+        .slice(
+          -21,
+          -1
+        )
+        .map(
+          x => x.volume
+        )
     );
 
 
   const volumeRatio =
     volumeAvg20 > 0
-    ?
-    last.volume /
-    volumeAvg20
-    :
-    0;
+      ? last.volume /
+        volumeAvg20
+      : 0;
 
 
   const previous20 =
@@ -1946,8 +1720,7 @@ function scoreVolume(
   const high20 =
     Math.max(
       ...previous20.map(
-        x =>
-          x.high
+        x => x.high
       )
     );
 
@@ -1955,25 +1728,23 @@ function scoreVolume(
   const recent5Avg =
     avg(
       rows
-      .slice(-5)
-      .map(
-        x =>
-          x.volume
-      )
+        .slice(-5)
+        .map(
+          x => x.volume
+        )
     );
 
 
   const previous15Avg =
     avg(
       rows
-      .slice(
-        -20,
-        -5
-      )
-      .map(
-        x =>
-          x.volume
-      )
+        .slice(
+          -20,
+          -5
+        )
+        .map(
+          x => x.volume
+        )
     );
 
 
@@ -2016,7 +1787,7 @@ function scoreVolume(
 
   if (
     price >
-    previous.close &&
+      previous.close &&
     volumeRatio >= 1
   ) {
 
@@ -2029,8 +1800,7 @@ function scoreVolume(
 
 
   if (
-    price >
-    high20 &&
+    price > high20 &&
     volumeRatio >= 1.2
   ) {
 
@@ -2058,16 +1828,14 @@ function scoreVolume(
     recent5Avg > 0 &&
     previous15Avg > 0 &&
     recent5Avg <
-      previous15Avg *
-      0.8 &&
+      previous15Avg * 0.8 &&
     price >=
       rows[
         Math.max(
           0,
           rows.length - 10
         )
-      ].close *
-      0.98
+      ].close * 0.98
   ) {
 
     score += 4;
@@ -2177,8 +1945,7 @@ function scoreInstitutional(
       total5,
       foreign10,
       total10
-    ]
-    .some(
+    ].some(
       Number.isFinite
     );
 
@@ -2255,7 +2022,6 @@ function scoreInstitutional(
   if (
     Number(foreign10) > 0
   ) {
-
     score += 1;
   }
 
@@ -2263,7 +2029,6 @@ function scoreInstitutional(
   if (
     Number(trust10) > 0
   ) {
-
     score += 1;
   }
 
@@ -2271,13 +2036,14 @@ function scoreInstitutional(
   if (
     Number(total10) > 0
   ) {
-
     score += 1;
   }
 
 
   if (
-    Number(foreignBuyDays5) >= 3
+    Number(
+      foreignBuyDays5
+    ) >= 3
   ) {
 
     score += 1;
@@ -2289,7 +2055,9 @@ function scoreInstitutional(
 
 
   if (
-    Number(trustBuyDays5) >= 3
+    Number(
+      trustBuyDays5
+    ) >= 3
   ) {
 
     score += 1;
@@ -2301,9 +2069,10 @@ function scoreInstitutional(
 
 
   if (
-    Number(totalBuyDays5) >= 3
+    Number(
+      totalBuyDays5
+    ) >= 3
   ) {
-
     score += 1;
   }
 
@@ -2311,7 +2080,6 @@ function scoreInstitutional(
   if (
     Number(dealer5) > 0
   ) {
-
     score += 0.5;
   }
 
@@ -2419,8 +2187,6 @@ function scoreFundamental(
   const reasons = [];
 
 
-  /* 月營收 */
-
   if (
     revenueAvailable
   ) {
@@ -2495,8 +2261,6 @@ function scoreFundamental(
   }
 
 
-  /* 財報 */
-
   if (
     financialAvailable
   ) {
@@ -2543,14 +2307,12 @@ function scoreFundamental(
       if (
         eps > 0
       ) {
-
         score += 2;
       }
 
       if (
         eps >= 2
       ) {
-
         score += 1;
       }
     }
@@ -2601,22 +2363,12 @@ function scoreFundamental(
   }
 
 
-  /*
-    如果只拿到其中一類，
-    換算成 20 分制。
-
-    例如只拿到營收，
-    不會因缺財報直接少 12 分。
-  */
-
   const normalized =
     maxScore > 0
-    ?
-    score /
-    maxScore *
-    20
-    :
-    null;
+      ? score /
+        maxScore *
+        20
+      : null;
 
 
   return {
@@ -2626,16 +2378,14 @@ function scoreFundamental(
 
     score:
       maxScore > 0
-      ?
-      clamp(
-        Math.round(
-          normalized
-        ),
-        0,
-        20
-      )
-      :
-      null,
+        ? clamp(
+            Math.round(
+              normalized
+            ),
+            0,
+            20
+          )
+        : null,
 
     revenueYoY:
       num(
@@ -2672,18 +2422,9 @@ function scoreFundamental(
 
 /* =========================================================
    新聞 0 ~ 20
-
-   /api/news overallScore：
-   -10 ~ +10
-
-   新聞只作輔助。
-   沒新聞 = unavailable，
-   不直接扣分。
 ========================================================= */
 
-function scoreNews(
-  news
-) {
+function scoreNews(news) {
 
   if (
     !news ||
@@ -2715,12 +2456,6 @@ function scoreNews(
       10
     );
 
-
-  /*
-    -10 -> 0
-      0 -> 10
-    +10 -> 20
-  */
 
   const score =
     clamp(
@@ -2770,14 +2505,10 @@ function scoreNews(
       news.overall ||
       (
         overall >= 2
-        ?
-        "偏多"
-        :
-        overall <= -2
-        ?
-        "偏空"
-        :
-        "中性"
+          ? "偏多"
+          : overall <= -2
+          ? "偏空"
+          : "中性"
       ),
 
     overallScore:
@@ -2810,9 +2541,7 @@ function combineScores(
     );
 
 
-  if (
-    !available.length
-  ) {
+  if (!available.length) {
 
     return {
       score: 0,
@@ -2838,12 +2567,10 @@ function combineScores(
 
   const score =
     possible > 0
-    ?
-    earned /
-    possible *
-    100
-    :
-    0;
+      ? earned /
+        possible *
+        100
+      : 0;
 
 
   const completeness =
@@ -2883,61 +2610,59 @@ function analyzeData(
     ) ||
     d.rows.length < 60
   ) {
-
     return null;
   }
 
 
   const rows =
     d.rows
-    .map(
-      x => ({
+      .map(
+        x => ({
 
-        date:
-          String(
-            x.date || ""
-          ),
+          date:
+            String(
+              x.date || ""
+            ),
 
-        open:
-          Number(x.open),
+          open:
+            Number(x.open),
 
-        high:
-          Number(x.high),
+          high:
+            Number(x.high),
 
-        low:
-          Number(x.low),
+          low:
+            Number(x.low),
 
-        close:
-          Number(x.close),
+          close:
+            Number(x.close),
 
-        volume:
-          Number(
-            x.volume || 0
-          )
-      })
-    )
-    .filter(
-      x =>
-        Number.isFinite(
-          x.open
-        ) &&
-        Number.isFinite(
-          x.high
-        ) &&
-        Number.isFinite(
-          x.low
-        ) &&
-        Number.isFinite(
-          x.close
-        ) &&
-        x.close > 0
-    );
+          volume:
+            Number(
+              x.volume || 0
+            )
+        })
+      )
+      .filter(
+        x =>
+          Number.isFinite(
+            x.open
+          ) &&
+          Number.isFinite(
+            x.high
+          ) &&
+          Number.isFinite(
+            x.low
+          ) &&
+          Number.isFinite(
+            x.close
+          ) &&
+          x.close > 0
+      );
 
 
   if (
     rows.length < 60
   ) {
-
     return null;
   }
 
@@ -3173,7 +2898,7 @@ function makeSignal(
     Number(
       a.technical.score
     ) <
-    MIN_TECHNICAL
+      MIN_TECHNICAL
   ) {
 
     return {
@@ -3190,7 +2915,7 @@ function makeSignal(
     Number(
       a.volume.score
     ) <
-    MIN_VOLUME
+      MIN_VOLUME
   ) {
 
     return {
@@ -3285,10 +3010,6 @@ function makeSignal(
   }
 
 
-  /*
-    防止已經噴太遠才通知。
-  */
-
   const entryDistance =
     (
       a.price -
@@ -3310,17 +3031,6 @@ function makeSignal(
     };
   }
 
-
-  /*
-    fingerprint：
-
-    股票 +
-    Entry +
-    SL +
-    分數區間
-
-    同一 Setup 6 小時不重複。
-  */
 
   const scoreBucket =
     Math.floor(
@@ -3345,8 +3055,7 @@ function makeSignal(
       ).toFixed(2),
 
       scoreBucket
-    ]
-    .join(":");
+    ].join(":");
 
 
   return {
@@ -3388,9 +3097,7 @@ async function fetchStock(
       );
 
 
-    if (
-      !response.ok
-    ) {
+    if (!response.ok) {
 
       console.error(
         "stock api status:",
@@ -3406,9 +3113,7 @@ async function fetchStock(
       await response.json();
 
 
-    if (
-      !data?.ok
-    ) {
+    if (!data?.ok) {
 
       console.error(
         "stock api error:",
@@ -3437,15 +3142,6 @@ async function fetchStock(
 
 /* =========================================================
    News API
-
-   重要：
-   不對全部股票一開始就抓新聞。
-
-   先用：
-   技術 + 量價 + 法人 + 基本面
-
-   初步夠強才抓新聞，
-   避免浪費 FinMind API 額度。
 ========================================================= */
 
 async function fetchNews(
@@ -3470,10 +3166,7 @@ async function fetchNews(
       );
 
 
-    if (
-      !response.ok
-    ) {
-
+    if (!response.ok) {
       return null;
     }
 
@@ -3482,10 +3175,7 @@ async function fetchNews(
       await response.json();
 
 
-    if (
-      !data?.ok
-    ) {
-
+    if (!data?.ok) {
       return null;
     }
 
@@ -3507,11 +3197,6 @@ async function fetchNews(
 
 /* =========================================================
    是否值得抓新聞
-
-   先用其他四大面向分析。
-
-   如果連其他四面向都很弱，
-   不浪費新聞 API。
 ========================================================= */
 
 function shouldFetchNews(
@@ -3527,23 +3212,13 @@ function shouldFetchNews(
     preliminary.completeness <
     60
   ) {
-
     return false;
   }
 
 
-  /*
-    沒新聞時，
-    最多只有 4 個分類。
-
-    preliminary.score 已經會依
-    現有資料重新正規化到 100。
-  */
-
   if (
     preliminary.score < 65
   ) {
-
     return false;
   }
 
@@ -3552,7 +3227,6 @@ function shouldFetchNews(
     preliminary.technical?.score <
     10
   ) {
-
     return false;
   }
 
@@ -3561,7 +3235,6 @@ function shouldFetchNews(
     preliminary.volume?.score <
     8
   ) {
-
     return false;
   }
 
@@ -3677,12 +3350,20 @@ function buildNotification(
 
         targets.join("｜"),
 
-        `RR ${Number.isFinite(Number(signal.rr1)) ? Number(signal.rr1).toFixed(2) : "--"}R`,
+        `RR ${
+          Number.isFinite(
+            Number(signal.rr1)
+          )
+            ? Number(
+                signal.rr1
+              ).toFixed(2)
+            : "--"
+        }R`,
 
         sectionScores.join("｜")
       ]
-      .filter(Boolean)
-      .join("\n"),
+        .filter(Boolean)
+        .join("\n"),
 
     tag:
       `entry-${signal.symbol}`,
@@ -3753,10 +3434,32 @@ async function handler(
 
 
   /* =======================================================
-     Cron Secret
+     TEST MODE
+
+     ?test=1：
+     Safari 可直接開啟測試。
+
+     正式 Cron：
+     不會有 test=1。
+  ======================================================= */
+
+  const testMode =
+    req.query?.test ===
+    "1";
+
+
+  /* =======================================================
+     CRON SECRET
+
+     test=1：
+     跳過 Authorization。
+
+     正式模式：
+     仍然必須通過 CRON_SECRET。
   ======================================================= */
 
   if (
+    !testMode &&
     process.env.CRON_SECRET
   ) {
 
@@ -3770,12 +3473,14 @@ async function handler(
     ) {
 
       return res
-      .status(401)
-      .json({
-        ok: false,
-        error:
-          "Unauthorized"
-      });
+        .status(401)
+        .json({
+
+          ok: false,
+
+          error:
+            "Unauthorized"
+        });
     }
   }
 
@@ -3801,14 +3506,9 @@ async function handler(
     );
 
 
-    const testMode =
-      req.query?.test ===
-      "1";
-
-
     /*
       正式 Cron：
-      只在台股監控時間掃描。
+      08:55～13:40。
 
       test=1：
       不受時間限制。
@@ -3820,27 +3520,28 @@ async function handler(
     ) {
 
       return res
-      .status(200)
-      .json({
+        .status(200)
+        .json({
 
-        ok: true,
+          ok: true,
 
-        skipped: true,
+          engine:
+            "Stock Analysis Monitor 6.1",
 
-        testMode:
-          false,
+          skipped: true,
 
-        marketTime:
-          false,
+          testMode: false,
 
-        reason:
-          "非台股監控時段"
-      });
+          marketTime: false,
+
+          reason:
+            "非台股監控時段"
+        });
     }
 
 
     /* =====================================================
-       取得 Push 裝置
+       取得所有 Push 裝置
     ===================================================== */
 
     const deviceIds =
@@ -3855,33 +3556,43 @@ async function handler(
     ) {
 
       return res
-      .status(200)
-      .json({
+        .status(200)
+        .json({
 
-        ok: true,
+          ok: true,
 
-        engine:
-          "Stock Analysis Monitor 6.0",
+          engine:
+            "Stock Analysis Monitor 6.1",
 
-        testMode,
+          testMode,
 
-        marketTime:
-          isMarketTime(),
+          marketTime:
+            isMarketTime(),
 
-        devices: 0,
+          devices: 0,
 
-        stocks: 0,
+          stocks: 0,
 
-        signals: 0,
+          signals: 0,
 
-        sent: 0,
+          sent: 0,
 
-        failed: 0,
+          failed: 0,
 
-        removed: 0,
+          removed: 0,
 
-        deduped: 0
-      });
+          deduped: 0,
+
+          checkedStocks:
+            testMode
+              ? []
+              : undefined,
+
+          pushResults:
+            testMode
+              ? []
+              : undefined
+        });
     }
 
 
@@ -3916,11 +3627,9 @@ async function handler(
 
         const device =
           typeof raw ===
-          "string"
-          ?
-          JSON.parse(raw)
-          :
-          raw;
+            "string"
+            ? JSON.parse(raw)
+            : raw;
 
 
         const subscription =
@@ -3969,50 +3678,54 @@ async function handler(
     ) {
 
       return res
-      .status(200)
-      .json({
+        .status(200)
+        .json({
 
-        ok: true,
+          ok: true,
 
-        engine:
-          "Stock Analysis Monitor 6.0",
+          engine:
+            "Stock Analysis Monitor 6.1",
 
-        testMode,
+          testMode,
 
-        marketTime:
-          isMarketTime(),
+          marketTime:
+            isMarketTime(),
 
-        devices: 0,
+          devices: 0,
 
-        stocks: 0,
+          stocks: 0,
 
-        signals: 0,
+          signals: 0,
 
-        sent: 0,
+          sent: 0,
 
-        failed: 0,
+          failed: 0,
 
-        removed: 0,
+          removed: 0,
 
-        deduped: 0
-      });
+          deduped: 0,
+
+          checkedStocks:
+            testMode
+              ? []
+              : undefined,
+
+          pushResults:
+            testMode
+              ? []
+              : undefined
+        });
     }
 
 
     /* =====================================================
        所有裝置股票合併
-
-       DEFAULT 已經由前端 push-subscribe
-       與 watchlist 一起寫入 symbols。
-
-       所以這裡只需要依照裝置 symbols。
     ===================================================== */
 
     const symbols =
       unique(
         devices.flatMap(
-          d =>
-            d.symbols
+          d => d.symbols
         )
       );
 
@@ -4039,13 +3752,12 @@ async function handler(
       new Map();
 
 
-    const checkedStocks =
-      [];
+    const checkedStocks = [];
 
 
     /*
       每批 3 檔，
-      避免同時對 FinMind 打太多 request。
+      避免一次大量呼叫 FinMind。
     */
 
     const batchSize = 3;
@@ -4146,11 +3858,10 @@ async function handler(
 
         /*
           第二階段：
-          只有基本條件夠強才抓新聞。
+          夠強才抓新聞。
         */
 
-        let newsData =
-          null;
+        let newsData = null;
 
 
         if (
@@ -4255,8 +3966,20 @@ async function handler(
             analysis?.tp1 ??
             null,
 
+          tp2:
+            analysis?.tp2 ??
+            null,
+
+          tp3:
+            analysis?.tp3 ??
+            null,
+
           rr1:
             analysis?.rr1 ??
+            null,
+
+          riskPct:
+            analysis?.riskPct ??
             null,
 
           signal:
@@ -4279,7 +4002,7 @@ async function handler(
 
 
     /* =====================================================
-       Push 到每一台裝置
+       Push
     ===================================================== */
 
     let sent = 0;
@@ -4305,7 +4028,6 @@ async function handler(
           device.deviceId
         )
       ) {
-
         continue;
       }
 
@@ -4320,7 +4042,6 @@ async function handler(
             device.deviceId
           )
         ) {
-
           break;
         }
 
@@ -4338,13 +4059,11 @@ async function handler(
 
 
         if (!signal) {
-
           continue;
         }
 
 
-        let dedupeKey =
-          null;
+        let dedupeKey = null;
 
 
         /*
@@ -4352,12 +4071,10 @@ async function handler(
           不使用 6 小時防重複。
 
           正式 Cron：
-          使用防重複。
+          使用 6 小時防重複。
         */
 
-        if (
-          !testMode
-        ) {
+        if (!testMode) {
 
           dedupeKey =
             `swing:push:sent:${device.deviceId}:${signal.fingerprint}`;
@@ -4432,13 +4149,11 @@ async function handler(
           const body =
             typeof error?.body ===
               "string"
-            ?
-            error.body
-            :
-            JSON.stringify(
-              error?.body ||
-              ""
-            );
+              ? error.body
+              : JSON.stringify(
+                  error?.body ||
+                  ""
+                );
 
 
           const expired =
@@ -4453,8 +4168,7 @@ async function handler(
             );
 
 
-          let deleted =
-            false;
+          let deleted = false;
 
 
           if (
@@ -4482,15 +4196,7 @@ async function handler(
             failed++;
 
 
-            /*
-              真正發送失敗：
-              把 dedupe 刪掉，
-              下一輪可以重試。
-            */
-
-            if (
-              dedupeKey
-            ) {
+            if (dedupeKey) {
 
               try {
 
@@ -4533,66 +4239,64 @@ async function handler(
     ===================================================== */
 
     return res
-    .status(200)
-    .json({
+      .status(200)
+      .json({
 
-      ok: true,
+        ok: true,
 
-      engine:
-        "Stock Analysis Monitor 6.0",
+        engine:
+          "Stock Analysis Monitor 6.1",
 
-      strategy:
-        "技術＋量價＋法人＋基本面＋新聞",
+        strategy:
+          "技術＋量價＋法人＋基本面＋新聞",
 
-      pushThreshold:
-        MIN_SCORE,
+        pushThreshold:
+          MIN_SCORE,
 
-      minimumCompleteness:
-        MIN_COMPLETENESS,
+        minimumCompleteness:
+          MIN_COMPLETENESS,
 
-      minimumRR:
-        MIN_RR,
+        minimumTechnical:
+          MIN_TECHNICAL,
 
-      testMode,
+        minimumVolume:
+          MIN_VOLUME,
 
-      marketTime:
-        isMarketTime(),
+        minimumRR:
+          MIN_RR,
 
-      devices:
-        devices.length,
+        testMode,
 
-      stocks:
-        symbols.length,
+        marketTime:
+          isMarketTime(),
 
-      signals:
-        signalMap.size,
+        devices:
+          devices.length,
 
-      sent,
+        stocks:
+          symbols.length,
 
-      failed,
+        signals:
+          signalMap.size,
 
-      removed,
+        sent,
 
-      deduped,
+        failed,
 
-      /*
-        test=1 才顯示詳細資料。
-      */
+        removed,
 
-      checkedStocks:
-        testMode
-        ?
-        checkedStocks
-        :
-        undefined,
+        deduped,
 
-      pushResults:
-        testMode
-        ?
-        pushResults
-        :
-        undefined
-    });
+        checkedStocks:
+          testMode
+            ? checkedStocks
+            : undefined,
+
+        pushResults:
+          testMode
+            ? pushResults
+            : undefined
+      });
 
 
   } catch (error) {
@@ -4604,17 +4308,19 @@ async function handler(
 
 
     return res
-    .status(500)
-    .json({
+      .status(500)
+      .json({
 
-      ok: false,
+        ok: false,
 
-      engine:
-        "Stock Analysis Monitor 6.0",
+        engine:
+          "Stock Analysis Monitor 6.1",
 
-      error:
-        error?.message ||
-        "背景監控失敗"
-    });
+        testMode,
+
+        error:
+          error?.message ||
+          "背景監控失敗"
+      });
   }
 };
