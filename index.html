@@ -468,7 +468,7 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <div class="note">
-7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。實際支撐、進場、停損與優先 TP 採用 SMC 市場結構；當上方暫無有效 SMC 壓力時，TP 會以風險報酬 R 倍數補足。
+7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點加 ATR 緩衝；TP 結合 SMC 壓力、風險報酬、ATR 與 Fibonacci 波段延伸。
 </div>
 
 </main>
@@ -810,6 +810,11 @@ return !after.some(x=>x.close<zone.low);
 return !after.some(x=>x.close>zone.high);
 }
 
+
+/* =========================================================
+   SMC + 波段 SL / TP
+========================================================= */
+
 function smcAnalysis(rows,price,A,inst){
 
 const recent=rows.slice(-140);
@@ -1050,7 +1055,7 @@ score:5.5
 }
 
 
-/* 成交量 */
+/* 成交量品質 */
 
 for(const z of [...supports,...pressures]){
 
@@ -1096,6 +1101,8 @@ supports.forEach(z=>z.score+=.3);
 }
 
 
+/* 有效支撐 */
+
 const validS=
 supports
 .filter(z=>z.high<=price*1.012)
@@ -1110,10 +1117,16 @@ return (db-da)*5+(b.score-a.score);
 }
 );
 
+
+/* 有效壓力 */
+
 const validP=
 pressures
 .filter(z=>z.low>price*1.001)
 .sort((a,b)=>a.low-b.low);
+
+
+/* 第一支撐 */
 
 const nearS=
 validS.filter(
@@ -1141,6 +1154,9 @@ validS[0]
 ||
 null;
 
+
+/* 第二支撐 */
+
 let s2=null;
 
 if(s1){
@@ -1159,6 +1175,9 @@ Math.max(A*.25,price*.003)
 null;
 
 }
+
+
+/* 上方壓力 */
 
 const p1=validP[0]||null;
 
@@ -1196,28 +1215,70 @@ null;
 
 }
 
+
+/* =========================================================
+   ENTRY + SL
+========================================================= */
+
 let entryLow=null;
 let entryHigh=null;
 let sl=null;
+let riskPct=null;
+let riskTooWide=false;
 
 if(s1){
 
 entryLow=Math.max(0,s1.low);
 entryHigh=s1.high;
 
+/*
+  波段 SL：
+  SMC 結構低點下方
+  至少保留 0.70 ATR 或 0.8% 緩衝。
+*/
+
+const slBuffer=
+Math.max(
+A*.70,
+price*.008
+);
+
 sl=
 s1.low-
-Math.max(A*.45,price*.006);
+slBuffer;
 
 if(sl>=entryLow){
 
 sl=
 entryLow-
-Math.max(A*.35,price*.005);
+Math.max(
+A*.50,
+price*.007
+);
+
+}
+
+const entryMid=
+(entryLow+entryHigh)/2;
+
+if(
+Number.isFinite(entryMid) &&
+entryMid>0 &&
+Number.isFinite(sl)
+){
+
+riskPct=
+((entryMid-sl)/entryMid)*100;
+
+riskTooWide=
+riskPct>5;
 
 }
 
 }
+
+
+/* Entry Ready */
 
 let entryReady=false;
 
@@ -1228,7 +1289,10 @@ Number.isFinite(entryHigh)
 ){
 
 const tolerance=
-Math.max(A*.60,price*.012);
+Math.max(
+A*.60,
+price*.012
+);
 
 entryReady=
 price>=
@@ -1243,9 +1307,16 @@ tolerance;
 
 
 /* =========================================================
-   TP：
-   先使用真正 SMC 壓力。
-   不足的目標用 1R / 2R / 3R 補足。
+   TP 系統
+
+   TP1：
+   >= 1.5R / 2 ATR
+
+   TP2：
+   >= 2.5R / 3.5 ATR / Fib 1.272
+
+   TP3：
+   >= 3.5R / 5 ATR / Fib 1.618
 ========================================================= */
 
 let tp1=null;
@@ -1271,77 +1342,312 @@ entryMid-sl;
 
 if(risk>0){
 
-const r1=entryMid+risk;
-const r2=entryMid+risk*2;
-const r3=entryMid+risk*3;
+/* R 倍數 */
+
+const target15R=
+entryMid+
+risk*1.5;
+
+const target25R=
+entryMid+
+risk*2.5;
+
+const target35R=
+entryMid+
+risk*3.5;
+
+
+/* ATR 波段延伸 */
+
+const atrTP1=
+entryMid+
+A*2;
+
+const atrTP2=
+entryMid+
+A*3.5;
+
+const atrTP3=
+entryMid+
+A*5;
+
+
+/* 最近有效 Swing Low */
+
+const swingLows=
+S.lows.filter(
+x=>
+x.value<entryMid
+);
+
+let swingLow=
+entryLow;
+
+if(swingLows.length){
+
+const candidate=
+swingLows[
+swingLows.length-1
+];
+
+if(
+candidate &&
+Number.isFinite(candidate.value)
+){
+
+swingLow=
+candidate.value;
+
+}
+
+}
+
+
+/* 最近有效 Swing High */
+
+const swingHighs=
+S.highs.filter(
+x=>
+x.value>swingLow
+);
+
+let swingHigh=
+price;
+
+for(
+let i=swingHighs.length-1;
+i>=0;
+i--
+){
+
+if(
+Number.isFinite(swingHighs[i].value) &&
+swingHighs[i].value>swingLow
+){
+
+swingHigh=
+Math.max(
+price,
+swingHighs[i].value
+);
+
+break;
+
+}
+
+}
+
+
+/* Swing Range */
+
+let swingRange=
+swingHigh-
+swingLow;
+
+if(
+!Number.isFinite(swingRange) ||
+swingRange<=0
+){
+
+swingRange=
+Math.max(
+A*3,
+risk*2
+);
+
+}
+
+
+/* Fibonacci Extension */
+
+const fib1272=
+swingLow+
+swingRange*1.272;
+
+const fib1618=
+swingLow+
+swingRange*1.618;
+
+
+/* 所有 SMC 上方壓力 */
 
 const smcTargets=
-[
-p1?.low,
-p2?.low,
-p3?.low
-]
+validP
+.map(
+z=>({
+price:+z.low,
+type:z.type
+})
+)
 .filter(
 x=>
-Number.isFinite(+x) &&
-+x>entryHigh
+Number.isFinite(x.price) &&
+x.price>entryHigh
 )
-.map(Number)
-.sort((a,b)=>a-b);
+.sort(
+(a,b)=>
+a.price-b.price
+);
 
-if(smcTargets[0]){
-tp1=smcTargets[0];
-tp1Source='SMC 壓力';
-}
-else{
-tp1=r1;
-tp1Source='1R 風險報酬';
-}
 
-const secondSMC=
+/* =========================================================
+   TP1
+========================================================= */
+
+const minTP1=
+Math.max(
+target15R,
+atrTP1
+);
+
+const smcTP1=
 smcTargets.find(
 x=>
-x>
+x.price>=minTP1
+);
+
+if(smcTP1){
+
+tp1=
+smcTP1.price;
+
+tp1Source=
+smcTP1.type+
+' / SMC';
+
+}
+else{
+
+tp1=
+minTP1;
+
+tp1Source=
+'1.5R / 2ATR 波段目標';
+
+}
+
+
+/* =========================================================
+   TP2
+========================================================= */
+
+const minTP2=
+Math.max(
+target25R,
+atrTP2,
+fib1272
+);
+
+const smcTP2=
+smcTargets.find(
+x=>
+x.price>=minTP2 &&
+x.price>
 tp1+
-Math.max(A*.15,price*.0015)
+Math.max(
+A*.30,
+price*.003
+)
 );
 
-if(secondSMC){
-tp2=secondSMC;
-tp2Source='SMC 壓力';
+if(smcTP2){
+
+tp2=
+smcTP2.price;
+
+tp2Source=
+smcTP2.type+
+' / SMC 波段壓力';
+
 }
 else{
-tp2=Math.max(r2,tp1+risk);
-tp2Source='2R 風險報酬';
+
+tp2=
+Math.max(
+minTP2,
+tp1+
+Math.max(
+risk,
+A
+)
+);
+
+tp2Source=
+'2.5R / Fib 1.272';
+
 }
 
-const thirdSMC=
+
+/* =========================================================
+   TP3
+========================================================= */
+
+const minTP3=
+Math.max(
+target35R,
+atrTP3,
+fib1618
+);
+
+const smcTP3=
 smcTargets.find(
 x=>
-x>
+x.price>=minTP3 &&
+x.price>
 tp2+
-Math.max(A*.15,price*.0015)
+Math.max(
+A*.40,
+price*.004
+)
 );
 
-if(thirdSMC){
-tp3=thirdSMC;
-tp3Source='SMC 壓力';
+if(smcTP3){
+
+tp3=
+smcTP3.price;
+
+tp3Source=
+smcTP3.type+
+' / 高階 SMC 壓力';
+
 }
 else{
-tp3=Math.max(r3,tp2+risk);
-tp3Source='3R 風險報酬';
-}
+
+tp3=
+Math.max(
+minTP3,
+tp2+
+Math.max(
+risk,
+A*1.25
+)
+);
+
+tp3Source=
+'3.5R / Fib 1.618 波段延伸';
 
 }
 
 }
+
+}
+
+
+/* =========================================================
+   回傳
+========================================================= */
 
 return {
 
 support1:s1,
 support2:s2,
 
-breakout:p1?p1.low:null,
+breakout:
+p1
+?
+p1.low
+:
+null,
 
 pressure1:p1,
 pressure2:p2,
@@ -1349,7 +1655,11 @@ pressure3:p3,
 
 entryLow,
 entryHigh,
+
 sl,
+
+riskPct,
+riskTooWide,
 
 tp1,
 tp2,
@@ -1361,7 +1671,8 @@ tp3Source,
 
 entryReady,
 
-hasRealStructure:!!s1,
+hasRealStructure:
+!!s1,
 
 chipBias:
 chip5>0
@@ -1571,6 +1882,12 @@ smc.hasRealStructure,
 
 entryReady:
 smc.entryReady,
+
+riskPct:
+smc.riskPct,
+
+riskTooWide:
+smc.riskTooWide,
 
 support1Low:
 smc.support1
@@ -2112,6 +2429,7 @@ a.entryReady
 
 </div>
 
+
 <div class="level sl">
 
 <span>
@@ -2126,7 +2444,13 @@ ${planFmt(a.sl)}
 ${
 a.hasRealStructure
 ?
-'放在主要 SMC 結構失效點下方'
+(
+a.riskTooWide
+?
+`結構停損距離約 ${fmt(a.riskPct)}%，風險偏大，較適合等待更好的進場位置`
+:
+`SMC 結構失效點下方，距進場中位約 ${fmt(a.riskPct)}%`
+)
 :
 '沒有有效 SMC 結構時不建立停損價'
 }
@@ -2134,9 +2458,12 @@ a.hasRealStructure
 
 </div>
 
+
 <div class="level tp">
 
-<span>TP1</span>
+<span>
+TP1｜第一止盈
+</span>
 
 <strong>
 ${planFmt(a.tp1)}
@@ -2154,9 +2481,12 @@ esc(a.tp1Source)
 
 </div>
 
+
 <div class="level tp">
 
-<span>TP2</span>
+<span>
+TP2｜波段目標
+</span>
 
 <strong>
 ${planFmt(a.tp2)}
@@ -2174,9 +2504,12 @@ esc(a.tp2Source)
 
 </div>
 
+
 <div class="level tp">
 
-<span>TP3</span>
+<span>
+TP3｜延伸目標
+</span>
 
 <strong>
 ${planFmt(a.tp3)}
@@ -2221,7 +2554,7 @@ ${has?'移除自選':'加入自選'}
 </button>
 
 <div class="note">
-7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。交易價位以 SMC 結構為核心；TP 優先使用真實上方流動性／供給結構，若上方暫無有效壓力，則依 Entry 與 SL 的風險距離，以 1R、2R、3R 補足目標。沒有有效 SMC 支撐時不會硬建立虛構 Entry、SL 或 TP。
+7～8 條為強勢成立、6 條為策略成立、5 條為接近形成。SL 採 SMC 結構失效點並加入 ATR／百分比緩衝，降低一般盤中震盪掃掉停損的機率。TP1 至少參考 1.5R／2ATR，TP2 結合 2.5R、3.5ATR 與 Fib 1.272，TP3 結合 3.5R、5ATR 與 Fib 1.618；若存在更合適的 SMC 壓力則優先採用市場結構。
 </div>
 
 </div>
