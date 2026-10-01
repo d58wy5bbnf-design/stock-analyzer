@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="波段分析">
 <meta name="theme-color" content="#f6f7f9">
 <link rel="manifest" href="/manifest.json">
+
 <title>波段分析</title>
 
 <style>
@@ -39,7 +40,10 @@ min-height:62px;
 margin:0 0 22px
 }
 
-.brand{font-size:25px;font-weight:900}
+.brand{
+font-size:25px;
+font-weight:900
+}
 
 .brand small{
 display:block;
@@ -127,8 +131,18 @@ color:#17202a
 }
 
 .suggestion:last-child{border-bottom:0}
-.suggestion-main{font-weight:850;font-size:15px}
-.suggestion-code,.suggestion-market{font-size:11px;color:#7d8793}
+
+.suggestion-main{
+font-weight:850;
+font-size:15px
+}
+
+.suggestion-code,
+.suggestion-market{
+font-size:11px;
+color:#7d8793
+}
+
 .suggestion-code{margin-top:3px}
 .suggestion-market{white-space:nowrap}
 
@@ -183,7 +197,10 @@ gap:12px;
 align-items:flex-start
 }
 
-.symbol{font-size:17px;font-weight:900}
+.symbol{
+font-size:17px;
+font-weight:900
+}
 
 .name{
 font-size:12px;
@@ -253,8 +270,15 @@ justify-content:space-between;
 align-items:center
 }
 
-.strategy-title{font-size:20px;font-weight:950}
-.bigscore{font-size:29px;font-weight:950}
+.strategy-title{
+font-size:20px;
+font-weight:950
+}
+
+.bigscore{
+font-size:29px;
+font-weight:950
+}
 
 .section-title{
 font-size:16px;
@@ -263,7 +287,9 @@ margin-top:19px;
 margin-bottom:8px
 }
 
-.score-grid,.levels,.chip-grid{
+.score-grid,
+.levels,
+.chip-grid{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:8px
@@ -280,19 +306,23 @@ border:1px solid #e7eaee
 
 .level.full{grid-column:1/-1}
 
-.score-box span,.level span,.chip-item span{
+.score-box span,
+.level span,
+.chip-item span{
 display:block;
 font-size:10px;
 color:#7c8793
 }
 
-.score-box strong,.level strong{
+.score-box strong,
+.level strong{
 display:block;
 font-size:17px;
 margin-top:4px
 }
 
-.score-box small,.level small{
+.score-box small,
+.level small{
 display:block;
 font-size:10px;
 line-height:1.45;
@@ -437,16 +467,20 @@ margin-right:5px
 <div class="app">
 
 <header class="top">
+
 <div class="brand">
 波段分析
 <small>台股全市場股票分析雷達</small>
 </div>
+
 <button id="notify" class="icon">🔔</button>
+
 </header>
 
 <main id="home">
 
 <div class="search">
+
 <div class="search-box">
 
 <input
@@ -461,30 +495,52 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <button id="go" class="primary">分析</button>
+
 </div>
 
 <div class="tabs">
-<button class="tab on" data-tab="signal">高分股票</button>
-<button class="tab" data-tab="near">觀察名單</button>
-<button class="tab" data-tab="watch">我的自選</button>
+
+<button class="tab on" data-tab="signal">
+高分股票
+</button>
+
+<button class="tab" data-tab="near">
+觀察名單
+</button>
+
+<button class="tab" data-tab="watch">
+我的自選
+</button>
+
 </div>
 
 <div id="homeList">
-<div class="card loader">正在掃描全市場...</div>
+
+<div class="card loader">
+正在掃描全市場...
+</div>
+
 </div>
 
 <div class="note">
-新版採一般股票波段分析：技術面、量價、法人籌碼、基本面與新聞事件。交易規劃會依現價自動判斷「回檔進場／突破進場／等待」，避免現價已遠離支撐時仍給出不實用的深度回檔 Entry。
+新版交易規劃會先尋找「現價附近最有結構依據的進場位置」，再設定結構失效停損。上方最近有效壓力作為關鍵突破位，突破後第一個有效歷史壓力才是 TP1，再依序尋找 TP2、TP3。
 </div>
 
 </main>
+
 
 <main id="detail" class="hidden">
-<button id="back" class="icon back">← 返回</button>
+
+<button id="back" class="icon back">
+← 返回
+</button>
+
 <div id="detailBody"></div>
+
 </main>
 
 </div>
+
 
 <script>
 
@@ -544,9 +600,7 @@ avg(a);
 
 function ema(a,n){
 
-if(!a.length){
-return 0;
-}
+if(!a.length)return 0;
 
 let e=a[0];
 
@@ -566,40 +620,23 @@ return e;
 
 function rsi(a,n=14){
 
-if(a.length<=n){
-return 50;
-}
+if(a.length<=n)return 50;
 
 let g=0;
 let l=0;
 
 for(let i=a.length-n;i<a.length;i++){
 
-const d=
-a[i]-
-a[i-1];
+const d=a[i]-a[i-1];
 
-if(d>0){
-g+=d;
-}
-else{
-l-=d;
-}
+if(d>0)g+=d;
+else l-=d;
 
 }
 
-if(l===0){
-return 100;
-}
+if(l===0)return 100;
 
-return (
-100-
-100/
-(
-1+
-(g/n)/(l/n)
-)
-);
+return 100-100/(1+(g/n)/(l/n));
 
 }
 
@@ -639,8 +676,9 @@ Math.max(min,v)
 
 }
 
+
 /* =========================================================
-   DEVICE ID
+   DEVICE
 ========================================================= */
 
 function getDeviceId(){
@@ -652,26 +690,18 @@ PUSH_DEVICE_KEY
 
 if(!id){
 
-if(
+id=
 window.crypto &&
 crypto.randomUUID
-){
-
-id=
-crypto.randomUUID();
-
-}
-else{
-
-id=
+?
+crypto.randomUUID()
+:
 'device-'+
 Date.now()+
 '-'+
 Math.random()
 .toString(36)
 .slice(2);
-
-}
 
 localStorage.setItem(
 PUSH_DEVICE_KEY,
@@ -684,8 +714,9 @@ return id;
 
 }
 
+
 /* =========================================================
-   自選
+   WATCHLIST
 ========================================================= */
 
 function watch(){
@@ -705,8 +736,7 @@ return Array.isArray(x)
 x
 .map(String)
 .filter(
-v=>
-/^\d{4,6}$/.test(v)
+v=>/^\d{4,6}$/.test(v)
 )
 )
 ]
@@ -730,8 +760,7 @@ const clean=
 (a||[])
 .map(String)
 .filter(
-v=>
-/^\d{4,6}$/.test(v)
+v=>/^\d{4,6}$/.test(v)
 )
 )
 ];
@@ -750,9 +779,7 @@ async function getCloudWatch(){
 const r=
 await fetch(
 '/api/watchlist?deviceId='+
-encodeURIComponent(
-getDeviceId()
-)+
+encodeURIComponent(getDeviceId())+
 '&t='+
 Date.now(),
 {
@@ -760,19 +787,10 @@ cache:'no-store'
 }
 );
 
-let d;
+const d=
+await r.json();
 
-try{
-d=await r.json();
-}
-catch{
-throw Error('雲端自選資料格式錯誤');
-}
-
-if(
-!r.ok ||
-!d.ok
-){
+if(!r.ok || !d.ok){
 
 throw Error(
 d.error||
@@ -785,10 +803,7 @@ return Array.isArray(d.symbols)
 ?
 d.symbols
 .map(String)
-.filter(
-v=>
-/^\d{4,6}$/.test(v)
-)
+.filter(v=>/^\d{4,6}$/.test(v))
 :
 [];
 
@@ -804,27 +819,17 @@ method:'POST',
 headers:{
 'Content-Type':'application/json'
 },
-body:
-JSON.stringify({
+body:JSON.stringify({
 deviceId:getDeviceId(),
 symbols
 })
 }
 );
 
-let d;
+const d=
+await r.json();
 
-try{
-d=await r.json();
-}
-catch{
-throw Error('雲端自選儲存格式錯誤');
-}
-
-if(
-!r.ok ||
-!d.ok
-){
+if(!r.ok || !d.ok){
 
 throw Error(
 d.error||
@@ -837,8 +842,7 @@ d.error||
 
 async function loadWatchlist(){
 
-const local=
-watch();
+const local=watch();
 
 try{
 
@@ -861,10 +865,7 @@ return watch();
 }
 catch(e){
 
-console.warn(
-'雲端自選讀取失敗',
-e
-);
+console.warn(e);
 
 return local;
 
@@ -872,8 +873,9 @@ return local;
 
 }
 
+
 /* =========================================================
-   搜尋歷史
+   HISTORY
 ========================================================= */
 
 function searchHistory(){
@@ -886,11 +888,7 @@ localStorage.getItem(HISTORY_KEY)||
 '[]'
 );
 
-return Array.isArray(x)
-?
-x
-:
-[];
+return Array.isArray(x)?x:[];
 
 }
 catch{
@@ -903,15 +901,12 @@ return [];
 
 function saveHistory(a){
 
-if(!a?.symbol){
-return;
-}
+if(!a?.symbol)return;
 
 let h=
 searchHistory()
 .filter(
-x=>
-x.symbol!==a.symbol
+x=>x.symbol!==a.symbol
 );
 
 h.unshift({
@@ -928,6 +923,7 @@ h.slice(0,10)
 );
 
 }
+
 
 /* =========================================================
    API
@@ -949,16 +945,19 @@ cache:'no-store'
 let d;
 
 try{
+
 d=await r.json();
+
 }
 catch{
-throw Error('股票資料格式錯誤');
+
+throw Error(
+'股票資料格式錯誤'
+);
+
 }
 
-if(
-!r.ok ||
-!d.ok
-){
+if(!r.ok || !d.ok){
 
 throw Error(
 d.error||
@@ -989,10 +988,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-r.ok &&
-d.ok
-){
+if(r.ok && d.ok){
 
 return d;
 
@@ -1001,10 +997,7 @@ return d;
 }
 catch(e){
 
-console.warn(
-'新聞取得失敗',
-e
-);
+console.warn(e);
 
 }
 
@@ -1016,6 +1009,7 @@ news:[]
 };
 
 }
+
 
 /* =========================================================
    PIVOT
@@ -1102,6 +1096,7 @@ highs
 
 }
 
+
 function clusterLevels(
 items,
 distance
@@ -1116,8 +1111,7 @@ Number.isFinite(+x.value)
 +x.value>0
 )
 .sort(
-(a,b)=>
-a.value-b.value
+(a,b)=>a.value-b.value
 );
 
 const groups=[];
@@ -1172,9 +1166,23 @@ return groups;
 
 }
 
+
 /* =========================================================
-   交易規劃 7.0
-   回檔 / 突破 / 等待
+   TRADE PLAN 8.0
+
+   現價附近最佳 Entry
+   ↓
+   結構失效 SL
+   ↓
+   關鍵突破位
+   ↓
+   TP1 = 突破後第一壓力
+   ↓
+   TP2
+   ↓
+   TP3
+   ↓
+   RR
 ========================================================= */
 
 function buildTradePlan(
@@ -1201,17 +1209,21 @@ A*.45,
 price*.005
 );
 
-/* ========================
-   支撐
-======================== */
+
+/* =========================================================
+   支撐候選
+========================================================= */
 
 const supportRaw=[];
+
+
+/* Pivot Low */
 
 for(const x of P.lows){
 
 if(
-x.value<=price*1.01 &&
-x.value>=price*.75
+x.value<=price*1.012 &&
+x.value>=price*.82
 ){
 
 supportRaw.push({
@@ -1223,59 +1235,108 @@ i:x.i
 
 }
 
+
+/* MA20 */
+
 if(
 Number.isFinite(m20) &&
-m20<=price*1.01 &&
-m20>=price*.75
+m20<=price*1.012 &&
+m20>=price*.82
 ){
 
 supportRaw.push({
 value:m20,
-i:recent.length+1
+i:recent.length+5
 });
 
 }
 
+
+/* MA60 */
+
 if(
 Number.isFinite(m60) &&
-m60<=price*1.01 &&
-m60>=price*.75
+m60<=price*1.012 &&
+m60>=price*.82
 ){
 
 supportRaw.push({
 value:m60,
-i:recent.length
+i:recent.length+4
 });
 
 }
 
-const low20=
+
+/* 10 / 20 / 60 日低點 */
+
+for(const n of [10,20,60]){
+
+const part=
+rows.slice(-n);
+
+if(!part.length)continue;
+
+const low=
 Math.min(
-...rows
-.slice(-20)
-.map(
-x=>x.low
-)
+...part.map(x=>x.low)
 );
 
-const low60=
-Math.min(
-...rows
-.slice(-60)
-.map(
-x=>x.low
-)
+if(
+low<=price*1.012 &&
+low>=price*.82
+){
+
+supportRaw.push({
+value:low,
+i:recent.length+n
+});
+
+}
+
+}
+
+
+/* =========================================================
+   已突破前高 → 可能轉成支撐
+========================================================= */
+
+for(const x of P.highs){
+
+if(
+x.value>=price*.88 &&
+x.value<price
+){
+
+const after=
+recent.slice(
+x.i+1
 );
 
-supportRaw.push({
-value:low20,
-i:recent.length+2
-});
+const broken=
+after.some(
+r=>
+r.close>
+x.value*1.004
+);
+
+if(broken){
 
 supportRaw.push({
-value:low60,
-i:recent.length-1
+value:x.value,
+i:x.i
 });
+
+}
+
+}
+
+}
+
+
+/* =========================================================
+   支撐群
+========================================================= */
 
 const supportGroups=
 clusterLevels(
@@ -1284,56 +1345,158 @@ mergeDistance
 )
 .filter(
 x=>
-x.value<=price*1.01 &&
-x.value>=price*.75
+x.value<=price*1.012 &&
+x.value>=price*.82
 )
 .sort(
 (a,b)=>
 b.value-a.value
 );
 
+
+/* =========================================================
+   第一、第二支撐
+========================================================= */
+
 const support1=
 supportGroups[0]
 ?
 supportGroups[0].value
 :
-(
-Number.isFinite(m20)
-?
-Math.min(price,m20)
-:
-price-A
-);
+null;
 
 const support2=
+support1
+?
 supportGroups.find(
 x=>
 x.value<
 support1-
-mergeDistance
+mergeDistance*.75
 )?.value
 ||
-(
-Number.isFinite(m60) &&
-m60<support1
-?
-m60
-:
 null
+:
+null;
+
+
+/* =========================================================
+   找現價附近「最佳 Entry 支撐」
+
+   最大容許回檔：
+   約 4.5%
+
+   如果最近支撐離現價太遠，
+   就不再叫使用者等深度回檔。
+========================================================= */
+
+const MAX_ENTRY_DISTANCE=
+0.045;
+
+const nearbySupports=
+supportGroups
+.filter(
+x=>{
+
+const distance=
+(
+price-
+x.value
+)/
+price;
+
+return (
+distance>=-.012 &&
+distance<=MAX_ENTRY_DISTANCE
 );
 
-/* ========================
-   壓力
-======================== */
+}
+);
+
+
+/*
+不是直接抓最低價。
+
+優先：
+1. 距離現價合理
+2. 群聚次數較多
+3. 越近期越好
+*/
+
+let bestSupport=null;
+let bestSupportScore=-Infinity;
+
+for(const x of nearbySupports){
+
+const distance=
+Math.max(
+0,
+(
+price-x.value
+)/
+price
+);
+
+const distanceScore=
+Math.max(
+0,
+1-
+distance/
+MAX_ENTRY_DISTANCE
+)*
+45;
+
+const clusterScore=
+Math.min(
+x.count,
+4
+)*
+10;
+
+const recentScore=
+recent.length
+?
+(
+x.latest/
+recent.length
+)*
+15
+:
+0;
+
+const score=
+distanceScore+
+clusterScore+
+recentScore;
+
+if(score>bestSupportScore){
+
+bestSupportScore=score;
+bestSupport=x;
+
+}
+
+}
+
+
+/* =========================================================
+   壓力資料
+
+   注意：
+   這裡不能只抓「現價上方」。
+
+   因為價格剛突破時，
+   舊壓力仍然必須保留下來，
+   才知道剛剛突破哪一關。
+========================================================= */
 
 const pressureRaw=[];
 
 for(const x of P.highs){
 
 if(
-x.value>
-price+
-mergeDistance*.20
+x.value>=price*.90 &&
+x.value<=price*1.35
 ){
 
 pressureRaw.push({
@@ -1345,24 +1508,25 @@ i:x.i
 
 }
 
+
+/* rolling highs */
+
 for(
-let i=20;
-i<recent.length;
-i+=10
+let end=20;
+end<=recent.length;
+end+=10
 ){
 
 const block=
 recent.slice(
 Math.max(
 0,
-i-20
+end-20
 ),
-i+1
+end
 );
 
-if(!block.length){
-continue;
-}
+if(!block.length)continue;
 
 const high=
 Math.max(
@@ -1372,132 +1536,183 @@ x=>x.high
 );
 
 if(
-high>
-price+
-mergeDistance*.20
+high>=price*.90 &&
+high<=price*1.35
 ){
 
 pressureRaw.push({
 value:high,
-i
+i:end
 });
 
 }
 
 }
 
-const pressureGroups=
+
+const allPressureGroups=
 clusterLevels(
 pressureRaw,
 mergeDistance
 )
 .filter(
 x=>
-x.value>
-price+
-mergeDistance*.20
+x.value>=price*.90 &&
+x.value<=price*1.35
 )
 .sort(
 (a,b)=>
 a.value-b.value
 );
 
-const breakout=
-pressureGroups[0]
+
+/* =========================================================
+   關鍵突破位
+
+   找現價上方最近有效壓力。
+
+   若剛突破：
+   也保留現價下方 2% 內的最近舊壓力。
+========================================================= */
+
+const abovePressures=
+allPressureGroups
+.filter(
+x=>
+x.value>
+price+
+mergeDistance*.15
+);
+
+
+const recentlyCrossed=
+allPressureGroups
+.filter(
+x=>
+x.value<=price &&
+x.value>=price*.98
+)
+.sort(
+(a,b)=>
+b.value-a.value
+);
+
+
+const nextResistance=
+abovePressures[0]
 ?
-pressureGroups[0].value
+abovePressures[0].value
 :
 null;
 
-/* ========================
-   判斷策略
-======================== */
 
-const supportDistance=
-support1>0
+const crossedResistance=
+recentlyCrossed[0]
 ?
-(
-price-support1
-)/
-price
+recentlyCrossed[0].value
 :
-999;
+null;
 
-const breakoutDistance=
-breakout
-?
-(
-breakout-price
-)/
-price
-:
-999;
-
-let planType=
-'WAIT';
 
 /*
-離有效支撐 5% 內：
-回檔型
+正常情況：
+突破位 = 上方最近壓力
+
+剛突破情況：
+保留剛突破的舊壓力
 */
+
+let breakout=
+nextResistance;
+
+let breakoutState=
+'BELOW';
 
 if(
-supportDistance>=-.01 &&
-supportDistance<=.05
+crossedResistance
 ){
 
-planType=
-'PULLBACK';
+const crossedDistance=
+(
+price-
+crossedResistance
+)/
+price;
+
+if(
+crossedDistance<=.02
+){
+
+breakout=
+crossedResistance;
+breakoutState=
+'BROKEN';
 
 }
 
-/*
-離支撐超過 5%，
-但距離上方突破位 3.5% 內：
-改成突破型。
-*/
-
-else if(
-breakout &&
-breakoutDistance>=0 &&
-breakoutDistance<=.035 &&
-supportDistance>.05
-){
-
-planType=
-'BREAKOUT';
-
 }
 
-/* ========================
-   ENTRY / SL
-======================== */
+
+/* =========================================================
+   Entry
+========================================================= */
+
+let planType='WAIT';
 
 let entryLow=null;
 let entryHigh=null;
 let entryMid=null;
+
 let sl=null;
 
-/* 回檔型 */
+let entryReady=false;
 
-if(
-planType===
-'PULLBACK'
-){
+
+/* =========================================================
+   有現價附近有效支撐
+========================================================= */
+
+if(bestSupport){
+
+planType='LIMIT';
+
+const base=
+bestSupport.value;
+
+
+/*
+Entry 區不要太寬。
+
+以最佳支撐為核心：
+下方少量容錯
+上方允許少量提前成交。
+*/
 
 entryLow=
-support1-
+base-
 Math.max(
-A*.20,
-price*.0025
+A*.18,
+price*.002
 );
 
 entryHigh=
-support1+
+base+
 Math.max(
-A*.35,
-price*.004
+A*.30,
+price*.0035
 );
+
+
+/*
+避免 Entry 上緣高於現價太多
+*/
+
+entryHigh=
+Math.min(
+entryHigh,
+price*1.006
+);
+
 
 entryMid=
 (
@@ -1505,33 +1720,44 @@ entryLow+
 entryHigh
 )/2;
 
-const structuralLows=
-P.lows
-.map(
-x=>x.value
-)
+
+/* =========================================================
+   SL
+
+   找 Entry 下方最近結構低點。
+========================================================= */
+
+const lowerStructures=
+[
+...P.lows
+.map(x=>x.value),
+
+...supportGroups
+.map(x=>x.value)
+]
 .filter(
-x=>
-x<
-support1-
+v=>
+v<
+base-
 mergeDistance*.20
 &&
-x>=entryMid*.90
+v>=base*.90
 )
 .sort(
-(a,b)=>
-b-a
+(a,b)=>b-a
 );
 
+
 const invalidation=
-structuralLows[0]
+lowerStructures[0]
 ||
 support2
 ||
 (
-support1-
-A*.8
+base-
+A*.80
 );
+
 
 sl=
 invalidation-
@@ -1540,67 +1766,10 @@ A*.25,
 price*.003
 );
 
-if(
-sl>=entryLow
-){
-
-sl=
-entryLow-
-Math.max(
-A*.40,
-price*.0045
-);
-
-}
-
-}
-
-/* 突破型 */
-
-else if(
-planType===
-'BREAKOUT'
-){
 
 /*
-Entry 改放在突破位附近。
-
-不是叫使用者現在追價，
-而是等待突破確認。
+SL 不可跑到 Entry 裡面
 */
-
-entryLow=
-breakout-
-Math.max(
-A*.18,
-breakout*.002
-);
-
-entryHigh=
-breakout+
-Math.max(
-A*.35,
-breakout*.004
-);
-
-entryMid=
-(
-entryLow+
-entryHigh
-)/2;
-
-/*
-突破失敗停損。
-
-不再使用很遠的舊支撐當 SL。
-*/
-
-sl=
-breakout-
-Math.max(
-A*.75,
-breakout*.012
-);
 
 if(
 sl>=entryLow
@@ -1609,72 +1778,127 @@ sl>=entryLow
 sl=
 entryLow-
 Math.max(
-A*.40,
+A*.45,
 price*.005
 );
 
 }
 
+
+/* =========================================================
+   是否進入 Entry 區
+
+   允許一點 ATR 誤差，
+   但不允許價格離 Entry 太遠還通知。
+========================================================= */
+
+const readyTolerance=
+Math.max(
+A*.25,
+price*.0035
+);
+
+
+entryReady=
+price>=
+entryLow-
+readyTolerance
+&&
+price<=
+entryHigh+
+readyTolerance;
+
 }
 
-const risk=
+
+/* =========================================================
+   沒有附近支撐 → WAIT
+
+   不再自動把壓力位當 Entry。
+========================================================= */
+
+else{
+
+planType='WAIT';
+
+}
+
+
+/* =========================================================
+   TP 邏輯
+
+   重要：
+
+   breakout = 必須突破的第一道關卡
+
+   TP1 =
+   breakout 上方第一個有效壓力
+
+   所以 breakout 自己絕對不是 TP1。
+========================================================= */
+
+let tp1=null;
+let tp2=null;
+let tp3=null;
+
+let tp3Source='';
+
+
+if(
 Number.isFinite(entryMid) &&
-Number.isFinite(sl) &&
-entryMid>sl
-?
-entryMid-sl
-:
-null;
+breakout
+){
 
-const riskPct=
-risk
-?
-risk/
-entryMid*
-100
-:
-null;
-
-/* ========================
-   TP
-======================== */
-
-/*
-TP 必須高於實際 Entry。
-
-突破型時，
-breakout 本身是 Entry 依據，
-不能又拿 breakout 當 TP1。
-*/
-
-const targetBase=
-Number.isFinite(entryHigh)
-?
-entryHigh
-:
-price;
-
-const targets=
-pressureGroups
+const targetPressures=
+allPressureGroups
 .map(
 x=>x.value
 )
 .filter(
 v=>
 v>
-targetBase+
-mergeDistance*.25
+breakout+
+mergeDistance*.55
+)
+.sort(
+(a,b)=>a-b
 );
 
-const tp1=
-targets[0]
+
+/* 去除過近重複壓力 */
+
+const cleanTargets=[];
+
+for(const v of targetPressures){
+
+const last=
+cleanTargets[
+cleanTargets.length-1
+];
+
+if(
+!last ||
+v-last>
+mergeDistance*.75
+){
+
+cleanTargets.push(v);
+
+}
+
+}
+
+
+tp1=
+cleanTargets[0]
 ||
 null;
 
-const tp2=
+
+tp2=
 tp1
 ?
-targets.find(
+cleanTargets.find(
 v=>
 v>
 tp1+
@@ -1685,10 +1909,11 @@ null
 :
 null;
 
-let tp3=
+
+tp3=
 tp2
 ?
-targets.find(
+cleanTargets.find(
 v=>
 v>
 tp2+
@@ -1699,38 +1924,73 @@ null
 :
 null;
 
-let tp3Source=
-tp3
-?
-'更高一層歷史壓力'
-:
-'';
+
+if(tp3){
+
+tp3Source=
+'第三層歷史壓力';
+
+}
+
+
+/*
+只有已經找到 TP1、TP2，
+但沒有 TP3，
+才允許 TP3 使用延伸。
+
+TP1 絕對不使用幻想價格。
+*/
 
 if(
 !tp3 &&
-tp2 &&
-tp1
+tp1 &&
+tp2
 ){
 
-const base=
+const extensionBase=
 support2||
-support1;
+support1||
+entryMid;
 
 tp3=
 tp2+
 Math.max(
-tp2-base,
+tp2-extensionBase,
 A*3
-)*.618;
+)*
+.618;
 
 tp3Source=
 '歷史壓力不足，Fib 0.618 延伸';
 
 }
 
-/* ========================
-   R:R
-======================== */
+}
+
+
+/* =========================================================
+   RR
+========================================================= */
+
+const risk=
+Number.isFinite(entryMid) &&
+Number.isFinite(sl) &&
+entryMid>sl
+?
+entryMid-sl
+:
+null;
+
+
+const riskPct=
+risk
+?
+risk/
+entryMid*
+100
+:
+null;
+
 
 function rr(target){
 
@@ -1752,6 +2012,7 @@ risk;
 
 }
 
+
 const rr1=
 rr(tp1);
 
@@ -1761,71 +2022,88 @@ rr(tp2);
 const rr3=
 rr(tp3);
 
-/* ========================
-   是否真正進場
-======================== */
 
-let entryReady=
-false;
+/* =========================================================
+   距離資訊
+========================================================= */
 
-/*
-回檔型：
-價格真的進入支撐 Entry 區附近。
-*/
+const entryDistance=
+bestSupport
+?
+(
+price-
+bestSupport.value
+)/
+price*
+100
+:
+null;
 
-if(
-planType===
-'PULLBACK'
-){
 
-entryReady=
-price>=
-entryLow-
-Math.max(
-A*.25,
-price*.004
-)
+const breakoutDistance=
+breakout
+?
+(
+breakout-price
+)/
+price*
+100
+:
+null;
+
+
+/* =========================================================
+   交易計畫是否完整
+========================================================= */
+
+const validPlan=
+planType==='LIMIT'
 &&
-price<=
-entryHigh+
-Math.max(
-A*.35,
-price*.006
-);
-
-}
-
-/*
-突破型：
-一定要真的突破 breakout。
-
-只是靠近壓力，
-不算 entryReady。
-*/
-
-if(
-planType===
-'BREAKOUT'
-){
-
-entryReady=
-price>=breakout
+Number.isFinite(entryLow)
 &&
-price<=
-entryHigh+
-Math.max(
-A*.20,
-price*.003
-);
+Number.isFinite(entryHigh)
+&&
+Number.isFinite(sl)
+&&
+sl<entryLow
+&&
+Number.isFinite(breakout)
+&&
+Number.isFinite(tp1)
+&&
+tp1>breakout;
 
-}
+
+/* =========================================================
+   回傳
+========================================================= */
 
 return {
 
 support1,
 support2,
 
+bestSupport:
+bestSupport
+?
+bestSupport.value
+:
+null,
+
+bestSupportStrength:
+bestSupport
+?
+bestSupport.count
+:
+0,
+
 breakout,
+
+breakoutState,
+
+nextResistance,
+
+crossedResistance,
 
 planType,
 
@@ -1849,22 +2127,19 @@ rr3,
 
 entryReady,
 
+validPlan,
+
 pressureCount:
-pressureGroups.length,
+allPressureGroups.length,
 
-supportDistance:
-supportDistance*100,
+entryDistance,
 
-breakoutDistance:
-breakoutDistance===999
-?
-null
-:
-breakoutDistance*100
+breakoutDistance
 
 };
 
 }
+
 
 /* =========================================================
    五大分析
@@ -2025,6 +2300,7 @@ let newsScore=null;
 
 const conditions=[];
 
+
 function techCondition(
 name,
 ok,
@@ -2033,7 +2309,9 @@ description
 ){
 
 if(ok){
+
 technical+=points;
+
 }
 
 conditions.push([
@@ -2043,6 +2321,7 @@ description
 ]);
 
 }
+
 
 techCondition(
 '股價站上 MA20',
@@ -2094,21 +2373,32 @@ technical,
 20
 );
 
-/* 量價 */
+
+/* =========================================================
+   量價
+========================================================= */
 
 if(vr>=1){
+
 volumeScore+=6;
+
 }
 else if(vr>=.8){
+
 volumeScore+=4;
+
 }
 else if(vr>=.6){
+
 volumeScore+=2;
+
 }
+
 
 const changePercent=
 +d.changePercent||
 0;
+
 
 if(
 changePercent>0 &&
@@ -2125,6 +2415,7 @@ changePercent>=0
 volumeScore+=3;
 
 }
+
 
 let upVolumeDays=0;
 
@@ -2151,12 +2442,14 @@ upVolumeDays++;
 
 }
 
+
 volumeScore+=
 clamp(
 upVolumeDays,
 0,
 5
 );
+
 
 if(
 price>=high20*.98 &&
@@ -2167,6 +2460,7 @@ volumeScore+=4;
 
 }
 
+
 volumeScore=
 clamp(
 volumeScore,
@@ -2174,7 +2468,10 @@ volumeScore,
 20
 );
 
-/* 法人 */
+
+/* =========================================================
+   法人
+========================================================= */
 
 const inst=
 d.institutional||
@@ -2196,11 +2493,15 @@ if(+inst.total10>0){
 chipScore+=3;
 }
 
-if((+inst.totalBuyDays5||0)>=3){
+if(
+(+inst.totalBuyDays5||0)>=3
+){
 chipScore+=2;
 }
 
-if((+inst.foreignBuyDays5||0)>=3){
+if(
+(+inst.foreignBuyDays5||0)>=3
+){
 chipScore+=2;
 }
 
@@ -2211,7 +2512,10 @@ chipScore,
 20
 );
 
-/* 基本面 */
+
+/* =========================================================
+   基本面
+========================================================= */
 
 const fundamental=
 d.fundamental||
@@ -2315,7 +2619,10 @@ fundScore,
 
 }
 
-/* 新聞 */
+
+/* =========================================================
+   新聞
+========================================================= */
 
 if(
 newsData?.available
@@ -2336,7 +2643,10 @@ newsData.overallScore||
 
 }
 
-/* 綜合 */
+
+/* =========================================================
+   綜合分數
+========================================================= */
 
 const availableScores=
 [
@@ -2351,6 +2661,7 @@ x=>
 x!==null &&
 Number.isFinite(+x)
 );
+
 
 const normalized=
 availableScores.length
@@ -2367,6 +2678,7 @@ availableScores.length*
 :
 0;
 
+
 const score=
 clamp(
 Math.round(
@@ -2376,6 +2688,13 @@ normalized
 100
 );
 
+
+const completeness=
+availableScores.length/
+5*
+100;
+
+
 const plan=
 buildTradePlan(
 rows,
@@ -2384,6 +2703,7 @@ A,
 m20,
 m60
 );
+
 
 return {
 
@@ -2408,6 +2728,7 @@ fundScore,
 newsScore,
 
 score,
+completeness,
 
 conditions,
 
@@ -2417,30 +2738,50 @@ conditions,
 
 }
 
+
 /* =========================================================
-   狀態
+   STATUS
 ========================================================= */
 
 function statusOf(a){
 
 if(a.score>=80){
-return ['強勢關注','green'];
+
+return [
+'強勢關注',
+'green'
+];
+
 }
 
 if(a.score>=70){
-return ['偏多波段','blue'];
+
+return [
+'偏多波段',
+'blue'
+];
+
 }
 
 if(a.score>=60){
-return ['觀察','yellow'];
+
+return [
+'觀察',
+'yellow'
+];
+
 }
 
-return ['等待','gray'];
+return [
+'等待',
+'gray'
+];
 
 }
+
 
 /* =========================================================
-   首頁 CARD
+   CARD
 ========================================================= */
 
 function renderCard(a){
@@ -2504,8 +2845,9 @@ ${label}
 
 }
 
+
 /* =========================================================
-   首頁
+   HOME
 ========================================================= */
 
 function renderHome(){
@@ -2515,26 +2857,20 @@ Object.values(
 cache
 );
 
-if(
-tab==='signal'
-){
+if(tab==='signal'){
 
 list=
 list.filter(
-x=>
-x.score>=70
+x=>x.score>=70
 );
 
 list.sort(
-(a,b)=>
-b.score-a.score
+(a,b)=>b.score-a.score
 );
 
 }
 
-if(
-tab==='near'
-){
+if(tab==='near'){
 
 list=
 list.filter(
@@ -2544,15 +2880,12 @@ x.score<70
 );
 
 list.sort(
-(a,b)=>
-b.score-a.score
+(a,b)=>b.score-a.score
 );
 
 }
 
-if(
-tab==='watch'
-){
+if(tab==='watch'){
 
 const w=
 watch();
@@ -2560,12 +2893,12 @@ watch();
 list=
 w
 .map(
-symbol=>
-cache[symbol]
+symbol=>cache[symbol]
 )
 .filter(Boolean);
 
 }
+
 
 if(
 tab==='watch' &&
@@ -2584,14 +2917,11 @@ return;
 
 }
 
+
 $('homeList').innerHTML=
 list.length
 ?
-list
-.map(
-renderCard
-)
-.join('')
+list.map(renderCard).join('')
 :
 `
 <div class="empty">
@@ -2604,6 +2934,7 @@ tab==='watch'
 }
 </div>
 `;
+
 
 document
 .querySelectorAll(
@@ -2624,6 +2955,7 @@ x.dataset.symbol
 );
 
 }
+
 
 /* =========================================================
    SCORE BOX
@@ -2663,6 +2995,7 @@ ${esc(description)}
 
 }
 
+
 /* =========================================================
    法人
 ========================================================= */
@@ -2672,12 +3005,17 @@ function chipHTML(i){
 if(!i){
 
 return `
+
 <div class="chip">
+
 <b>法人籌碼</b>
+
 <div class="muted">
 目前沒有法人資料
 </div>
+
 </div>
+
 `;
 
 }
@@ -2699,23 +3037,51 @@ return `
 <div class="chip-grid">
 
 <div class="chip-item">
-<span>外資近 5 日</span>
-<strong>${sign(i.foreign5)}${fmt(i.foreign5,0)}</strong>
+
+<span>
+外資近 5 日
+</span>
+
+<strong>
+${sign(i.foreign5)}${fmt(i.foreign5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>投信近 5 日</span>
-<strong>${sign(i.trust5)}${fmt(i.trust5,0)}</strong>
+
+<span>
+投信近 5 日
+</span>
+
+<strong>
+${sign(i.trust5)}${fmt(i.trust5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>三大法人近 5 日</span>
-<strong>${sign(i.total5)}${fmt(i.total5,0)}</strong>
+
+<span>
+三大法人近 5 日
+</span>
+
+<strong>
+${sign(i.total5)}${fmt(i.total5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>三大法人近 20 日</span>
-<strong>${sign(i.total20)}${fmt(i.total20,0)}</strong>
+
+<span>
+三大法人近 20 日
+</span>
+
+<strong>
+${sign(i.total20)}${fmt(i.total20,0)}
+</strong>
+
 </div>
 
 </div>
@@ -2725,6 +3091,7 @@ return `
 `;
 
 }
+
 
 /* =========================================================
    基本面
@@ -2753,7 +3120,11 @@ return `
 <div class="chip-grid">
 
 <div class="chip-item">
-<span>最新 EPS</span>
+
+<span>
+最新 EPS
+</span>
+
 <strong>
 ${
 x.eps===null ||
@@ -2764,10 +3135,15 @@ x.eps===undefined
 fmt(x.eps)
 }
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>公司獲利</span>
+
+<span>
+公司獲利
+</span>
+
 <strong>
 ${
 x.profitable===true
@@ -2781,10 +3157,15 @@ x.profitable===false
 '資料不足'
 }
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>月營收 YoY</span>
+
+<span>
+月營收 YoY
+</span>
+
 <strong>
 ${
 r.yoy===null ||
@@ -2803,10 +3184,15 @@ fmt(r.yoy)+
 '%'
 }
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>月營收 MoM</span>
+
+<span>
+月營收 MoM
+</span>
+
 <strong>
 ${
 r.mom===null ||
@@ -2825,6 +3211,7 @@ fmt(r.mom)+
 '%'
 }
 </strong>
+
 </div>
 
 </div>
@@ -2835,21 +3222,22 @@ fmt(r.mom)+
 
 }
 
+
 /* =========================================================
-   新聞
+   NEWS
 ========================================================= */
 
 function newsHTML(n){
 
-if(
-!n?.available
-){
+if(!n?.available){
 
 return `
 
 <div class="chip">
 
-<b>近期新聞</b>
+<b>
+近期新聞
+</b>
 
 <div class="muted">
 目前沒有足夠新聞資料，不硬判斷利多利空。
@@ -2906,8 +3294,9 @@ ${esc(x.sentiment||'中性')}
 
 }
 
+
 /* =========================================================
-   詳細頁
+   DETAIL
 ========================================================= */
 
 function renderDetail(a){
@@ -2927,27 +3316,70 @@ a.symbol
 const news=
 a.newsData;
 
-const planLabel=
-a.planType==='PULLBACK'
-?
-'回檔型進場'
-:
-a.planType==='BREAKOUT'
-?
-'突破型進場'
-:
-'等待較佳位置';
 
-const planText=
-a.planType==='PULLBACK'
-?
-'現價接近有效支撐，Entry 以支撐區規劃。'
-:
-a.planType==='BREAKOUT'
-?
-`現價已遠離下方支撐，改觀察 ${fmt(a.breakout)} 突破確認，不再要求深跌回第一支撐。`
-:
-'目前既不靠近支撐，也沒有進入合理突破區，不硬給進場價。';
+/* =========================================================
+   Entry 狀態
+========================================================= */
+
+let planLabel=
+'等待較佳進場';
+
+
+let planText=
+'現價附近沒有足夠明確的有效支撐，不為了顯示數字硬給進場價。';
+
+
+if(
+a.planType==='LIMIT'
+){
+
+if(a.entryReady){
+
+planLabel=
+'接近最佳進場區';
+
+planText=
+'目前價格已接近系統計算的最佳限價進場區，可配合盤中價格行為確認。';
+
+}
+else{
+
+planLabel=
+'等待回到最佳進場區';
+
+planText=
+`系統已找到現價附近的有效支撐 ${fmt(a.bestSupport)}，等待價格回到合理 Entry，而不是追到壓力附近。`;
+
+}
+
+}
+
+
+/* =========================================================
+   Breakout 文字
+========================================================= */
+
+let breakoutText=
+'目前上方沒有足夠明確的歷史壓力。';
+
+
+if(a.breakout){
+
+if(a.breakoutState==='BROKEN'){
+
+breakoutText=
+'價格目前位於剛突破的關鍵壓力上方；此位置保留作為突破確認基準。';
+
+}
+else{
+
+breakoutText=
+'這是目前上方最近的有效關鍵壓力。突破後才往下一層歷史壓力尋找 TP1。';
+
+}
+
+}
+
 
 $('detailBody').innerHTML=`
 
@@ -2966,13 +3398,17 @@ ${(+a.changePercent||0)>=0?'+':''}${fmt(a.changePercent)}%
 </div>
 
 <div class="live">
+
 <span class="pulse"></span>
+
 ${a.realtime?'即時報價':'最新報價'}
  ·
 ${esc(a.updatedAt||'')}
+
 </div>
 
 </div>
+
 
 <div class="card strategy">
 
@@ -2995,6 +3431,7 @@ ${a.score}/100
 </div>
 
 </div>
+
 
 <div class="section-title">
 五大分析
@@ -3042,11 +3479,13 @@ news?.available
 
 </div>
 
+
 <div class="section-title">
 支撐與壓力
 </div>
 
 <div class="levels">
+
 
 <div class="level support">
 
@@ -3055,14 +3494,21 @@ news?.available
 </span>
 
 <strong>
-${fmt(a.support1)}
+${
+a.support1
+?
+fmt(a.support1)
+:
+'暫無明確支撐'
+}
 </strong>
 
 <small>
-近期前低、均線與價格結構綜合判斷。
+近期前低、均線、突破轉支撐與價格結構綜合判斷。
 </small>
 
 </div>
+
 
 <div class="level support">
 
@@ -3081,15 +3527,39 @@ fmt(a.support2)
 </strong>
 
 <small>
-第一支撐失效後的下一層市場支撐。
+第一支撐失效後的下一層結構支撐。
 </small>
 
 </div>
 
+
+<div class="level entry full">
+
+<span>
+最佳進場支撐
+</span>
+
+<strong>
+${
+a.bestSupport
+?
+fmt(a.bestSupport)
+:
+'附近沒有合理進場支撐'
+}
+</strong>
+
+<small>
+優先尋找現價附近具有結構依據的位置，不再使用距離現價過遠的深度支撐當 Entry。
+</small>
+
+</div>
+
+
 <div class="level pressure full">
 
 <span>
-關鍵壓力／突破位
+關鍵突破位
 </span>
 
 <strong>
@@ -3103,18 +3573,20 @@ fmt(a.breakout)
 </strong>
 
 <small>
-最近的前高或歷史壓力；突破型策略會直接使用這個位置做確認。
+${breakoutText}
 </small>
 
 </div>
 
 </div>
 
+
 <div class="section-title">
 交易規劃
 </div>
 
 <div class="levels">
+
 
 <div class="level current-price">
 
@@ -3132,10 +3604,11 @@ ${a.realtime?'目前即時成交價':'目前最新報價'}
 
 </div>
 
+
 <div class="level ${a.planType==='WAIT'?'wait':'entry'}">
 
 <span>
-策略
+目前策略
 </span>
 
 <strong>
@@ -3148,10 +3621,11 @@ ${planText}
 
 </div>
 
+
 <div class="level entry full">
 
 <span>
-觀察進場區 Entry
+最佳限價進場區 Entry
 </span>
 
 <strong>
@@ -3167,23 +3641,20 @@ a.entryHigh!==null
 
 <small>
 ${
-a.planType==='WAIT'
+a.entryLow!==null
 ?
-'等待價格靠近有效支撐，或靠近關鍵壓力形成突破機會。'
-:
 a.entryReady
 ?
-'目前已符合此策略的進場確認區。'
+'現價已進入或非常接近最佳 Entry 區。'
 :
-a.planType==='BREAKOUT'
-?
-'尚未真正突破，不提前把「靠近壓力」當成已進場。'
+`距最佳支撐約 ${fmt(a.entryDistance)}%，等待價格靠近，不追價。`
 :
-'目前尚未進入支撐 Entry 區。'
+'現價附近找不到足夠可靠的支撐結構，因此等待。'
 }
 </small>
 
 </div>
+
 
 <div class="level sl">
 
@@ -3205,13 +3676,37 @@ fmt(a.sl)
 ${
 a.sl!==null
 ?
-`依目前 ${planLabel} 的結構失效點設定${a.riskPct?`｜距進場中位約 ${fmt(a.riskPct)}%`:''}`
+`放在最佳 Entry 下方的結構失效位置${a.riskPct?`｜進場中位風險約 ${fmt(a.riskPct)}%`:''}`
 :
-'尚未形成有效 Entry，因此不硬給停損。'
+'尚未形成合理 Entry，因此不硬給停損。'
 }
 </small>
 
 </div>
+
+
+<div class="level pressure">
+
+<span>
+必須突破
+</span>
+
+<strong>
+${
+a.breakout
+?
+fmt(a.breakout)
+:
+'尚無明確突破位'
+}
+</strong>
+
+<small>
+這是上方第一道關卡，不直接當成 TP1。
+</small>
+
+</div>
+
 
 <div class="level tp">
 
@@ -3225,7 +3720,7 @@ a.tp1
 ?
 fmt(a.tp1)
 :
-'等待新壓力形成'
+'突破後暫無明確壓力'
 }
 </strong>
 
@@ -3233,13 +3728,14 @@ fmt(a.tp1)
 ${
 a.tp1
 ?
-`進場後第一層有效歷史壓力${a.rr1?`｜約 ${fmt(a.rr1)}R`:''}`
+`突破 ${fmt(a.breakout)} 後第一個有效歷史壓力${a.rr1!==null?`｜約 ${fmt(a.rr1)}R`:''}`
 :
-'目前沒有可確認的第一層目標。'
+'找不到突破關卡上方的有效歷史壓力，不硬製造 TP1。'
 }
 </small>
 
 </div>
+
 
 <div class="level tp">
 
@@ -3253,7 +3749,7 @@ a.tp2
 ?
 fmt(a.tp2)
 :
-'等待新壓力形成'
+'暫無第二目標'
 }
 </strong>
 
@@ -3261,13 +3757,14 @@ fmt(a.tp2)
 ${
 a.tp2
 ?
-`第二層有效壓力${a.rr2?`｜約 ${fmt(a.rr2)}R`:''}`
+`第二層有效歷史壓力${a.rr2!==null?`｜約 ${fmt(a.rr2)}R`:''}`
 :
 '目前沒有第二層有效壓力。'
 }
 </small>
 
 </div>
+
 
 <div class="level tp full">
 
@@ -3281,7 +3778,7 @@ a.tp3
 ?
 fmt(a.tp3)
 :
-'等待新壓力形成'
+'暫無第三目標'
 }
 </strong>
 
@@ -3289,9 +3786,9 @@ fmt(a.tp3)
 ${
 a.tp3
 ?
-`${esc(a.tp3Source)}${a.rr3?`｜約 ${fmt(a.rr3)}R`:''}`
+`${esc(a.tp3Source)}${a.rr3!==null?`｜約 ${fmt(a.rr3)}R`:''}`
 :
-'優先使用更高歷史壓力；不足時才考慮延伸。'
+'優先尋找第三層歷史壓力；只有 TP1、TP2 已成立但更高歷史壓力不足時才使用延伸。'
 }
 </small>
 
@@ -3299,13 +3796,17 @@ a.tp3
 
 </div>
 
+
 ${chipHTML(
 a.institutional
 )}
 
+
 ${fundamentalHTML(a)}
 
+
 ${newsHTML(news)}
+
 
 <div class="section-title">
 技術條件
@@ -3336,6 +3837,7 @@ ${esc(x[2])}
 
 </div>
 
+
 <button
 id="fav"
 class="fav"
@@ -3343,22 +3845,22 @@ class="fav"
 ${has?'移除自選':'加入自選'}
 </button>
 
+
 <div class="note">
-交易規劃現在會先判斷現價位置：靠近支撐採回檔型；遠離支撐但接近關鍵壓力採突破型；兩者都不符合就等待，不再為了顯示數字硬製造 Entry。
+交易規劃 8.0：先分析現價附近最有結構依據的限價 Entry，再設定結構失效 SL。上方最近有效壓力是「必須突破的關卡」，不是 TP1；突破後第一個有效歷史壓力才是 TP1，再依序尋找 TP2、TP3。附近沒有合理支撐時不硬給 Entry。
 </div>
 
 </div>
 
 `;
 
+
 $('fav').onclick=
 async()=>{
 
-$('fav').disabled=
-true;
+$('fav').disabled=true;
 
-let x=
-watch();
+let x=watch();
 
 if(
 x.includes(
@@ -3368,8 +3870,7 @@ a.symbol
 
 x=
 x.filter(
-s=>
-s!==a.symbol
+s=>s!==a.symbol
 );
 
 }
@@ -3378,8 +3879,7 @@ else{
 x=[
 a.symbol,
 ...x.filter(
-s=>
-s!==a.symbol
+s=>s!==a.symbol
 )
 ];
 
@@ -3416,8 +3916,9 @@ e?.message||
 
 }
 
+
 /* =========================================================
-   分析股票
+   ANALYZE
 ========================================================= */
 
 async function analyzeStock(
@@ -3427,7 +3928,6 @@ withNews=false
 
 const results=
 await Promise.all([
-
 getStock(symbol),
 
 withNews
@@ -3435,7 +3935,6 @@ withNews
 getNews(symbol)
 :
 Promise.resolve(null)
-
 ]);
 
 return analyzeData(
@@ -3445,8 +3944,9 @@ results[1]
 
 }
 
+
 /* =========================================================
-   開啟股票
+   OPEN STOCK
 ========================================================= */
 
 async function openStock(symbol){
@@ -3514,11 +4014,10 @@ refreshDetail,
 
 }
 
+
 async function refreshDetail(){
 
-if(!current){
-return;
-}
+if(!current)return;
 
 try{
 
@@ -3544,8 +4043,9 @@ e
 
 }
 
+
 /* =========================================================
-   自選載入
+   WATCH STOCKS
 ========================================================= */
 
 async function loadWatchStocks(){
@@ -3553,9 +4053,7 @@ async function loadWatchStocks(){
 const symbols=
 watch();
 
-if(!symbols.length){
-return;
-}
+if(!symbols.length)return;
 
 const BATCH_SIZE=5;
 
@@ -3615,8 +4113,9 @@ renderHome();
 
 }
 
+
 /* =========================================================
-   全市場雷達
+   RADAR
 ========================================================= */
 
 async function radar(){
@@ -3637,10 +4136,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-r.ok &&
-d.ok
-){
+if(r.ok && d.ok){
 
 radarData=d;
 
@@ -3655,6 +4151,7 @@ e
 );
 
 }
+
 
 let marketSymbols=[];
 
@@ -3684,8 +4181,7 @@ x.symbol||
 )
 )
 .filter(
-x=>
-/^\d{4,6}$/.test(x)
+x=>/^\d{4,6}$/.test(x)
 )
 
 );
@@ -3693,6 +4189,7 @@ x=>
 }
 
 }
+
 
 let symbols=
 [
@@ -3703,6 +4200,7 @@ let symbols=
 ]
 )
 ];
+
 
 if(!symbols.length){
 
@@ -3718,12 +4216,14 @@ symbols=
 
 }
 
+
 $('homeList').innerHTML=
 `
 <div class="card loader">
 正在分析 ${symbols.length} 檔候選...
 </div>
 `;
+
 
 const BATCH_SIZE=5;
 
@@ -3781,14 +4281,16 @@ renderHome();
 
 }
 
+
 await loadWatchStocks();
 
 renderHome();
 
 }
 
+
 /* =========================================================
-   搜尋
+   SEARCH
 ========================================================= */
 
 function hideSuggestions(){
@@ -3800,6 +4302,7 @@ $('suggestions')
 );
 
 }
+
 
 async function searchStocks(q){
 
@@ -3817,10 +4320,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-!r.ok ||
-!d.ok
-){
+if(!r.ok || !d.ok){
 
 throw Error(
 d.error||
@@ -3833,6 +4333,7 @@ return d.items||
 [];
 
 }
+
 
 async function showSuggestions(q){
 
@@ -3869,6 +4370,7 @@ return;
 
 }
 
+
 box.innerHTML=
 items
 .map(
@@ -3901,9 +4403,11 @@ ${esc(x.market||'')}
 )
 .join('');
 
+
 box.classList.remove(
 'hidden'
 );
+
 
 box
 .querySelectorAll(
@@ -3940,6 +4444,7 @@ hideSuggestions();
 
 }
 
+
 async function submitSearch(){
 
 hideSuggestions();
@@ -3949,13 +4454,10 @@ $('q')
 .value
 .trim();
 
-if(!q){
-return;
-}
+if(!q)return;
 
-if(
-selectedSearchSymbol
-){
+
+if(selectedSearchSymbol){
 
 openStock(
 selectedSearchSymbol
@@ -3964,6 +4466,7 @@ selectedSearchSymbol
 return;
 
 }
+
 
 if(
 /^\d{4,6}$/.test(q)
@@ -3974,6 +4477,7 @@ openStock(q);
 return;
 
 }
+
 
 try{
 
@@ -4006,6 +4510,7 @@ e.message
 
 }
 
+
 $('q')
 .addEventListener(
 'input',
@@ -4032,6 +4537,7 @@ e.target.value
 }
 );
 
+
 $('q')
 .addEventListener(
 'keydown',
@@ -4048,11 +4554,13 @@ submitSearch();
 }
 );
 
+
 $('go').onclick=
 submitSearch;
 
+
 /* =========================================================
-   返回
+   BACK
 ========================================================= */
 
 $('back').onclick=
@@ -4081,6 +4589,7 @@ $('home')
 renderHome();
 
 };
+
 
 /* =========================================================
    TAB
@@ -4130,6 +4639,7 @@ renderHome();
 }
 );
 
+
 /* =========================================================
    PUSH
 ========================================================= */
@@ -4146,6 +4656,7 @@ return [
 ];
 
 }
+
 
 function urlBase64ToUint8Array(
 base64String
@@ -4198,6 +4709,7 @@ return outputArray;
 
 }
 
+
 async function savePushSubscription(
 subscription
 ){
@@ -4224,10 +4736,7 @@ pushSymbols()
 const d=
 await r.json();
 
-if(
-!r.ok ||
-!d.ok
-){
+if(!r.ok || !d.ok){
 
 throw Error(
 d.error||
@@ -4237,6 +4746,7 @@ d.error||
 }
 
 }
+
 
 async function syncPushSymbols(){
 
@@ -4258,18 +4768,14 @@ await navigator
 .serviceWorker
 .getRegistration('/');
 
-if(!registration){
-return;
-}
+if(!registration)return;
 
 const subscription=
 await registration
 .pushManager
 .getSubscription();
 
-if(!subscription){
-return;
-}
+if(!subscription)return;
 
 await savePushSubscription(
 subscription
@@ -4286,6 +4792,7 @@ e
 }
 
 }
+
 
 async function enablePush(){
 
@@ -4344,6 +4851,7 @@ await navigator
 .serviceWorker
 .ready;
 
+
 const configResponse=
 await fetch(
 '/api/push-config?t='+
@@ -4370,6 +4878,7 @@ config.error||
 
 }
 
+
 const oldSubscription=
 await registration
 .pushManager
@@ -4394,6 +4903,7 @@ e
 
 }
 
+
 const subscription=
 await registration
 .pushManager
@@ -4405,9 +4915,11 @@ config.publicKey
 )
 });
 
+
 await savePushSubscription(
 subscription
 );
+
 
 $('notify')
 .classList
@@ -4417,11 +4929,11 @@ $('notify')
 
 }
 
+
 $('notify').onclick=
 async()=>{
 
-$('notify').disabled=
-true;
+$('notify').disabled=true;
 
 try{
 
@@ -4447,6 +4959,7 @@ window.matchMedia(
 ||
 window.navigator.standalone===true;
 
+
 if(
 isiOS &&
 !standalone
@@ -4469,12 +4982,12 @@ e.message||
 }
 finally{
 
-$('notify').disabled=
-false;
+$('notify').disabled=false;
 
 }
 
 };
+
 
 /* =========================================================
    PUSH URL
@@ -4520,8 +5033,9 @@ console.warn(e);
 
 }
 
+
 /* =========================================================
-   啟動
+   START
 ========================================================= */
 
 async function startApp(){
@@ -4537,6 +5051,7 @@ $('homeList').innerHTML=
 
 getDeviceId();
 
+
 try{
 
 await loadWatchlist();
@@ -4550,6 +5065,7 @@ e
 );
 
 }
+
 
 if(
 'serviceWorker'
@@ -4579,7 +5095,9 @@ e
 
 }
 
+
 syncPushSymbols();
+
 
 $('homeList').innerHTML=
 `
@@ -4587,6 +5105,7 @@ $('homeList').innerHTML=
 正在啟動全市場雷達...
 </div>
 `;
+
 
 try{
 
@@ -4602,6 +5121,7 @@ e
 
 }
 
+
 try{
 
 await loadWatchStocks();
@@ -4616,11 +5136,14 @@ e
 
 }
 
+
 renderHome();
+
 
 clearInterval(
 radarTimer
 );
+
 
 radarTimer=
 setInterval(
@@ -4644,9 +5167,11 @@ e
 300000
 );
 
+
 await openStockFromURL();
 
 }
+
 
 if(
 document.readyState===
