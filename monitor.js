@@ -1,26 +1,27 @@
 /* =========================================================
    api/monitor.js
-   台股背景進場訊號監控 + Web Push
+   妖子平台 Stock Analysis Monitor 6.2
 
-   正式 Push 條件與 index.html 對齊：
-   1. passed >= 7
-   2. hasRealStructure === true
-   3. entryReady === true
+   正式 Push：
+   - 綜合評分 >= 75
+   - 資料完整度 >= 60%
+   - 技術面 >= 12 / 20
+   - 量價 >= 10 / 20
+   - 進入合理進場區
+   - 有有效 SL / TP1
+   - TP1 RR >= 1.3
 
-   支援：
+   保留：
    - iPhone / iPad 多裝置
    - Redis
    - Vercel Cron
+   - 08:55 ~ 13:40
    - 6 小時同 Setup 防重複
    - 失效 Push 自動清除
+   - ?test=1 可直接 Safari 測試，不受 CRON_SECRET 限制
 ========================================================= */
 
 const webpush = require("web-push");
-
-
-/* =========================================================
-   ENV
-========================================================= */
 
 const REDIS_URL =
   process.env.KV_REST_API_URL ||
@@ -38,7 +39,19 @@ const VAPID_PRIVATE_KEY =
 
 const VAPID_SUBJECT =
   process.env.VAPID_SUBJECT ||
-  "mailto:liaozhanxie@gmail.com";
+  "mailto:liaozhanxjie@gmail.com";
+
+
+/* =========================================================
+   設定
+========================================================= */
+
+const MIN_SCORE = 75;
+const MIN_COMPLETENESS = 60;
+const MIN_TECHNICAL = 12;
+const MIN_VOLUME = 10;
+const MIN_RR = 1.3;
+const DEDUPE_SECONDS = 21600;
 
 
 /* =========================================================
@@ -48,7 +61,9 @@ const VAPID_SUBJECT =
 async function redis(command) {
 
   if (!REDIS_URL || !REDIS_TOKEN) {
-    throw new Error("Redis 環境變數尚未設定");
+    throw new Error(
+      "Redis 環境變數尚未設定"
+    );
   }
 
   const controller =
@@ -155,13 +170,19 @@ function num(v) {
 function avg(a) {
 
   const values =
-    a.filter(
-      Number.isFinite
-    );
+    (Array.isArray(a)
+      ? a
+      : []
+    )
+      .map(Number)
+      .filter(
+        Number.isFinite
+      );
 
   return values.length
     ? values.reduce(
-        (x, y) => x + y,
+        (x, y) =>
+          x + y,
         0
       ) / values.length
     : 0;
@@ -170,87 +191,126 @@ function avg(a) {
 
 function sma(a, n) {
 
+  if (
+    !Array.isArray(a) ||
+    a.length < n
+  ) {
+    return null;
+  }
+
   return avg(
     a.slice(-n)
   );
 }
 
 
-function ema(a, n) {
+function emaSeries(
+  values,
+  period
+) {
 
-  if (!a.length) {
-    return 0;
+  if (
+    !Array.isArray(values) ||
+    !values.length
+  ) {
+    return [];
   }
 
-  let e =
-    a[0];
-
   const k =
-    2 / (n + 1);
+    2 / (period + 1);
+
+  const result = [];
+
+  let e =
+    Number(values[0]);
+
+  result.push(e);
 
   for (
     let i = 1;
-    i < a.length;
+    i < values.length;
     i++
   ) {
 
     e =
-      a[i] * k +
-      e * (1 - k);
+      Number(values[i]) *
+      k +
+      e *
+      (1 - k);
+
+    result.push(e);
   }
 
-  return e;
+  return result;
 }
 
 
-function rsi(a, n = 14) {
+function rsi(
+  values,
+  n = 14
+) {
 
   if (
-    a.length <= n
+    !Array.isArray(values) ||
+    values.length <= n
   ) {
     return 50;
   }
 
-  let g = 0;
-  let l = 0;
+  let gain = 0;
+  let loss = 0;
 
   for (
     let i =
-      a.length - n;
-    i < a.length;
+      values.length - n;
+    i < values.length;
     i++
   ) {
 
     const d =
-      a[i] -
-      a[i - 1];
+      Number(values[i]) -
+      Number(values[i - 1]);
 
     if (d > 0) {
-      g += d;
+
+      gain += d;
+
     } else {
-      l -= d;
+
+      loss +=
+        Math.abs(d);
     }
   }
 
-  if (l === 0) {
+  if (loss === 0) {
     return 100;
   }
+
+  const rs =
+    (gain / n) /
+    (loss / n);
 
   return (
     100 -
     100 /
-    (
-      1 +
-      (g / n) /
-      (l / n)
-    )
+    (1 + rs)
   );
 }
 
 
-function atr(rows, n = 14) {
+function atr(
+  rows,
+  n = 14
+) {
 
-  const v = [];
+  if (
+    !Array.isArray(rows) ||
+    rows.length < 2
+  ) {
+    return 0;
+  }
+
+  const values = [];
 
   for (
     let i =
@@ -265,23 +325,27 @@ function atr(rows, n = 14) {
     const x =
       rows[i];
 
-    const p =
+    const previous =
       rows[i - 1].close;
 
-    v.push(
+    values.push(
       Math.max(
         x.high - x.low,
+
         Math.abs(
-          x.high - p
+          x.high -
+          previous
         ),
+
         Math.abs(
-          x.low - p
+          x.low -
+          previous
         )
       )
     );
   }
 
-  return avg(v);
+  return avg(values);
 }
 
 
@@ -289,26 +353,73 @@ function unique(list) {
 
   return [
     ...new Set(
-      list.map(
-        x => String(x)
+      (
+        Array.isArray(list)
+          ? list
+          : []
       )
+        .map(
+          x =>
+            String(x)
+              .trim()
+        )
+        .filter(Boolean)
     )
   ];
 }
 
 
-function formatPrice(v) {
-
-  if (
-    !Number.isFinite(
-      Number(v)
-    )
-  ) {
-    return "--";
-  }
+function round(
+  v,
+  digits = 2
+) {
 
   const n =
     Number(v);
+
+  if (
+    !Number.isFinite(n)
+  ) {
+    return null;
+  }
+
+  const p =
+    10 ** digits;
+
+  return (
+    Math.round(
+      n * p
+    ) / p
+  );
+}
+
+
+function clamp(
+  v,
+  min,
+  max
+) {
+
+  return Math.min(
+    max,
+    Math.max(
+      min,
+      v
+    )
+  );
+}
+
+
+function formatPrice(v) {
+
+  const n =
+    Number(v);
+
+  if (
+    !Number.isFinite(n)
+  ) {
+    return "--";
+  }
 
   if (n >= 1000) {
     return n.toFixed(0);
@@ -348,17 +459,19 @@ function taipeiParts() {
           false
       }
     )
-    .formatToParts(
-      new Date()
-    );
+      .formatToParts(
+        new Date()
+      );
 
   const get =
     type =>
       parts.find(
-        p => p.type === type
+        p =>
+          p.type === type
       )?.value;
 
   return {
+
     weekday:
       get("weekday"),
 
@@ -391,7 +504,6 @@ function isMarketTime() {
       t.weekday
     )
   ) {
-
     return false;
   }
 
@@ -409,18 +521,81 @@ function isMarketTime() {
 
 
 /* =========================================================
-   SMC
-   與 index.html 對齊
+   MACD
 ========================================================= */
 
-function swings(
+function getMACD(closes) {
+
+  if (
+    closes.length < 35
+  ) {
+
+    return {
+      macd: 0,
+      signal: 0,
+      histogram: 0
+    };
+  }
+
+  const fast =
+    emaSeries(
+      closes,
+      12
+    );
+
+  const slow =
+    emaSeries(
+      closes,
+      26
+    );
+
+  const macdSeries =
+    closes.map(
+      (_, i) =>
+        (fast[i] || 0) -
+        (slow[i] || 0)
+    );
+
+  const signalSeries =
+    emaSeries(
+      macdSeries,
+      9
+    );
+
+  const macd =
+    macdSeries[
+      macdSeries.length - 1
+    ] || 0;
+
+  const signal =
+    signalSeries[
+      signalSeries.length - 1
+    ] || 0;
+
+  return {
+
+    macd,
+
+    signal,
+
+    histogram:
+      macd - signal
+  };
+}
+
+
+/* =========================================================
+   Swing High / Low
+========================================================= */
+
+function getSwings(
   rows,
   left = 2,
   right = 2
 ) {
 
-  const lows = [];
   const highs = [];
+  const lows = [];
 
   for (
     let i = left;
@@ -428,8 +603,8 @@ function swings(
     i++
   ) {
 
-    let lo = true;
-    let hi = true;
+    let isHigh = true;
+    let isLow = true;
 
     for (
       let j = 1;
@@ -438,17 +613,17 @@ function swings(
     ) {
 
       if (
-        rows[i].low >
-        rows[i - j].low
+        rows[i].high <=
+        rows[i - j].high
       ) {
-        lo = false;
+        isHigh = false;
       }
 
       if (
-        rows[i].high <
-        rows[i - j].high
+        rows[i].low >=
+        rows[i - j].low
       ) {
-        hi = false;
+        isLow = false;
       }
     }
 
@@ -459,829 +634,656 @@ function swings(
     ) {
 
       if (
-        rows[i].low >
-        rows[i + j].low
+        rows[i].high <=
+        rows[i + j].high
       ) {
-        lo = false;
+        isHigh = false;
       }
 
       if (
-        rows[i].high <
-        rows[i + j].high
+        rows[i].low >=
+        rows[i + j].low
       ) {
-        hi = false;
+        isLow = false;
       }
     }
 
-    if (lo) {
+    if (isHigh) {
 
-      lows.push({
-        i,
-        value:
-          rows[i].low,
-        row:
-          rows[i]
+      highs.push({
+
+        index: i,
+
+        price:
+          rows[i].high,
+
+        date:
+          rows[i].date
       });
     }
 
-    if (hi) {
+    if (isLow) {
 
-      highs.push({
-        i,
-        value:
-          rows[i].high,
-        row:
-          rows[i]
+      lows.push({
+
+        index: i,
+
+        price:
+          rows[i].low,
+
+        date:
+          rows[i].date
       });
     }
   }
 
   return {
-    lows,
-    highs
+    highs,
+    lows
   };
 }
 
 
-function zoneValid(
-  zone,
-  rows,
-  bullish = true
-) {
+/* =========================================================
+   Entry / SL / TP
+========================================================= */
 
-  const after =
-    rows.slice(
-      zone.i + 1
-    );
-
-  if (bullish) {
-
-    return !after.some(
-      x =>
-        x.close <
-        zone.low
-    );
-  }
-
-  return !after.some(
-    x =>
-      x.close >
-      zone.high
-  );
-}
-
-
-function smcAnalysis(
+function buildTradePlan(
   rows,
   price,
-  A,
-  inst
+  A
 ) {
 
-  /*
-    跟 index.html 一樣：
-    只使用最近 140 根
-  */
-
   const recent =
-    rows.slice(-140);
+    rows.slice(-180);
 
-  const S =
-    swings(
+  const closes =
+    recent.map(
+      x => x.close
+    );
+
+  const m20 =
+    sma(
+      closes,
+      20
+    );
+
+  const m60 =
+    sma(
+      closes,
+      60
+    );
+
+  const swings =
+    getSwings(
       recent,
       2,
       2
     );
 
-  const volBase =
-    avg(
-      recent
-      .slice(
-        -21,
-        -1
-      )
-      .map(
-        x =>
-          x.volume
-      )
-    );
-
   const supports = [];
-  const pressures = [];
 
 
-  /* =======================================================
-     Bullish / Bearish OB
-  ======================================================= */
+  /* MA20 */
 
-  for (
-    let i = 2;
-    i < recent.length - 2;
-    i++
+  if (
+    Number.isFinite(m20) &&
+    m20 <=
+      price * 1.005
   ) {
 
-    const x =
-      recent[i];
+    supports.push({
 
-    const n2 =
-      recent[i + 2];
+      price:
+        m20,
 
-    const displacementUp =
-      n2.close >
-      x.high +
-      Math.max(
-        A * 0.35,
-        price * 0.004
-      );
+      type:
+        "MA20 支撐",
 
-    const displacementDown =
-      n2.close <
-      x.low -
-      Math.max(
-        A * 0.35,
-        price * 0.004
-      );
+      weight: 4
+    });
+  }
 
-    if (
-      x.close < x.open &&
-      displacementUp
-    ) {
 
-      const z = {
-        type:
-          "Bullish OB",
+  /* MA60 */
 
-        i,
+  if (
+    Number.isFinite(m60) &&
+    m60 <=
+      price * 1.005
+  ) {
 
-        low:
-          x.low,
+    supports.push({
 
-        high:
-          Math.max(
-            x.open,
-            x.close
-          ),
+      price:
+        m60,
 
-        score: 5
-      };
+      type:
+        "MA60 支撐",
 
-      if (
-        zoneValid(
-          z,
-          recent,
-          true
-        ) &&
-        z.low < price
-      ) {
+      weight: 3
+    });
+  }
 
-        supports.push(z);
-      }
-    }
+
+  /* 波段低點 */
+
+  for (
+    const s of
+    swings.lows
+  ) {
 
     if (
-      x.close > x.open &&
-      displacementDown
+      s.price <=
+        price * 1.005 &&
+      s.price >=
+        price * 0.88
     ) {
 
-      const z = {
+      supports.push({
+
+        price:
+          s.price,
+
         type:
-          "Bearish OB",
+          "波段低點支撐",
 
-        i,
+        weight: 5,
 
-        low:
-          Math.min(
-            x.open,
-            x.close
-          ),
-
-        high:
-          x.high,
-
-        score: 5
-      };
-
-      if (
-        zoneValid(
-          z,
-          recent,
-          false
-        ) &&
-        z.high > price
-      ) {
-
-        pressures.push(z);
-      }
+        date:
+          s.date
+      });
     }
   }
 
 
-  /* =======================================================
-     FVG
-  ======================================================= */
-
-  for (
-    let i = 1;
-    i < recent.length - 1;
-    i++
-  ) {
-
-    const a =
-      recent[i - 1];
-
-    const c =
-      recent[i + 1];
-
-    if (
-      c.low >
-      a.high
-    ) {
-
-      const z = {
-        type:
-          "Bullish FVG",
-
-        i,
-
-        low:
-          a.high,
-
-        high:
-          c.low,
-
-        score:
-          3.5
-      };
-
-      if (
-        zoneValid(
-          z,
-          recent,
-          true
-        ) &&
-        z.low < price
-      ) {
-
-        supports.push(z);
-      }
-    }
-
-    if (
-      c.high <
-      a.low
-    ) {
-
-      const z = {
-        type:
-          "Bearish FVG",
-
-        i,
-
-        low:
-          c.high,
-
-        high:
-          a.low,
-
-        score:
-          3.5
-      };
-
-      if (
-        zoneValid(
-          z,
-          recent,
-          false
-        ) &&
-        z.high > price
-      ) {
-
-        pressures.push(z);
-      }
-    }
-  }
-
-
-  /* =======================================================
-     BOS / Breaker
-  ======================================================= */
+  /* 前高突破回測 */
 
   for (
     const h of
-    S.highs
+    swings.highs
   ) {
 
-    const later =
-      recent.slice(
-        h.i + 1
-      );
+    if (
+      h.price < price &&
+      h.price >=
+        price * 0.90
+    ) {
 
-    const broken =
-      later.some(
-        x =>
-          x.close >
-          h.value +
-          Math.max(
-            A * 0.12,
-            h.value * 0.0025
+      const broken =
+        recent
+          .slice(
+            h.index + 1
           )
-      );
+          .some(
+            x =>
+              x.close >
+              h.price *
+              1.005
+          );
 
-    if (
-      broken &&
-      h.value < price
-    ) {
+      if (broken) {
 
-      supports.push({
-        type:
-          "BOS / Breaker",
+        supports.push({
 
-        i:
-          h.i,
+          price:
+            h.price,
 
-        low:
-          h.value -
-          A * 0.15,
+          type:
+            "前高突破回測",
 
-        high:
-          h.value +
-          A * 0.15,
+          weight: 6,
 
-        score: 6
-      });
-
-    } else if (
-      h.value > price
-    ) {
-
-      pressures.push({
-        type:
-          "Buy-side Liquidity",
-
-        i:
-          h.i,
-
-        low:
-          h.value -
-          A * 0.08,
-
-        high:
-          h.value +
-          A * 0.08,
-
-        score:
-          4.5
-      });
+          date:
+            h.date
+        });
+      }
     }
   }
 
 
-  for (
-    const l of
-    S.lows
-  ) {
-
-    if (
-      l.value < price
-    ) {
-
-      supports.push({
-        type:
-          "Sell-side Liquidity / Demand",
-
-        i:
-          l.i,
-
-        low:
-          l.value -
-          A * 0.10,
-
-        high:
-          l.value +
-          A * 0.12,
-
-        score:
-          3.8
-      });
-    }
-  }
-
-
-  /* =======================================================
-     Liquidity Sweep
-  ======================================================= */
-
-  for (
-    let i = 3;
-    i < recent.length;
-    i++
-  ) {
-
-    const prevLow =
-      Math.min(
-        ...recent
-        .slice(
-          Math.max(
-            0,
-            i - 8
-          ),
-          i
-        )
-        .map(
-          x =>
-            x.low
-        )
-      );
-
-    const prevHigh =
-      Math.max(
-        ...recent
-        .slice(
-          Math.max(
-            0,
-            i - 8
-          ),
-          i
-        )
-        .map(
-          x =>
-            x.high
-        )
-      );
-
-    const x =
-      recent[i];
-
-    if (
-      x.low <
-      prevLow &&
-      x.close >
-      prevLow
-    ) {
-
-      supports.push({
-        type:
-          "Liquidity Sweep",
-
-        i,
-
-        low:
-          x.low,
-
-        high:
-          prevLow,
-
-        score:
-          5.5
-      });
-    }
-
-    if (
-      x.high >
-      prevHigh &&
-      x.close <
-      prevHigh
-    ) {
-
-      pressures.push({
-        type:
-          "Liquidity Sweep",
-
-        i,
-
-        low:
-          prevHigh,
-
-        high:
-          x.high,
-
-        score:
-          5.5
-      });
-    }
-  }
-
-
-  /* =======================================================
-     成交量加權
-  ======================================================= */
-
-  for (
-    const z of
-    [
-      ...supports,
-      ...pressures
-    ]
-  ) {
-
-    const r =
-      recent[z.i];
-
-    if (
-      r &&
-      volBase > 0 &&
-      r.volume >=
-      volBase * 1.35
-    ) {
-
-      z.score += 1.5;
-    }
-
-    const dist =
-      Math.abs(
-        price -
-        (
-          z.low +
-          z.high
-        ) / 2
-      ) /
-      price;
-
-    z.score -=
-      dist * 12;
-  }
-
-
-  /* =======================================================
-     法人加權
-  ======================================================= */
-
-  const chip =
-    inst || {};
-
-  const chip5 =
-    Number(
-      chip.total5 || 0
-    );
-
-  if (
-    chip5 > 0
-  ) {
-
-    supports.forEach(
-      z =>
-        z.score += 0.7
-    );
-  }
-
-  if (
-    chip5 < 0
-  ) {
-
-    pressures.forEach(
-      z =>
-        z.score += 0.7
-    );
-  }
-
-  if (
-    Number(
-      chip.foreign5 || 0
-    ) > 0
-  ) {
-
-    supports.forEach(
-      z =>
-        z.score += 0.3
-    );
-  }
-
-  if (
-    Number(
-      chip.trust5 || 0
-    ) > 0
-  ) {
-
-    supports.forEach(
-      z =>
-        z.score += 0.3
-    );
-  }
-
-
-  /* =======================================================
-     有效支撐
-  ======================================================= */
-
-  const validS =
+  const rankedSupports =
     supports
-    .filter(
-      z =>
-        z.high <=
-        price * 1.012
-    )
-    .sort(
-      (a, b) => {
-
-        const da =
-          (
-            price -
-            a.high
-          ) /
-          price;
-
-        const db =
-          (
-            price -
-            b.high
-          ) /
-          price;
-
-        return (
-          (db - da) * 5 +
-          (
-            b.score -
-            a.score
-          )
-        );
-      }
-    );
-
-
-  /* =======================================================
-     有效壓力
-  ======================================================= */
-
-  const validP =
-    pressures
-    .filter(
-      z =>
-        z.low >
-        price * 1.001
-    )
-    .sort(
-      (a, b) =>
-        a.low -
-        b.low
-    );
-
-
-  const nearS =
-    validS.filter(
-      z =>
-        (
-          price -
-          z.high
-        ) /
-        price <=
-        0.10
-    );
-
-
-  let s1 =
-    nearS
-    .sort(
-      (a, b) => {
-
-        const da =
-          (
-            price -
-            a.high
-          ) /
-          price;
-
-        const db =
-          (
-            price -
-            b.high
-          ) /
-          price;
-
-        return (
-          b.score -
-          db * 30
-        ) -
-        (
-          a.score -
-          da * 30
-        );
-      }
-    )[0]
-    ||
-    validS[0]
-    ||
-    null;
-
-
-  let s2 =
-    null;
-
-  if (s1) {
-
-    s2 =
-      validS
       .filter(
-        z =>
-          z !== s1 &&
-          z.high <
-          s1.low -
-          Math.max(
-            A * 0.25,
-            price * 0.003
-          )
+        x =>
+          Number.isFinite(
+            x.price
+          ) &&
+          x.price > 0
+      )
+      .map(
+        x => ({
+
+          ...x,
+
+          distance:
+            (
+              price -
+              x.price
+            ) /
+            price
+        })
+      )
+      .filter(
+        x =>
+          x.distance >=
+            -0.005 &&
+          x.distance <=
+            0.10
       )
       .sort(
-        (a, b) =>
-          b.high -
-          a.high
-      )[0]
-      ||
-      null;
-  }
+        (a, b) => {
+
+          const sa =
+            a.weight -
+            a.distance * 25;
+
+          const sb =
+            b.weight -
+            b.distance * 25;
+
+          return (
+            sb - sa
+          );
+        }
+      );
 
 
-  const p1 =
-    validP[0] ||
+  const support1 =
+    rankedSupports[0] ||
     null;
 
 
-  let p2 =
-    null;
-
-  let p3 =
+  let support2 =
     null;
 
 
-  if (p1) {
+  if (support1) {
 
-    p2 =
-      validP.find(
-        z =>
-          z !== p1 &&
-          z.low >
-          p1.high +
-          Math.max(
-            A * 0.2,
-            price * 0.002
-          )
-      )
-      ||
-      null;
-  }
-
-
-  if (p2) {
-
-    p3 =
-      validP.find(
-        z =>
-          z !== p1 &&
-          z !== p2 &&
-          z.low >
-          p2.high +
-          Math.max(
-            A * 0.2,
-            price * 0.002
-          )
-      )
-      ||
+    support2 =
+      rankedSupports
+        .filter(
+          x =>
+            x !==
+              support1 &&
+            x.price <
+              support1.price -
+              Math.max(
+                A * 0.4,
+                price * 0.004
+              )
+        )
+        .sort(
+          (a, b) =>
+            b.price -
+            a.price
+        )[0] ||
       null;
   }
 
 
   /* =======================================================
-     Entry / SL
+     Entry
   ======================================================= */
 
-  let entryLow =
-    null;
-
-  let entryHigh =
-    null;
-
-  let sl =
-    null;
+  let entryLow = null;
+  let entryHigh = null;
+  let entryMid = null;
+  let sl = null;
 
 
-  if (s1) {
+  if (support1) {
+
+    const width =
+      Math.max(
+        A * 0.30,
+        support1.price *
+          0.003
+      );
 
     entryLow =
-      Math.max(
-        0,
-        s1.low
-      );
+      support1.price -
+      width;
 
     entryHigh =
-      s1.high;
+      support1.price +
+      width;
 
-    sl =
-      s1.low -
+    entryMid =
+      (
+        entryLow +
+        entryHigh
+      ) / 2;
+
+
+    /* =====================================================
+       SL
+    ===================================================== */
+
+    const lowerSwing =
+      swings.lows
+        .filter(
+          x =>
+            x.price <
+            support1.price
+        )
+        .sort(
+          (a, b) =>
+            b.price -
+            a.price
+        )[0] ||
+      null;
+
+
+    const invalidation =
+      lowerSwing &&
+      lowerSwing.price >=
+        support1.price *
+        0.94
+
+        ? lowerSwing.price
+        : support1.price;
+
+
+    const buffer =
       Math.max(
-        A * 0.45,
-        price * 0.006
+        A * 0.35,
+        price * 0.004
       );
 
+
+    sl =
+      invalidation -
+      buffer;
+
+
     if (
-      sl >=
-      entryLow
+      sl >= entryLow
     ) {
 
       sl =
         entryLow -
+        buffer;
+    }
+  }
+
+
+  /* =======================================================
+     歷史壓力
+  ======================================================= */
+
+  const resistances = [];
+
+
+  for (
+    const h of
+    swings.highs
+  ) {
+
+    if (
+      h.price >
+        price * 1.003
+    ) {
+
+      resistances.push({
+
+        price:
+          h.price,
+
+        type:
+          "歷史波段高點",
+
+        date:
+          h.date
+      });
+    }
+  }
+
+
+  for (
+    const length of
+    [20, 60, 120]
+  ) {
+
+    const part =
+      recent.slice(
+        -length
+      );
+
+    if (!part.length) {
+      continue;
+    }
+
+
+    const high =
+      Math.max(
+        ...part.map(
+          x => x.high
+        )
+      );
+
+
+    if (
+      high >
+        price * 1.003
+    ) {
+
+      resistances.push({
+
+        price:
+          high,
+
+        type:
+          `${length} 日高點`
+      });
+    }
+  }
+
+
+  resistances.sort(
+    (a, b) =>
+      a.price -
+      b.price
+  );
+
+
+  /* 合併過近壓力 */
+
+  const merged = [];
+
+
+  for (
+    const x of
+    resistances
+  ) {
+
+    const last =
+      merged[
+        merged.length - 1
+      ];
+
+
+    if (
+      last &&
+      Math.abs(
+        x.price -
+        last.price
+      ) <=
         Math.max(
-          A * 0.35,
+          A * 0.45,
           price * 0.005
+        )
+    ) {
+
+      last.price =
+        (
+          last.price +
+          x.price
+        ) / 2;
+
+      last.type =
+        "壓力共振";
+
+    } else {
+
+      merged.push({
+        ...x
+      });
+    }
+  }
+
+
+  /* =======================================================
+     TP1 / TP2 / TP3
+
+     優先真實歷史壓力。
+     沒有才使用 ATR 延伸。
+  ======================================================= */
+
+  let tp1 =
+    merged[0]?.price ??
+    null;
+
+  let tp2 =
+    merged[1]?.price ??
+    null;
+
+  let tp3 =
+    merged[2]?.price ??
+    null;
+
+
+  let tp1Source =
+    merged[0]?.type ||
+    "";
+
+  let tp2Source =
+    merged[1]?.type ||
+    "";
+
+  let tp3Source =
+    merged[2]?.type ||
+    "";
+
+
+  if (
+    Number.isFinite(
+      entryMid
+    )
+  ) {
+
+    if (
+      !Number.isFinite(tp1)
+    ) {
+
+      tp1 =
+        Math.max(
+          price + A * 2,
+          entryMid + A * 2
         );
+
+      tp1Source =
+        "上方無有效歷史壓力／ATR 延伸";
+    }
+
+
+    if (
+      !Number.isFinite(tp2)
+    ) {
+
+      tp2 =
+        Math.max(
+          tp1 + A * 1.5,
+          entryMid + A * 3.5
+        );
+
+      tp2Source =
+        "ATR 波段延伸";
+    }
+
+
+    if (
+      !Number.isFinite(tp3)
+    ) {
+
+      tp3 =
+        Math.max(
+          tp2 + A * 1.5,
+          entryMid + A * 5
+        );
+
+      tp3Source =
+        "ATR 長波段延伸";
+    }
+  }
+
+
+  /* =======================================================
+     RR
+  ======================================================= */
+
+  let risk = null;
+  let riskPct = null;
+
+  let rr1 = null;
+  let rr2 = null;
+  let rr3 = null;
+
+
+  if (
+    Number.isFinite(
+      entryMid
+    ) &&
+    Number.isFinite(sl) &&
+    entryMid > sl
+  ) {
+
+    risk =
+      entryMid -
+      sl;
+
+    riskPct =
+      risk /
+      entryMid *
+      100;
+
+
+    if (
+      Number.isFinite(tp1)
+    ) {
+
+      rr1 =
+        (
+          tp1 -
+          entryMid
+        ) /
+        risk;
+    }
+
+
+    if (
+      Number.isFinite(tp2)
+    ) {
+
+      rr2 =
+        (
+          tp2 -
+          entryMid
+        ) /
+        risk;
+    }
+
+
+    if (
+      Number.isFinite(tp3)
+    ) {
+
+      rr3 =
+        (
+          tp3 -
+          entryMid
+        ) /
+        risk;
     }
   }
 
@@ -1290,12 +1292,10 @@ function smcAnalysis(
      Entry Ready
   ======================================================= */
 
-  let entryReady =
-    false;
+  let entryReady = false;
 
 
   if (
-    s1 &&
     Number.isFinite(
       entryLow
     ) &&
@@ -1306,100 +1306,1220 @@ function smcAnalysis(
 
     const tolerance =
       Math.max(
-        A * 0.60,
-        price * 0.012
+        A * 0.45,
+        price * 0.008
       );
+
 
     entryReady =
       price >=
-      entryLow -
-      Math.max(
-        A * 0.15,
-        price * 0.003
-      )
+        entryLow -
+        tolerance
       &&
       price <=
-      entryHigh +
-      tolerance;
+        entryHigh +
+        tolerance;
   }
 
 
   return {
 
-    support1:
-      s1,
+    support1,
 
-    support2:
-      s2,
+    support2,
 
-    breakout:
-      p1
-      ?
-      p1.low
-      :
-      null,
+    entryLow:
+      round(entryLow),
 
-    pressure1:
-      p1,
+    entryHigh:
+      round(entryHigh),
 
-    pressure2:
-      p2,
+    entryMid:
+      round(entryMid),
 
-    pressure3:
-      p3,
+    sl:
+      round(sl),
 
-    entryLow,
+    risk:
+      round(risk),
 
-    entryHigh,
-
-    sl,
+    riskPct:
+      round(riskPct),
 
     tp1:
-      p1
-      ?
-      p1.low
-      :
-      null,
+      round(tp1),
 
     tp2:
-      p2
-      ?
-      p2.low
-      :
-      null,
+      round(tp2),
 
     tp3:
-      p3
-      ?
-      p3.low
-      :
-      null,
+      round(tp3),
 
-    entryReady,
+    tp1Source,
 
-    hasRealStructure:
-      !!s1,
+    tp2Source,
 
-    chipBias:
-      chip5 > 0
-      ?
-      "偏多"
-      :
-      chip5 < 0
-      ?
-      "偏空"
-      :
-      "中性"
+    tp3Source,
+
+    rr1:
+      round(rr1),
+
+    rr2:
+      round(rr2),
+
+    rr3:
+      round(rr3),
+
+    entryReady
   };
 }
 
 
 /* =========================================================
-   8 條策略
-   與 index.html 對齊
+   技術面 0 ~ 20
 ========================================================= */
 
-function analyzeData(d) {
+function scoreTechnical(
+  rows,
+  price
+) {
+
+  const closes =
+    rows.map(
+      x => x.close
+    );
+
+  const ma20 =
+    sma(
+      closes,
+      20
+    );
+
+  const ma60 =
+    sma(
+      closes,
+      60
+    );
+
+
+  const ma20Prev =
+    rows.length >= 25
+      ? avg(
+          closes.slice(
+            -25,
+            -5
+          )
+        )
+      : ma20;
+
+
+  const R =
+    rsi(
+      closes,
+      14
+    );
+
+
+  const macd =
+    getMACD(
+      closes
+    );
+
+
+  const previous20 =
+    rows.slice(
+      -21,
+      -1
+    );
+
+
+  const previousHigh20 =
+    previous20.length
+      ? Math.max(
+          ...previous20.map(
+            x => x.high
+          )
+        )
+      : null;
+
+
+  let score = 0;
+
+  const reasons = [];
+
+
+  if (
+    Number.isFinite(ma20) &&
+    price > ma20
+  ) {
+
+    score += 4;
+
+    reasons.push(
+      "股價站上 MA20"
+    );
+  }
+
+
+  if (
+    Number.isFinite(ma20) &&
+    Number.isFinite(ma60) &&
+    ma20 > ma60
+  ) {
+
+    score += 4;
+
+    reasons.push(
+      "MA20 高於 MA60"
+    );
+  }
+
+
+  if (
+    Number.isFinite(ma20) &&
+    Number.isFinite(ma20Prev) &&
+    ma20 > ma20Prev
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "MA20 趨勢向上"
+    );
+  }
+
+
+  if (
+    R >= 50 &&
+    R <= 70
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "RSI 動能健康"
+    );
+
+  } else if (
+    R > 45 &&
+    R < 75
+  ) {
+
+    score += 1;
+  }
+
+
+  if (
+    macd.macd >
+    macd.signal
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "MACD 位於訊號線上方"
+    );
+
+  } else if (
+    macd.histogram > 0
+  ) {
+
+    score += 2;
+  }
+
+
+  if (
+    Number.isFinite(
+      previousHigh20
+    ) &&
+    price >=
+      previousHigh20 *
+      0.985
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      price >
+        previousHigh20
+        ? "突破近期高點"
+        : "接近近期突破區"
+    );
+  }
+
+
+  return {
+
+    available: true,
+
+    score:
+      clamp(
+        Math.round(score),
+        0,
+        20
+      ),
+
+    ma20:
+      round(ma20),
+
+    ma60:
+      round(ma60),
+
+    rsi:
+      round(R),
+
+    macd:
+      round(
+        macd.macd,
+        4
+      ),
+
+    macdSignal:
+      round(
+        macd.signal,
+        4
+      ),
+
+    previousHigh20:
+      round(
+        previousHigh20
+      ),
+
+    reasons
+  };
+}
+
+
+/* =========================================================
+   量價 0 ~ 20
+========================================================= */
+
+function scoreVolume(
+  rows,
+  price
+) {
+
+  if (
+    rows.length < 22
+  ) {
+
+    return {
+
+      available:
+        false,
+
+      score:
+        null,
+
+      reasons:
+        []
+    };
+  }
+
+
+  const last =
+    rows[
+      rows.length - 1
+    ];
+
+
+  const previous =
+    rows[
+      rows.length - 2
+    ];
+
+
+  const volumeAvg20 =
+    avg(
+      rows
+        .slice(
+          -21,
+          -1
+        )
+        .map(
+          x => x.volume
+        )
+    );
+
+
+  const volumeRatio =
+    volumeAvg20 > 0
+      ? last.volume /
+        volumeAvg20
+      : 0;
+
+
+  const previous20 =
+    rows.slice(
+      -21,
+      -1
+    );
+
+
+  const high20 =
+    Math.max(
+      ...previous20.map(
+        x => x.high
+      )
+    );
+
+
+  const recent5Avg =
+    avg(
+      rows
+        .slice(-5)
+        .map(
+          x => x.volume
+        )
+    );
+
+
+  const previous15Avg =
+    avg(
+      rows
+        .slice(
+          -20,
+          -5
+        )
+        .map(
+          x => x.volume
+        )
+    );
+
+
+  let score = 0;
+
+  const reasons = [];
+
+
+  if (
+    volumeRatio >= 1.5
+  ) {
+
+    score += 6;
+
+    reasons.push(
+      "成交量明顯放大"
+    );
+
+  } else if (
+    volumeRatio >= 1.15
+  ) {
+
+    score += 5;
+
+    reasons.push(
+      "成交量高於均量"
+    );
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+
+    score += 3;
+
+  } else {
+
+    score += 1;
+  }
+
+
+  if (
+    price >
+      previous.close &&
+    volumeRatio >= 1
+  ) {
+
+    score += 5;
+
+    reasons.push(
+      "價漲量增"
+    );
+  }
+
+
+  if (
+    price > high20 &&
+    volumeRatio >= 1.2
+  ) {
+
+    score += 5;
+
+    reasons.push(
+      "帶量突破近期高點"
+    );
+
+  } else if (
+    price >=
+      high20 * 0.985 &&
+    volumeRatio >= 1
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "接近突破且量能配合"
+    );
+  }
+
+
+  if (
+    recent5Avg > 0 &&
+    previous15Avg > 0 &&
+    recent5Avg <
+      previous15Avg * 0.8 &&
+    price >=
+      rows[
+        Math.max(
+          0,
+          rows.length - 10
+        )
+      ].close * 0.98
+  ) {
+
+    score += 4;
+
+    reasons.push(
+      "整理期間量縮"
+    );
+  }
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        Math.round(score),
+        0,
+        20
+      ),
+
+    volume:
+      last.volume,
+
+    volumeAvg20:
+      round(
+        volumeAvg20,
+        0
+      ),
+
+    volumeRatio:
+      round(
+        volumeRatio
+      ),
+
+    reasons
+  };
+}
+
+
+/* =========================================================
+   法人籌碼 0 ~ 20
+========================================================= */
+
+function scoreInstitutional(
+  i = {}
+) {
+
+  if (
+    i.available ===
+    false
+  ) {
+
+    return {
+
+      available:
+        false,
+
+      score:
+        null,
+
+      reasons:
+        []
+    };
+  }
+
+
+  const foreign5 =
+    num(i.foreign5);
+
+  const foreign10 =
+    num(i.foreign10);
+
+  const trust5 =
+    num(i.trust5);
+
+  const trust10 =
+    num(i.trust10);
+
+  const dealer5 =
+    num(i.dealer5);
+
+  const total5 =
+    num(i.total5);
+
+  const total10 =
+    num(i.total10);
+
+  const foreignBuyDays5 =
+    num(
+      i.foreignBuyDays5
+    );
+
+  const trustBuyDays5 =
+    num(
+      i.trustBuyDays5
+    );
+
+  const totalBuyDays5 =
+    num(
+      i.totalBuyDays5
+    );
+
+
+  const hasData =
+    [
+      foreign5,
+      foreign10,
+      trust5,
+      trust10,
+      dealer5,
+      total5,
+      total10
+    ].some(
+      Number.isFinite
+    );
+
+
+  if (!hasData) {
+
+    return {
+
+      available:
+        false,
+
+      score:
+        null,
+
+      reasons:
+        []
+    };
+  }
+
+
+  let score = 8;
+
+  const reasons = [];
+
+
+  if (
+    Number(foreign5) >
+    0
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "外資近 5 日買超"
+    );
+
+  } else if (
+    Number(foreign5) <
+    0
+  ) {
+
+    score -= 2;
+  }
+
+
+  if (
+    Number(trust5) >
+    0
+  ) {
+
+    score += 3;
+
+    reasons.push(
+      "投信近 5 日買超"
+    );
+
+  } else if (
+    Number(trust5) <
+    0
+  ) {
+
+    score -= 2;
+  }
+
+
+  if (
+    Number(total5) >
+    0
+  ) {
+
+    score += 2;
+
+    reasons.push(
+      "三大法人近 5 日合計買超"
+    );
+
+  } else if (
+    Number(total5) <
+    0
+  ) {
+
+    score -= 2;
+  }
+
+
+  if (
+    Number(foreign10) >
+    0
+  ) {
+    score += 1;
+  }
+
+
+  if (
+    Number(trust10) >
+    0
+  ) {
+    score += 1;
+  }
+
+
+  if (
+    Number(total10) >
+    0
+  ) {
+    score += 1;
+  }
+
+
+  if (
+    Number(
+      foreignBuyDays5
+    ) >= 3
+  ) {
+
+    score += 1;
+
+    reasons.push(
+      "外資買盤具連續性"
+    );
+  }
+
+
+  if (
+    Number(
+      trustBuyDays5
+    ) >= 3
+  ) {
+
+    score += 1;
+
+    reasons.push(
+      "投信買盤具連續性"
+    );
+  }
+
+
+  if (
+    Number(
+      totalBuyDays5
+    ) >= 3
+  ) {
+
+    score += 1;
+  }
+
+
+  if (
+    Number(dealer5) >
+    0
+  ) {
+
+    score += 0.5;
+  }
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        Math.round(score),
+        0,
+        20
+      ),
+
+    foreign5,
+
+    trust5,
+
+    dealer5,
+
+    total5,
+
+    total10,
+
+    reasons
+  };
+}
+
+
+/* =========================================================
+   基本面 0 ~ 20
+========================================================= */
+
+function scoreFundamental(
+  data
+) {
+
+  const revenue =
+    data?.revenue ||
+    data?.fundamental?.revenue ||
+    {};
+
+
+  const financial =
+    data?.financial ||
+    data?.fundamental?.financial ||
+    {};
+
+
+  const revenueAvailable =
+    revenue.available !==
+      false &&
+    (
+      Number.isFinite(
+        num(
+          revenue.yoy
+        )
+      ) ||
+      Number.isFinite(
+        num(
+          revenue.mom
+        )
+      )
+    );
+
+
+  const financialAvailable =
+    financial.available !==
+      false &&
+    (
+      Number.isFinite(
+        num(
+          financial.eps
+        )
+      ) ||
+      Number.isFinite(
+        num(
+          financial.incomeAfterTaxes
+        )
+      ) ||
+      typeof financial.profitable ===
+        "boolean"
+    );
+
+
+  if (
+    !revenueAvailable &&
+    !financialAvailable
+  ) {
+
+    return {
+
+      available:
+        false,
+
+      score:
+        null,
+
+      reasons:
+        []
+    };
+  }
+
+
+  let score = 0;
+  let possible = 0;
+
+  const reasons = [];
+
+
+  if (
+    revenueAvailable
+  ) {
+
+    possible += 8;
+
+
+    const yoy =
+      num(
+        revenue.yoy
+      );
+
+
+    const mom =
+      num(
+        revenue.mom
+      );
+
+
+    if (
+      Number.isFinite(yoy)
+    ) {
+
+      if (
+        yoy >= 20
+      ) {
+
+        score += 5;
+
+        reasons.push(
+          "營收年增超過 20%"
+        );
+
+      } else if (
+        yoy > 0
+      ) {
+
+        score += 4;
+
+        reasons.push(
+          "營收維持年增"
+        );
+
+      } else if (
+        yoy > -5
+      ) {
+
+        score += 2;
+      }
+    }
+
+
+    if (
+      Number.isFinite(mom)
+    ) {
+
+      if (
+        mom > 0
+      ) {
+
+        score += 3;
+
+        reasons.push(
+          "營收月增"
+        );
+
+      } else if (
+        mom > -5
+      ) {
+
+        score += 1;
+      }
+    }
+  }
+
+
+  if (
+    financialAvailable
+  ) {
+
+    possible += 12;
+
+
+    const eps =
+      num(
+        financial.eps
+      );
+
+
+    const epsGrowth =
+      num(
+        financial.epsGrowth
+      );
+
+
+    const netIncomeGrowth =
+      num(
+        financial.netIncomeGrowth
+      );
+
+
+    if (
+      financial.profitable ===
+        true ||
+      (
+        Number.isFinite(eps) &&
+        eps > 0
+      )
+    ) {
+
+      score += 4;
+
+      reasons.push(
+        "公司維持獲利"
+      );
+    }
+
+
+    if (
+      Number.isFinite(eps)
+    ) {
+
+      if (
+        eps > 0
+      ) {
+
+        score += 2;
+      }
+
+
+      if (
+        eps >= 2
+      ) {
+
+        score += 1;
+      }
+    }
+
+
+    if (
+      Number.isFinite(
+        epsGrowth
+      )
+    ) {
+
+      if (
+        epsGrowth > 20
+      ) {
+
+        score += 3;
+
+        reasons.push(
+          "EPS 成長明顯"
+        );
+
+      } else if (
+        epsGrowth > 0
+      ) {
+
+        score += 2;
+
+        reasons.push(
+          "EPS 成長"
+        );
+      }
+    }
+
+
+    if (
+      Number.isFinite(
+        netIncomeGrowth
+      ) &&
+      netIncomeGrowth > 0
+    ) {
+
+      score += 2;
+
+      reasons.push(
+        "稅後獲利成長"
+      );
+    }
+  }
+
+
+  return {
+
+    available:
+      possible > 0,
+
+    score:
+      possible > 0
+        ? clamp(
+            Math.round(
+              (
+                score /
+                possible
+              ) * 20
+            ),
+            0,
+            20
+          )
+        : null,
+
+    reasons
+  };
+}
+
+
+/* =========================================================
+   新聞 0 ~ 20
+========================================================= */
+
+function scoreNews(news) {
+
+  if (
+    !news ||
+    news.available ===
+      false ||
+    !Array.isArray(
+      news.news
+    ) ||
+    !news.news.length
+  ) {
+
+    return {
+
+      available:
+        false,
+
+      score:
+        null,
+
+      overall:
+        "資料不足",
+
+      reasons:
+        []
+    };
+  }
+
+
+  const overall =
+    clamp(
+      Number(
+        news.overallScore ||
+        0
+      ),
+      -10,
+      10
+    );
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        Math.round(
+          10 +
+          overall
+        ),
+        0,
+        20
+      ),
+
+    overall:
+      news.overall ||
+      "中性",
+
+    reasons: [
+
+      overall >= 2
+        ? "近期新聞偏正向"
+        : overall <= -2
+        ? "近期新聞偏負向"
+        : "近期新聞影響中性"
+    ]
+  };
+}
+
+
+/* =========================================================
+   綜合評分
+========================================================= */
+
+function combineScores(
+  sections
+) {
+
+  const available =
+    sections.filter(
+      x =>
+        x?.available &&
+        Number.isFinite(
+          Number(
+            x.score
+          )
+        )
+    );
+
+
+  if (
+    !available.length
+  ) {
+
+    return {
+
+      score:
+        0,
+
+      completeness:
+        0
+    };
+  }
+
+
+  const earned =
+    available.reduce(
+      (
+        sum,
+        x
+      ) =>
+        sum +
+        Number(
+          x.score
+        ),
+      0
+    );
+
+
+  return {
+
+    score:
+      Math.round(
+        (
+          earned /
+          (
+            available.length *
+            20
+          )
+        ) *
+        100
+      ),
+
+    completeness:
+      Math.round(
+        (
+          available.length /
+          5
+        ) *
+        100
+      )
+  };
+}
+
+
+/* =========================================================
+   完整股票分析
+========================================================= */
+
+function analyzeData(
+  d,
+  newsData = null
+) {
 
   if (
     !Array.isArray(
@@ -1414,34 +2534,58 @@ function analyzeData(d) {
 
   const rows =
     d.rows
-    .map(
-      x => ({
-        date:
-          x.date || "",
+      .map(
+        x => ({
 
-        open:
-          +x.open,
+          date:
+            String(
+              x.date ||
+              ""
+            ),
 
-        high:
-          +x.high,
+          open:
+            Number(
+              x.open
+            ),
 
-        low:
-          +x.low,
+          high:
+            Number(
+              x.high
+            ),
 
-        close:
-          +x.close,
+          low:
+            Number(
+              x.low
+            ),
 
-        volume:
-          +x.volume || 0
-      })
-    )
-    .filter(
-      x =>
-        Number.isFinite(
-          x.close
-        ) &&
-        x.close > 0
-    );
+          close:
+            Number(
+              x.close
+            ),
+
+          volume:
+            Number(
+              x.volume ||
+              0
+            )
+        })
+      )
+      .filter(
+        x =>
+          Number.isFinite(
+            x.open
+          ) &&
+          Number.isFinite(
+            x.high
+          ) &&
+          Number.isFinite(
+            x.low
+          ) &&
+          Number.isFinite(
+            x.close
+          ) &&
+          x.close > 0
+      );
 
 
   if (
@@ -1452,187 +2596,126 @@ function analyzeData(d) {
   }
 
 
-  const c =
-    rows.map(
-      x =>
-        x.close
+  let price =
+    Number(
+      d.price
     );
 
 
-  let p =
-    +d.price;
-
-
   if (
-    !Number.isFinite(p) ||
-    p <= 0
+    !Number.isFinite(
+      price
+    ) ||
+    price <= 0
   ) {
 
-    p =
+    price =
       rows[
         rows.length - 1
       ].close;
   }
 
 
-  const m20 =
-    sma(
-      c,
-      20
-    );
-
-
-  const m60 =
-    sma(
-      c,
-      60
-    );
-
-
-  /*
-    跟 index.html 完全相同：
-    ATR 至少使用股價 0.6%
-  */
-
   const A =
     Math.max(
-      atr(rows),
-      p * 0.006
+      atr(
+        rows,
+        14
+      ),
+      price * 0.006
     );
 
 
-  const R =
-    rsi(c);
-
-
-  const macd =
-    ema(
-      c.slice(-100),
-      12
-    )
-    -
-    ema(
-      c.slice(-100),
-      26
-    );
-
-
-  const r20 =
-    rows.slice(-20);
-
-
-  const r60 =
-    rows.slice(-60);
-
-
-  const support =
-    Math.min(
-      ...r20.map(
-        x =>
-          x.low
-      )
-    );
-
-
-  const res =
-    Math.max(
-      ...r20.map(
-        x =>
-          x.high
-      )
-    );
-
-
-  const high60 =
-    Math.max(
-      ...r60.map(
-        x =>
-          x.high
-      )
-    );
-
-
-  const vol =
-    rows[
-      rows.length - 1
-    ].volume;
-
-
-  const volAvg =
-    avg(
-      rows
-      .slice(
-        -21,
-        -1
-      )
-      .map(
-        x =>
-          x.volume
-      )
-    );
-
-
-  const vr =
-    volAvg
-    ?
-    vol /
-    volAvg
-    :
-    0;
-
-
-  const conditions = [
-
-    m20 > m60,
-
-    p >=
-      m60 * 0.985,
-
-    Math.abs(
-      p - m20
-    ) <=
-      A * 2.2,
-
-    p >=
-      support * 0.99,
-
-    R >= 45 &&
-      R <= 72,
-
-    macd >=
-      -A * 0.05,
-
-    vr >=
-      0.8,
-
-    Math.max(
-      res,
-      high60
-    ) >
-      p * 1.025
-  ];
-
-
-  const passed =
-    conditions
-    .filter(Boolean)
-    .length;
-
-
-  const smc =
-    smcAnalysis(
+  const technical =
+    scoreTechnical(
       rows,
-      p,
-      A,
+      price
+    );
+
+
+  const volume =
+    scoreVolume(
+      rows,
+      price
+    );
+
+
+  const institutional =
+    scoreInstitutional(
       d.institutional
     );
+
+
+  const fundamental =
+    scoreFundamental(
+      d
+    );
+
+
+  const news =
+    scoreNews(
+      newsData
+    );
+
+
+  const combined =
+    combineScores([
+      technical,
+      volume,
+      institutional,
+      fundamental,
+      news
+    ]);
+
+
+  const plan =
+    buildTradePlan(
+      rows,
+      price,
+      A
+    );
+
+
+  let classification =
+    "偏弱／觀望";
+
+
+  if (
+    combined.score >= 80
+  ) {
+
+    classification =
+      "偏多波段";
+
+  } else if (
+    combined.score >= 70
+  ) {
+
+    classification =
+      "偏多觀察";
+
+  } else if (
+    combined.score >= 60
+  ) {
+
+    classification =
+      "中性偏多";
+
+  } else if (
+    combined.score >= 45
+  ) {
+
+    classification =
+      "中性";
+  }
 
 
   return {
 
     symbol:
       String(
-        d.symbol || ""
+        d.symbol ||
+        ""
       ),
 
     name:
@@ -1640,167 +2723,212 @@ function analyzeData(d) {
       d.symbol ||
       "",
 
-    price:
-      p,
+    price,
 
-    passed,
+    score:
+      combined.score,
 
-    qualified:
-      passed >= 7,
+    completeness:
+      combined.completeness,
 
-    near:
-      passed === 6,
+    classification,
 
-    A,
+    technical,
 
-    vr,
+    volume,
 
-    R,
+    institutional,
 
-    hasRealStructure:
-      smc.hasRealStructure,
+    fundamental,
 
-    entryReady:
-      smc.entryReady,
+    news,
 
-    support1Low:
-      smc.support1
-      ?
-      smc.support1.low
-      :
-      null,
-
-    support1High:
-      smc.support1
-      ?
-      smc.support1.high
-      :
-      null,
-
-    support1Type:
-      smc.support1
-      ?
-      smc.support1.type
-      :
-      "無有效 SMC 結構",
-
-    entryLow:
-      smc.entryLow,
-
-    entryHigh:
-      smc.entryHigh,
-
-    sl:
-      smc.sl,
-
-    breakout:
-      smc.breakout,
-
-    pressure1:
-      smc.pressure1
-      ?
-      smc.pressure1.low
-      :
-      null,
-
-    pressure2:
-      smc.pressure2
-      ?
-      smc.pressure2.low
-      :
-      null,
-
-    tp1:
-      smc.tp1,
-
-    tp2:
-      smc.tp2,
-
-    tp3:
-      smc.tp3,
-
-    chipBias:
-      smc.chipBias
+    ...plan
   };
 }
 
 
 /* =========================================================
-   正式進場訊號
+   正式 Push 判斷
 ========================================================= */
 
-function makeSignal(data) {
-
-  const a =
-    analyzeData(data);
+function makeSignal(a) {
 
   if (!a) {
-    return null;
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        "分析資料不足"
+    };
   }
 
-
-  /*
-    跟網站一致：
-    7 / 8 才是策略成立
-  */
 
   if (
-    !a.qualified
+    a.score <
+    MIN_SCORE
   ) {
-    return null;
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        `綜合評分不足 ${a.score}/${MIN_SCORE}`
+    };
   }
 
-
-  /*
-    一定要有真正 SMC 支撐
-  */
 
   if (
-    !a.hasRealStructure
+    a.completeness <
+    MIN_COMPLETENESS
   ) {
-    return null;
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        `資料完整度不足 ${a.completeness}%`
+    };
   }
 
 
-  /*
-    一定要真的進入網站計算的
-    SMC 進場範圍
-  */
+  if (
+    !a.technical?.available ||
+    a.technical.score <
+      MIN_TECHNICAL
+  ) {
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        `技術面不足 ${a.technical?.score ?? "--"}/20`
+    };
+  }
+
+
+  if (
+    !a.volume?.available ||
+    a.volume.score <
+      MIN_VOLUME
+  ) {
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        `量價不足 ${a.volume?.score ?? "--"}/20`
+    };
+  }
+
 
   if (
     !a.entryReady
   ) {
-    return null;
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        "尚未進入合理進場區"
+    };
   }
 
 
   if (
     !Number.isFinite(
-      a.entryLow
+      Number(
+        a.entryLow
+      )
     ) ||
     !Number.isFinite(
-      a.entryHigh
+      Number(
+        a.entryHigh
+      )
     ) ||
     !Number.isFinite(
-      a.sl
+      Number(
+        a.sl
+      )
     )
   ) {
 
-    return null;
+    return {
+
+      signal:
+        null,
+
+      reason:
+        "交易計畫資料不足"
+    };
   }
 
 
-  /*
-    fingerprint：
-    同一支股票、同一個 SMC 支撐區，
-    6 小時只通知一次。
-  */
+  if (
+    !Number.isFinite(
+      Number(
+        a.tp1
+      )
+    ) ||
+    Number(
+      a.tp1
+    ) <=
+      Number(
+        a.entryHigh
+      )
+  ) {
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        "上方沒有足夠目標空間"
+    };
+  }
+
+
+  if (
+    !Number.isFinite(
+      Number(
+        a.rr1
+      )
+    ) ||
+    Number(
+      a.rr1
+    ) <
+      MIN_RR
+  ) {
+
+    return {
+
+      signal:
+        null,
+
+      reason:
+        `TP1 風報比不足 ${a.rr1 ?? "--"}R`
+    };
+  }
+
 
   const fingerprint =
     [
-      a.symbol,
 
-      a.support1Type,
+      a.symbol,
 
       Number(
         a.entryLow
@@ -1810,22 +2938,34 @@ function makeSignal(data) {
         a.entryHigh
       ).toFixed(2),
 
-      a.passed
-    ]
-    .join(":");
+      Number(
+        a.sl
+      ).toFixed(2),
+
+      Math.floor(
+        a.score / 5
+      ) * 5
+
+    ].join(":");
 
 
   return {
 
-    ...a,
+    signal: {
 
-    fingerprint
+      ...a,
+
+      fingerprint
+    },
+
+    reason:
+      "符合正式進場通知條件"
   };
 }
 
 
 /* =========================================================
-   股票 API
+   Stock API
 ========================================================= */
 
 async function fetchStock(
@@ -1839,10 +2979,12 @@ async function fetchStock(
       await fetch(
         `${origin}/api/stock?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`,
         {
+
           cache:
             "no-store",
 
           headers: {
+
             "Cache-Control":
               "no-cache"
           }
@@ -1854,12 +2996,6 @@ async function fetchStock(
       !response.ok
     ) {
 
-      console.error(
-        "stock api status:",
-        symbol,
-        response.status
-      );
-
       return null;
     }
 
@@ -1868,21 +3004,11 @@ async function fetchStock(
       await response.json();
 
 
-    if (
-      !data?.ok
-    ) {
-
-      console.error(
-        "stock api error:",
-        symbol,
-        data?.error
-      );
-
-      return null;
-    }
-
-
-    return data;
+    return (
+      data?.ok
+        ? data
+        : null
+    );
 
   } catch (error) {
 
@@ -1898,7 +3024,75 @@ async function fetchStock(
 
 
 /* =========================================================
-   Push
+   News API
+========================================================= */
+
+async function fetchNews(
+  origin,
+  symbol
+) {
+
+  try {
+
+    const response =
+      await fetch(
+        `${origin}/api/news?symbol=${encodeURIComponent(symbol)}`,
+        {
+          cache:
+            "no-store"
+        }
+      );
+
+
+    if (
+      !response.ok
+    ) {
+
+      return null;
+    }
+
+
+    const data =
+      await response.json();
+
+
+    return (
+      data?.ok
+        ? data
+        : null
+    );
+
+  } catch (_) {
+
+    return null;
+  }
+}
+
+
+/* =========================================================
+   新聞只抓強勢候選
+========================================================= */
+
+function shouldFetchNews(a) {
+
+  return !!(
+    a &&
+    a.completeness >= 60 &&
+    a.score >= 65 &&
+    (
+      a.technical?.score ??
+      0
+    ) >= 10 &&
+    (
+      a.volume?.score ??
+      0
+    ) >= 8
+  );
+}
+
+
+/* =========================================================
+   Push Notification
 ========================================================= */
 
 function buildNotification(
@@ -1914,7 +3108,9 @@ function buildNotification(
 
   if (
     Number.isFinite(
-      signal.tp1
+      Number(
+        signal.tp1
+      )
     )
   ) {
 
@@ -1926,7 +3122,9 @@ function buildNotification(
 
   if (
     Number.isFinite(
-      signal.tp2
+      Number(
+        signal.tp2
+      )
     )
   ) {
 
@@ -1936,25 +3134,14 @@ function buildNotification(
   }
 
 
-  if (
-    Number.isFinite(
-      signal.tp3
-    )
-  ) {
-
-    targets.push(
-      `TP3 ${formatPrice(signal.tp3)}`
-    );
-  }
-
-
   return {
 
     title:
-      `📈 ${signal.name} ${signal.symbol}｜${signal.passed}/8 進場訊號`,
+      `📈 ${signal.name} ${signal.symbol}｜綜合 ${signal.score} 分`,
 
     body:
       [
+
         `現價 ${formatPrice(signal.price)}`,
 
         `進場 ${entry}`,
@@ -1963,16 +3150,21 @@ function buildNotification(
 
         targets.join("｜"),
 
-        `${signal.support1Type}｜法人${signal.chipBias}`
+        `RR ${Number(signal.rr1).toFixed(2)}R`,
+
+        `完整度 ${signal.completeness}%`,
+
+        `技術 ${signal.technical?.score ?? "--"}｜量價 ${signal.volume?.score ?? "--"}｜法人 ${signal.institutional?.score ?? "--"}｜基本 ${signal.fundamental?.score ?? "--"}｜新聞 ${signal.news?.score ?? "--"}`
+
       ]
-      .filter(Boolean)
-      .join("\n"),
+        .filter(Boolean)
+        .join("\n"),
 
     tag:
       `entry-${signal.symbol}`,
 
     url:
-      `/?symbol=${encodeURIComponent(signal.symbol)}`
+      `/?stock=${encodeURIComponent(signal.symbol)}`
   };
 }
 
@@ -1997,18 +3189,16 @@ async function sendPush(
   }
 
 
-  const payload =
-    JSON.stringify(
-      buildNotification(
-        signal
-      )
-    );
-
-
   return webpush
     .sendNotification(
       subscription,
-      payload,
+
+      JSON.stringify(
+        buildNotification(
+          signal
+        )
+      ),
+
       {
         TTL: 120
       }
@@ -2033,10 +3223,30 @@ async function handler(
 
 
   /* =======================================================
-     Cron Secret
+     TEST MODE
+
+     這一段一定要在 CRON_SECRET 前面。
+
+     /api/monitor?test=1
+     可以直接用 Safari 開。
+  ======================================================= */
+
+  const testMode =
+    String(
+      req.query?.test ||
+      ""
+    ) === "1";
+
+
+  /* =======================================================
+     CRON SECRET
+
+     正式 Cron 才檢查。
+     test=1 完全跳過。
   ======================================================= */
 
   if (
+    !testMode &&
     process.env.CRON_SECRET
   ) {
 
@@ -2050,17 +3260,24 @@ async function handler(
     ) {
 
       return res
-      .status(401)
-      .json({
-        ok: false,
-        error:
-          "Unauthorized"
-      });
+        .status(401)
+        .json({
+
+          ok:
+            false,
+
+          error:
+            "Unauthorized"
+        });
     }
   }
 
 
   try {
+
+    /* =====================================================
+       VAPID
+    ===================================================== */
 
     if (
       !VAPID_PUBLIC_KEY ||
@@ -2081,14 +3298,11 @@ async function handler(
     );
 
 
-    const testMode =
-      req.query?.test === "1";
+    /* =====================================================
+       正式 Cron 時段限制
 
-
-    /*
-      正式 Cron：
-      只在台股監控時間真正掃股票。
-    */
+       test=1 不受限制。
+    ===================================================== */
 
     if (
       !testMode &&
@@ -2096,27 +3310,32 @@ async function handler(
     ) {
 
       return res
-      .status(200)
-      .json({
+        .status(200)
+        .json({
 
-        ok: true,
+          ok:
+            true,
 
-        skipped: true,
+          engine:
+            "Stock Analysis Monitor 6.2",
 
-        testMode:
-          false,
+          skipped:
+            true,
 
-        marketTime:
-          false,
+          testMode:
+            false,
 
-        reason:
-          "非台股監控時段"
-      });
+          marketTime:
+            false,
+
+          reason:
+            "非台股監控時段"
+        });
     }
 
 
     /* =====================================================
-       取得所有裝置
+       取得所有 Push 裝置
     ===================================================== */
 
     const deviceIds =
@@ -2124,38 +3343,6 @@ async function handler(
         "SMEMBERS",
         "swing:push:devices"
       ]) || [];
-
-
-    if (
-      !deviceIds.length
-    ) {
-
-      return res
-      .status(200)
-      .json({
-
-        ok: true,
-
-        testMode,
-
-        marketTime:
-          isMarketTime(),
-
-        devices: 0,
-
-        stocks: 0,
-
-        signals: 0,
-
-        sent: 0,
-
-        failed: 0,
-
-        removed: 0,
-
-        deduped: 0
-      });
-    }
 
 
     const devices = [];
@@ -2175,12 +3362,6 @@ async function handler(
 
       if (!raw) {
 
-        /*
-          Set 裡有 ID，
-          但實際 device 不存在，
-          順便清掉。
-        */
-
         await redis([
           "SREM",
           "swing:push:devices",
@@ -2194,11 +3375,10 @@ async function handler(
       try {
 
         const device =
-          typeof raw === "string"
-          ?
-          JSON.parse(raw)
-          :
-          raw;
+          typeof raw ===
+            "string"
+            ? JSON.parse(raw)
+            : raw;
 
 
         const subscription =
@@ -2242,41 +3422,60 @@ async function handler(
     }
 
 
+    /* =====================================================
+       沒裝置
+    ===================================================== */
+
     if (
       !devices.length
     ) {
 
       return res
-      .status(200)
-      .json({
+        .status(200)
+        .json({
 
-        ok: true,
+          ok:
+            true,
 
-        testMode,
+          engine:
+            "Stock Analysis Monitor 6.2",
 
-        marketTime:
-          isMarketTime(),
+          testMode,
 
-        devices: 0,
+          marketTime:
+            isMarketTime(),
 
-        stocks: 0,
+          devices:
+            0,
 
-        signals: 0,
+          stocks:
+            0,
 
-        sent: 0,
+          signals:
+            0,
 
-        failed: 0,
+          sent:
+            0,
 
-        removed: 0,
+          failed:
+            0,
 
-        deduped: 0
-      });
+          removed:
+            0,
+
+          deduped:
+            0,
+
+          checkedStocks:
+            testMode
+              ? []
+              : undefined
+        });
     }
 
 
     /* =====================================================
-       iPhone + iPad 的股票全部合併
-       同一支股票只抓一次
+       合併所有裝置監控股票
     ===================================================== */
 
     const symbols =
@@ -2314,11 +3513,12 @@ async function handler(
       [];
 
 
-    /*
-      避免一次同時打太多 API
-    */
+    /* =====================================================
+       每批 3 檔
+    ===================================================== */
 
-    const batchSize = 3;
+    const batchSize =
+      3;
 
 
     for (
@@ -2382,21 +3582,86 @@ async function handler(
         }
 
 
-        /*
-          先取得完整網站分析結果，
-          測試時方便查看為何沒 Push。
-        */
+        /* =================================================
+           第一階段：
+           不抓新聞先評分
+        ================================================= */
+
+        const preliminary =
+          analyzeData(
+            data,
+            null
+          );
+
+
+        if (
+          !preliminary
+        ) {
+
+          checkedStocks.push({
+
+            symbol,
+
+            name:
+              data.name ||
+              "",
+
+            api:
+              true,
+
+            signal:
+              false,
+
+            reason:
+              "歷史資料不足"
+          });
+
+          continue;
+        }
+
+
+        /* =================================================
+           第二階段：
+           只有夠強的股票才抓新聞
+        ================================================= */
+
+        let newsData =
+          null;
+
+
+        if (
+          shouldFetchNews(
+            preliminary
+          )
+        ) {
+
+          newsData =
+            await fetchNews(
+              origin,
+              symbol
+            );
+        }
+
+
+        /* =================================================
+           最終分析
+        ================================================= */
 
         const analysis =
           analyzeData(
-            data
+            data,
+            newsData
+          );
+
+
+        const result =
+          makeSignal(
+            analysis
           );
 
 
         const signal =
-          makeSignal(
-            data
-          );
+          result.signal;
 
 
         checkedStocks.push({
@@ -2404,6 +3669,7 @@ async function handler(
           symbol,
 
           name:
+            analysis?.name ||
             data.name ||
             "",
 
@@ -2414,25 +3680,41 @@ async function handler(
             analysis?.price ??
             null,
 
-          passed:
-            analysis?.passed ??
+          score:
+            analysis?.score ??
             null,
 
-          qualified:
-            analysis?.qualified ??
-            false,
+          completeness:
+            analysis?.completeness ??
+            null,
 
-          hasRealStructure:
-            analysis?.hasRealStructure ??
-            false,
+          classification:
+            analysis?.classification ??
+            null,
+
+          technical:
+            analysis?.technical?.score ??
+            null,
+
+          volume:
+            analysis?.volume?.score ??
+            null,
+
+          institutional:
+            analysis?.institutional?.score ??
+            null,
+
+          fundamental:
+            analysis?.fundamental?.score ??
+            null,
+
+          news:
+            analysis?.news?.score ??
+            null,
 
           entryReady:
             analysis?.entryReady ??
             false,
-
-          supportType:
-            analysis?.support1Type ??
-            null,
 
           entryLow:
             analysis?.entryLow ??
@@ -2442,12 +3724,37 @@ async function handler(
             analysis?.entryHigh ??
             null,
 
+          sl:
+            analysis?.sl ??
+            null,
+
+          tp1:
+            analysis?.tp1 ??
+            null,
+
+          tp2:
+            analysis?.tp2 ??
+            null,
+
+          tp3:
+            analysis?.tp3 ??
+            null,
+
+          rr1:
+            analysis?.rr1 ??
+            null,
+
           signal:
-            !!signal
+            !!signal,
+
+          reason:
+            result.reason
         });
 
 
-        if (signal) {
+        if (
+          signal
+        ) {
 
           signalMap.set(
             symbol,
@@ -2459,7 +3766,7 @@ async function handler(
 
 
     /* =====================================================
-       Push 到每一台裝置
+       Push
     ===================================================== */
 
     let sent = 0;
@@ -2468,13 +3775,9 @@ async function handler(
     let deduped = 0;
 
 
-    const pushResults = [];
+    const pushResults =
+      [];
 
-
-    /*
-      如果同一裝置已經失效，
-      不要後面其他股票繼續送。
-    */
 
     const deadDevices =
       new Set();
@@ -2490,6 +3793,7 @@ async function handler(
           device.deviceId
         )
       ) {
+
         continue;
       }
 
@@ -2504,6 +3808,7 @@ async function handler(
             device.deviceId
           )
         ) {
+
           break;
         }
 
@@ -2520,7 +3825,10 @@ async function handler(
           );
 
 
-        if (!signal) {
+        if (
+          !signal
+        ) {
+
           continue;
         }
 
@@ -2529,10 +3837,13 @@ async function handler(
           null;
 
 
-        /*
-          test=1 不使用防重複，
-          正式 Cron 才使用。
-        */
+        /* =================================================
+           正式 Cron：
+           6 小時防重複
+
+           test=1：
+           不防重複
+        ================================================= */
 
         if (
           !testMode
@@ -2549,12 +3860,15 @@ async function handler(
               "1",
               "NX",
               "EX",
-              "21600"
+              String(
+                DEDUPE_SECONDS
+              )
             ]);
 
 
           if (
-            acquired !== "OK"
+            acquired !==
+            "OK"
           ) {
 
             deduped++;
@@ -2609,23 +3923,26 @@ async function handler(
 
           const body =
             typeof error?.body ===
-            "string"
-            ?
-            error.body
-            :
-            JSON.stringify(
-              error?.body ||
-              ""
-            );
+              "string"
+
+              ? error.body
+
+              : JSON.stringify(
+                  error?.body ||
+                  ""
+                );
 
 
           const expired =
-            statusCode === 404 ||
-            statusCode === 410;
+            statusCode ===
+              404 ||
+            statusCode ===
+              410;
 
 
           const vapidMismatch =
-            statusCode === 400 &&
+            statusCode ===
+              400 &&
             body.includes(
               "VapidPkHashMismatch"
             );
@@ -2646,9 +3963,12 @@ async function handler(
               );
 
 
-            if (deleted) {
+            if (
+              deleted
+            ) {
 
               removed++;
+
 
               deadDevices.add(
                 device.deviceId
@@ -2661,9 +3981,9 @@ async function handler(
 
 
             /*
-              真正發送失敗：
+              真正發送失敗，
               刪掉 dedupe，
-              下一輪可以重試。
+              下一輪可以再試。
             */
 
             if (
@@ -2712,53 +4032,65 @@ async function handler(
     ===================================================== */
 
     return res
-    .status(200)
-    .json({
+      .status(200)
+      .json({
 
-      ok:
-        true,
+        ok:
+          true,
 
-      testMode,
+        engine:
+          "Stock Analysis Monitor 6.2",
 
-      marketTime:
-        isMarketTime(),
+        strategy:
+          "技術＋量價＋法人＋基本面＋新聞",
 
-      devices:
-        devices.length,
+        pushThreshold:
+          MIN_SCORE,
 
-      stocks:
-        symbols.length,
+        minimumCompleteness:
+          MIN_COMPLETENESS,
 
-      signals:
-        signalMap.size,
+        minimumTechnical:
+          MIN_TECHNICAL,
 
-      sent,
+        minimumVolume:
+          MIN_VOLUME,
 
-      failed,
+        minimumRR:
+          MIN_RR,
 
-      removed,
+        testMode,
 
-      deduped,
+        marketTime:
+          isMarketTime(),
 
-      /*
-        test=1 才輸出詳細分析。
-        正式 Cron 保持精簡。
-      */
+        devices:
+          devices.length,
 
-      checkedStocks:
-        testMode
-        ?
-        checkedStocks
-        :
-        undefined,
+        stocks:
+          symbols.length,
 
-      pushResults:
-        testMode
-        ?
-        pushResults
-        :
-        undefined
-    });
+        signals:
+          signalMap.size,
+
+        sent,
+
+        failed,
+
+        removed,
+
+        deduped,
+
+        checkedStocks:
+          testMode
+            ? checkedStocks
+            : undefined,
+
+        pushResults:
+          testMode
+            ? pushResults
+            : undefined
+      });
 
 
   } catch (error) {
@@ -2770,15 +4102,20 @@ async function handler(
 
 
     return res
-    .status(500)
-    .json({
+      .status(500)
+      .json({
 
-      ok:
-        false,
+        ok:
+          false,
 
-      error:
-        error?.message ||
-        "背景監控失敗"
-    });
+        engine:
+          "Stock Analysis Monitor 6.2",
+
+        testMode,
+
+        error:
+          error?.message ||
+          "背景監控失敗"
+      });
   }
 };
