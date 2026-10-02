@@ -1,11 +1,18 @@
 // api/radar.js
-// 波段分析 Radar 6.1 FAST
+// 波段分析 Radar 6.2 Redis Cache
 //
 // 全市場 Snapshot
 // → Snapshot 高速初篩
 // → Top 120 才抓日 K
 // → 技術 + 量價二次篩選
 // → Top 40 回傳首頁做完整分析
+//
+// 6.2：
+// - Snapshot Redis Cache
+// - Stock Info Redis Cache
+// - Daily K Redis Cache
+// - 與 stock.js 6.3 共用 price cache
+// - FinMind 402 時使用 stale Redis
 
 const SNAPSHOT_URL =
   "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
@@ -15,16 +22,47 @@ const DATA_URL =
 
 
 /* =========================================================
-   高速設定
+   設定
 ========================================================= */
 
 const KLINE_SCAN_LIMIT = 120;
-
 const KLINE_BATCH_SIZE = 12;
-
-const DAILY_TIMEOUT_MS = 4500;
-
+const DAILY_TIMEOUT_MS = 5000;
 const FRONTEND_LIMIT = 40;
+
+
+/*
+  Redis Fresh TTL
+*/
+
+const CACHE_TTL = {
+  snapshot: 60 * 1000,
+  names: 24 * 60 * 60 * 1000,
+  daily: 30 * 60 * 1000
+};
+
+
+/*
+  Redis 實際保存時間（秒）
+*/
+
+const REDIS_EXPIRE = {
+  snapshot: 6 * 60 * 60,
+  names: 30 * 24 * 60 * 60,
+  daily: 7 * 24 * 60 * 60
+};
+
+
+/* =========================================================
+   Memory Cache
+========================================================= */
+
+const MEMORY =
+  global.__RADAR_CACHE__ ||
+  new Map();
+
+global.__RADAR_CACHE__ =
+  MEMORY;
 
 
 /* =========================================================
@@ -67,9 +105,7 @@ function clamp(v, min, max) {
 
 function avg(arr) {
   const values =
-    arr.filter(
-      Number.isFinite
-    );
+    arr.filter(Number.isFinite);
 
   if (!values.length) {
     return 0;
@@ -118,6 +154,436 @@ function getTaipeiTime() {
       hour12: false
     }
   ).format(new Date());
+}
+
+
+/* =========================================================
+   Redis
+========================================================= */
+
+function redisConfig() {
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL ||
+    "";
+
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN ||
+    "";
+
+  if (!url || !token) {
+    return null;
+  }
+
+  return {
+    url: url.replace(/\/+$/, ""),
+    token
+  };
+}
+
+
+async function redisCommand(command) {
+  const config =
+    redisConfig();
+
+  if (!config) {
+    throw new Error(
+      "Redis 尚未設定"
+    );
+  }
+
+  const response =
+    await fetch(
+      config.url,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${config.token}`,
+
+          "Content-Type":
+            "application/json"
+        },
+
+        body:
+          JSON.stringify(command)
+      }
+    );
+
+  const text =
+    await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `Redis HTTP ${response.status}`
+    );
+  }
+
+  let json;
+
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(
+      "Redis JSON 解析失敗"
+    );
+  }
+
+  if (json?.error) {
+    throw new Error(
+      String(json.error)
+    );
+  }
+
+  return json?.result ?? null;
+}
+
+
+async function redisGet(key) {
+  try {
+    const result =
+      await redisCommand([
+        "GET",
+        key
+      ]);
+
+    if (
+      result === null ||
+      result === undefined
+    ) {
+      return null;
+    }
+
+    if (
+      typeof result === "object"
+    ) {
+      return result;
+    }
+
+    return JSON.parse(result);
+
+  } catch (error) {
+    console.error(
+      "Radar Redis GET:",
+      key,
+      error?.message
+    );
+
+    return null;
+  }
+}
+
+
+async function redisSet(
+  key,
+  value,
+  expireSeconds
+) {
+  try {
+    await redisCommand([
+      "SET",
+      key,
+      JSON.stringify(value),
+      "EX",
+      String(expireSeconds)
+    ]);
+
+    return true;
+
+  } catch (error) {
+    console.error(
+      "Radar Redis SET:",
+      key,
+      error?.message
+    );
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   Smart Cache
+========================================================= */
+
+async function smartCache({
+  key,
+  freshMs,
+  expireSeconds,
+  loader
+}) {
+  const now =
+    Date.now();
+
+  const memory =
+    MEMORY.get(key);
+
+  if (
+    memory &&
+    memory.freshUntil > now
+  ) {
+    return memory.value;
+  }
+
+
+  const redis =
+    await redisGet(key);
+
+  if (
+    redis &&
+    redis.value !== undefined
+  ) {
+    const savedAt =
+      Number(redis.savedAt) || 0;
+
+    if (
+      savedAt &&
+      now - savedAt < freshMs
+    ) {
+      MEMORY.set(
+        key,
+        {
+          value: redis.value,
+          freshUntil:
+            savedAt + freshMs
+        }
+      );
+
+      return redis.value;
+    }
+  }
+
+
+  try {
+    const value =
+      await loader();
+
+    MEMORY.set(
+      key,
+      {
+        value,
+        freshUntil:
+          now + freshMs
+      }
+    );
+
+    await redisSet(
+      key,
+      {
+        savedAt: Date.now(),
+        value
+      },
+      expireSeconds
+    );
+
+    return value;
+
+  } catch (error) {
+
+    if (
+      redis &&
+      redis.value !== undefined
+    ) {
+      console.warn(
+        "Radar use stale Redis:",
+        key,
+        error?.message
+      );
+
+      MEMORY.set(
+        key,
+        {
+          value: redis.value,
+          freshUntil:
+            Date.now() +
+            5 * 60 * 1000
+        }
+      );
+
+      return redis.value;
+    }
+
+
+    if (
+      memory &&
+      memory.value !== undefined
+    ) {
+      return memory.value;
+    }
+
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   FinMind Request
+========================================================= */
+
+async function finmindFetch(
+  url,
+  token,
+  timeout = 7000
+) {
+  const controller =
+    new AbortController();
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeout
+    );
+
+  try {
+    const response =
+      await fetch(
+        url,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+
+            Accept:
+              "application/json"
+          },
+
+          signal:
+            controller.signal
+        }
+      );
+
+    let body;
+
+    try {
+      body =
+        await response.json();
+    } catch {
+      throw new Error(
+        `FinMind JSON 錯誤 HTTP ${response.status}`
+      );
+    }
+
+    if (!response.ok) {
+      if (response.status === 402) {
+        throw new Error(
+          "FinMind API 額度已達上限（HTTP 402）"
+        );
+      }
+
+      throw new Error(
+        body?.msg ||
+        body?.message ||
+        `FinMind HTTP ${response.status}`
+      );
+    }
+
+    if (
+      body?.status !== undefined &&
+      Number(body.status) !== 200
+    ) {
+      throw new Error(
+        body?.msg ||
+        body?.message ||
+        "FinMind API 錯誤"
+      );
+    }
+
+    return body;
+
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+
+/* =========================================================
+   Snapshot
+========================================================= */
+
+async function fetchSnapshot(token) {
+  return smartCache({
+    key:
+      "radar:v62:snapshot",
+
+    freshMs:
+      CACHE_TTL.snapshot,
+
+    expireSeconds:
+      REDIS_EXPIRE.snapshot,
+
+    loader:
+      async () => {
+        const body =
+          await finmindFetch(
+            SNAPSHOT_URL,
+            token,
+            7000
+          );
+
+        return Array.isArray(
+          body?.data
+        )
+          ? body.data
+          : [];
+      }
+  });
+}
+
+
+/* =========================================================
+   股票名稱
+========================================================= */
+
+async function fetchTaiwanStockNames(
+  token
+) {
+  return smartCache({
+    key:
+      "radar:v62:stock-info",
+
+    freshMs:
+      CACHE_TTL.names,
+
+    expireSeconds:
+      REDIS_EXPIRE.names,
+
+    loader:
+      async () => {
+        const body =
+          await finmindFetch(
+            `${DATA_URL}?dataset=TaiwanStockInfo`,
+            token,
+            7000
+          );
+
+        const names = {};
+
+        for (
+          const stock of
+          body?.data || []
+        ) {
+          const id =
+            String(
+              stock?.stock_id ||
+              ""
+            );
+
+          if (
+            id &&
+            stock?.stock_name
+          ) {
+            names[id] =
+              String(
+                stock.stock_name
+              );
+          }
+        }
+
+        return names;
+      }
+  });
 }
 
 
@@ -269,96 +735,13 @@ function ATR(rows, period = 14) {
 
 
 /* =========================================================
-   股票名稱
-========================================================= */
-
-async function fetchTaiwanStockNames(token) {
-  try {
-    const controller =
-      new AbortController();
-
-    const timer =
-      setTimeout(
-        () => controller.abort(),
-        4500
-      );
-
-    try {
-      const response =
-        await fetch(
-          `${DATA_URL}?dataset=TaiwanStockInfo`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-
-              Accept:
-                "application/json"
-            },
-
-            signal:
-              controller.signal
-          }
-        );
-
-      if (!response.ok) {
-        return {};
-      }
-
-      const body =
-        await response.json();
-
-      if (
-        !Array.isArray(
-          body?.data
-        )
-      ) {
-        return {};
-      }
-
-      const names = {};
-
-      for (
-        const stock of body.data
-      ) {
-        const id =
-          String(
-            stock?.stock_id ||
-            ""
-          );
-
-        if (
-          id &&
-          stock?.stock_name
-        ) {
-          names[id] =
-            String(
-              stock.stock_name
-            );
-        }
-      }
-
-      return names;
-
-    } finally {
-      clearTimeout(timer);
-    }
-
-  } catch (_) {
-    return {};
-  }
-}
-
-
-/* =========================================================
-   Snapshot 第一階段高速評分
+   Snapshot 第一階段評分
 ========================================================= */
 
 function scoreSnapshot(x) {
   const symbol =
     String(
-      x.stock_id ||
-      ""
+      x.stock_id || ""
     );
 
   const price =
@@ -401,8 +784,7 @@ function scoreSnapshot(x) {
   const dayPosition =
     range > 0
       ? clamp(
-          (price - low) /
-            range,
+          (price - low) / range,
           0,
           1
         )
@@ -414,14 +796,11 @@ function scoreSnapshot(x) {
 
   const buyStrength =
     orderTotal > 0
-      ? buyVolume /
-        orderTotal
+      ? buyVolume / orderTotal
       : 0.5;
 
   let score = 0;
 
-
-  /* 價格動能 */
 
   if (
     change >= 0.5 &&
@@ -447,8 +826,6 @@ function scoreSnapshot(x) {
   }
 
 
-  /* 量比 */
-
   if (
     volumeRatio >= 2
   ) {
@@ -471,8 +848,6 @@ function scoreSnapshot(x) {
   }
 
 
-  /* K 棒位置 */
-
   if (
     dayPosition >= 0.8
   ) {
@@ -490,8 +865,6 @@ function scoreSnapshot(x) {
   }
 
 
-  /* 紅 K */
-
   if (
     open > 0 &&
     price >= open
@@ -499,8 +872,6 @@ function scoreSnapshot(x) {
     score += 7;
   }
 
-
-  /* 買盤 */
 
   if (
     buyStrength >= 0.62
@@ -518,8 +889,6 @@ function scoreSnapshot(x) {
     score -= 5;
   }
 
-
-  /* 流動性 */
 
   if (
     totalVolume >= 5000
@@ -602,118 +971,220 @@ function scoreSnapshot(x) {
 
 /* =========================================================
    日 K
+   與 stock.js 6.3 共用：
+   stock:v63:price:2330
 ========================================================= */
 
 async function fetchDailyRows(
   token,
   symbol
 ) {
-  const controller =
-    new AbortController();
+  const sharedKey =
+    `stock:v63:price:${symbol}`;
 
-  const timer =
-    setTimeout(
-      () => controller.abort(),
-      DAILY_TIMEOUT_MS
+  const memoryKey =
+    `daily:${symbol}`;
+
+  const now =
+    Date.now();
+
+  const memory =
+    MEMORY.get(
+      memoryKey
     );
+
+  if (
+    memory &&
+    memory.freshUntil > now
+  ) {
+    return memory.value;
+  }
+
+
+  const redis =
+    await redisGet(
+      sharedKey
+    );
+
+
+  if (
+    redis &&
+    Array.isArray(
+      redis.value
+    )
+  ) {
+    const savedAt =
+      Number(
+        redis.savedAt
+      ) || 0;
+
+    if (
+      savedAt &&
+      now - savedAt <
+      CACHE_TTL.daily
+    ) {
+      MEMORY.set(
+        memoryKey,
+        {
+          value:
+            redis.value,
+
+          freshUntil:
+            savedAt +
+            CACHE_TTL.daily
+        }
+      );
+
+      return redis.value;
+    }
+  }
+
 
   try {
     const url =
       `${DATA_URL}` +
       `?dataset=TaiwanStockPrice` +
       `&data_id=${encodeURIComponent(symbol)}` +
-      `&start_date=${dateString(220)}`;
+      `&start_date=${dateString(500)}`;
 
-    const response =
-      await fetch(
+
+    const body =
+      await finmindFetch(
         url,
+        token,
+        DAILY_TIMEOUT_MS
+      );
+
+
+    const rows =
+      (body?.data || [])
+
+        .map(
+          x => ({
+            date:
+              String(
+                x.date || ""
+              ).slice(0, 10),
+
+            open:
+              num(x.open),
+
+            high:
+              num(
+                x.max ??
+                x.high
+              ),
+
+            low:
+              num(
+                x.min ??
+                x.low
+              ),
+
+            close:
+              num(x.close),
+
+            volume:
+              num(
+                x.Trading_Volume ??
+                x.volume
+              )
+          })
+        )
+
+        .filter(
+          x =>
+            x.date &&
+            x.close > 0 &&
+            x.high > 0 &&
+            x.low > 0
+        )
+
+        .sort(
+          (a, b) =>
+            String(a.date)
+              .localeCompare(
+                String(b.date)
+              )
+        );
+
+
+    if (
+      rows.length >= 60
+    ) {
+      const payload = {
+        savedAt:
+          Date.now(),
+
+        value:
+          rows
+      };
+
+
+      await redisSet(
+        sharedKey,
+        payload,
+        REDIS_EXPIRE.daily
+      );
+
+
+      MEMORY.set(
+        memoryKey,
         {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
+          value: rows,
 
-            Accept:
-              "application/json"
-          },
+          freshUntil:
+            Date.now() +
+            CACHE_TTL.daily
+        }
+      );
+    }
 
-          signal:
-            controller.signal
+
+    return rows;
+
+
+  } catch (error) {
+
+    if (
+      redis &&
+      Array.isArray(
+        redis.value
+      ) &&
+      redis.value.length >= 60
+    ) {
+      console.warn(
+        "Radar daily stale:",
+        symbol,
+        error?.message
+      );
+
+
+      MEMORY.set(
+        memoryKey,
+        {
+          value:
+            redis.value,
+
+          freshUntil:
+            Date.now() +
+            5 * 60 * 1000
         }
       );
 
-    if (!response.ok) {
-      return [];
+
+      return redis.value;
     }
 
-    const body =
-      await response.json();
 
-    if (
-      !Array.isArray(
-        body?.data
-      )
-    ) {
-      return [];
-    }
-
-    return body.data
-      .map(
-        x => ({
-          date:
-            x.date ||
-            "",
-
-          open:
-            num(x.open),
-
-          high:
-            num(
-              x.max ??
-              x.high
-            ),
-
-          low:
-            num(
-              x.min ??
-              x.low
-            ),
-
-          close:
-            num(x.close),
-
-          volume:
-            num(
-              x.Trading_Volume ??
-              x.volume
-            )
-        })
-      )
-      .filter(
-        x =>
-          x.close > 0 &&
-          x.high > 0 &&
-          x.low > 0
-      )
-      .sort(
-        (a, b) =>
-          String(a.date)
-            .localeCompare(
-              String(b.date)
-            )
-      );
-
-  } catch (_) {
-    return [];
-
-  } finally {
-    clearTimeout(timer);
+    throw error;
   }
 }
 
 
 /* =========================================================
    第二階段：
-   技術 + 量價快速分析
+   技術 + 量價
 ========================================================= */
 
 function analyzeKline(
@@ -838,19 +1309,13 @@ function analyzeKline(
       : 0;
 
 
-  /* 技術 20 分 */
-
   let technical = 0;
 
-  if (
-    price > ma20
-  ) {
+  if (price > ma20) {
     technical += 4;
   }
 
-  if (
-    ma20 > ma60
-  ) {
+  if (ma20 > ma60) {
     technical += 5;
   }
 
@@ -865,8 +1330,7 @@ function analyzeKline(
     Number.isFinite(
       previousMA20
     ) &&
-    ma20 >
-      previousMA20
+    ma20 > previousMA20
   ) {
     technical += 3;
   }
@@ -878,14 +1342,10 @@ function analyzeKline(
     technical += 3;
   }
 
-  if (
-    macd >= 0
-  ) {
+  if (macd >= 0) {
     technical += 2;
   }
 
-
-  /* 量價 20 分 */
 
   let volumePrice = 0;
 
@@ -948,6 +1408,7 @@ function analyzeKline(
     volumePrice += 2;
   }
 
+
   technical =
     clamp(
       technical,
@@ -968,7 +1429,7 @@ function analyzeKline(
       technical * 2.3 +
       volumePrice * 2.1 +
       stock.snapshotScore *
-        0.12
+      0.12
     );
 
 
@@ -976,7 +1437,7 @@ function analyzeKline(
     Math.max(
       low20,
       ma20 -
-        atr * 0.7
+      atr * 0.7
     );
 
 
@@ -1187,90 +1648,17 @@ export default async function handler(
     }
 
 
-    /* Snapshot + 股票名稱同時抓 */
-
-    const snapshotController =
-      new AbortController();
-
-    const snapshotTimer =
-      setTimeout(
-        () =>
-          snapshotController.abort(),
-        7000
-      );
-
-    let snapshotResponse;
-    let stockNames;
-
-
-    try {
-      [
-        snapshotResponse,
-        stockNames
-      ] =
-        await Promise.all([
-          fetch(
-            SNAPSHOT_URL,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-
-                Accept:
-                  "application/json"
-              },
-
-              signal:
-                snapshotController.signal
-            }
-          ),
-
-          fetchTaiwanStockNames(
-            token
-          )
-        ]);
-
-    } finally {
-      clearTimeout(
-        snapshotTimer
-      );
-    }
-
-
-    const body =
-      await snapshotResponse
-        .json();
-
-
-    if (
-      !snapshotResponse.ok ||
-      body?.status !== 200
-    ) {
-      return res
-        .status(
-          snapshotResponse
-            .status ||
-          502
+    const [
+      snapshots,
+      stockNames
+    ] =
+      await Promise.all([
+        fetchSnapshot(token),
+        fetchTaiwanStockNames(
+          token
         )
-        .json({
-          ok: false,
+      ]);
 
-          error:
-            body?.msg ||
-            "FinMind 即時行情錯誤"
-        });
-    }
-
-
-    const snapshots =
-      Array.isArray(
-        body?.data
-      )
-        ? body.data
-        : [];
-
-
-    /* 全市場 Snapshot */
 
     const stocks =
       snapshots
@@ -1309,7 +1697,7 @@ export default async function handler(
 
     /* =====================================================
        第一階段：
-       全市場初掃後，取前 120 檔
+       全市場初掃 → Top 120
     ===================================================== */
 
     const candidatePool =
@@ -1379,8 +1767,7 @@ export default async function handler(
 
     /* =====================================================
        第二階段：
-       120 檔抓日 K
-       每批 12 = 最多 10 批
+       Top 120 日 K
     ===================================================== */
 
     const analyzed = [];
@@ -1409,11 +1796,13 @@ export default async function handler(
                   stock.symbol
                 );
 
+
               if (
                 rows.length < 65
               ) {
                 return null;
               }
+
 
               return analyzeKline(
                 stock,
@@ -1441,7 +1830,7 @@ export default async function handler(
 
 
     /* =====================================================
-       最終候選 Top 40
+       Top 40
     ===================================================== */
 
     const strategyReady =
@@ -1469,11 +1858,13 @@ export default async function handler(
       strategyReady.length
         ? strategyReady
         : [...analyzed]
+
             .sort(
               (a, b) =>
                 b.fastScore -
                 a.fastScore
             )
+
             .slice(
               0,
               Math.min(
@@ -1482,8 +1873,6 @@ export default async function handler(
               )
             );
 
-
-    /* Snapshot Radar */
 
     const radar =
       [...stocks]
@@ -1571,16 +1960,16 @@ export default async function handler(
         ok: true,
 
         platform:
-          "波段分析 Radar 6.1",
+          "波段分析 Radar 6.2",
 
         engine:
-          "FAST_TWO_STAGE_120",
+          "FAST_TWO_STAGE_120_REDIS",
 
         market:
           "TW",
 
         source:
-          "FinMind",
+          "FinMind + Upstash Redis",
 
         updatedAt:
           new Date()
@@ -1621,7 +2010,7 @@ export default async function handler(
         momentumLeaders,
 
         notice:
-          "高速兩階段雷達 6.1：全市場 Snapshot 初掃 → Top 120 抓日 K → Top 40 交由首頁做完整五大類波段分析。"
+          "Radar 6.2：全市場 Snapshot → Top 120 日 K → Top 40；Snapshot、股票名稱與日 K 已加入 Upstash Redis，日 K與 Stock API 6.3 共用快取。"
       });
 
 
@@ -1631,15 +2020,23 @@ export default async function handler(
       error
     );
 
+
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
 
+
     return res
       .status(500)
       .json({
         ok: false,
+
+        platform:
+          "波段分析 Radar 6.2",
+
+        engine:
+          "FAST_TWO_STAGE_120_REDIS",
 
         error:
           error?.name ===
