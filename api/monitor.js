@@ -1,24 +1,60 @@
 const webpush = require("web-push");
 
+/*
+  ==========================================================
+  波段分析 Monitor 8.0
+
+  正式背景監控：
+  DEFAULT 12 + 使用者自選股
+  → Stock API 資料
+  → 五大類評分
+  → 最佳 Entry
+  → 結構失效 SL
+  → 關鍵突破位
+  → TP1 / TP2 / TP3
+  → RR
+  → 符合條件才 Push
+
+  五大類：
+  1. 技術 / 趨勢        20
+  2. 量價               20
+  3. 法人 / 籌碼        20
+  4. 基本面             20
+  5. 新聞 / 事件        20
+
+  缺資料：
+  - 不直接給 0 分
+  - 依實際可用類別重新換算總分
+  - completeness 顯示完整度
+
+  正式 Push：
+  - score >= 75
+  - completeness >= 60
+  - technical >= 12
+  - volumePrice >= 10
+  - 必須進入最佳 Entry 區
+  - 結構必須有效
+  - 單筆風險 <= 5%
+  - TP1 RR >= 1.3
+  - 同股票 6 小時去重
+
+  測試模式：
+  - ?test=1
+  - 或 x-monitor-test: 1
+  - 可略過台股交易時段限制
+  - 不修改正式 Cron
+
+  注意：
+  - 無 SMC
+  - 不要求先突破才進場
+  - Breakout 是關鍵突破位，不是 TP1
+  ==========================================================
+*/
+
+
 /* =========================================================
-   妖子平台｜台股背景波段進場監控
-
-   核心：
-   SMC 支撐
-   → Entry
-   → 結構 SL
-   → 關鍵突破
-   → TP1
-   → TP2
-   → TP3
-
-   正式 Push：
-   - 7/8、8/8
-   - 必須有有效 SMC 支撐
-   - 必須接近 Entry
-   - TP1 至少 1.5R
-   - 關鍵突破位不等於 TP
-   ========================================================= */
+   CONFIG
+========================================================= */
 
 const DEFAULT_SYMBOLS = [
   "2330",
@@ -35,24 +71,77 @@ const DEFAULT_SYMBOLS = [
   "2615"
 ];
 
-const DEVICE_SET_KEY = "swing:push:devices";
+
+const DEVICE_SET_KEY =
+  "swing:push:devices";
+
+
+const WATCHLIST_PREFIX =
+  "swing:watchlist:";
+
+
+const PUSH_DEDUPE_PREFIX =
+  "swing:push:dedupe:v8:";
+
+
+const PUSH_DEDUPE_SECONDS =
+  6 * 60 * 60;
+
+
+const MAX_SYMBOLS =
+  40;
+
+
+const STOCK_BATCH_SIZE =
+  4;
+
+
+const SCORE_LIMIT =
+  75;
+
+
+const COMPLETENESS_LIMIT =
+  60;
+
+
+const TECHNICAL_LIMIT =
+  12;
+
+
+const VOLUME_LIMIT =
+  10;
+
+
+const MAX_RISK_PERCENT =
+  5;
+
+
+const MIN_RR1 =
+  1.3;
 
 
 /* =========================================================
-   Environment
+   ENV
 ========================================================= */
 
-function env(name, ...fallbacks) {
+function env(
+  name,
+  ...fallbacks
+) {
 
   const names = [
     name,
     ...fallbacks
   ];
 
-  for (const key of names) {
+
+  for (
+    const key of names
+  ) {
 
     const value =
       process.env[key];
+
 
     if (value) {
       return value;
@@ -60,241 +149,192 @@ function env(name, ...fallbacks) {
 
   }
 
+
   return "";
 
 }
 
-const REDIS_URL = () =>
-  env(
-    "UPSTASH_REDIS_REST_URL",
-    "KV_REST_API_URL"
+
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
+
+function finite(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+
+  const n =
+    Number(value);
+
+
+  return Number.isFinite(n)
+    ? n
+    : null;
+
+}
+
+
+function num(
+  value,
+  fallback = 0
+) {
+
+  const n =
+    finite(value);
+
+
+  return n === null
+    ? fallback
+    : n;
+
+}
+
+
+function round(
+  value,
+  digits = 2
+) {
+
+  const n =
+    Number(value);
+
+
+  if (
+    !Number.isFinite(n)
+  ) {
+    return 0;
+  }
+
+
+  const p =
+    10 ** digits;
+
+
+  return (
+    Math.round(
+      (n + Number.EPSILON) *
+      p
+    ) / p
   );
 
-const REDIS_TOKEN = () =>
-  env(
-    "UPSTASH_REDIS_REST_TOKEN",
-    "KV_REST_API_TOKEN"
+}
+
+
+function clamp(
+  value,
+  min,
+  max
+) {
+
+  return Math.min(
+    max,
+    Math.max(
+      min,
+      value
+    )
   );
+
+}
+
+
+function avg(
+  values
+) {
+
+  const rows =
+    values
+      .map(Number)
+      .filter(
+        Number.isFinite
+      );
+
+
+  if (!rows.length) {
+    return 0;
+  }
+
+
+  return (
+    rows.reduce(
+      (a, b) =>
+        a + b,
+      0
+    ) /
+    rows.length
+  );
+
+}
+
+
+function unique(
+  values
+) {
+
+  return [
+    ...new Set(
+      values
+        .map(
+          x =>
+            String(
+              x || ""
+            )
+              .trim()
+              .toUpperCase()
+        )
+        .filter(Boolean)
+    )
+  ];
+
+}
+
+
+function validSymbol(
+  symbol
+) {
+
+  return /^[0-9A-Z]{4,10}$/.test(
+    String(
+      symbol || ""
+    )
+  );
+
+}
 
 
 /* =========================================================
-   Response
+   RESPONSE
 ========================================================= */
 
-function send(res, status, data) {
-
-  res.statusCode = status;
-
-  res.setHeader(
-    "Content-Type",
-    "application/json; charset=utf-8"
-  );
+function send(
+  res,
+  status,
+  body
+) {
 
   res.setHeader(
     "Cache-Control",
-    "no-store"
+    "no-store, no-cache, must-revalidate"
   );
 
-  res.end(
-    JSON.stringify(data)
-  );
+
+  return res
+    .status(status)
+    .json(body);
 
 }
 
 
 /* =========================================================
-   Redis
-========================================================= */
-
-async function redis(command) {
-
-  const url =
-    REDIS_URL();
-
-  const token =
-    REDIS_TOKEN();
-
-  if (!url || !token) {
-
-    throw new Error(
-      "Redis 環境變數不存在"
-    );
-
-  }
-
-  const response =
-    await fetch(
-      url,
-      {
-        method: "POST",
-
-        headers: {
-
-          Authorization:
-            `Bearer ${token}`,
-
-          "Content-Type":
-            "application/json"
-
-        },
-
-        body:
-          JSON.stringify(command)
-      }
-    );
-
-  const json =
-    await response
-      .json()
-      .catch(() => ({}));
-
-  if (
-    !response.ok ||
-    json.error
-  ) {
-
-    throw new Error(
-      json.error ||
-      `Redis HTTP ${response.status}`
-    );
-
-  }
-
-  return json.result;
-
-}
-
-async function getDeviceIds() {
-
-  const result =
-    await redis([
-      "SMEMBERS",
-      DEVICE_SET_KEY
-    ]);
-
-  return Array.isArray(result)
-    ? result
-    : [];
-
-}
-
-async function getDevice(deviceId) {
-
-  const raw =
-    await redis([
-      "GET",
-      `swing:push:device:${deviceId}`
-    ]);
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-
-    return JSON.parse(raw);
-
-  }
-  catch {
-
-    return null;
-
-  }
-
-}
-
-async function removeDevice(deviceId) {
-
-  await Promise.allSettled([
-
-    redis([
-      "DEL",
-      `swing:push:device:${deviceId}`
-    ]),
-
-    redis([
-      "SREM",
-      DEVICE_SET_KEY,
-      deviceId
-    ])
-
-  ]);
-
-}
-
-
-/* =========================================================
-   Push
-========================================================= */
-
-function configurePush() {
-
-  const publicKey =
-    String(
-      process.env.VAPID_PUBLIC_KEY ||
-      ""
-    ).trim();
-
-  const privateKey =
-    String(
-      process.env.VAPID_PRIVATE_KEY ||
-      ""
-    ).trim();
-
-  let subject =
-    String(
-      process.env.VAPID_SUBJECT ||
-      ""
-    ).trim();
-
-  if (!publicKey) {
-
-    throw new Error(
-      "缺少 VAPID_PUBLIC_KEY"
-    );
-
-  }
-
-  if (!privateKey) {
-
-    throw new Error(
-      "缺少 VAPID_PRIVATE_KEY"
-    );
-
-  }
-
-  if (!subject) {
-
-    throw new Error(
-      "缺少 VAPID_SUBJECT"
-    );
-
-  }
-
-  if (
-    !subject
-      .toLowerCase()
-      .startsWith("mailto:")
-    &&
-    !/^https?:\/\//i.test(subject)
-  ) {
-
-    subject =
-      `mailto:${subject}`;
-
-  }
-
-  webpush.setVapidDetails(
-    subject,
-    publicKey,
-    privateKey
-  );
-
-}
-
-
-/* =========================================================
-   台北時間
+   TAIPEI TIME
 ========================================================= */
 
 function taipeiParts() {
@@ -315,1214 +355,1999 @@ function taipeiParts() {
         minute:
           "2-digit",
 
-        hourCycle:
-          "h23"
+        second:
+          "2-digit",
+
+        hour12:
+          false
       }
     )
-    .formatToParts(
-      new Date()
+      .formatToParts(
+        new Date()
+      );
+
+
+  const result = {};
+
+
+  for (
+    const part of parts
+  ) {
+
+    result[
+      part.type
+    ] =
+      part.value;
+
+  }
+
+
+  return result;
+
+}
+
+
+function taipeiString() {
+
+  return new Date()
+    .toLocaleString(
+      "zh-TW",
+      {
+        timeZone:
+          "Asia/Taipei",
+
+        hour12:
+          false
+      }
     );
 
-  const get =
-    type =>
-      parts.find(
-        x => x.type === type
-      )?.value;
+}
+
+
+function marketOpenNow() {
+
+  const p =
+    taipeiParts();
+
+
+  const weekday =
+    p.weekday;
+
+
+  if (
+    weekday === "Sat" ||
+    weekday === "Sun"
+  ) {
+    return false;
+  }
+
+
+  const hour =
+    Number(
+      p.hour
+    );
+
+
+  const minute =
+    Number(
+      p.minute
+    );
+
+
+  const total =
+    hour * 60 +
+    minute;
+
+
+  /*
+    正式監控：
+    08:55 ~ 13:40
+  */
+
+  return (
+    total >=
+      8 * 60 + 55 &&
+    total <=
+      13 * 60 + 40
+  );
+
+}
+
+
+/* =========================================================
+   TEST MODE
+========================================================= */
+
+function isTestMode(
+  req
+) {
+
+  const queryTest =
+    String(
+      req?.query?.test ||
+      ""
+    ) === "1";
+
+
+  const headerTest =
+    String(
+      req?.headers?.[
+        "x-monitor-test"
+      ] ||
+      ""
+    ) === "1";
+
+
+  return (
+    queryTest ||
+    headerTest
+  );
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+function authorized(
+  req,
+  testMode
+) {
+
+  const secret =
+    env(
+      "CRON_SECRET"
+    );
+
+
+  /*
+    沒設定 CRON_SECRET
+    正式環境直接拒絕
+  */
+
+  if (!secret) {
+    return false;
+  }
+
+
+  const authorization =
+    String(
+      req?.headers
+        ?.authorization ||
+      ""
+    );
+
+
+  const bearer =
+    authorization.startsWith(
+      "Bearer "
+    )
+      ? authorization.slice(7)
+      : "";
+
+
+  if (
+    bearer === secret
+  ) {
+    return true;
+  }
+
+
+  /*
+    Vercel Cron
+  */
+
+  const cronHeader =
+    String(
+      req?.headers?.[
+        "x-vercel-cron"
+      ] ||
+      ""
+    );
+
+
+  if (
+    !testMode &&
+    cronHeader
+  ) {
+    return true;
+  }
+
+
+  return false;
+
+}
+
+
+/* =========================================================
+   REDIS
+========================================================= */
+
+function redisConfig() {
+
+  const url =
+    env(
+      "UPSTASH_REDIS_REST_URL",
+      "KV_REST_API_URL"
+    );
+
+
+  const token =
+    env(
+      "UPSTASH_REDIS_REST_TOKEN",
+      "KV_REST_API_TOKEN"
+    );
+
+
+  if (
+    !url ||
+    !token
+  ) {
+    return null;
+  }
+
+
+  return {
+    url:
+      url.replace(
+        /\/+$/,
+        ""
+      ),
+
+    token
+  };
+
+}
+
+
+async function redisCommand(
+  command
+) {
+
+  const config =
+    redisConfig();
+
+
+  if (!config) {
+    throw new Error(
+      "Redis 尚未設定"
+    );
+  }
+
+
+  const response =
+    await fetch(
+      config.url,
+      {
+        method:
+          "POST",
+
+        headers: {
+
+          Authorization:
+            `Bearer ${config.token}`,
+
+          "Content-Type":
+            "application/json"
+
+        },
+
+        body:
+          JSON.stringify(
+            command
+          )
+
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      `Redis HTTP ${response.status}: ${text.slice(0, 120)}`
+    );
+
+  }
+
+
+  let json;
+
+
+  try {
+
+    json =
+      JSON.parse(text);
+
+  } catch {
+
+    throw new Error(
+      "Redis JSON 解析失敗"
+    );
+
+  }
+
+
+  if (
+    json?.error
+  ) {
+
+    throw new Error(
+      String(
+        json.error
+      )
+    );
+
+  }
+
+
+  return json?.result ??
+    null;
+
+}
+
+
+async function redisGet(
+  key
+) {
+
+  try {
+
+    return await redisCommand(
+      [
+        "GET",
+        key
+      ]
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Redis GET:",
+      key,
+      error?.message
+    );
+
+
+    return null;
+
+  }
+
+}
+
+
+async function redisSet(
+  key,
+  value,
+  seconds
+) {
+
+  try {
+
+    await redisCommand(
+      [
+        "SET",
+        key,
+        String(value),
+        "EX",
+        String(
+          Math.max(
+            60,
+            Math.floor(
+              Number(
+                seconds
+              ) ||
+              3600
+            )
+          )
+        )
+      ]
+    );
+
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "Redis SET:",
+      key,
+      error?.message
+    );
+
+
+    return false;
+
+  }
+
+}
+
+
+async function redisSMembers(
+  key
+) {
+
+  try {
+
+    const result =
+      await redisCommand(
+        [
+          "SMEMBERS",
+          key
+        ]
+      );
+
+
+    return Array.isArray(
+      result
+    )
+      ? result
+      : [];
+
+  } catch (error) {
+
+    console.error(
+      "Redis SMEMBERS:",
+      key,
+      error?.message
+    );
+
+
+    return [];
+
+  }
+
+}
+
+
+/* =========================================================
+   PUSH CONFIG
+========================================================= */
+
+function configureWebPush() {
+
+  const subject =
+    env(
+      "VAPID_SUBJECT"
+    );
+
+
+  const publicKey =
+    env(
+      "VAPID_PUBLIC_KEY"
+    );
+
+
+  const privateKey =
+    env(
+      "VAPID_PRIVATE_KEY"
+    );
+
+
+  if (
+    !subject ||
+    !publicKey ||
+    !privateKey
+  ) {
+
+    throw new Error(
+      "VAPID 環境變數尚未完整設定"
+    );
+
+  }
+
+
+  webpush.setVapidDetails(
+    subject,
+    publicKey,
+    privateKey
+  );
+
+}
+
+
+/* =========================================================
+   DEVICE
+========================================================= */
+
+function parseJSON(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+
+  if (
+    typeof value ===
+    "object"
+  ) {
+    return value;
+  }
+
+
+  try {
+
+    return JSON.parse(
+      String(value)
+    );
+
+  } catch {
+
+    return null;
+
+  }
+
+}
+
+
+async function loadDevices() {
+
+  const members =
+    await redisSMembers(
+      DEVICE_SET_KEY
+    );
+
+
+  const devices = [];
+
+
+  for (
+    const item of members
+  ) {
+
+    const parsed =
+      parseJSON(item);
+
+
+    if (
+      parsed?.endpoint &&
+      parsed?.keys?.p256dh &&
+      parsed?.keys?.auth
+    ) {
+
+      devices.push(
+        {
+          subscription:
+            parsed,
+
+          deviceKey:
+            "",
+
+          watchlist:
+            []
+        }
+      );
+
+
+      continue;
+
+    }
+
+
+    /*
+      如果 Set 裡放的是 device key，
+      再嘗試抓 device 資料。
+    */
+
+    const deviceKey =
+      String(
+        item || ""
+      );
+
+
+    if (!deviceKey) {
+      continue;
+    }
+
+
+    const possibleKeys = [
+      `swing:push:device:${deviceKey}`,
+      `push:device:${deviceKey}`,
+      deviceKey
+    ];
+
+
+    let device =
+      null;
+
+
+    for (
+      const key of possibleKeys
+    ) {
+
+      const raw =
+        await redisGet(
+          key
+        );
+
+
+      const parsed =
+        parseJSON(raw);
+
+
+      if (
+        parsed &&
+        (
+          parsed.subscription ||
+          parsed.endpoint
+        )
+      ) {
+
+        device =
+          parsed;
+
+        break;
+
+      }
+
+    }
+
+
+    if (!device) {
+      continue;
+    }
+
+
+    const subscription =
+      device.subscription ||
+      device;
+
+
+    if (
+      !subscription?.endpoint ||
+      !subscription?.keys?.p256dh ||
+      !subscription?.keys?.auth
+    ) {
+      continue;
+    }
+
+
+    devices.push(
+      {
+        subscription,
+
+        deviceKey,
+
+        watchlist:
+          normalizeWatchlist(
+            device.watchlist
+          )
+      }
+    );
+
+  }
+
+
+  return devices;
+
+}
+
+
+function normalizeWatchlist(
+  value
+) {
+
+  if (
+    Array.isArray(value)
+  ) {
+
+    return unique(
+      value
+    )
+      .filter(
+        validSymbol
+      );
+
+  }
+
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+
+    const parsed =
+      parseJSON(value);
+
+
+    if (
+      Array.isArray(parsed)
+    ) {
+
+      return unique(
+        parsed
+      )
+        .filter(
+          validSymbol
+        );
+
+    }
+
+
+    return unique(
+      value.split(",")
+    )
+      .filter(
+        validSymbol
+      );
+
+  }
+
+
+  return [];
+
+}
+
+
+/* =========================================================
+   WATCHLIST
+========================================================= */
+
+async function loadWatchlists(
+  devices
+) {
+
+  const symbols = [];
+
+
+  for (
+    const device of devices
+  ) {
+
+    symbols.push(
+      ...device.watchlist
+    );
+
+
+    if (
+      !device.deviceKey
+    ) {
+      continue;
+    }
+
+
+    const possibleKeys = [
+      `${WATCHLIST_PREFIX}${device.deviceKey}`,
+      `watchlist:${device.deviceKey}`,
+      `swing:watchlist:${device.deviceKey}`
+    ];
+
+
+    for (
+      const key of possibleKeys
+    ) {
+
+      const raw =
+        await redisGet(
+          key
+        );
+
+
+      const parsed =
+        parseJSON(raw);
+
+
+      if (
+        Array.isArray(parsed)
+      ) {
+
+        symbols.push(
+          ...parsed
+        );
+
+
+        break;
+
+      }
+
+
+      if (
+        typeof raw ===
+        "string" &&
+        raw
+      ) {
+
+        symbols.push(
+          ...raw.split(",")
+        );
+
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  return unique(
+    symbols
+  )
+    .filter(
+      validSymbol
+    );
+
+}
+
+
+/* =========================================================
+   INTERNAL API
+========================================================= */
+
+function baseURL(
+  req
+) {
+
+  const proto =
+    String(
+      req?.headers?.[
+        "x-forwarded-proto"
+      ] ||
+      "https"
+    )
+      .split(",")[0]
+      .trim();
+
+
+  const host =
+    String(
+      req?.headers?.host ||
+      process.env.VERCEL_URL ||
+      ""
+    );
+
+
+  if (!host) {
+    throw new Error(
+      "無法取得網站 Host"
+    );
+  }
+
+
+  if (
+    host.startsWith(
+      "http://"
+    ) ||
+    host.startsWith(
+      "https://"
+    )
+  ) {
+    return host;
+  }
+
+
+  return (
+    `${proto}://${host}`
+  );
+
+}
+
+
+async function fetchJSON(
+  url,
+  timeout = 25000
+) {
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      () =>
+        controller.abort(),
+      timeout
+    );
+
+
+  try {
+
+    const response =
+      await fetch(
+        url,
+        {
+          headers: {
+            Accept:
+              "application/json"
+          },
+
+          signal:
+            controller.signal
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    let json;
+
+
+    try {
+
+      json =
+        JSON.parse(text);
+
+    } catch {
+
+      throw new Error(
+        `JSON 解析失敗 HTTP ${response.status}`
+      );
+
+    }
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        json?.error ||
+        json?.message ||
+        `HTTP ${response.status}`
+      );
+
+    }
+
+
+    return json;
+
+  } finally {
+
+    clearTimeout(
+      timer
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   STOCK DATA
+========================================================= */
+
+async function getStock(
+  req,
+  symbol
+) {
+
+  const url =
+    `${baseURL(req)}` +
+    `/api/stock?symbol=` +
+    encodeURIComponent(
+      symbol
+    );
+
+
+  const json =
+    await fetchJSON(
+      url,
+      30000
+    );
+
+
+  if (
+    !json?.ok
+  ) {
+
+    throw new Error(
+      json?.error ||
+      `${symbol} Stock API 失敗`
+    );
+
+  }
+
+
+  return json;
+
+}
+
+
+/* =========================================================
+   NEWS
+========================================================= */
+
+async function getNews(
+  req,
+  symbol
+) {
+
+  const url =
+    `${baseURL(req)}` +
+    `/api/news?symbol=` +
+    encodeURIComponent(
+      symbol
+    );
+
+
+  try {
+
+    const json =
+      await fetchJSON(
+        url,
+        10000
+      );
+
+
+    return json;
+
+  } catch (error) {
+
+    console.error(
+      "news:",
+      symbol,
+      error?.message
+    );
+
+
+    return null;
+
+  }
+
+}
+
+
+/* =========================================================
+   INDICATORS
+========================================================= */
+
+function SMA(
+  values,
+  period
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length < period
+  ) {
+    return NaN;
+  }
+
+
+  return avg(
+    values
+      .slice(-period)
+      .map(Number)
+  );
+
+}
+
+
+function EMA(
+  values,
+  period
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length < period
+  ) {
+    return NaN;
+  }
+
+
+  let value =
+    avg(
+      values
+        .slice(0, period)
+        .map(Number)
+    );
+
+
+  const k =
+    2 /
+    (
+      period + 1
+    );
+
+
+  for (
+    let i = period;
+    i < values.length;
+    i++
+  ) {
+
+    value =
+      Number(
+        values[i]
+      ) *
+      k +
+      value *
+      (
+        1 - k
+      );
+
+  }
+
+
+  return value;
+
+}
+
+
+function RSI(
+  values,
+  period = 14
+) {
+
+  if (
+    !Array.isArray(values) ||
+    values.length <= period
+  ) {
+    return NaN;
+  }
+
+
+  const rows =
+    values.slice(
+      -(period + 1)
+    );
+
+
+  let gain = 0;
+  let loss = 0;
+
+
+  for (
+    let i = 1;
+    i < rows.length;
+    i++
+  ) {
+
+    const diff =
+      Number(
+        rows[i]
+      ) -
+      Number(
+        rows[i - 1]
+      );
+
+
+    if (
+      diff > 0
+    ) {
+
+      gain +=
+        diff;
+
+    } else {
+
+      loss +=
+        Math.abs(
+          diff
+        );
+
+    }
+
+  }
+
+
+  gain /=
+    period;
+
+
+  loss /=
+    period;
+
+
+  if (
+    loss === 0
+  ) {
+    return 100;
+  }
+
+
+  const rs =
+    gain /
+    loss;
+
+
+  return (
+    100 -
+    100 /
+    (
+      1 + rs
+    )
+  );
+
+}
+
+
+function ATR(
+  rows,
+  period = 14
+) {
+
+  if (
+    !Array.isArray(rows) ||
+    rows.length <= period
+  ) {
+    return NaN;
+  }
+
+
+  const tr = [];
+
+
+  for (
+    let i = 1;
+    i < rows.length;
+    i++
+  ) {
+
+    const high =
+      num(
+        rows[i].high
+      );
+
+
+    const low =
+      num(
+        rows[i].low
+      );
+
+
+    const previousClose =
+      num(
+        rows[
+          i - 1
+        ].close
+      );
+
+
+    tr.push(
+      Math.max(
+        high - low,
+        Math.abs(
+          high -
+          previousClose
+        ),
+        Math.abs(
+          low -
+          previousClose
+        )
+      )
+    );
+
+  }
+
+
+  return SMA(
+    tr,
+    period
+  );
+
+}
+
+
+/* =========================================================
+   TECHNICAL SCORE 20
+========================================================= */
+
+function scoreTechnical(
+  stock
+) {
+
+  const rows =
+    stock.rows || [];
+
+
+  if (
+    rows.length < 65
+  ) {
+
+    return {
+      available:
+        false,
+
+      score:
+        0
+    };
+
+  }
+
+
+  const closes =
+    rows.map(
+      x =>
+        num(
+          x.close
+        )
+    );
+
+
+  const price =
+    num(
+      stock.price,
+      closes[
+        closes.length - 1
+      ]
+    );
+
+
+  const ma5 =
+    SMA(
+      closes,
+      5
+    );
+
+
+  const ma10 =
+    SMA(
+      closes,
+      10
+    );
+
+
+  const ma20 =
+    SMA(
+      closes,
+      20
+    );
+
+
+  const ma60 =
+    SMA(
+      closes,
+      60
+    );
+
+
+  const previousMA20 =
+    SMA(
+      closes.slice(
+        0,
+        -5
+      ),
+      20
+    );
+
+
+  const rsi =
+    RSI(
+      closes,
+      14
+    );
+
+
+  const macd =
+    EMA(
+      closes.slice(-100),
+      12
+    ) -
+    EMA(
+      closes.slice(-100),
+      26
+    );
+
+
+  let score = 0;
+
+
+  if (
+    price >
+    ma20
+  ) {
+    score += 4;
+  }
+
+
+  if (
+    ma20 >
+    ma60
+  ) {
+    score += 5;
+  }
+
+
+  if (
+    price >
+      ma5 &&
+    ma5 >=
+      ma10
+  ) {
+    score += 3;
+  }
+
+
+  if (
+    Number.isFinite(
+      previousMA20
+    ) &&
+    ma20 >
+      previousMA20
+  ) {
+    score += 3;
+  }
+
+
+  if (
+    rsi >= 45 &&
+    rsi <= 72
+  ) {
+    score += 3;
+  }
+
+
+  if (
+    macd >= 0
+  ) {
+    score += 2;
+  }
+
 
   return {
 
-    weekday:
-      get("weekday"),
+    available:
+      true,
 
-    hour:
-      Number(
-        get("hour")
+    score:
+      clamp(
+        score,
+        0,
+        20
       ),
 
-    minute:
-      Number(
-        get("minute")
+    ma5:
+      round(ma5),
+
+    ma10:
+      round(ma10),
+
+    ma20:
+      round(ma20),
+
+    ma60:
+      round(ma60),
+
+    rsi:
+      round(
+        rsi,
+        1
+      ),
+
+    macd:
+      round(
+        macd
       )
 
   };
 
 }
 
-function isMarketMonitoringTime() {
 
-  const {
-    weekday,
-    hour,
-    minute
-  } =
-    taipeiParts();
+/* =========================================================
+   VOLUME / PRICE SCORE 20
+========================================================= */
+
+function scoreVolumePrice(
+  stock
+) {
+
+  const rows =
+    stock.rows || [];
+
 
   if (
-    weekday === "Sat" ||
-    weekday === "Sun"
+    rows.length < 21
   ) {
 
-    return false;
-
-  }
-
-  const now =
-    hour * 60 +
-    minute;
-
-  return (
-    now >=
-    8 * 60 + 55
-    &&
-    now <=
-    13 * 60 + 40
-  );
-
-}
-
-
-/* =========================================================
-   Math
-========================================================= */
-
-function num(v) {
-
-  const n =
-    Number(v);
-
-  return Number.isFinite(n)
-    ? n
-    : 0;
-
-}
-
-function avg(arr) {
-
-  if (!arr.length) {
-    return 0;
-  }
-
-  return (
-    arr.reduce(
-      (sum, x) =>
-        sum + num(x),
-      0
-    ) /
-    arr.length
-  );
-
-}
-
-function sma(values, period) {
-
-  if (
-    values.length <
-    period
-  ) {
-    return 0;
-  }
-
-  return avg(
-    values.slice(-period)
-  );
-
-}
-
-function ema(values, period) {
-
-  if (!values.length) {
-    return 0;
-  }
-
-  const k =
-    2 /
-    (period + 1);
-
-  let result =
-    num(values[0]);
-
-  for (
-    let i = 1;
-    i < values.length;
-    i++
-  ) {
-
-    result =
-      num(values[i]) * k +
-      result * (1 - k);
-
-  }
-
-  return result;
-
-}
-
-function rsi(
-  values,
-  period = 14
-) {
-
-  if (
-    values.length <=
-    period
-  ) {
-
-    return 50;
-
-  }
-
-  let gains = 0;
-  let losses = 0;
-
-  const start =
-    values.length -
-    period;
-
-  for (
-    let i = start;
-    i < values.length;
-    i++
-  ) {
-
-    const diff =
-      num(values[i]) -
-      num(values[i - 1]);
-
-    if (diff > 0) {
-
-      gains += diff;
-
-    }
-    else {
-
-      losses +=
-        Math.abs(diff);
-
-    }
-
-  }
-
-  const avgGain =
-    gains / period;
-
-  const avgLoss =
-    losses / period;
-
-  if (avgLoss === 0) {
-    return 100;
-  }
-
-  const rs =
-    avgGain /
-    avgLoss;
-
-  return (
-    100 -
-    100 /
-    (1 + rs)
-  );
-
-}
-
-function atr(
-  rows,
-  period = 14
-) {
-
-  if (
-    rows.length <
-    period + 1
-  ) {
-
-    return 0;
-
-  }
-
-  const trs = [];
-
-  for (
-    let i =
-      rows.length - period;
-    i < rows.length;
-    i++
-  ) {
-
-    const row =
-      rows[i];
-
-    const prev =
-      rows[i - 1];
-
-    const high =
-      num(row.high);
-
-    const low =
-      num(row.low);
-
-    const prevClose =
-      num(prev.close);
-
-    trs.push(
-      Math.max(
-        high - low,
-        Math.abs(
-          high - prevClose
-        ),
-        Math.abs(
-          low - prevClose
-        )
-      )
-    );
-
-  }
-
-  return avg(trs);
-
-}
-
-function fmtPrice(value) {
-
-  const n =
-    num(value);
-
-  if (!n) {
-    return "-";
-  }
-
-  if (n >= 1000) {
-    return n.toFixed(0);
-  }
-
-  if (n >= 100) {
-    return n.toFixed(1);
-  }
-
-  return n.toFixed(2);
-
-}
-
-
-/* =========================================================
-   Swing
-========================================================= */
-
-function findSwingLows(
-  rows,
-  lookback = 2
-) {
-
-  const result = [];
-
-  for (
-    let i = lookback;
-    i <
-    rows.length - lookback;
-    i++
-  ) {
-
-    const low =
-      num(rows[i].low);
-
-    let valid = true;
-
-    for (
-      let j =
-        i - lookback;
-      j <=
-      i + lookback;
-      j++
-    ) {
-
-      if (j === i) {
-        continue;
-      }
-
-      if (
-        num(rows[j].low) <
-        low
-      ) {
-
-        valid = false;
-        break;
-
-      }
-
-    }
-
-    if (valid) {
-
-      result.push({
-
-        index: i,
-        price: low,
-        row: rows[i]
-
-      });
-
-    }
-
-  }
-
-  return result;
-
-}
-
-function findSwingHighs(
-  rows,
-  lookback = 2
-) {
-
-  const result = [];
-
-  for (
-    let i = lookback;
-    i <
-    rows.length - lookback;
-    i++
-  ) {
-
-    const high =
-      num(rows[i].high);
-
-    let valid = true;
-
-    for (
-      let j =
-        i - lookback;
-      j <=
-      i + lookback;
-      j++
-    ) {
-
-      if (j === i) {
-        continue;
-      }
-
-      if (
-        num(rows[j].high) >
-        high
-      ) {
-
-        valid = false;
-        break;
-
-      }
-
-    }
-
-    if (valid) {
-
-      result.push({
-
-        index: i,
-        price: high,
-        row: rows[i]
-
-      });
-
-    }
-
-  }
-
-  return result;
-
-}
-
-
-/* =========================================================
-   Bullish Order Block
-========================================================= */
-
-function findBullishOrderBlocks(
-  rows,
-  price,
-  A
-) {
-
-  const zones = [];
-
-  const start =
-    Math.max(
-      2,
-      rows.length - 120
-    );
-
-  for (
-    let i = start;
-    i < rows.length - 2;
-    i++
-  ) {
-
-    const candle =
-      rows[i];
-
-    const open =
-      num(candle.open);
-
-    const close =
-      num(candle.close);
-
-    const high =
-      num(candle.high);
-
-    const low =
-      num(candle.low);
-
-    if (!(close < open)) {
-      continue;
-    }
-
-    const n1 =
-      rows[i + 1];
-
-    const n2 =
-      rows[i + 2];
-
-    const displacement =
-      Math.max(
-        num(n1.close),
-        num(n2.close)
-      ) -
-      high;
-
-    if (
-      displacement <=
-      Math.max(
-        A * 0.35,
-        price * 0.004
-      )
-    ) {
-
-      continue;
-
-    }
-
-    const zone = {
-
-      type:
-        "Bullish OB",
-
-      low,
-
-      high:
-        Math.max(
-          open,
-          close
-        ),
-
-      index: i,
-
-      score: 5
-
-    };
-
-    let invalid = false;
-
-    for (
-      let j = i + 1;
-      j < rows.length;
-      j++
-    ) {
-
-      if (
-        num(rows[j].close) <
-        zone.low
-      ) {
-
-        invalid = true;
-        break;
-
-      }
-
-    }
-
-    if (
-      !invalid &&
-      zone.low <
-      price
-    ) {
-
-      zones.push(zone);
-
-    }
-
-  }
-
-  return zones;
-
-}
-
-
-/* =========================================================
-   Bullish FVG
-========================================================= */
-
-function findBullishFVG(
-  rows,
-  price,
-  A
-) {
-
-  const zones = [];
-
-  for (
-    let i = 1;
-    i < rows.length - 1;
-    i++
-  ) {
-
-    const left =
-      rows[i - 1];
-
-    const right =
-      rows[i + 1];
-
-    if (
-      num(right.low) <=
-      num(left.high)
-    ) {
-
-      continue;
-
-    }
-
-    const gap =
-      num(right.low) -
-      num(left.high);
-
-    if (
-      gap <
-      Math.max(
-        A * 0.12,
-        price * 0.0015
-      )
-    ) {
-
-      continue;
-
-    }
-
-    const zone = {
-
-      type:
-        "Bullish FVG",
-
-      low:
-        num(left.high),
-
-      high:
-        num(right.low),
-
-      index: i,
-
-      score: 3.5
-
-    };
-
-    let invalid = false;
-
-    for (
-      let j = i + 1;
-      j < rows.length;
-      j++
-    ) {
-
-      if (
-        num(rows[j].close) <
-        zone.low
-      ) {
-
-        invalid = true;
-        break;
-
-      }
-
-    }
-
-    if (
-      !invalid &&
-      zone.low <
-      price
-    ) {
-
-      zones.push(zone);
-
-    }
-
-  }
-
-  return zones;
-
-}
-
-
-/* =========================================================
-   Liquidity Sweep
-========================================================= */
-
-function findBullishSweeps(
-  rows,
-  price,
-  A
-) {
-
-  const zones = [];
-
-  const start =
-    Math.max(
-      8,
-      rows.length - 100
-    );
-
-  for (
-    let i = start;
-    i < rows.length;
-    i++
-  ) {
-
-    const previous =
-      rows.slice(
-        Math.max(
-          0,
-          i - 8
-        ),
-        i
-      );
-
-    if (!previous.length) {
-      continue;
-    }
-
-    const previousLow =
-      Math.min(
-        ...previous.map(
-          x => num(x.low)
-        )
-      );
-
-    const row =
-      rows[i];
-
-    if (
-      num(row.low) <
-      previousLow
-      &&
-      num(row.close) >
-      previousLow
-    ) {
-
-      const zone = {
-
-        type:
-          "Liquidity Sweep",
-
-        low:
-          num(row.low),
-
-        high:
-          previousLow,
-
-        index: i,
-
-        score: 5.5
-
-      };
-
-      let invalid = false;
-
-      for (
-        let j = i + 1;
-        j < rows.length;
-        j++
-      ) {
-
-        if (
-          num(rows[j].close) <
-          zone.low
-        ) {
-
-          invalid = true;
-          break;
-
-        }
-
-      }
-
-      if (
-        !invalid &&
-        zone.low <
-        price
-      ) {
-
-        zones.push(zone);
-
-      }
-
-    }
-
-  }
-
-  return zones;
-
-}
-
-
-/* =========================================================
-   Breaker
-========================================================= */
-
-function findBreakerSupports(
-  rows,
-  price,
-  A
-) {
-
-  const highs =
-    findSwingHighs(
-      rows,
-      2
-    );
-
-  const zones = [];
-
-  for (const swing of highs) {
-
-    let breakIndex = -1;
-
-    const buffer =
-      Math.max(
-        A * 0.12,
-        swing.price * 0.0025
-      );
-
-    for (
-      let j =
-        swing.index + 1;
-      j < rows.length;
-      j++
-    ) {
-
-      if (
-        num(rows[j].close) >
-        swing.price +
-        buffer
-      ) {
-
-        breakIndex = j;
-        break;
-
-      }
-
-    }
-
-    if (breakIndex < 0) {
-      continue;
-    }
-
-    let failed = false;
-
-    for (
-      let j =
-        breakIndex + 1;
-      j < rows.length;
-      j++
-    ) {
-
-      if (
-        num(rows[j].close) <
-        swing.price -
-        A * 0.25
-      ) {
-
-        failed = true;
-        break;
-
-      }
-
-    }
-
-    if (failed) {
-      continue;
-    }
-
-    const zone = {
-
-      type:
-        "BOS / Breaker",
-
-      low:
-        swing.price -
-        A * 0.15,
-
-      high:
-        swing.price +
-        A * 0.15,
-
-      index:
-        breakIndex,
+    return {
+      available:
+        false,
 
       score:
-        6
-
+        0
     };
 
-    if (
-      zone.low <
-      price
-    ) {
-
-      zones.push(zone);
-
-    }
-
   }
 
-  return zones;
 
-}
-
-
-/* =========================================================
-   Swing Demand
-========================================================= */
-
-function findSwingDemand(
-  rows,
-  price,
-  A
-) {
-
-  return findSwingLows(
-    rows,
-    2
-  )
-  .filter(
-    x =>
-      x.price <
-      price
-  )
-  .map(
-    x => ({
-
-      type:
-        "Swing Demand",
-
-      low:
-        x.price -
-        A * 0.10,
-
-      high:
-        x.price +
-        A * 0.12,
-
-      index:
-        x.index,
-
-      score:
-        3.8
-
-    })
-  );
-
-}
+  const latest =
+    rows[
+      rows.length - 1
+    ];
 
 
-/* =========================================================
-   Best Support
-========================================================= */
+  const previous =
+    rows.slice(
+      -21,
+      -1
+    );
 
-function findBestSupport(
-  rows,
-  price,
-  A,
-  institutional
-) {
 
-  const zones = [
-
-    ...findBullishOrderBlocks(
-      rows,
-      price,
-      A
-    ),
-
-    ...findBullishFVG(
-      rows,
-      price,
-      A
-    ),
-
-    ...findBullishSweeps(
-      rows,
-      price,
-      A
-    ),
-
-    ...findBreakerSupports(
-      rows,
-      price,
-      A
-    ),
-
-    ...findSwingDemand(
-      rows,
-      price,
-      A
-    )
-
-  ];
-
-  if (!zones.length) {
-    return null;
-  }
-
-  const volumeBase =
+  const avgVolume20 =
     avg(
-      rows
-      .slice(-21, -1)
-      .map(
-        x => num(x.volume)
+      previous.map(
+        x =>
+          num(
+            x.volume
+          )
       )
     );
 
-  const chip =
-    institutional || {};
 
-  const total5 =
+  const currentVolume =
     num(
-      chip.total5
+      stock.volume,
+      latest.volume
     );
+
+
+  const volumeRatio =
+    avgVolume20 > 0
+      ? currentVolume /
+        avgVolume20
+      : 0;
+
+
+  const price =
+    num(
+      stock.price,
+      latest.close
+    );
+
+
+  const open =
+    num(
+      stock.open,
+      latest.open
+    );
+
+
+  const high =
+    num(
+      stock.high,
+      latest.high
+    );
+
+
+  const low =
+    num(
+      stock.low,
+      latest.low
+    );
+
+
+  const changePercent =
+    num(
+      stock.changePercent
+    );
+
+
+  const range =
+    high -
+    low;
+
+
+  const dayPosition =
+    range > 0
+      ? clamp(
+          (
+            price -
+            low
+          ) /
+          range,
+          0,
+          1
+        )
+      : 0.5;
+
+
+  let score = 0;
+
+
+  if (
+    volumeRatio >= 1.5
+  ) {
+
+    score += 7;
+
+  } else if (
+    volumeRatio >= 1.1
+  ) {
+
+    score += 5;
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+
+    score += 2;
+
+  }
+
+
+  if (
+    changePercent >= 0 &&
+    changePercent <= 5
+  ) {
+
+    score += 4;
+
+  } else if (
+    changePercent >= -1.5
+  ) {
+
+    score += 2;
+
+  }
+
+
+  if (
+    dayPosition >= 0.65
+  ) {
+
+    score += 4;
+
+  } else if (
+    dayPosition >= 0.5
+  ) {
+
+    score += 2;
+
+  }
+
+
+  if (
+    price >= open
+  ) {
+    score += 2;
+  }
+
+
+  const previousHigh20 =
+    Math.max(
+      ...previous.map(
+        x =>
+          num(
+            x.high
+          )
+      )
+    );
+
+
+  const atr =
+    ATR(
+      rows,
+      14
+    );
+
+
+  if (
+    Number.isFinite(atr) &&
+    atr > 0
+  ) {
+
+    const distance =
+      (
+        price -
+        previousHigh20
+      ) /
+      atr;
+
+
+    if (
+      distance >= -0.6 &&
+      distance <= 1.2
+    ) {
+
+      score += 3;
+
+    }
+
+  }
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        score,
+        0,
+        20
+      ),
+
+    volumeRatio:
+      round(
+        volumeRatio,
+        2
+      ),
+
+    dayPosition:
+      round(
+        dayPosition *
+        100,
+        1
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   INSTITUTIONAL SCORE 20
+========================================================= */
+
+function scoreInstitutional(
+  stock
+) {
+
+  const x =
+    stock.institutional;
+
+
+  if (
+    !x?.available
+  ) {
+
+    return {
+      available:
+        false,
+
+      score:
+        0
+    };
+
+  }
+
+
+  let score = 0;
+
 
   const foreign5 =
     num(
-      chip.foreign5
+      x.foreign5
     );
+
 
   const trust5 =
     num(
-      chip.trust5
+      x.trust5
     );
 
-  const valid =
-    zones
-    .filter(
-      z =>
-        Number.isFinite(z.low)
-        &&
-        Number.isFinite(z.high)
-        &&
-        z.low > 0
-        &&
-        z.high > 0
-        &&
-        z.high <=
-        price * 1.012
-    )
-    .map(
-      z => {
 
-        let score =
-          num(z.score);
-
-        const row =
-          rows[z.index];
-
-        if (
-          row &&
-          volumeBase > 0 &&
-          num(row.volume) >=
-          volumeBase * 1.35
-        ) {
-
-          score += 1.5;
-
-        }
-
-        if (total5 > 0) {
-          score += 0.7;
-        }
-
-        if (foreign5 > 0) {
-          score += 0.3;
-        }
-
-        if (trust5 > 0) {
-          score += 0.3;
-        }
-
-        const distance =
-          Math.max(
-            0,
-            price - z.high
-          );
-
-        const distancePct =
-          distance /
-          price;
-
-        score -=
-          distancePct * 12;
-
-        return {
-
-          ...z,
-
-          finalScore:
-            score
-
-        };
-
-      }
-    )
-    .filter(
-      z =>
-        (
-          price -
-          z.high
-        ) /
-        price <=
-        0.10
-    )
-    .sort(
-      (a, b) =>
-        b.finalScore -
-        a.finalScore
+  const dealer5 =
+    num(
+      x.dealer5
     );
 
-  return valid[0] || null;
+
+  const total5 =
+    num(
+      x.total5
+    );
+
+
+  const total10 =
+    num(
+      x.total10
+    );
+
+
+  const foreignDays =
+    num(
+      x.foreignBuyDays5
+    );
+
+
+  const trustDays =
+    num(
+      x.trustBuyDays5
+    );
+
+
+  const totalDays =
+    num(
+      x.totalBuyDays5
+    );
+
+
+  if (
+    total5 > 0
+  ) {
+    score += 5;
+  }
+
+
+  if (
+    total10 > 0
+  ) {
+    score += 3;
+  }
+
+
+  if (
+    foreign5 > 0
+  ) {
+    score += 4;
+  }
+
+
+  if (
+    trust5 > 0
+  ) {
+    score += 3;
+  }
+
+
+  if (
+    dealer5 > 0
+  ) {
+    score += 1;
+  }
+
+
+  if (
+    foreignDays >= 3
+  ) {
+    score += 2;
+  }
+
+
+  if (
+    trustDays >= 2
+  ) {
+    score += 1;
+  }
+
+
+  if (
+    totalDays >= 3
+  ) {
+    score += 1;
+  }
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        score,
+        0,
+        20
+      ),
+
+    foreign5,
+
+    trust5,
+
+    dealer5,
+
+    total5,
+
+    total10
+
+  };
 
 }
 
 
 /* =========================================================
-   上方市場結構
-
-   這裡不再直接把最近 Swing High 當 TP。
-
-   先建立：
-   - 關鍵突破位
-   - 後續獨立壓力
+   FUNDAMENTAL SCORE 20
 ========================================================= */
 
-function buildResistanceLevels(
-  rows,
-  price,
-  A
+function scoreFundamental(
+  stock
 ) {
 
-  const raw = [];
+  const revenue =
+    stock?.revenue ||
+    stock?.fundamental
+      ?.revenue;
 
-  const highs =
-    findSwingHighs(
-      rows,
-      2
+
+  const financial =
+    stock?.financial ||
+    stock?.fundamental
+      ?.financial;
+
+
+  const available =
+    Boolean(
+      revenue?.available ||
+      financial?.available
     );
 
-  for (const h of highs) {
 
-    if (
-      h.price >
-      price +
-      Math.max(
-        A * 0.12,
-        price * 0.0015
-      )
-    ) {
+  if (!available) {
 
-      raw.push({
+    return {
+      available:
+        false,
 
-        price:
-          h.price,
-
-        type:
-          "Swing High / Liquidity",
-
-        score:
-          4.5,
-
-        index:
-          h.index
-
-      });
-
-    }
+      score:
+        0
+    };
 
   }
 
 
-  /*
-    Bearish OB / Supply
-  */
+  let score = 0;
 
-  for (
-    let i = 2;
-    i < rows.length - 2;
-    i++
+
+  if (
+    revenue?.available
   ) {
 
-    const x =
-      rows[i];
-
-    const n2 =
-      rows[i + 2];
-
-    const open =
-      num(x.open);
-
-    const close =
-      num(x.close);
-
-    const high =
-      num(x.high);
-
-    const low =
-      num(x.low);
-
-    const displacementDown =
-      num(n2.close) <
-      low -
-      Math.max(
-        A * 0.35,
-        price * 0.004
+    const yoy =
+      finite(
+        revenue.yoy
       );
 
+
+    const mom =
+      finite(
+        revenue.mom
+      );
+
+
     if (
-      close > open &&
-      displacementDown
+      yoy !== null
     ) {
 
-      const level =
-        Math.min(
-          open,
-          close
-        );
-
       if (
-        level >
-        price +
-        Math.max(
-          A * 0.12,
-          price * 0.0015
-        )
+        yoy >= 20
       ) {
 
-        raw.push({
+        score += 6;
 
-          price:
-            level,
+      } else if (
+        yoy >= 10
+      ) {
 
-          high,
+        score += 5;
 
-          type:
-            "Bearish OB / Supply",
+      } else if (
+        yoy > 0
+      ) {
 
-          score:
-            5,
+        score += 3;
 
-          index:
-            i
+      } else if (
+        yoy < -10
+      ) {
 
-        });
+        score -= 2;
+
+      }
+
+    }
+
+
+    if (
+      mom !== null
+    ) {
+
+      if (
+        mom >= 10
+      ) {
+
+        score += 3;
+
+      } else if (
+        mom > 0
+      ) {
+
+        score += 2;
 
       }
 
@@ -1531,164 +2356,739 @@ function buildResistanceLevels(
   }
 
 
-  /*
-    Bearish FVG
-  */
-
-  for (
-    let i = 1;
-    i < rows.length - 1;
-    i++
+  if (
+    financial?.available
   ) {
 
-    const left =
-      rows[i - 1];
+    const eps =
+      finite(
+        financial.eps
+      );
 
-    const right =
-      rows[i + 1];
+
+    const epsGrowth =
+      finite(
+        financial.epsGrowth
+      );
+
+
+    const netIncomeGrowth =
+      finite(
+        financial.netIncomeGrowth
+      );
+
 
     if (
-      num(right.high) <
-      num(left.low)
+      eps !== null &&
+      eps > 0
+    ) {
+      score += 4;
+    }
+
+
+    if (
+      epsGrowth !== null
     ) {
 
-      const level =
-        num(right.high);
-
       if (
-        level >
-        price +
-        Math.max(
-          A * 0.12,
-          price * 0.0015
-        )
+        epsGrowth >= 20
       ) {
 
-        raw.push({
+        score += 4;
 
-          price:
-            level,
+      } else if (
+        epsGrowth > 0
+      ) {
 
-          high:
-            num(left.low),
-
-          type:
-            "Bearish FVG",
-
-          score:
-            3.5,
-
-          index:
-            i
-
-        });
+        score += 2;
 
       }
 
     }
 
-  }
-
-
-  /*
-    合併過度接近的壓力，
-    避免 100、100.2、100.4
-    被當成三個 TP。
-  */
-
-  raw.sort(
-    (a, b) =>
-      a.price -
-      b.price
-  );
-
-  const groups = [];
-
-  const mergeDistance =
-    Math.max(
-      A * 0.35,
-      price * 0.004
-    );
-
-  for (const level of raw) {
-
-    const last =
-      groups[
-        groups.length - 1
-      ];
 
     if (
-      last &&
-      Math.abs(
-        level.price -
-        last.price
-      ) <=
-      mergeDistance
+      netIncomeGrowth !== null &&
+      netIncomeGrowth > 0
     ) {
-
-      if (
-        level.score >
-        last.score
-      ) {
-
-        last.type =
-          level.type;
-
-      }
-
-      last.score =
-        Math.max(
-          last.score,
-          level.score
-        ) + 0.4;
-
-      last.price =
-        (
-          last.price +
-          level.price
-        ) /
-        2;
-
-      continue;
-
+      score += 2;
     }
 
-    groups.push({
-      ...level
-    });
+
+    if (
+      financial.profitable ===
+      true
+    ) {
+      score += 1;
+    }
 
   }
 
-  return groups;
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        score,
+        0,
+        20
+      ),
+
+    yoy:
+      revenue?.yoy ??
+      null,
+
+    mom:
+      revenue?.mom ??
+      null,
+
+    eps:
+      financial?.eps ??
+      null,
+
+    epsGrowth:
+      financial?.epsGrowth ??
+      null
+
+  };
 
 }
 
 
 /* =========================================================
-   波段目標引擎
+   NEWS SCORE 20
+========================================================= */
+
+function scoreNews(
+  news
+) {
+
+  if (!news) {
+
+    return {
+      available:
+        false,
+
+      score:
+        0
+    };
+
+  }
+
+
+  let raw =
+    finite(
+      news.overallScore
+    );
+
+
+  if (
+    raw === null
+  ) {
+
+    raw =
+      finite(
+        news.score
+      );
+
+  }
+
+
+  const hasArticles =
+    Array.isArray(
+      news.news
+    )
+      ? news.news.length > 0
+      : Array.isArray(
+          news.items
+        )
+      ? news.items.length > 0
+      : raw !== null;
+
+
+  if (!hasArticles) {
+
+    return {
+      available:
+        false,
+
+      score:
+        0
+    };
+
+  }
+
+
+  /*
+    news API:
+    -10 ~ +10
+
+    換成：
+    0 ~ 20
+  */
+
+  if (
+    raw === null
+  ) {
+    raw = 0;
+  }
+
+
+  return {
+
+    available:
+      true,
+
+    score:
+      clamp(
+        round(
+          raw + 10,
+          0
+        ),
+        0,
+        20
+      ),
+
+    raw:
+      round(
+        raw,
+        1
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   TOTAL SCORE
+========================================================= */
+
+function buildScore(
+  categories
+) {
+
+  const rows = [
+    categories.technical,
+    categories.volumePrice,
+    categories.institutional,
+    categories.fundamental,
+    categories.news
+  ];
+
+
+  const available =
+    rows.filter(
+      x =>
+        x?.available
+    );
+
+
+  const availableCount =
+    available.length;
+
+
+  const completeness =
+    availableCount /
+    5 *
+    100;
+
+
+  if (
+    !availableCount
+  ) {
+
+    return {
+      score:
+        0,
+
+      completeness:
+        0,
+
+      availableCount:
+        0
+    };
+
+  }
+
+
+  const raw =
+    available.reduce(
+      (
+        total,
+        x
+      ) =>
+        total +
+        num(
+          x.score
+        ),
+      0
+    );
+
+
+  /*
+    每一類滿分 20。
+    缺資料不直接算 0，
+    依有資料類別重新換算 100。
+  */
+
+  const maxAvailable =
+    availableCount *
+    20;
+
+
+  const score =
+    maxAvailable > 0
+      ? raw /
+        maxAvailable *
+        100
+      : 0;
+
+
+  return {
+
+    score:
+      clamp(
+        round(
+          score,
+          0
+        ),
+        0,
+        100
+      ),
+
+    completeness:
+      round(
+        completeness,
+        0
+      ),
+
+    availableCount
+
+  };
+
+}
+
+
+/* =========================================================
+   TRADE PLAN 8.0
 ========================================================= */
 
 function buildTradePlan(
-  rows,
-  price,
-  A,
-  support
+  stock
 ) {
 
-  if (!support) {
-    return null;
+  const rows =
+    Array.isArray(
+      stock.rows
+    )
+      ? stock.rows
+      : [];
+
+
+  if (
+    rows.length < 65
+  ) {
+
+    return {
+      valid:
+        false,
+
+      reason:
+        "K 線不足"
+    };
+
   }
 
 
-  /* ==============================
-     Entry
-  ============================== */
+  const latest =
+    rows[
+      rows.length - 1
+    ];
 
-  const entryLow =
-    support.low;
 
-  const entryHigh =
-    support.high;
+  const price =
+    num(
+      stock.price,
+      latest.close
+    );
+
+
+  if (
+    price <= 0
+  ) {
+
+    return {
+      valid:
+        false,
+
+      reason:
+        "現價無效"
+    };
+
+  }
+
+
+  const closes =
+    rows.map(
+      x =>
+        num(
+          x.close
+        )
+    );
+
+
+  const ma10 =
+    SMA(
+      closes,
+      10
+    );
+
+
+  const ma20 =
+    SMA(
+      closes,
+      20
+    );
+
+
+  const ma60 =
+    SMA(
+      closes,
+      60
+    );
+
+
+  let atr =
+    ATR(
+      rows,
+      14
+    );
+
+
+  if (
+    !Number.isFinite(atr) ||
+    atr <= 0
+  ) {
+
+    atr =
+      Math.max(
+        price *
+        0.015,
+        0.01
+      );
+
+  }
+
+
+  const previous20 =
+    rows.slice(
+      -21,
+      -1
+    );
+
+
+  const previous40 =
+    rows.slice(
+      -41,
+      -1
+    );
+
+
+  const previous60 =
+    rows.slice(
+      -61,
+      -1
+    );
+
+
+  const low10 =
+    Math.min(
+      ...rows
+        .slice(-10)
+        .map(
+          x =>
+            num(
+              x.low,
+              price
+            )
+        )
+    );
+
+
+  const low20 =
+    Math.min(
+      ...rows
+        .slice(-20)
+        .map(
+          x =>
+            num(
+              x.low,
+              price
+            )
+        )
+    );
+
+
+  const supportCandidates =
+    [
+      low10,
+      low20,
+      ma20 -
+        atr * 0.5,
+      ma10 -
+        atr * 0.8
+    ]
+      .filter(
+        x =>
+          Number.isFinite(x) &&
+          x > 0 &&
+          x <=
+            price +
+            atr * 0.8
+      );
+
+
+  if (
+    !supportCandidates.length
+  ) {
+
+    return {
+      valid:
+        false,
+
+      reason:
+        "找不到有效支撐"
+    };
+
+  }
+
+
+  /*
+    找距離現價最近，
+    但不高於現價太多的有效支撐。
+  */
+
+  supportCandidates.sort(
+    (a, b) =>
+      Math.abs(
+        price - a
+      ) -
+      Math.abs(
+        price - b
+      )
+  );
+
+
+  const support =
+    supportCandidates[0];
+
+
+  /*
+    Entry：
+    現價附近有效支撐區。
+
+    不要求先突破。
+  */
+
+  let entryLow =
+    support -
+    atr * 0.18;
+
+
+  let entryHigh =
+    support +
+    atr * 0.55;
+
+
+  /*
+    不讓 Entry 上緣離現價太遠
+  */
+
+  entryHigh =
+    Math.min(
+      entryHigh,
+      price +
+      atr * 0.2
+    );
+
+
+  entryLow =
+    Math.max(
+      0.01,
+      entryLow
+    );
+
+
+  if (
+    entryHigh <
+    entryLow
+  ) {
+
+    entryHigh =
+      entryLow +
+      atr * 0.35;
+
+  }
+
+
+  /*
+    SL：
+    結構失效 + ATR buffer
+  */
+
+  const structureLow =
+    Math.min(
+      low10,
+      support
+    );
+
+
+  const stop =
+    structureLow -
+    atr * 0.35;
+
+
+  /*
+    關鍵突破：
+    前 20 日有效壓力
+  */
+
+  const resistance20 =
+    Math.max(
+      ...previous20.map(
+        x =>
+          num(
+            x.high
+          )
+      )
+    );
+
+
+  let breakout =
+    resistance20;
+
+
+  /*
+    若 20 日高點已被突破，
+    改找 40 日壓力。
+  */
+
+  if (
+    breakout <=
+    price
+  ) {
+
+    const higher =
+      previous40
+        .map(
+          x =>
+            num(
+              x.high
+            )
+        )
+        .filter(
+          x =>
+            x >
+            price +
+            atr * 0.15
+        )
+        .sort(
+          (a, b) =>
+            a - b
+        );
+
+
+    if (
+      higher.length
+    ) {
+
+      breakout =
+        higher[0];
+
+    } else {
+
+      breakout =
+        price +
+        atr * 0.8;
+
+    }
+
+  }
+
+
+  /*
+    TP1：
+    一定要在突破位上方，
+    找第一個真正歷史壓力。
+  */
+
+  const resistancePool =
+    previous60
+      .map(
+        x =>
+          num(
+            x.high
+          )
+      )
+      .filter(
+        x =>
+          x >
+          breakout +
+          atr * 0.2
+      )
+      .sort(
+        (a, b) =>
+          a - b
+      );
+
+
+  let tp1 =
+    resistancePool.length
+      ? resistancePool[0]
+      : breakout +
+        atr * 1.2;
+
+
+  if (
+    tp1 <= breakout
+  ) {
+
+    tp1 =
+      breakout +
+      atr * 1.2;
+
+  }
+
+
+  /*
+    TP2 / TP3
+  */
+
+  const tp2 =
+    Math.max(
+      tp1 +
+      atr * 1.2,
+      breakout +
+      atr * 2.2
+    );
+
+
+  const tp3 =
+    Math.max(
+      tp2 +
+      atr * 1.5,
+      breakout +
+      atr * 3.8
+    );
+
+
+  /*
+    RR 使用 Entry 中位
+  */
 
   const entryMid =
     (
@@ -1698,472 +3098,164 @@ function buildTradePlan(
     2;
 
 
-  /* ==============================
-     SL
-
-     跟前端統一：
-     0.70 ATR 或 0.8%
-  ============================== */
-
-  const slBuffer =
-    Math.max(
-      A * 0.70,
-      price * 0.008
-    );
-
-  let stopLoss =
-    support.low -
-    slBuffer;
-
-  if (
-    stopLoss >=
-    entryLow
-  ) {
-
-    stopLoss =
-      entryLow -
-      Math.max(
-        A * 0.50,
-        price * 0.007
-      );
-
-  }
-
   const risk =
     entryMid -
-    stopLoss;
+    stop;
+
 
   if (
-    !Number.isFinite(risk) ||
     risk <= 0
   ) {
 
-    return null;
+    return {
+      valid:
+        false,
+
+      reason:
+        "風險距離無效"
+    };
 
   }
 
-  const riskPct =
-    risk /
-    entryMid *
-    100;
-
-
-  /* ==============================
-     Entry Ready
-  ============================== */
-
-  const entryTolerance =
-    Math.max(
-      A * 0.60,
-      price * 0.012
-    );
-
-  const entryReady =
-    price >=
-    entryLow -
-    Math.max(
-      A * 0.15,
-      price * 0.003
-    )
-    &&
-    price <=
-    entryHigh +
-    entryTolerance;
-
-
-  /* ==============================
-     上方壓力
-  ============================== */
-
-  const resistance =
-    buildResistanceLevels(
-      rows.slice(-160),
-      price,
-      A
-    );
-
-
-  /*
-    第一層是關鍵突破位。
-
-    注意：
-    它不是 TP1。
-  */
-
-  const breakout =
-    resistance.find(
-      x =>
-        x.price >
-        Math.max(
-          price,
-          entryHigh
-        ) +
-        Math.max(
-          A * 0.15,
-          price * 0.002
-        )
-    )
-    ||
-    null;
-
-
-  /*
-    TP 必須在突破位上方，
-    不把突破位本身拿來止盈。
-  */
-
-  const breakoutPrice =
-    breakout
-      ? breakout.price
-      : Math.max(
-          price,
-          entryHigh
-        );
-
-
-  /* ==============================
-     R 倍數最低目標
-  ============================== */
-
-  const target15R =
-    entryMid +
-    risk * 1.5;
-
-  const target25R =
-    entryMid +
-    risk * 2.5;
-
-  const target35R =
-    entryMid +
-    risk * 3.5;
-
-
-  /* ==============================
-     ATR 波段目標
-  ============================== */
-
-  const atrTP1 =
-    entryMid +
-    A * 2;
-
-  const atrTP2 =
-    entryMid +
-    A * 3.5;
-
-  const atrTP3 =
-    entryMid +
-    A * 5;
-
-
-  /* ==============================
-     Swing Range / Fibonacci
-  ============================== */
-
-  const swingLows =
-    findSwingLows(
-      rows.slice(-160),
-      2
-    )
-    .filter(
-      x =>
-        x.price <
-        entryMid
-    );
-
-  let swingLow =
-    entryLow;
-
-  if (swingLows.length) {
-
-    const candidate =
-      swingLows[
-        swingLows.length - 1
-      ];
-
-    if (
-      candidate &&
-      Number.isFinite(
-        candidate.price
-      )
-    ) {
-
-      swingLow =
-        candidate.price;
-
-    }
-
-  }
-
-  const swingHighs =
-    findSwingHighs(
-      rows.slice(-160),
-      2
-    )
-    .filter(
-      x =>
-        x.price >
-        swingLow
-    );
-
-  let swingHigh =
-    Math.max(
-      price,
-      breakoutPrice
-    );
-
-  for (
-    let i =
-      swingHighs.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-    if (
-      Number.isFinite(
-        swingHighs[i].price
-      )
-      &&
-      swingHighs[i].price >
-      swingLow
-    ) {
-
-      swingHigh =
-        Math.max(
-          swingHigh,
-          swingHighs[i].price
-        );
-
-      break;
-
-    }
-
-  }
-
-  let swingRange =
-    swingHigh -
-    swingLow;
-
-  if (
-    !Number.isFinite(
-      swingRange
-    )
-    ||
-    swingRange <= 0
-  ) {
-
-    swingRange =
-      Math.max(
-        A * 3,
-        risk * 2
-      );
-
-  }
-
-  const fib1272 =
-    swingLow +
-    swingRange * 1.272;
-
-  const fib1618 =
-    swingLow +
-    swingRange * 1.618;
-
-
-  /* ==============================
-     TP1
-  ============================== */
-
-  const minTP1 =
-    Math.max(
-      target15R,
-      atrTP1,
-      breakoutPrice +
-      Math.max(
-        A * 0.35,
-        price * 0.004
-      )
-    );
-
-  const structureTP1 =
-    resistance.find(
-      x =>
-        x.price >=
-        minTP1
-    );
-
-  let tp1;
-  let tp1Source;
-
-  if (structureTP1) {
-
-    tp1 =
-      structureTP1.price;
-
-    tp1Source =
-      `${structureTP1.type} / SMC`;
-
-  }
-  else {
-
-    tp1 =
-      minTP1;
-
-    tp1Source =
-      "1.5R / 2ATR 波段延伸";
-
-  }
-
-
-  /* ==============================
-     TP2
-  ============================== */
-
-  const minTP2 =
-    Math.max(
-      target25R,
-      atrTP2,
-      fib1272,
-      tp1 +
-      Math.max(
-        risk,
-        A
-      )
-    );
-
-  const structureTP2 =
-    resistance.find(
-      x =>
-        x.price >=
-        minTP2
-        &&
-        x.price >
-        tp1 +
-        Math.max(
-          A * 0.35,
-          price * 0.004
-        )
-    );
-
-  let tp2;
-  let tp2Source;
-
-  if (structureTP2) {
-
-    tp2 =
-      structureTP2.price;
-
-    tp2Source =
-      `${structureTP2.type} / SMC 波段壓力`;
-
-  }
-  else {
-
-    tp2 =
-      minTP2;
-
-    tp2Source =
-      "2.5R / Fib 1.272";
-
-  }
-
-
-  /* ==============================
-     TP3
-  ============================== */
-
-  const minTP3 =
-    Math.max(
-      target35R,
-      atrTP3,
-      fib1618,
-      tp2 +
-      Math.max(
-        risk,
-        A * 1.25
-      )
-    );
-
-  const structureTP3 =
-    resistance.find(
-      x =>
-        x.price >=
-        minTP3
-        &&
-        x.price >
-        tp2 +
-        Math.max(
-          A * 0.40,
-          price * 0.004
-        )
-    );
-
-  let tp3;
-  let tp3Source;
-
-  if (structureTP3) {
-
-    tp3 =
-      structureTP3.price;
-
-    tp3Source =
-      `${structureTP3.type} / 高階 SMC 壓力`;
-
-  }
-  else {
-
-    tp3 =
-      minTP3;
-
-    tp3Source =
-      "3.5R / Fib 1.618 波段延伸";
-
-  }
-
-
-  /* ==============================
-     真實 RR
-  ============================== */
-
-  const reward1 =
-    tp1 -
-    entryMid;
 
   const rr1 =
-    reward1 /
+    (
+      tp1 -
+      entryMid
+    ) /
     risk;
 
 
+  const rr2 =
+    (
+      tp2 -
+      entryMid
+    ) /
+    risk;
+
+
+  const rr3 =
+    (
+      tp3 -
+      entryMid
+    ) /
+    risk;
+
+
+  const riskPercent =
+    (
+      risk /
+      entryMid
+    ) *
+    100;
+
+
+  /*
+    是否已進入最佳 Entry 區
+
+    ATR 0.15 容許誤差，
+    避免價格差一檔就漏通知。
+  */
+
+  const entryTolerance =
+    atr * 0.15;
+
+
+  const entryReady =
+    price >=
+      entryLow -
+      entryTolerance &&
+    price <=
+      entryHigh +
+      entryTolerance;
+
+
+  const structureValid =
+    price >
+    stop;
+
+
   return {
 
-    entryLow,
-    entryHigh,
-    entryMid,
+    valid:
+      true,
 
-    stopLoss,
+    price:
+      round(price),
 
-    risk,
-    riskPct,
+    atr:
+      round(atr),
+
+    ma10:
+      round(ma10),
+
+    ma20:
+      round(ma20),
+
+    ma60:
+      round(ma60),
+
+    support:
+      round(support),
+
+    entryLow:
+      round(entryLow),
+
+    entryHigh:
+      round(entryHigh),
+
+    entryMid:
+      round(entryMid),
+
+    stop:
+      round(stop),
+
+    structureLow:
+      round(
+        structureLow
+      ),
+
+    breakout:
+      round(
+        breakout
+      ),
+
+    tp1:
+      round(tp1),
+
+    tp2:
+      round(tp2),
+
+    tp3:
+      round(tp3),
+
+    rr1:
+      round(
+        rr1,
+        2
+      ),
+
+    rr2:
+      round(
+        rr2,
+        2
+      ),
+
+    rr3:
+      round(
+        rr3,
+        2
+      ),
+
+    riskPercent:
+      round(
+        riskPercent,
+        2
+      ),
 
     entryReady,
 
-    breakout:
-      breakout
-        ? breakout.price
-        : null,
-
-    breakoutType:
-      breakout
-        ? breakout.type
-        : "無明確突破位",
-
-    tp1,
-    tp2,
-    tp3,
-
-    tp1Source,
-    tp2Source,
-    tp3Source,
-
-    rr1
+    structureValid
 
   };
 
@@ -2171,1151 +3263,391 @@ function buildTradePlan(
 
 
 /* =========================================================
-   Institutional
+   ANALYZE ONE STOCK
 ========================================================= */
 
-function institutionalBias(
-  institutional
-) {
-
-  if (!institutional) {
-
-    return {
-      score: 0,
-      text:
-        "法人資料中性"
-    };
-
-  }
-
-  const total5 =
-    num(
-      institutional.total5
-    );
-
-  const foreign5 =
-    num(
-      institutional.foreign5
-    );
-
-  const trust5 =
-    num(
-      institutional.trust5
-    );
-
-  const dealer5 =
-    num(
-      institutional.dealer5
-    );
-
-  const total =
-    total5 ||
-    (
-      foreign5 +
-      trust5 +
-      dealer5
-    );
-
-  if (total > 0) {
-
-    return {
-      score: 0.5,
-      text:
-        "法人偏多"
-    };
-
-  }
-
-  if (total < 0) {
-
-    return {
-      score: -0.25,
-      text:
-        "法人偏空"
-    };
-
-  }
-
-  return {
-    score: 0,
-    text:
-      "法人中性"
-  };
-
-}
-
-
-/* =========================================================
-   8 條策略 + 新波段價位
-========================================================= */
-
-function analyzeStock(data) {
-
-  const rows =
-    Array.isArray(data.rows)
-      ?
-      data.rows
-      .map(
-        x => ({
-
-          open:
-            num(x.open),
-
-          high:
-            num(x.high),
-
-          low:
-            num(x.low),
-
-          close:
-            num(x.close),
-
-          volume:
-            num(x.volume)
-
-        })
-      )
-      .filter(
-        x =>
-          x.open > 0
-          &&
-          x.high > 0
-          &&
-          x.low > 0
-          &&
-          x.close > 0
-      )
-      :
-      [];
-
-  if (
-    rows.length <
-    60
-  ) {
-
-    return {
-
-      eligible: false,
-
-      reason:
-        "歷史資料不足"
-
-    };
-
-  }
-
-  const price =
-    num(data.price)
-    ||
-    num(
-      rows[
-        rows.length - 1
-      ].close
-    );
-
-  if (!price) {
-
-    return {
-
-      eligible: false,
-
-      reason:
-        "無目前價格"
-
-    };
-
-  }
-
-  const closes =
-    rows.map(
-      x => x.close
-    );
-
-  const volumes =
-    rows.map(
-      x => x.volume
-    );
-
-  const MA20 =
-    sma(
-      closes,
-      20
-    );
-
-  const MA60 =
-    sma(
-      closes,
-      60
-    );
-
-  const A =
-    Math.max(
-      atr(
-        rows,
-        14
-      ),
-      price * 0.006
-    );
-
-  const RSI =
-    rsi(
-      closes,
-      14
-    );
-
-  const EMA12 =
-    ema(
-      closes.slice(-100),
-      12
-    );
-
-  const EMA26 =
-    ema(
-      closes.slice(-100),
-      26
-    );
-
-  const support20 =
-    Math.min(
-      ...rows
-      .slice(-20)
-      .map(
-        x => x.low
-      )
-    );
-
-  const resistance20 =
-    Math.max(
-      ...rows
-      .slice(-20)
-      .map(
-        x => x.high
-      )
-    );
-
-  const high60 =
-    Math.max(
-      ...rows
-      .slice(-60)
-      .map(
-        x => x.high
-      )
-    );
-
-  const currentVolume =
-    num(data.volume)
-    ||
-    volumes[
-      volumes.length - 1
-    ];
-
-  const avgVolume20 =
-    avg(
-      volumes
-      .slice(-21, -1)
-      .filter(
-        x => x > 0
-      )
-    );
-
-  const volumeRatio =
-    avgVolume20 > 0
-      ?
-      currentVolume /
-      avgVolume20
-      :
-      0;
-
-
-  /* ==============================
-     8 條策略
-  ============================== */
-
-  const conditions = [
-
-    {
-      name:
-        "MA20 > MA60",
-
-      pass:
-        MA20 > MA60
-    },
-
-    {
-      name:
-        "股價守 MA60",
-
-      pass:
-        price >=
-        MA60 * 0.985
-    },
-
-    {
-      name:
-        "距 MA20 不過遠",
-
-      pass:
-        Math.abs(
-          price -
-          MA20
-        ) <=
-        A * 2.2
-    },
-
-    {
-      name:
-        "守住 20 日支撐",
-
-      pass:
-        price >=
-        support20 * 0.99
-    },
-
-    {
-      name:
-        "RSI 45～72",
-
-      pass:
-        RSI >= 45
-        &&
-        RSI <= 72
-    },
-
-    {
-      name:
-        "EMA 動能",
-
-      pass:
-        EMA12 -
-        EMA26 >=
-        -A * 0.05
-    },
-
-    {
-      name:
-        "量能",
-
-      pass:
-        volumeRatio >=
-        0.8
-    },
-
-    {
-      name:
-        "上方仍有空間",
-
-      pass:
-        Math.max(
-          resistance20,
-          high60
-        ) >
-        price * 1.025
-    }
-
-  ];
-
-  const passed =
-    conditions
-    .filter(
-      x => x.pass
-    )
-    .length;
-
-
-  /*
-    正式 Push：
-    7/8、8/8
-  */
-
-  if (
-    passed < 7
-  ) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      reason:
-        `${passed}/8，未達正式 Push 條件`
-
-    };
-
-  }
-
-
-  /* ==============================
-     SMC 支撐
-  ============================== */
-
-  const support =
-    findBestSupport(
-      rows.slice(-160),
-      price,
-      A,
-      data.institutional
-    );
-
-  if (!support) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      reason:
-        "沒有有效 SMC 支撐結構"
-
-    };
-
-  }
-
-
-  /* ==============================
-     Trade Plan
-  ============================== */
-
-  const plan =
-    buildTradePlan(
-      rows,
-      price,
-      A,
-      support
-    );
-
-  if (!plan) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      support,
-
-      reason:
-        "無法建立有效波段交易計畫"
-
-    };
-
-  }
-
-
-  /*
-    必須接近 Entry。
-  */
-
-  if (
-    !plan.entryReady
-  ) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      support,
-
-      plan,
-
-      reason:
-        "策略成立，但目前不在好的進場位置"
-
-    };
-
-  }
-
-
-  /*
-    SL 風險過大：
-    不推播。
-
-    不會把 SL 硬拉到 5%，
-    而是等待更好的 Entry。
-  */
-
-  if (
-    plan.riskPct >
-    5
-  ) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      support,
-
-      plan,
-
-      reason:
-        `結構停損距離 ${plan.riskPct.toFixed(2)}%，風險偏大`
-
-    };
-
-  }
-
-
-  /*
-    TP1 必須至少 1.5R。
-  */
-
-  if (
-    !Number.isFinite(
-      plan.rr1
-    )
-    ||
-    plan.rr1 <
-    1.5
-  ) {
-
-    return {
-
-      eligible: false,
-
-      passed,
-
-      conditions,
-
-      support,
-
-      plan,
-
-      reason:
-        "第一波段目標風報比不足"
-
-    };
-
-  }
-
-
-  const inst =
-    institutionalBias(
-      data.institutional
-    );
-
-
-  return {
-
-    eligible: true,
-
-    symbol:
-      String(
-        data.symbol ||
-        ""
-      ),
-
-    name:
-      data.name
-      ||
-      data.symbol
-      ||
-      "台股",
-
-    price,
-
-    passed,
-
-    ATR: A,
-    RSI,
-    MA20,
-    MA60,
-
-    volumeRatio,
-
-    conditions,
-
-    support,
-
-    entryLow:
-      plan.entryLow,
-
-    entryHigh:
-      plan.entryHigh,
-
-    stopLoss:
-      plan.stopLoss,
-
-    riskPct:
-      plan.riskPct,
-
-    breakout:
-      plan.breakout,
-
-    breakoutType:
-      plan.breakoutType,
-
-    tp1:
-      plan.tp1,
-
-    tp2:
-      plan.tp2,
-
-    tp3:
-      plan.tp3,
-
-    tp1Source:
-      plan.tp1Source,
-
-    tp2Source:
-      plan.tp2Source,
-
-    tp3Source:
-      plan.tp3Source,
-
-    rr1:
-      plan.rr1,
-
-    institutional:
-      inst
-
-  };
-
-}
-
-
-/* =========================================================
-   Stock API
-========================================================= */
-
-function getOrigin(req) {
-
-  const forwarded =
-    req.headers[
-      "x-forwarded-host"
-    ];
-
-  const host =
-    forwarded ||
-    req.headers.host;
-
-  const protoHeader =
-    req.headers[
-      "x-forwarded-proto"
-    ];
-
-  const proto =
-    protoHeader ||
-    "https";
-
-  return (
-    `${proto}://${host}`
-  );
-
-}
-
-async function fetchStock(
-  origin,
+async function analyzeStock(
+  req,
   symbol
 ) {
 
-  const controller =
-    new AbortController();
-
-  const timer =
-    setTimeout(
-      () =>
-        controller.abort(),
-      22000
+  const stock =
+    await getStock(
+      req,
+      symbol
     );
 
-  try {
 
-    const response =
-      await fetch(
-        `${origin}/api/stock?symbol=${encodeURIComponent(symbol)}`,
-        {
-          headers: {
-
-            "Cache-Control":
-              "no-cache"
-
-          },
-
-          signal:
-            controller.signal
-        }
-      );
-
-    if (!response.ok) {
-
-      throw new Error(
-        `stock ${symbol} HTTP ${response.status}`
-      );
-
-    }
-
-    const json =
-      await response.json();
-
-    if (
-      !json ||
-      json.ok === false
-    ) {
-
-      throw new Error(
-        json?.error ||
-        `stock ${symbol} failed`
-      );
-
-    }
-
-    return json;
-
-  }
-  finally {
-
-    clearTimeout(timer);
-
-  }
-
-}
-
-
-/* =========================================================
-   Concurrency
-========================================================= */
-
-async function mapLimit(
-  items,
-  limit,
-  worker
-) {
-
-  const result =
-    new Array(
-      items.length
+  const news =
+    await getNews(
+      req,
+      symbol
     );
 
-  let cursor = 0;
 
-  async function runner() {
+  const categories = {
 
-    while (true) {
+    technical:
+      scoreTechnical(
+        stock
+      ),
 
-      const index =
-        cursor++;
+    volumePrice:
+      scoreVolumePrice(
+        stock
+      ),
 
-      if (
-        index >=
-        items.length
-      ) {
+    institutional:
+      scoreInstitutional(
+        stock
+      ),
 
-        break;
+    fundamental:
+      scoreFundamental(
+        stock
+      ),
 
-      }
-
-      try {
-
-        result[index] =
-          await worker(
-            items[index],
-            index
-          );
-
-      }
-      catch (error) {
-
-        result[index] = {
-
-          error:
-            error?.message ||
-            String(error)
-
-        };
-
-      }
-
-    }
-
-  }
-
-  await Promise.all(
-    Array.from(
-      {
-        length:
-          Math.min(
-            limit,
-            items.length
-          )
-      },
-      () => runner()
-    )
-  );
-
-  return result;
-
-}
-
-
-/* =========================================================
-   Device symbols
-========================================================= */
-
-function normalizeSymbols(
-  symbols
-) {
-
-  const list =
-    Array.isArray(symbols)
-      ?
-      symbols
-      :
-      [];
-
-  return [
-    ...new Set(
-      list
-      .map(
-        x =>
-          String(x)
-          .trim()
+    news:
+      scoreNews(
+        news
       )
-      .filter(
-        x =>
-          /^\d{4,6}$/.test(x)
-      )
-    )
-  ];
 
-}
+  };
 
-function symbolsForDevice(
-  device
-) {
 
-  const saved =
-    normalizeSymbols(
-      device?.symbols
+  const total =
+    buildScore(
+      categories
     );
 
-  return [
-    ...new Set([
-      ...DEFAULT_SYMBOLS,
-      ...saved
-    ])
-  ];
 
-}
-
-
-/* =========================================================
-   Dedupe
-========================================================= */
-
-function setupFingerprint(
-  symbol,
-  analysis
-) {
-
-  const low =
-    fmtPrice(
-      analysis.support.low
+  const plan =
+    buildTradePlan(
+      stock
     );
 
-  const high =
-    fmtPrice(
-      analysis.support.high
+
+  const eligible =
+    Boolean(
+
+      total.score >=
+        SCORE_LIMIT &&
+
+      total.completeness >=
+        COMPLETENESS_LIMIT &&
+
+      categories
+        .technical
+        .available &&
+
+      categories
+        .technical
+        .score >=
+        TECHNICAL_LIMIT &&
+
+      categories
+        .volumePrice
+        .available &&
+
+      categories
+        .volumePrice
+        .score >=
+        VOLUME_LIMIT &&
+
+      plan.valid &&
+
+      plan.entryReady &&
+
+      plan.structureValid &&
+
+      plan.riskPercent <=
+        MAX_RISK_PERCENT &&
+
+      plan.rr1 >=
+        MIN_RR1
     );
 
-  const breakout =
-    fmtPrice(
-      analysis.breakout
-    );
 
-  return [
+  return {
 
     symbol,
 
-    analysis.support.type,
+    name:
+      stock.name ||
+      symbol,
 
-    low,
+    price:
+      stock.price,
 
-    high,
+    changePercent:
+      stock.changePercent,
 
-    breakout,
+    score:
+      total.score,
 
-    analysis.passed
+    completeness:
+      total.completeness,
 
-  ].join(":");
+    availableCategories:
+      total.availableCount,
+
+    categories,
+
+    plan,
+
+    eligible,
+
+    degraded:
+      Boolean(
+        stock.degraded
+      ),
+
+    stockErrors:
+      stock.errors ||
+      {},
+
+    newsAvailable:
+      categories
+        .news
+        .available
+
+  };
 
 }
 
-async function acquireNotificationLock(
-  deviceId,
-  symbol,
-  analysis
+
+/* =========================================================
+   DEDUPE
+========================================================= */
+
+async function isDuplicate(
+  signal
 ) {
-
-  const fingerprint =
-    setupFingerprint(
-      symbol,
-      analysis
-    );
-
-  const safeFingerprint =
-    fingerprint.replace(
-      /[^a-zA-Z0-9:._-]/g,
-      "_"
-    );
 
   const key =
-    `swing:push:sent:${deviceId}:${safeFingerprint}`;
+    `${PUSH_DEDUPE_PREFIX}${signal.symbol}`;
 
-  const result =
-    await redis([
-      "SET",
-      key,
-      "1",
-      "NX",
-      "EX",
-      "21600"
-    ]);
 
-  return (
-    result === "OK"
+  const exists =
+    await redisGet(
+      key
+    );
+
+
+  return Boolean(
+    exists
+  );
+
+}
+
+
+async function markDuplicate(
+  signal
+) {
+
+  const key =
+    `${PUSH_DEDUPE_PREFIX}${signal.symbol}`;
+
+
+  return redisSet(
+    key,
+    JSON.stringify(
+      {
+        symbol:
+          signal.symbol,
+
+        price:
+          signal.price,
+
+        score:
+          signal.score,
+
+        sentAt:
+          Date.now()
+      }
+    ),
+    PUSH_DEDUPE_SECONDS
   );
 
 }
 
 
 /* =========================================================
-   Notification
+   PUSH MESSAGE
 ========================================================= */
 
-function buildPayload(
-  stock,
-  analysis
+function pushPayload(
+  signal,
+  testMode
 ) {
+
+  const p =
+    signal.plan;
+
+
+  const prefix =
+    testMode
+      ? "🧪 測試｜"
+      : "";
+
 
   const title =
-    `📈 ${analysis.name} ${stock.symbol} 波段進場訊號`;
+    `${prefix}${signal.name} ${signal.symbol}｜進入波段進場區`;
 
-  const parts = [
 
-    `${analysis.passed}/8 強勢成立`,
+  const body =
+    [
+      `現價 ${round(signal.price)}`,
+      `評分 ${signal.score}｜完整度 ${signal.completeness}%`,
+      `Entry ${p.entryLow}～${p.entryHigh}`,
+      `SL ${p.stop}`,
+      `突破 ${p.breakout}`,
+      `TP1 ${p.tp1}｜RR ${p.rr1}`,
+      `TP2 ${p.tp2}｜TP3 ${p.tp3}`
+    ]
+      .join("\n");
 
-    `現價 ${fmtPrice(analysis.price)}`,
 
-    `進場 ${fmtPrice(analysis.entryLow)}～${fmtPrice(analysis.entryHigh)}`,
+  return JSON.stringify(
+    {
+      title,
 
-    `SL ${fmtPrice(analysis.stopLoss)}`
+      body,
 
-  ];
+      icon:
+        "/icons/icon-192.png",
 
-  if (
-    analysis.breakout
-  ) {
+      badge:
+        "/icons/icon-192.png",
 
-    parts.push(
-      `突破 ${fmtPrice(analysis.breakout)}`
-    );
+      tag:
+        `swing-${signal.symbol}`,
 
-  }
+      renotify:
+        true,
 
-  if (
-    analysis.tp1
-  ) {
+      data: {
+        url:
+          `/?symbol=${encodeURIComponent(signal.symbol)}`,
 
-    parts.push(
-      `TP1 ${fmtPrice(analysis.tp1)}`
-    );
+        symbol:
+          signal.symbol,
 
-  }
+        score:
+          signal.score,
 
-  if (
-    analysis.tp2
-  ) {
+        entryLow:
+          p.entryLow,
 
-    parts.push(
-      `TP2 ${fmtPrice(analysis.tp2)}`
-    );
+        entryHigh:
+          p.entryHigh,
 
-  }
+        stop:
+          p.stop,
 
-  if (
-    analysis.tp3
-  ) {
+        breakout:
+          p.breakout,
 
-    parts.push(
-      `TP3 ${fmtPrice(analysis.tp3)}`
-    );
+        tp1:
+          p.tp1,
 
-  }
+        tp2:
+          p.tp2,
 
-  parts.push(
-    analysis.support.type
+        tp3:
+          p.tp3,
+
+        rr1:
+          p.rr1
+      }
+    }
   );
-
-  if (
-    analysis.institutional?.text
-  ) {
-
-    parts.push(
-      analysis.institutional.text
-    );
-
-  }
-
-  return JSON.stringify({
-
-    title,
-
-    body:
-      parts.join("｜"),
-
-    tag:
-      `entry-${stock.symbol}`,
-
-    url:
-      `/?symbol=${encodeURIComponent(stock.symbol)}`,
-
-    symbol:
-      stock.symbol
-
-  });
 
 }
 
 
 /* =========================================================
-   Send Push
+   SEND PUSH
 ========================================================= */
 
-async function sendPush(
-  deviceId,
-  device,
-  stock,
-  analysis
+async function sendSignal(
+  devices,
+  signal,
+  testMode
 ) {
 
-  if (
-    !device?.subscription
+  const payload =
+    pushPayload(
+      signal,
+      testMode
+    );
+
+
+  let sent = 0;
+
+  const errors = [];
+
+
+  for (
+    const device of devices
   ) {
 
-    return {
+    try {
 
-      ok: false,
+      await webpush
+        .sendNotification(
+          device.subscription,
+          payload,
+          {
+            TTL:
+              300
+          }
+        );
 
-      reason:
-        "device 沒有 subscription"
 
-    };
+      sent += 1;
 
-  }
+    } catch (error) {
 
-  const locked =
-    await acquireNotificationLock(
-      deviceId,
-      stock.symbol,
-      analysis
-    );
-
-  if (!locked) {
-
-    return {
-
-      ok: false,
-
-      duplicate: true,
-
-      reason:
-        "同一訊號已通知"
-
-    };
-
-  }
-
-  const payload =
-    buildPayload(
-      stock,
-      analysis
-    );
-
-  try {
-
-    await webpush
-      .sendNotification(
-        device.subscription,
-        payload,
+      errors.push(
         {
-          TTL: 120,
-          urgency: "high"
+          endpoint:
+            String(
+              device
+                .subscription
+                ?.endpoint ||
+              ""
+            )
+              .slice(
+                0,
+                80
+              ),
+
+          statusCode:
+            error?.statusCode ||
+            null,
+
+          message:
+            error?.message ||
+            "Push failed"
         }
-      );
-
-    return {
-      ok: true
-    };
-
-  }
-  catch (error) {
-
-    const status =
-      error?.statusCode ||
-      error?.status;
-
-    if (
-      status === 404 ||
-      status === 410
-    ) {
-
-      await removeDevice(
-        deviceId
       );
 
     }
 
-    throw error;
-
   }
+
+
+  return {
+    sent,
+    errors
+  };
 
 }
 
 
 /* =========================================================
-   Authorization
-========================================================= */
-
-function authorized(req) {
-
-  const secret =
-    process.env
-      .CRON_SECRET;
-
-  if (!secret) {
-    return false;
-  }
-
-  const auth =
-    req.headers
-      .authorization ||
-    "";
-
-  return (
-    auth ===
-    `Bearer ${secret}`
-  );
-
-}
-
-
-/* =========================================================
-   Main
+   MAIN
 ========================================================= */
 
 module.exports =
@@ -3324,133 +3656,100 @@ async function handler(
   res
 ) {
 
-  if (
-    req.method !==
-    "GET"
-  ) {
+  const startedAt =
+    Date.now();
 
-    res.setHeader(
-      "Allow",
-      "GET"
+
+  const testMode =
+    isTestMode(
+      req
     );
 
-    return send(
-      res,
-      405,
-      {
-        ok: false,
-        error:
-          "Method Not Allowed"
-      }
-    );
-
-  }
-
-  if (
-    !authorized(req)
-  ) {
-
-    return send(
-      res,
-      401,
-      {
-        ok: false,
-        error:
-          "Unauthorized"
-      }
-    );
-
-  }
 
   try {
 
-    configurePush();
-
-
-    /* ==============================
-       Market time
-    ============================== */
+    /* =====================================================
+       AUTH
+    ===================================================== */
 
     if (
-      !isMarketMonitoringTime()
+      !authorized(
+        req,
+        testMode
+      )
+    ) {
+
+      return send(
+        res,
+        401,
+        {
+          ok:
+            false,
+
+          engine:
+            "Monitor 8.0",
+
+          error:
+            "Unauthorized"
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       MARKET HOURS
+    ===================================================== */
+
+    if (
+      !testMode &&
+      !marketOpenNow()
     ) {
 
       return send(
         res,
         200,
         {
+          ok:
+            true,
 
-          ok: true,
+          engine:
+            "Monitor 8.0",
 
-          skipped: true,
+          skipped:
+            true,
 
           reason:
-            "目前非台股監控時段",
+            "台股目前非監控時段",
+
+          taipeiTime:
+            taipeiString(),
 
           marketWindow:
-            "Asia/Taipei 08:55-13:40"
+            "08:55-13:40",
 
+          testMode:
+            false
         }
       );
 
     }
 
 
-    /* ==============================
-       Devices
-    ============================== */
+    /* =====================================================
+       PUSH
+    ===================================================== */
 
-    const deviceIds =
-      await getDeviceIds();
+    configureWebPush();
 
-    if (
-      !deviceIds.length
-    ) {
 
-      return send(
-        res,
-        200,
-        {
-
-          ok: true,
-
-          skipped: true,
-
-          reason:
-            "目前沒有 Push 訂閱裝置"
-
-        }
-      );
-
-    }
-
-    const devicesRaw =
-      await mapLimit(
-        deviceIds,
-        5,
-        async deviceId => ({
-
-          deviceId,
-
-          device:
-            await getDevice(
-              deviceId
-            )
-
-        })
-      );
+    /* =====================================================
+       DEVICES
+    ===================================================== */
 
     const devices =
-      devicesRaw.filter(
-        x =>
-          x
-          &&
-          !x.error
-          &&
-          x.device
-          &&
-          x.device.subscription
-      );
+      await loadDevices();
+
 
     if (
       !devices.length
@@ -3460,234 +3759,129 @@ async function handler(
         res,
         200,
         {
+          ok:
+            true,
 
-          ok: true,
+          engine:
+            "Monitor 8.0",
 
-          skipped: true,
+          skipped:
+            true,
 
           reason:
-            "沒有有效 Push subscription"
+            "目前沒有 Push 訂閱裝置",
 
+          taipeiTime:
+            taipeiString(),
+
+          testMode
         }
       );
 
     }
 
 
-    /* ==============================
-       Symbols
-    ============================== */
+    /* =====================================================
+       SYMBOL UNIVERSE
 
-    const allSymbols = [
+       正式：
+       DEFAULT 12 + Watchlist
 
-      ...new Set(
-        devices.flatMap(
-          x =>
-            symbolsForDevice(
-              x.device
-            )
-        )
-      )
+       Radar 不擴大 Push Universe
+    ===================================================== */
 
-    ];
-
-    const origin =
-      getOrigin(req);
-
-
-    /* ==============================
-       Analyze
-    ============================== */
-
-    const stockResults =
-      await mapLimit(
-        allSymbols,
-        3,
-        async symbol => {
-
-          const data =
-            await fetchStock(
-              origin,
-              symbol
-            );
-
-          const analysis =
-            analyzeStock(
-              data
-            );
-
-          return {
-
-            symbol,
-            data,
-            analysis
-
-          };
-
-        }
+    const watchlist =
+      await loadWatchlists(
+        devices
       );
 
-    const stockMap =
-      new Map();
+
+    const allSymbols =
+      unique(
+        [
+          ...DEFAULT_SYMBOLS,
+          ...watchlist
+        ]
+      )
+        .filter(
+          validSymbol
+        )
+        .slice(
+          0,
+          MAX_SYMBOLS
+        );
+
+
+    /* =====================================================
+       ANALYZE
+    ===================================================== */
+
+    const signals = [];
+
+
+    const failedStocks = [];
+
 
     for (
       let i = 0;
       i < allSymbols.length;
-      i++
+      i += STOCK_BATCH_SIZE
     ) {
 
-      const result =
-        stockResults[i];
-
-      if (
-        result &&
-        !result.error
-      ) {
-
-        stockMap.set(
-          allSymbols[i],
-          result
+      const batch =
+        allSymbols.slice(
+          i,
+          i +
+          STOCK_BATCH_SIZE
         );
 
-      }
 
-    }
-
-
-    /* ==============================
-       Push
-    ============================== */
-
-    let eligibleCount = 0;
-    let pushSent = 0;
-    let duplicateCount = 0;
-    let pushErrors = 0;
-
-    const signals = [];
-
-    for (
-      const item
-      of devices
-    ) {
-
-      const symbols =
-        symbolsForDevice(
-          item.device
+      const results =
+        await Promise.allSettled(
+          batch.map(
+            symbol =>
+              analyzeStock(
+                req,
+                symbol
+              )
+          )
         );
+
 
       for (
-        const symbol
-        of symbols
+        let j = 0;
+        j < results.length;
+        j++
       ) {
 
-        const stock =
-          stockMap.get(
-            symbol
-          );
+        const result =
+          results[j];
 
-        if (!stock) {
-          continue;
-        }
+
+        const symbol =
+          batch[j];
+
 
         if (
-          !stock.analysis
-            ?.eligible
+          result.status ===
+          "fulfilled"
         ) {
 
-          continue;
+          signals.push(
+            result.value
+          );
 
-        }
+        } else {
 
-        eligibleCount++;
+          failedStocks.push(
+            {
+              symbol,
 
-        signals.push({
-
-          symbol,
-
-          name:
-            stock.analysis.name,
-
-          passed:
-            stock.analysis.passed,
-
-          price:
-            stock.analysis.price,
-
-          support:
-            stock.analysis
-              .support.type,
-
-          entryLow:
-            stock.analysis
-              .entryLow,
-
-          entryHigh:
-            stock.analysis
-              .entryHigh,
-
-          stopLoss:
-            stock.analysis
-              .stopLoss,
-
-          breakout:
-            stock.analysis
-              .breakout,
-
-          tp1:
-            stock.analysis
-              .tp1,
-
-          tp2:
-            stock.analysis
-              .tp2,
-
-          tp3:
-            stock.analysis
-              .tp3,
-
-          rr1:
-            stock.analysis
-              .rr1
-
-        });
-
-        try {
-
-          const result =
-            await sendPush(
-              item.deviceId,
-              item.device,
-              {
-                ...stock.data,
-                symbol
-              },
-              stock.analysis
-            );
-
-          if (
-            result.ok
-          ) {
-
-            pushSent++;
-
-          }
-          else if (
-            result.duplicate
-          ) {
-
-            duplicateCount++;
-
-          }
-
-        }
-        catch (error) {
-
-          pushErrors++;
-
-          console.error(
-            `push ${symbol} error:`,
-            error?.message ||
-            error
+              error:
+                result.reason
+                  ?.message ||
+                "分析失敗"
+            }
           );
 
         }
@@ -3697,53 +3891,179 @@ async function handler(
     }
 
 
-    /* ==============================
-       Failed stocks
-    ============================== */
+    /* =====================================================
+       SORT
+    ===================================================== */
 
-    const failedStocks =
-      stockResults
-      .map(
-        (x, i) =>
-          x?.error
-            ?
-            {
+    signals.sort(
+      (a, b) =>
+        b.score -
+        a.score
+    );
+
+
+    const eligibleSignals =
+      signals.filter(
+        x =>
+          x.eligible
+      );
+
+
+    /* =====================================================
+       PUSH
+    ===================================================== */
+
+    let pushSent = 0;
+
+
+    let duplicateCount = 0;
+
+
+    const pushErrors = [];
+
+
+    const pushedSymbols = [];
+
+
+    for (
+      const signal of
+      eligibleSignals
+    ) {
+
+      /*
+        測試模式仍保留 eligibility，
+        但不受交易時段限制。
+
+        testMode 不寫入正式 dedupe，
+        避免測試吃掉正式通知。
+      */
+
+      if (
+        !testMode
+      ) {
+
+        const duplicate =
+          await isDuplicate(
+            signal
+          );
+
+
+        if (duplicate) {
+
+          duplicateCount +=
+            1;
+
+
+          continue;
+
+        }
+
+      }
+
+
+      const result =
+        await sendSignal(
+          devices,
+          signal,
+          testMode
+        );
+
+
+      pushSent +=
+        result.sent;
+
+
+      pushedSymbols.push(
+        signal.symbol
+      );
+
+
+      if (
+        result.errors.length
+      ) {
+
+        pushErrors.push(
+          ...result.errors.map(
+            error => ({
               symbol:
-                allSymbols[i],
+                signal.symbol,
 
-              error:
-                x.error
-            }
-            :
-            null
-      )
-      .filter(Boolean);
+              ...error
+            })
+          )
+        );
+
+      }
 
 
-    /* ==============================
-       Response
-    ============================== */
+      if (
+        !testMode &&
+        result.sent > 0
+      ) {
+
+        await markDuplicate(
+          signal
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       RESPONSE
+    ===================================================== */
 
     return send(
       res,
       200,
       {
 
-        ok: true,
+        ok:
+          true,
 
         engine:
-          "SMC Swing Target 2.0",
+          "Monitor 8.0",
 
-        monitoredDevices:
+        platform:
+          "波段分析",
+
+        strategy:
+          "Swing Entry 8.0",
+
+        testMode,
+
+        marketOpen:
+          marketOpenNow(),
+
+        taipeiTime:
+          taipeiString(),
+
+        elapsedMs:
+          Date.now() -
+          startedAt,
+
+        devices:
           devices.length,
+
+        defaultSymbols:
+          DEFAULT_SYMBOLS.length,
+
+        watchlistSymbols:
+          watchlist.length,
 
         monitoredSymbols:
           allSymbols.length,
 
+        analyzedStocks:
+          signals.length,
+
         eligibleSignals:
-          eligibleCount,
+          eligibleSignals.length,
 
         pushSent,
+
+        pushedSymbols,
 
         duplicateCount,
 
@@ -3751,29 +4071,149 @@ async function handler(
 
         failedStocks,
 
-        signals
+        rules: {
+
+          score:
+            SCORE_LIMIT,
+
+          completeness:
+            COMPLETENESS_LIMIT,
+
+          technical:
+            TECHNICAL_LIMIT,
+
+          volumePrice:
+            VOLUME_LIMIT,
+
+          maxRiskPercent:
+            MAX_RISK_PERCENT,
+
+          minRR1:
+            MIN_RR1,
+
+          entryRequired:
+            true,
+
+          breakoutRequired:
+            false,
+
+          smcRequired:
+            false
+
+        },
+
+        signals:
+          signals.map(
+            signal => ({
+
+              symbol:
+                signal.symbol,
+
+              name:
+                signal.name,
+
+              price:
+                signal.price,
+
+              score:
+                signal.score,
+
+              completeness:
+                signal.completeness,
+
+              technical:
+                signal
+                  .categories
+                  .technical
+                  .score,
+
+              volumePrice:
+                signal
+                  .categories
+                  .volumePrice
+                  .score,
+
+              institutional:
+                signal
+                  .categories
+                  .institutional
+                  .available
+                  ? signal
+                      .categories
+                      .institutional
+                      .score
+                  : null,
+
+              fundamental:
+                signal
+                  .categories
+                  .fundamental
+                  .available
+                  ? signal
+                      .categories
+                      .fundamental
+                      .score
+                  : null,
+
+              news:
+                signal
+                  .categories
+                  .news
+                  .available
+                  ? signal
+                      .categories
+                      .news
+                      .score
+                  : null,
+
+              eligible:
+                signal.eligible,
+
+              entryReady:
+                Boolean(
+                  signal.plan
+                    ?.entryReady
+                ),
+
+              plan:
+                signal.plan
+
+            })
+          )
 
       }
     );
 
-  }
-  catch (error) {
+  } catch (error) {
 
     console.error(
-      "monitor error:",
+      "Monitor 8.0 error:",
       error
     );
+
 
     return send(
       res,
       500,
       {
 
-        ok: false,
+        ok:
+          false,
+
+        engine:
+          "Monitor 8.0",
+
+        testMode,
+
+        taipeiTime:
+          taipeiString(),
 
         error:
-          error?.message ||
-          "Monitor failed"
+          error?.name ===
+          "AbortError"
+            ? "Monitor API 連線逾時"
+            : error?.message ||
+              "Monitor failed"
 
       }
     );
