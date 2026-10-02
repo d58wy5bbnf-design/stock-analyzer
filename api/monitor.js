@@ -2,7 +2,7 @@ const webpush = require("web-push");
 
 /*
   ==========================================================
-  波段分析 Monitor 8.0
+  波段分析 Monitor 8.1
 
   正式背景監控：
   DEFAULT 12 + 使用者自選股
@@ -44,6 +44,14 @@ const webpush = require("web-push");
   - 可略過台股交易時段限制
   - 不修改正式 Cron
 
+  強制 Push 測試：
+  - testMode + forcePush=1
+  - 如果沒有正式 eligible 訊號
+  - 強制挑一檔有效交易計畫測 Push
+  - 不修改正式 eligibility
+  - 不寫正式 dedupe
+  - 正式 Cron 不受影響
+
   注意：
   - 無 SMC
   - 不要求先突破才進場
@@ -71,50 +79,38 @@ const DEFAULT_SYMBOLS = [
   "2615"
 ];
 
-
 const DEVICE_SET_KEY =
   "swing:push:devices";
-
 
 const WATCHLIST_PREFIX =
   "swing:watchlist:";
 
-
 const PUSH_DEDUPE_PREFIX =
   "swing:push:dedupe:v8:";
-
 
 const PUSH_DEDUPE_SECONDS =
   6 * 60 * 60;
 
-
 const MAX_SYMBOLS =
   40;
-
 
 const STOCK_BATCH_SIZE =
   4;
 
-
 const SCORE_LIMIT =
   75;
-
 
 const COMPLETENESS_LIMIT =
   60;
 
-
 const TECHNICAL_LIMIT =
   12;
-
 
 const VOLUME_LIMIT =
   10;
 
-
 const MAX_RISK_PERCENT =
   5;
-
 
 const MIN_RR1 =
   1.3;
@@ -134,21 +130,16 @@ function env(
     ...fallbacks
   ];
 
-
-  for (
-    const key of names
-  ) {
+  for (const key of names) {
 
     const value =
       process.env[key];
-
 
     if (value) {
       return value;
     }
 
   }
-
 
   return "";
 
@@ -159,9 +150,7 @@ function env(
    BASIC HELPERS
 ========================================================= */
 
-function finite(
-  value
-) {
+function finite(value) {
 
   if (
     value === null ||
@@ -171,10 +160,8 @@ function finite(
     return null;
   }
 
-
   const n =
     Number(value);
-
 
   return Number.isFinite(n)
     ? n
@@ -191,7 +178,6 @@ function num(
   const n =
     finite(value);
 
-
   return n === null
     ? fallback
     : n;
@@ -207,22 +193,16 @@ function round(
   const n =
     Number(value);
 
-
-  if (
-    !Number.isFinite(n)
-  ) {
+  if (!Number.isFinite(n)) {
     return 0;
   }
-
 
   const p =
     10 ** digits;
 
-
   return (
     Math.round(
-      (n + Number.EPSILON) *
-      p
+      (n + Number.EPSILON) * p
     ) / p
   );
 
@@ -246,27 +226,20 @@ function clamp(
 }
 
 
-function avg(
-  values
-) {
+function avg(values) {
 
   const rows =
     values
       .map(Number)
-      .filter(
-        Number.isFinite
-      );
-
+      .filter(Number.isFinite);
 
   if (!rows.length) {
     return 0;
   }
 
-
   return (
     rows.reduce(
-      (a, b) =>
-        a + b,
+      (a, b) => a + b,
       0
     ) /
     rows.length
@@ -275,18 +248,14 @@ function avg(
 }
 
 
-function unique(
-  values
-) {
+function unique(values) {
 
   return [
     ...new Set(
       values
         .map(
           x =>
-            String(
-              x || ""
-            )
+            String(x || "")
               .trim()
               .toUpperCase()
         )
@@ -297,14 +266,10 @@ function unique(
 }
 
 
-function validSymbol(
-  symbol
-) {
+function validSymbol(symbol) {
 
   return /^[0-9A-Z]{4,10}$/.test(
-    String(
-      symbol || ""
-    )
+    String(symbol || "")
   );
 
 }
@@ -324,7 +289,6 @@ function send(
     "Cache-Control",
     "no-store, no-cache, must-revalidate"
   );
-
 
   return res
     .status(status)
@@ -366,21 +330,12 @@ function taipeiParts() {
         new Date()
       );
 
-
   const result = {};
 
-
-  for (
-    const part of parts
-  ) {
-
-    result[
-      part.type
-    ] =
+  for (const part of parts) {
+    result[part.type] =
       part.value;
-
   }
-
 
   return result;
 
@@ -409,10 +364,8 @@ function marketOpenNow() {
   const p =
     taipeiParts();
 
-
   const weekday =
     p.weekday;
-
 
   if (
     weekday === "Sat" ||
@@ -421,28 +374,15 @@ function marketOpenNow() {
     return false;
   }
 
-
   const hour =
-    Number(
-      p.hour
-    );
-
+    Number(p.hour);
 
   const minute =
-    Number(
-      p.minute
-    );
-
+    Number(p.minute);
 
   const total =
     hour * 60 +
     minute;
-
-
-  /*
-    正式監控：
-    08:55 ~ 13:40
-  */
 
   return (
     total >=
@@ -458,16 +398,13 @@ function marketOpenNow() {
    TEST MODE
 ========================================================= */
 
-function isTestMode(
-  req
-) {
+function isTestMode(req) {
 
   const queryTest =
     String(
       req?.query?.test ||
       ""
     ) === "1";
-
 
   const headerTest =
     String(
@@ -476,7 +413,6 @@ function isTestMode(
       ] ||
       ""
     ) === "1";
-
 
   return (
     queryTest ||
@@ -496,20 +432,11 @@ function authorized(
 ) {
 
   const secret =
-    env(
-      "CRON_SECRET"
-    );
-
-
-  /*
-    沒設定 CRON_SECRET
-    正式環境直接拒絕
-  */
+    env("CRON_SECRET");
 
   if (!secret) {
     return false;
   }
-
 
   const authorization =
     String(
@@ -518,7 +445,6 @@ function authorized(
       ""
     );
 
-
   const bearer =
     authorization.startsWith(
       "Bearer "
@@ -526,17 +452,9 @@ function authorized(
       ? authorization.slice(7)
       : "";
 
-
-  if (
-    bearer === secret
-  ) {
+  if (bearer === secret) {
     return true;
   }
-
-
-  /*
-    Vercel Cron
-  */
 
   const cronHeader =
     String(
@@ -546,14 +464,12 @@ function authorized(
       ""
     );
 
-
   if (
     !testMode &&
     cronHeader
   ) {
     return true;
   }
-
 
   return false;
 
@@ -572,13 +488,11 @@ function redisConfig() {
       "KV_REST_API_URL"
     );
 
-
   const token =
     env(
       "UPSTASH_REDIS_REST_TOKEN",
       "KV_REST_API_TOKEN"
     );
-
 
   if (
     !url ||
@@ -586,7 +500,6 @@ function redisConfig() {
   ) {
     return null;
   }
-
 
   return {
     url:
@@ -601,20 +514,16 @@ function redisConfig() {
 }
 
 
-async function redisCommand(
-  command
-) {
+async function redisCommand(command) {
 
   const config =
     redisConfig();
-
 
   if (!config) {
     throw new Error(
       "Redis 尚未設定"
     );
   }
-
 
   const response =
     await fetch(
@@ -624,27 +533,20 @@ async function redisCommand(
           "POST",
 
         headers: {
-
           Authorization:
             `Bearer ${config.token}`,
 
           "Content-Type":
             "application/json"
-
         },
 
         body:
-          JSON.stringify(
-            command
-          )
-
+          JSON.stringify(command)
       }
     );
 
-
   const text =
     await response.text();
-
 
   if (!response.ok) {
 
@@ -654,9 +556,7 @@ async function redisCommand(
 
   }
 
-
   let json;
-
 
   try {
 
@@ -671,19 +571,13 @@ async function redisCommand(
 
   }
 
-
-  if (
-    json?.error
-  ) {
+  if (json?.error) {
 
     throw new Error(
-      String(
-        json.error
-      )
+      String(json.error)
     );
 
   }
-
 
   return json?.result ??
     null;
@@ -691,9 +585,7 @@ async function redisCommand(
 }
 
 
-async function redisGet(
-  key
-) {
+async function redisGet(key) {
 
   try {
 
@@ -711,7 +603,6 @@ async function redisGet(
       key,
       error?.message
     );
-
 
     return null;
 
@@ -738,16 +629,13 @@ async function redisSet(
           Math.max(
             60,
             Math.floor(
-              Number(
-                seconds
-              ) ||
+              Number(seconds) ||
               3600
             )
           )
         )
       ]
     );
-
 
     return true;
 
@@ -759,7 +647,6 @@ async function redisSet(
       error?.message
     );
 
-
     return false;
 
   }
@@ -767,9 +654,7 @@ async function redisSet(
 }
 
 
-async function redisSMembers(
-  key
-) {
+async function redisSMembers(key) {
 
   try {
 
@@ -781,10 +666,7 @@ async function redisSMembers(
         ]
       );
 
-
-    return Array.isArray(
-      result
-    )
+    return Array.isArray(result)
       ? result
       : [];
 
@@ -795,7 +677,6 @@ async function redisSMembers(
       key,
       error?.message
     );
-
 
     return [];
 
@@ -811,22 +692,13 @@ async function redisSMembers(
 function configureWebPush() {
 
   const subject =
-    env(
-      "VAPID_SUBJECT"
-    );
-
+    env("VAPID_SUBJECT");
 
   const publicKey =
-    env(
-      "VAPID_PUBLIC_KEY"
-    );
-
+    env("VAPID_PUBLIC_KEY");
 
   const privateKey =
-    env(
-      "VAPID_PRIVATE_KEY"
-    );
-
+    env("VAPID_PRIVATE_KEY");
 
   if (
     !subject ||
@@ -839,7 +711,6 @@ function configureWebPush() {
     );
 
   }
-
 
   webpush.setVapidDetails(
     subject,
@@ -854,9 +725,7 @@ function configureWebPush() {
    DEVICE
 ========================================================= */
 
-function parseJSON(
-  value
-) {
+function parseJSON(value) {
 
   if (
     value === null ||
@@ -866,14 +735,12 @@ function parseJSON(
     return null;
   }
 
-
   if (
     typeof value ===
     "object"
   ) {
     return value;
   }
-
 
   try {
 
@@ -890,6 +757,42 @@ function parseJSON(
 }
 
 
+function normalizeWatchlist(value) {
+
+  if (Array.isArray(value)) {
+
+    return unique(value)
+      .filter(validSymbol);
+
+  }
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+
+    const parsed =
+      parseJSON(value);
+
+    if (Array.isArray(parsed)) {
+
+      return unique(parsed)
+        .filter(validSymbol);
+
+    }
+
+    return unique(
+      value.split(",")
+    )
+      .filter(validSymbol);
+
+  }
+
+  return [];
+
+}
+
+
 async function loadDevices() {
 
   const members =
@@ -897,17 +800,12 @@ async function loadDevices() {
       DEVICE_SET_KEY
     );
 
-
   const devices = [];
 
-
-  for (
-    const item of members
-  ) {
+  for (const item of members) {
 
     const parsed =
       parseJSON(item);
-
 
     if (
       parsed?.endpoint &&
@@ -928,27 +826,18 @@ async function loadDevices() {
         }
       );
 
-
       continue;
 
     }
-
-
-    /*
-      如果 Set 裡放的是 device key，
-      再嘗試抓 device 資料。
-    */
 
     const deviceKey =
       String(
         item || ""
       );
 
-
     if (!deviceKey) {
       continue;
     }
-
 
     const possibleKeys = [
       `swing:push:device:${deviceKey}`,
@@ -956,35 +845,27 @@ async function loadDevices() {
       deviceKey
     ];
 
-
     let device =
       null;
 
-
-    for (
-      const key of possibleKeys
-    ) {
+    for (const key of possibleKeys) {
 
       const raw =
-        await redisGet(
-          key
-        );
+        await redisGet(key);
 
-
-      const parsed =
+      const parsedDevice =
         parseJSON(raw);
 
-
       if (
-        parsed &&
+        parsedDevice &&
         (
-          parsed.subscription ||
-          parsed.endpoint
+          parsedDevice.subscription ||
+          parsedDevice.endpoint
         )
       ) {
 
         device =
-          parsed;
+          parsedDevice;
 
         break;
 
@@ -992,16 +873,13 @@ async function loadDevices() {
 
     }
 
-
     if (!device) {
       continue;
     }
 
-
     const subscription =
       device.subscription ||
       device;
-
 
     if (
       !subscription?.endpoint ||
@@ -1010,7 +888,6 @@ async function loadDevices() {
     ) {
       continue;
     }
-
 
     devices.push(
       {
@@ -1027,64 +904,7 @@ async function loadDevices() {
 
   }
 
-
   return devices;
-
-}
-
-
-function normalizeWatchlist(
-  value
-) {
-
-  if (
-    Array.isArray(value)
-  ) {
-
-    return unique(
-      value
-    )
-      .filter(
-        validSymbol
-      );
-
-  }
-
-
-  if (
-    typeof value ===
-    "string"
-  ) {
-
-    const parsed =
-      parseJSON(value);
-
-
-    if (
-      Array.isArray(parsed)
-    ) {
-
-      return unique(
-        parsed
-      )
-        .filter(
-          validSymbol
-        );
-
-    }
-
-
-    return unique(
-      value.split(",")
-    )
-      .filter(
-        validSymbol
-      );
-
-  }
-
-
-  return [];
 
 }
 
@@ -1099,22 +919,15 @@ async function loadWatchlists(
 
   const symbols = [];
 
-
-  for (
-    const device of devices
-  ) {
+  for (const device of devices) {
 
     symbols.push(
       ...device.watchlist
     );
 
-
-    if (
-      !device.deviceKey
-    ) {
+    if (!device.deviceKey) {
       continue;
     }
-
 
     const possibleKeys = [
       `${WATCHLIST_PREFIX}${device.deviceKey}`,
@@ -1122,34 +935,23 @@ async function loadWatchlists(
       `swing:watchlist:${device.deviceKey}`
     ];
 
-
-    for (
-      const key of possibleKeys
-    ) {
+    for (const key of possibleKeys) {
 
       const raw =
-        await redisGet(
-          key
-        );
-
+        await redisGet(key);
 
       const parsed =
         parseJSON(raw);
 
-
-      if (
-        Array.isArray(parsed)
-      ) {
+      if (Array.isArray(parsed)) {
 
         symbols.push(
           ...parsed
         );
 
-
         break;
 
       }
-
 
       if (
         typeof raw ===
@@ -1161,7 +963,6 @@ async function loadWatchlists(
           ...raw.split(",")
         );
 
-
         break;
 
       }
@@ -1170,13 +971,8 @@ async function loadWatchlists(
 
   }
 
-
-  return unique(
-    symbols
-  )
-    .filter(
-      validSymbol
-    );
+  return unique(symbols)
+    .filter(validSymbol);
 
 }
 
@@ -1185,9 +981,7 @@ async function loadWatchlists(
    INTERNAL API
 ========================================================= */
 
-function baseURL(
-  req
-) {
+function baseURL(req) {
 
   const proto =
     String(
@@ -1199,7 +993,6 @@ function baseURL(
       .split(",")[0]
       .trim();
 
-
   const host =
     String(
       req?.headers?.host ||
@@ -1207,13 +1000,11 @@ function baseURL(
       ""
     );
 
-
   if (!host) {
     throw new Error(
       "無法取得網站 Host"
     );
   }
-
 
   if (
     host.startsWith(
@@ -1226,10 +1017,7 @@ function baseURL(
     return host;
   }
 
-
-  return (
-    `${proto}://${host}`
-  );
+  return `${proto}://${host}`;
 
 }
 
@@ -1242,14 +1030,12 @@ async function fetchJSON(
   const controller =
     new AbortController();
 
-
   const timer =
     setTimeout(
       () =>
         controller.abort(),
       timeout
     );
-
 
   try {
 
@@ -1267,13 +1053,10 @@ async function fetchJSON(
         }
       );
 
-
     const text =
       await response.text();
 
-
     let json;
-
 
     try {
 
@@ -1288,7 +1071,6 @@ async function fetchJSON(
 
     }
 
-
     if (!response.ok) {
 
       throw new Error(
@@ -1299,14 +1081,11 @@ async function fetchJSON(
 
     }
 
-
     return json;
 
   } finally {
 
-    clearTimeout(
-      timer
-    );
+    clearTimeout(timer);
 
   }
 
@@ -1325,10 +1104,7 @@ async function getStock(
   const url =
     `${baseURL(req)}` +
     `/api/stock?symbol=` +
-    encodeURIComponent(
-      symbol
-    );
-
+    encodeURIComponent(symbol);
 
   const json =
     await fetchJSON(
@@ -1336,10 +1112,7 @@ async function getStock(
       30000
     );
 
-
-  if (
-    !json?.ok
-  ) {
+  if (!json?.ok) {
 
     throw new Error(
       json?.error ||
@@ -1347,7 +1120,6 @@ async function getStock(
     );
 
   }
-
 
   return json;
 
@@ -1366,21 +1138,14 @@ async function getNews(
   const url =
     `${baseURL(req)}` +
     `/api/news?symbol=` +
-    encodeURIComponent(
-      symbol
-    );
-
+    encodeURIComponent(symbol);
 
   try {
 
-    const json =
-      await fetchJSON(
-        url,
-        10000
-      );
-
-
-    return json;
+    return await fetchJSON(
+      url,
+      10000
+    );
 
   } catch (error) {
 
@@ -1389,7 +1154,6 @@ async function getNews(
       symbol,
       error?.message
     );
-
 
     return null;
 
@@ -1414,7 +1178,6 @@ function SMA(
     return NaN;
   }
 
-
   return avg(
     values
       .slice(-period)
@@ -1436,7 +1199,6 @@ function EMA(
     return NaN;
   }
 
-
   let value =
     avg(
       values
@@ -1444,13 +1206,11 @@ function EMA(
         .map(Number)
     );
 
-
   const k =
     2 /
     (
       period + 1
     );
-
 
   for (
     let i = period;
@@ -1459,9 +1219,7 @@ function EMA(
   ) {
 
     value =
-      Number(
-        values[i]
-      ) *
+      Number(values[i]) *
       k +
       value *
       (
@@ -1469,7 +1227,6 @@ function EMA(
       );
 
   }
-
 
   return value;
 
@@ -1488,16 +1245,13 @@ function RSI(
     return NaN;
   }
 
-
   const rows =
     values.slice(
       -(period + 1)
     );
 
-
   let gain = 0;
   let loss = 0;
-
 
   for (
     let i = 1;
@@ -1506,52 +1260,34 @@ function RSI(
   ) {
 
     const diff =
-      Number(
-        rows[i]
-      ) -
-      Number(
-        rows[i - 1]
-      );
+      Number(rows[i]) -
+      Number(rows[i - 1]);
 
+    if (diff > 0) {
 
-    if (
-      diff > 0
-    ) {
-
-      gain +=
-        diff;
+      gain += diff;
 
     } else {
 
       loss +=
-        Math.abs(
-          diff
-        );
+        Math.abs(diff);
 
     }
 
   }
 
-
   gain /=
     period;
-
 
   loss /=
     period;
 
-
-  if (
-    loss === 0
-  ) {
+  if (loss === 0) {
     return 100;
   }
 
-
   const rs =
-    gain /
-    loss;
-
+    gain / loss;
 
   return (
     100 -
@@ -1576,9 +1312,7 @@ function ATR(
     return NaN;
   }
 
-
   const tr = [];
-
 
   for (
     let i = 1;
@@ -1587,24 +1321,15 @@ function ATR(
   ) {
 
     const high =
-      num(
-        rows[i].high
-      );
-
+      num(rows[i].high);
 
     const low =
-      num(
-        rows[i].low
-      );
-
+      num(rows[i].low);
 
     const previousClose =
       num(
-        rows[
-          i - 1
-        ].close
+        rows[i - 1].close
       );
-
 
     tr.push(
       Math.max(
@@ -1622,7 +1347,6 @@ function ATR(
 
   }
 
-
   return SMA(
     tr,
     period
@@ -1635,17 +1359,12 @@ function ATR(
    TECHNICAL SCORE 20
 ========================================================= */
 
-function scoreTechnical(
-  stock
-) {
+function scoreTechnical(stock) {
 
   const rows =
     stock.rows || [];
 
-
-  if (
-    rows.length < 65
-  ) {
+  if (rows.length < 65) {
 
     return {
       available:
@@ -1657,15 +1376,11 @@ function scoreTechnical(
 
   }
 
-
   const closes =
     rows.map(
       x =>
-        num(
-          x.close
-        )
+        num(x.close)
     );
-
 
   const price =
     num(
@@ -1675,34 +1390,17 @@ function scoreTechnical(
       ]
     );
 
-
   const ma5 =
-    SMA(
-      closes,
-      5
-    );
-
+    SMA(closes, 5);
 
   const ma10 =
-    SMA(
-      closes,
-      10
-    );
-
+    SMA(closes, 10);
 
   const ma20 =
-    SMA(
-      closes,
-      20
-    );
-
+    SMA(closes, 20);
 
   const ma60 =
-    SMA(
-      closes,
-      60
-    );
-
+    SMA(closes, 60);
 
   const previousMA20 =
     SMA(
@@ -1713,13 +1411,8 @@ function scoreTechnical(
       20
     );
 
-
   const rsi =
-    RSI(
-      closes,
-      14
-    );
-
+    RSI(closes, 14);
 
   const macd =
     EMA(
@@ -1731,35 +1424,22 @@ function scoreTechnical(
       26
     );
 
-
   let score = 0;
 
-
-  if (
-    price >
-    ma20
-  ) {
+  if (price > ma20) {
     score += 4;
   }
 
-
-  if (
-    ma20 >
-    ma60
-  ) {
+  if (ma20 > ma60) {
     score += 5;
   }
 
-
   if (
-    price >
-      ma5 &&
-    ma5 >=
-      ma10
+    price > ma5 &&
+    ma5 >= ma10
   ) {
     score += 3;
   }
-
 
   if (
     Number.isFinite(
@@ -1771,7 +1451,6 @@ function scoreTechnical(
     score += 3;
   }
 
-
   if (
     rsi >= 45 &&
     rsi <= 72
@@ -1779,13 +1458,9 @@ function scoreTechnical(
     score += 3;
   }
 
-
-  if (
-    macd >= 0
-  ) {
+  if (macd >= 0) {
     score += 2;
   }
-
 
   return {
 
@@ -1818,9 +1493,7 @@ function scoreTechnical(
       ),
 
     macd:
-      round(
-        macd
-      )
+      round(macd)
 
   };
 
@@ -1831,17 +1504,12 @@ function scoreTechnical(
    VOLUME / PRICE SCORE 20
 ========================================================= */
 
-function scoreVolumePrice(
-  stock
-) {
+function scoreVolumePrice(stock) {
 
   const rows =
     stock.rows || [];
 
-
-  if (
-    rows.length < 21
-  ) {
+  if (rows.length < 21) {
 
     return {
       available:
@@ -1853,12 +1521,10 @@ function scoreVolumePrice(
 
   }
 
-
   const latest =
     rows[
       rows.length - 1
     ];
-
 
   const previous =
     rows.slice(
@@ -1866,17 +1532,13 @@ function scoreVolumePrice(
       -1
     );
 
-
   const avgVolume20 =
     avg(
       previous.map(
         x =>
-          num(
-            x.volume
-          )
+          num(x.volume)
       )
     );
-
 
   const currentVolume =
     num(
@@ -1884,13 +1546,11 @@ function scoreVolumePrice(
       latest.volume
     );
 
-
   const volumeRatio =
     avgVolume20 > 0
       ? currentVolume /
         avgVolume20
       : 0;
-
 
   const price =
     num(
@@ -1898,13 +1558,11 @@ function scoreVolumePrice(
       latest.close
     );
 
-
   const open =
     num(
       stock.open,
       latest.open
     );
-
 
   const high =
     num(
@@ -1912,31 +1570,25 @@ function scoreVolumePrice(
       latest.high
     );
 
-
   const low =
     num(
       stock.low,
       latest.low
     );
 
-
   const changePercent =
     num(
       stock.changePercent
     );
 
-
   const range =
-    high -
-    low;
-
+    high - low;
 
   const dayPosition =
     range > 0
       ? clamp(
           (
-            price -
-            low
+            price - low
           ) /
           range,
           0,
@@ -1944,9 +1596,7 @@ function scoreVolumePrice(
         )
       : 0.5;
 
-
   let score = 0;
-
 
   if (
     volumeRatio >= 1.5
@@ -1968,7 +1618,6 @@ function scoreVolumePrice(
 
   }
 
-
   if (
     changePercent >= 0 &&
     changePercent <= 5
@@ -1984,7 +1633,6 @@ function scoreVolumePrice(
 
   }
 
-
   if (
     dayPosition >= 0.65
   ) {
@@ -1999,31 +1647,23 @@ function scoreVolumePrice(
 
   }
 
-
-  if (
-    price >= open
-  ) {
+  if (price >= open) {
     score += 2;
   }
-
 
   const previousHigh20 =
     Math.max(
       ...previous.map(
         x =>
-          num(
-            x.high
-          )
+          num(x.high)
       )
     );
-
 
   const atr =
     ATR(
       rows,
       14
     );
-
 
   if (
     Number.isFinite(atr) &&
@@ -2037,7 +1677,6 @@ function scoreVolumePrice(
       ) /
       atr;
 
-
     if (
       distance >= -0.6 &&
       distance <= 1.2
@@ -2048,7 +1687,6 @@ function scoreVolumePrice(
     }
 
   }
-
 
   return {
 
@@ -2070,8 +1708,7 @@ function scoreVolumePrice(
 
     dayPosition:
       round(
-        dayPosition *
-        100,
+        dayPosition * 100,
         1
       )
 
@@ -2084,17 +1721,12 @@ function scoreVolumePrice(
    INSTITUTIONAL SCORE 20
 ========================================================= */
 
-function scoreInstitutional(
-  stock
-) {
+function scoreInstitutional(stock) {
 
   const x =
     stock.institutional;
 
-
-  if (
-    !x?.available
-  ) {
+  if (!x?.available) {
 
     return {
       available:
@@ -2106,113 +1738,69 @@ function scoreInstitutional(
 
   }
 
-
   let score = 0;
 
-
   const foreign5 =
-    num(
-      x.foreign5
-    );
-
+    num(x.foreign5);
 
   const trust5 =
-    num(
-      x.trust5
-    );
-
+    num(x.trust5);
 
   const dealer5 =
-    num(
-      x.dealer5
-    );
-
+    num(x.dealer5);
 
   const total5 =
-    num(
-      x.total5
-    );
-
+    num(x.total5);
 
   const total10 =
-    num(
-      x.total10
-    );
-
+    num(x.total10);
 
   const foreignDays =
     num(
       x.foreignBuyDays5
     );
 
-
   const trustDays =
     num(
       x.trustBuyDays5
     );
-
 
   const totalDays =
     num(
       x.totalBuyDays5
     );
 
-
-  if (
-    total5 > 0
-  ) {
+  if (total5 > 0) {
     score += 5;
   }
 
-
-  if (
-    total10 > 0
-  ) {
+  if (total10 > 0) {
     score += 3;
   }
 
-
-  if (
-    foreign5 > 0
-  ) {
+  if (foreign5 > 0) {
     score += 4;
   }
 
-
-  if (
-    trust5 > 0
-  ) {
+  if (trust5 > 0) {
     score += 3;
   }
 
-
-  if (
-    dealer5 > 0
-  ) {
+  if (dealer5 > 0) {
     score += 1;
   }
 
-
-  if (
-    foreignDays >= 3
-  ) {
+  if (foreignDays >= 3) {
     score += 2;
   }
 
-
-  if (
-    trustDays >= 2
-  ) {
+  if (trustDays >= 2) {
     score += 1;
   }
 
-
-  if (
-    totalDays >= 3
-  ) {
+  if (totalDays >= 3) {
     score += 1;
   }
-
 
   return {
 
@@ -2245,28 +1833,23 @@ function scoreInstitutional(
    FUNDAMENTAL SCORE 20
 ========================================================= */
 
-function scoreFundamental(
-  stock
-) {
+function scoreFundamental(stock) {
 
   const revenue =
     stock?.revenue ||
     stock?.fundamental
       ?.revenue;
 
-
   const financial =
     stock?.financial ||
     stock?.fundamental
       ?.financial;
-
 
   const available =
     Boolean(
       revenue?.available ||
       financial?.available
     );
-
 
   if (!available) {
 
@@ -2280,33 +1863,23 @@ function scoreFundamental(
 
   }
 
-
   let score = 0;
 
-
-  if (
-    revenue?.available
-  ) {
+  if (revenue?.available) {
 
     const yoy =
       finite(
         revenue.yoy
       );
 
-
     const mom =
       finite(
         revenue.mom
       );
 
+    if (yoy !== null) {
 
-    if (
-      yoy !== null
-    ) {
-
-      if (
-        yoy >= 20
-      ) {
+      if (yoy >= 20) {
 
         score += 6;
 
@@ -2332,14 +1905,9 @@ function scoreFundamental(
 
     }
 
+    if (mom !== null) {
 
-    if (
-      mom !== null
-    ) {
-
-      if (
-        mom >= 10
-      ) {
+      if (mom >= 10) {
 
         score += 3;
 
@@ -2355,28 +1923,22 @@ function scoreFundamental(
 
   }
 
-
-  if (
-    financial?.available
-  ) {
+  if (financial?.available) {
 
     const eps =
       finite(
         financial.eps
       );
 
-
     const epsGrowth =
       finite(
         financial.epsGrowth
       );
 
-
     const netIncomeGrowth =
       finite(
         financial.netIncomeGrowth
       );
-
 
     if (
       eps !== null &&
@@ -2384,7 +1946,6 @@ function scoreFundamental(
     ) {
       score += 4;
     }
-
 
     if (
       epsGrowth !== null
@@ -2406,14 +1967,12 @@ function scoreFundamental(
 
     }
 
-
     if (
       netIncomeGrowth !== null &&
       netIncomeGrowth > 0
     ) {
       score += 2;
     }
-
 
     if (
       financial.profitable ===
@@ -2423,7 +1982,6 @@ function scoreFundamental(
     }
 
   }
-
 
   return {
 
@@ -2462,9 +2020,7 @@ function scoreFundamental(
    NEWS SCORE 20
 ========================================================= */
 
-function scoreNews(
-  news
-) {
+function scoreNews(news) {
 
   if (!news) {
 
@@ -2478,16 +2034,12 @@ function scoreNews(
 
   }
 
-
   let raw =
     finite(
       news.overallScore
     );
 
-
-  if (
-    raw === null
-  ) {
+  if (raw === null) {
 
     raw =
       finite(
@@ -2495,7 +2047,6 @@ function scoreNews(
       );
 
   }
-
 
   const hasArticles =
     Array.isArray(
@@ -2507,7 +2058,6 @@ function scoreNews(
         )
       ? news.items.length > 0
       : raw !== null;
-
 
   if (!hasArticles) {
 
@@ -2521,21 +2071,9 @@ function scoreNews(
 
   }
 
-
-  /*
-    news API:
-    -10 ~ +10
-
-    換成：
-    0 ~ 20
-  */
-
-  if (
-    raw === null
-  ) {
+  if (raw === null) {
     raw = 0;
   }
-
 
   return {
 
@@ -2567,9 +2105,7 @@ function scoreNews(
    TOTAL SCORE
 ========================================================= */
 
-function buildScore(
-  categories
-) {
+function buildScore(categories) {
 
   const rows = [
     categories.technical,
@@ -2579,27 +2115,21 @@ function buildScore(
     categories.news
   ];
 
-
   const available =
     rows.filter(
       x =>
         x?.available
     );
 
-
   const availableCount =
     available.length;
-
 
   const completeness =
     availableCount /
     5 *
     100;
 
-
-  if (
-    !availableCount
-  ) {
+  if (!availableCount) {
 
     return {
       score:
@@ -2614,7 +2144,6 @@ function buildScore(
 
   }
 
-
   const raw =
     available.reduce(
       (
@@ -2622,23 +2151,13 @@ function buildScore(
         x
       ) =>
         total +
-        num(
-          x.score
-        ),
+        num(x.score),
       0
     );
-
-
-  /*
-    每一類滿分 20。
-    缺資料不直接算 0，
-    依有資料類別重新換算 100。
-  */
 
   const maxAvailable =
     availableCount *
     20;
-
 
   const score =
     maxAvailable > 0
@@ -2646,7 +2165,6 @@ function buildScore(
         maxAvailable *
         100
       : 0;
-
 
   return {
 
@@ -2674,12 +2192,10 @@ function buildScore(
 
 
 /* =========================================================
-   TRADE PLAN 8.0
+   TRADE PLAN 8.1
 ========================================================= */
 
-function buildTradePlan(
-  stock
-) {
+function buildTradePlan(stock) {
 
   const rows =
     Array.isArray(
@@ -2688,10 +2204,7 @@ function buildTradePlan(
       ? stock.rows
       : [];
 
-
-  if (
-    rows.length < 65
-  ) {
+  if (rows.length < 65) {
 
     return {
       valid:
@@ -2703,12 +2216,10 @@ function buildTradePlan(
 
   }
 
-
   const latest =
     rows[
       rows.length - 1
     ];
-
 
   const price =
     num(
@@ -2716,10 +2227,7 @@ function buildTradePlan(
       latest.close
     );
 
-
-  if (
-    price <= 0
-  ) {
+  if (price <= 0) {
 
     return {
       valid:
@@ -2731,43 +2239,26 @@ function buildTradePlan(
 
   }
 
-
   const closes =
     rows.map(
       x =>
-        num(
-          x.close
-        )
+        num(x.close)
     );
-
 
   const ma10 =
-    SMA(
-      closes,
-      10
-    );
-
+    SMA(closes, 10);
 
   const ma20 =
-    SMA(
-      closes,
-      20
-    );
-
+    SMA(closes, 20);
 
   const ma60 =
-    SMA(
-      closes,
-      60
-    );
-
+    SMA(closes, 60);
 
   let atr =
     ATR(
       rows,
       14
     );
-
 
   if (
     !Number.isFinite(atr) ||
@@ -2776,13 +2267,11 @@ function buildTradePlan(
 
     atr =
       Math.max(
-        price *
-        0.015,
+        price * 0.015,
         0.01
       );
 
   }
-
 
   const previous20 =
     rows.slice(
@@ -2790,20 +2279,17 @@ function buildTradePlan(
       -1
     );
 
-
   const previous40 =
     rows.slice(
       -41,
       -1
     );
 
-
   const previous60 =
     rows.slice(
       -61,
       -1
     );
-
 
   const low10 =
     Math.min(
@@ -2818,7 +2304,6 @@ function buildTradePlan(
         )
     );
 
-
   const low20 =
     Math.min(
       ...rows
@@ -2831,7 +2316,6 @@ function buildTradePlan(
             )
         )
     );
-
 
   const supportCandidates =
     [
@@ -2851,7 +2335,6 @@ function buildTradePlan(
             atr * 0.8
       );
 
-
   if (
     !supportCandidates.length
   ) {
@@ -2866,12 +2349,6 @@ function buildTradePlan(
 
   }
 
-
-  /*
-    找距離現價最近，
-    但不高於現價太多的有效支撐。
-  */
-
   supportCandidates.sort(
     (a, b) =>
       Math.abs(
@@ -2882,31 +2359,16 @@ function buildTradePlan(
       )
   );
 
-
   const support =
     supportCandidates[0];
-
-
-  /*
-    Entry：
-    現價附近有效支撐區。
-
-    不要求先突破。
-  */
 
   let entryLow =
     support -
     atr * 0.18;
 
-
   let entryHigh =
     support +
     atr * 0.55;
-
-
-  /*
-    不讓 Entry 上緣離現價太遠
-  */
 
   entryHigh =
     Math.min(
@@ -2915,13 +2377,11 @@ function buildTradePlan(
       atr * 0.2
     );
 
-
   entryLow =
     Math.max(
       0.01,
       entryLow
     );
-
 
   if (
     entryHigh <
@@ -2934,48 +2394,26 @@ function buildTradePlan(
 
   }
 
-
-  /*
-    SL：
-    結構失效 + ATR buffer
-  */
-
   const structureLow =
     Math.min(
       low10,
       support
     );
 
-
   const stop =
     structureLow -
     atr * 0.35;
-
-
-  /*
-    關鍵突破：
-    前 20 日有效壓力
-  */
 
   const resistance20 =
     Math.max(
       ...previous20.map(
         x =>
-          num(
-            x.high
-          )
+          num(x.high)
       )
     );
 
-
   let breakout =
     resistance20;
-
-
-  /*
-    若 20 日高點已被突破，
-    改找 40 日壓力。
-  */
 
   if (
     breakout <=
@@ -2986,9 +2424,7 @@ function buildTradePlan(
       previous40
         .map(
           x =>
-            num(
-              x.high
-            )
+            num(x.high)
         )
         .filter(
           x =>
@@ -3001,10 +2437,7 @@ function buildTradePlan(
             a - b
         );
 
-
-    if (
-      higher.length
-    ) {
+    if (higher.length) {
 
       breakout =
         higher[0];
@@ -3019,20 +2452,11 @@ function buildTradePlan(
 
   }
 
-
-  /*
-    TP1：
-    一定要在突破位上方，
-    找第一個真正歷史壓力。
-  */
-
   const resistancePool =
     previous60
       .map(
         x =>
-          num(
-            x.high
-          )
+          num(x.high)
       )
       .filter(
         x =>
@@ -3045,13 +2469,11 @@ function buildTradePlan(
           a - b
       );
 
-
   let tp1 =
     resistancePool.length
       ? resistancePool[0]
       : breakout +
         atr * 1.2;
-
 
   if (
     tp1 <= breakout
@@ -3063,11 +2485,6 @@ function buildTradePlan(
 
   }
 
-
-  /*
-    TP2 / TP3
-  */
-
   const tp2 =
     Math.max(
       tp1 +
@@ -3075,7 +2492,6 @@ function buildTradePlan(
       breakout +
       atr * 2.2
     );
-
 
   const tp3 =
     Math.max(
@@ -3085,11 +2501,6 @@ function buildTradePlan(
       atr * 3.8
     );
 
-
-  /*
-    RR 使用 Entry 中位
-  */
-
   const entryMid =
     (
       entryLow +
@@ -3097,15 +2508,11 @@ function buildTradePlan(
     ) /
     2;
 
-
   const risk =
     entryMid -
     stop;
 
-
-  if (
-    risk <= 0
-  ) {
+  if (risk <= 0) {
 
     return {
       valid:
@@ -3117,14 +2524,12 @@ function buildTradePlan(
 
   }
 
-
   const rr1 =
     (
       tp1 -
       entryMid
     ) /
     risk;
-
 
   const rr2 =
     (
@@ -3133,14 +2538,12 @@ function buildTradePlan(
     ) /
     risk;
 
-
   const rr3 =
     (
       tp3 -
       entryMid
     ) /
     risk;
-
 
   const riskPercent =
     (
@@ -3149,17 +2552,8 @@ function buildTradePlan(
     ) *
     100;
 
-
-  /*
-    是否已進入最佳 Entry 區
-
-    ATR 0.15 容許誤差，
-    避免價格差一檔就漏通知。
-  */
-
   const entryTolerance =
     atr * 0.15;
-
 
   const entryReady =
     price >=
@@ -3169,11 +2563,9 @@ function buildTradePlan(
       entryHigh +
       entryTolerance;
 
-
   const structureValid =
     price >
     stop;
-
 
   return {
 
@@ -3277,13 +2669,11 @@ async function analyzeStock(
       symbol
     );
 
-
   const news =
     await getNews(
       req,
       symbol
     );
-
 
   const categories = {
 
@@ -3314,18 +2704,15 @@ async function analyzeStock(
 
   };
 
-
   const total =
     buildScore(
       categories
     );
 
-
   const plan =
     buildTradePlan(
       stock
     );
-
 
   const eligible =
     Boolean(
@@ -3366,7 +2753,6 @@ async function analyzeStock(
       plan.rr1 >=
         MIN_RR1
     );
-
 
   return {
 
@@ -3427,16 +2813,10 @@ async function isDuplicate(
   const key =
     `${PUSH_DEDUPE_PREFIX}${signal.symbol}`;
 
-
   const exists =
-    await redisGet(
-      key
-    );
+    await redisGet(key);
 
-
-  return Boolean(
-    exists
-  );
+  return Boolean(exists);
 
 }
 
@@ -3447,7 +2827,6 @@ async function markDuplicate(
 
   const key =
     `${PUSH_DEDUPE_PREFIX}${signal.symbol}`;
-
 
   return redisSet(
     key,
@@ -3478,22 +2857,22 @@ async function markDuplicate(
 
 function pushPayload(
   signal,
-  testMode
+  testMode,
+  forcePush = false
 ) {
 
   const p =
     signal.plan;
 
-
   const prefix =
-    testMode
+    forcePush
+      ? "🧪 強制測試｜"
+      : testMode
       ? "🧪 測試｜"
       : "";
 
-
   const title =
     `${prefix}${signal.name} ${signal.symbol}｜進入波段進場區`;
-
 
   const body =
     [
@@ -3506,7 +2885,6 @@ function pushPayload(
       `TP2 ${p.tp2}｜TP3 ${p.tp3}`
     ]
       .join("\n");
-
 
   return JSON.stringify(
     {
@@ -3535,6 +2913,12 @@ function pushPayload(
 
         score:
           signal.score,
+
+        testMode:
+          Boolean(testMode),
+
+        forcePush:
+          Boolean(forcePush),
 
         entryLow:
           p.entryLow,
@@ -3573,24 +2957,22 @@ function pushPayload(
 async function sendSignal(
   devices,
   signal,
-  testMode
+  testMode,
+  forcePush = false
 ) {
 
   const payload =
     pushPayload(
       signal,
-      testMode
+      testMode,
+      forcePush
     );
-
 
   let sent = 0;
 
   const errors = [];
 
-
-  for (
-    const device of devices
-  ) {
+  for (const device of devices) {
 
     try {
 
@@ -3603,7 +2985,6 @@ async function sendSignal(
               300
           }
         );
-
 
       sent += 1;
 
@@ -3637,7 +3018,6 @@ async function sendSignal(
 
   }
 
-
   return {
     sent,
     errors
@@ -3659,12 +3039,26 @@ async function handler(
   const startedAt =
     Date.now();
 
-
   const testMode =
     isTestMode(
       req
     );
 
+  /*
+    forcePush 只有 testMode 才能啟動。
+
+    所以即使正式 /api/monitor
+    被加上 ?forcePush=1，
+    只要不是 testMode，
+    就完全不會強制推播。
+  */
+
+  const forcePush =
+    testMode &&
+    String(
+      req?.query?.forcePush ||
+      ""
+    ) === "1";
 
   try {
 
@@ -3687,7 +3081,7 @@ async function handler(
             false,
 
           engine:
-            "Monitor 8.0",
+            "Monitor 8.1",
 
           error:
             "Unauthorized"
@@ -3714,7 +3108,7 @@ async function handler(
             true,
 
           engine:
-            "Monitor 8.0",
+            "Monitor 8.1",
 
           skipped:
             true,
@@ -3729,6 +3123,9 @@ async function handler(
             "08:55-13:40",
 
           testMode:
+            false,
+
+          forcePush:
             false
         }
       );
@@ -3750,10 +3147,7 @@ async function handler(
     const devices =
       await loadDevices();
 
-
-    if (
-      !devices.length
-    ) {
+    if (!devices.length) {
 
       return send(
         res,
@@ -3763,7 +3157,7 @@ async function handler(
             true,
 
           engine:
-            "Monitor 8.0",
+            "Monitor 8.1",
 
           skipped:
             true,
@@ -3774,7 +3168,9 @@ async function handler(
           taipeiTime:
             taipeiString(),
 
-          testMode
+          testMode,
+
+          forcePush
         }
       );
 
@@ -3794,7 +3190,6 @@ async function handler(
       await loadWatchlists(
         devices
       );
-
 
     const allSymbols =
       unique(
@@ -3818,9 +3213,7 @@ async function handler(
 
     const signals = [];
 
-
     const failedStocks = [];
-
 
     for (
       let i = 0;
@@ -3835,7 +3228,6 @@ async function handler(
           STOCK_BATCH_SIZE
         );
 
-
       const results =
         await Promise.allSettled(
           batch.map(
@@ -3847,7 +3239,6 @@ async function handler(
           )
         );
 
-
       for (
         let j = 0;
         j < results.length;
@@ -3857,10 +3248,8 @@ async function handler(
         const result =
           results[j];
 
-
         const symbol =
           batch[j];
-
 
         if (
           result.status ===
@@ -3901,7 +3290,6 @@ async function handler(
         a.score
     );
 
-
     const eligibleSignals =
       signals.filter(
         x =>
@@ -3910,49 +3298,91 @@ async function handler(
 
 
     /* =====================================================
+       FORCE PUSH TEST
+
+       正常：
+       只推 eligibleSignals。
+
+       forcePush=1：
+       若目前沒有正式 eligible，
+       挑一檔有效交易計畫測試 Push。
+
+       優先：
+       1. plan valid
+       2. structure valid
+       3. 分數最高
+
+       不會把 signal.eligible 改成 true。
+    ===================================================== */
+
+    let pushSignals =
+      eligibleSignals;
+
+    let forcedTestSymbol =
+      null;
+
+    if (
+      forcePush &&
+      pushSignals.length === 0
+    ) {
+
+      const testSignal =
+        signals.find(
+          x =>
+            x?.plan?.valid &&
+            x?.plan?.structureValid
+        );
+
+      if (testSignal) {
+
+        pushSignals = [
+          testSignal
+        ];
+
+        forcedTestSymbol =
+          testSignal.symbol;
+
+      }
+
+    }
+
+
+    /* =====================================================
        PUSH
     ===================================================== */
 
     let pushSent = 0;
 
-
     let duplicateCount = 0;
-
 
     const pushErrors = [];
 
-
     const pushedSymbols = [];
-
 
     for (
       const signal of
-      eligibleSignals
+      pushSignals
     ) {
 
       /*
-        測試模式仍保留 eligibility，
-        但不受交易時段限制。
+        正式模式：
+        檢查 6 小時 dedupe。
 
-        testMode 不寫入正式 dedupe，
-        避免測試吃掉正式通知。
+        所有 testMode：
+        不檢查正式 dedupe，
+        也不寫入正式 dedupe。
       */
 
-      if (
-        !testMode
-      ) {
+      if (!testMode) {
 
         const duplicate =
           await isDuplicate(
             signal
           );
 
-
         if (duplicate) {
 
-          duplicateCount +=
-            1;
-
+          duplicateCount += 1;
 
           continue;
 
@@ -3960,23 +3390,25 @@ async function handler(
 
       }
 
+      const isForcedSignal =
+        forcePush &&
+        forcedTestSymbol ===
+          signal.symbol;
 
       const result =
         await sendSignal(
           devices,
           signal,
-          testMode
+          testMode,
+          isForcedSignal
         );
-
 
       pushSent +=
         result.sent;
 
-
       pushedSymbols.push(
         signal.symbol
       );
-
 
       if (
         result.errors.length
@@ -3994,7 +3426,6 @@ async function handler(
         );
 
       }
-
 
       if (
         !testMode &&
@@ -4023,15 +3454,19 @@ async function handler(
           true,
 
         engine:
-          "Monitor 8.0",
+          "Monitor 8.1",
 
         platform:
           "波段分析",
 
         strategy:
-          "Swing Entry 8.0",
+          "Swing Entry 8.1",
 
         testMode,
+
+        forcePush,
+
+        forcedTestSymbol,
 
         marketOpen:
           marketOpenNow(),
@@ -4060,6 +3495,9 @@ async function handler(
 
         eligibleSignals:
           eligibleSignals.length,
+
+        pushCandidates:
+          pushSignals.length,
 
         pushSent,
 
@@ -4098,7 +3536,10 @@ async function handler(
             false,
 
           smcRequired:
-            false
+            false,
+
+          forcePushOnlyInTestMode:
+            true
 
         },
 
@@ -4187,10 +3628,9 @@ async function handler(
   } catch (error) {
 
     console.error(
-      "Monitor 8.0 error:",
+      "Monitor 8.1 error:",
       error
     );
-
 
     return send(
       res,
@@ -4201,9 +3641,11 @@ async function handler(
           false,
 
         engine:
-          "Monitor 8.0",
+          "Monitor 8.1",
 
         testMode,
+
+        forcePush,
 
         taipeiTime:
           taipeiString(),
