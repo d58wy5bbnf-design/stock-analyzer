@@ -1,848 +1,325 @@
-const https = require("https");
+// api/radar.js
+// 波段分析 Radar 6.2 Redis Cache
+//
+// 全市場 Snapshot
+// → Snapshot 高速初篩
+// → Top 120 才抓日 K
+// → 技術 + 量價二次篩選
+// → Top 40 回傳首頁做完整分析
+//
+// 6.2：
+// - Snapshot Redis Cache
+// - Stock Info Redis Cache
+// - Daily K Redis Cache
+// - 與 stock.js 6.3 共用 price cache
+// - FinMind 402 時使用 stale Redis
+
+const SNAPSHOT_URL =
+  "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
+
+const DATA_URL =
+  "https://api.finmindtrade.com/api/v4/data";
+
+
+/* =========================================================
+   設定
+========================================================= */
+
+const KLINE_SCAN_LIMIT = 120;
+const KLINE_BATCH_SIZE = 12;
+const DAILY_TIMEOUT_MS = 5000;
+const FRONTEND_LIMIT = 40;
+
 
 /*
-  波段分析 Stock API 6.3 Redis Cache
-
-  功能：
-  - 歷史 K
-  - 即時價格
-  - 法人
-  - 月營收
-  - 財報
-  - 股票名稱
-
-  Cache：
-  - Memory Cache
-  - Upstash Redis 持久快取
-  - FinMind 失敗 / HTTP 402 時自動使用 Redis 舊資料
-
-  目的：
-  - 大幅降低 FinMind API 使用量
-  - 避免 Sponsor 6000/hour 被重複資料打爆
-  - 保留 Stock API 6.2 原本回傳格式
+  Redis Fresh TTL
 */
 
-const CACHE =
-  global.__STOCK_CACHE__ ||
+const CACHE_TTL = {
+  snapshot: 60 * 1000,
+  names: 24 * 60 * 60 * 1000,
+  daily: 30 * 60 * 1000
+};
+
+
+/*
+  Redis 實際保存時間（秒）
+  Fresh 過期仍保留，用來處理 FinMind 402
+*/
+
+const REDIS_EXPIRE = {
+  snapshot: 6 * 60 * 60,
+  names: 30 * 24 * 60 * 60,
+  daily: 7 * 24 * 60 * 60
+};
+
+
+/* =========================================================
+   Memory Cache
+========================================================= */
+
+const MEMORY =
+  global.__RADAR_CACHE__ ||
   new Map();
 
-global.__STOCK_CACHE__ = CACHE;
+global.__RADAR_CACHE__ =
+  MEMORY;
 
 
-/* =========================
-   CACHE TTL
-========================= */
+/* =========================================================
+   基本工具
+========================================================= */
 
-/*
-  fresh：
-  在這段時間內直接使用 Cache，不呼叫 FinMind
+function num(v) {
+  const n = Number(v);
 
-  stale：
-  Redis 最長保存時間。
-  fresh 過期後會嘗試更新 FinMind；
-  如果 FinMind 402 / timeout / error，
-  就使用 Redis 裡最後一次成功資料。
-*/
+  return Number.isFinite(n)
+    ? n
+    : 0;
+}
 
-const TTL = {
-  price: {
-    fresh: 30 * 60 * 1000,
-    stale: 7 * 24 * 60 * 60
-  },
 
-  realtime: {
-    fresh: 60 * 1000,
-    stale: 6 * 60 * 60
-  },
+function round(v, d = 2) {
+  const n = Number(v);
 
-  institutional: {
-    fresh: 2 * 60 * 60 * 1000,
-    stale: 14 * 24 * 60 * 60
-  },
-
-  info: {
-    fresh: 24 * 60 * 60 * 1000,
-    stale: 30 * 24 * 60 * 60
-  },
-
-  revenue: {
-    fresh: 12 * 60 * 60 * 1000,
-    stale: 60 * 24 * 60 * 60
-  },
-
-  financial: {
-    fresh: 24 * 60 * 60 * 1000,
-    stale: 90 * 24 * 60 * 60
+  if (!Number.isFinite(n)) {
+    return null;
   }
-};
+
+  const p = 10 ** d;
+
+  return (
+    Math.round(
+      (n + Number.EPSILON) * p
+    ) / p
+  );
+}
 
 
-/* =========================
-   MAIN
-========================= */
+function clamp(v, min, max) {
+  return Math.min(
+    max,
+    Math.max(min, v)
+  );
+}
 
-module.exports =
-async function handler(req, res) {
 
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "*"
+function avg(arr) {
+  const values =
+    arr.filter(Number.isFinite);
+
+  if (!values.length) {
+    return 0;
+  }
+
+  return (
+    values.reduce(
+      (a, b) => a + b,
+      0
+    ) / values.length
+  );
+}
+
+
+function isNormalTaiwanStock(id) {
+  return /^\d{4}$/.test(
+    String(id || "")
+  );
+}
+
+
+function dateString(daysAgo = 0) {
+  const d = new Date();
+
+  d.setDate(
+    d.getDate() - daysAgo
   );
 
-  res.setHeader(
-    "Cache-Control",
-    "no-store"
-  );
+  return d
+    .toISOString()
+    .slice(0, 10);
+}
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+
+function getTaipeiTime() {
+  return new Intl.DateTimeFormat(
+    "zh-TW",
+    {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    }
+  ).format(new Date());
+}
+
+
+/* =========================================================
+   Redis
+========================================================= */
+
+function redisConfig() {
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL ||
+    "";
+
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN ||
+    "";
+
+  if (!url || !token) {
+    return null;
   }
+
+  return {
+    url: url.replace(/\/+$/, ""),
+    token
+  };
+}
+
+
+async function redisCommand(command) {
+  const config =
+    redisConfig();
+
+  if (!config) {
+    throw new Error(
+      "Redis 尚未設定"
+    );
+  }
+
+  const response =
+    await fetch(
+      config.url,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${config.token}`,
+
+          "Content-Type":
+            "application/json"
+        },
+
+        body:
+          JSON.stringify(command)
+      }
+    );
+
+  const text =
+    await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `Redis HTTP ${response.status}`
+    );
+  }
+
+  let json;
 
   try {
-
-    const token =
-      process.env.FINMIND_TOKEN;
-
-    if (!token) {
-      throw new Error(
-        "Vercel 尚未設定 FINMIND_TOKEN"
-      );
-    }
-
-
-    const symbol =
-      String(
-        req.query.symbol || ""
-      )
-        .trim()
-        .toUpperCase();
-
-
-    if (
-      !/^[0-9A-Z]{4,10}$/.test(symbol)
-    ) {
-      throw new Error(
-        "股票代號格式錯誤"
-      );
-    }
-
-
-    /* =========================
-       DATE
-    ========================= */
-
-    const end =
-      new Date();
-
-
-    const priceStart =
-      new Date();
-
-    priceStart.setDate(
-      priceStart.getDate() - 500
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(
+      "Redis JSON 解析失敗"
     );
-
-
-    const revenueStart =
-      new Date();
-
-    revenueStart.setMonth(
-      revenueStart.getMonth() - 18
-    );
-
-
-    const financialStart =
-      new Date();
-
-    financialStart.setFullYear(
-      financialStart.getFullYear() - 2
-    );
-
-
-    const startDate =
-      date(priceStart);
-
-    const endDate =
-      date(end);
-
-    const revenueStartDate =
-      date(revenueStart);
-
-    const financialStartDate =
-      date(financialStart);
-
-
-    /* =========================
-       DATA
-    ========================= */
-
-    const results =
-      await Promise.allSettled([
-
-        smartCached(
-          `price:${symbol}`,
-          TTL.price,
-          () =>
-            getPrice(
-              symbol,
-              startDate,
-              endDate,
-              token
-            )
-        ),
-
-        smartCached(
-          `rt:${symbol}`,
-          TTL.realtime,
-          () =>
-            getRealtime(
-              symbol,
-              token
-            )
-        ),
-
-        smartCached(
-          `inst:${symbol}`,
-          TTL.institutional,
-          () =>
-            getInstitutional(
-              symbol,
-              startDate,
-              endDate,
-              token
-            )
-        ),
-
-        smartCached(
-          "stock-info",
-          TTL.info,
-          () =>
-            getStockInfo(
-              token
-            )
-        ),
-
-        smartCached(
-          `revenue:${symbol}`,
-          TTL.revenue,
-          () =>
-            getRevenue(
-              symbol,
-              revenueStartDate,
-              endDate,
-              token
-            )
-        ),
-
-        smartCached(
-          `financial:${symbol}`,
-          TTL.financial,
-          () =>
-            getFinancial(
-              symbol,
-              financialStartDate,
-              endDate,
-              token
-            )
-        )
-
-      ]);
-
-
-    const [
-      priceR,
-      realtimeR,
-      institutionalR,
-      infoR,
-      revenueR,
-      financialR
-    ] = results;
-
-
-    /*
-      K 線是唯一必要資料
-    */
-
-    if (
-      priceR.status !== "fulfilled"
-    ) {
-      throw (
-        priceR.reason ||
-        new Error(
-          "歷史股價取得失敗"
-        )
-      );
-    }
-
-
-    let rows =
-      priceR.value;
-
-
-    if (
-      !Array.isArray(rows) ||
-      rows.length < 60
-    ) {
-      throw new Error(
-        "歷史 K 線不足 60 根"
-      );
-    }
-
-
-    /* =========================
-       OPTIONAL DATA
-    ========================= */
-
-    const realtime =
-      realtimeR.status === "fulfilled"
-        ? realtimeR.value
-        : null;
-
-
-    const institutional =
-      institutionalR.status === "fulfilled"
-        ? institutionalR.value
-        : emptyInstitutional();
-
-
-    const revenue =
-      revenueR.status === "fulfilled"
-        ? revenueR.value
-        : emptyRevenue();
-
-
-    const financial =
-      financialR.status === "fulfilled"
-        ? financialR.value
-        : emptyFinancial();
-
-
-    /* =========================
-       STOCK NAME
-    ========================= */
-
-    let name =
-      symbol;
-
-    let market =
-      "";
-
-
-    if (
-      infoR.status === "fulfilled" &&
-      Array.isArray(infoR.value)
-    ) {
-
-      const info =
-        infoR.value.find(
-          x =>
-            String(
-              x.stock_id || ""
-            ) === symbol
-        );
-
-
-      if (info) {
-
-        name =
-          String(
-            info.stock_name ||
-            symbol
-          );
-
-
-        market =
-          marketName(
-            info.type ||
-            info.industry_category ||
-            ""
-          );
-
-      }
-
-    }
-
-
-    /* =========================
-       PRICE
-    ========================= */
-
-    const latest =
-      rows[
-        rows.length - 1
-      ];
-
-
-    const previous =
-      rows.length > 1
-        ? rows[
-            rows.length - 2
-          ]
-        : latest;
-
-
-    const currentPrice =
-      positive(
-        realtime?.price,
-        latest.close
-      );
-
-
-    const previousClose =
-      positive(
-        realtime?.previousClose,
-        previous.close
-      );
-
-
-    const open =
-      positive(
-        realtime?.open,
-        latest.open,
-        currentPrice
-      );
-
-
-    const high =
-      positive(
-        realtime?.high,
-        latest.high,
-        currentPrice
-      );
-
-
-    const low =
-      positive(
-        realtime?.low,
-        latest.low,
-        currentPrice
-      );
-
-
-    const volume =
-      nonNegative(
-        realtime?.volume,
-        latest.volume
-      );
-
-
-    /* =========================
-       MERGE REALTIME
-    ========================= */
-
-    const today =
-      date(
-        new Date()
-      );
-
-
-    rows =
-      rows.map(
-        x => ({ ...x })
-      );
-
-
-    const last =
-      rows[
-        rows.length - 1
-      ];
-
-
-    if (
-      realtime &&
-      currentPrice > 0
-    ) {
-
-      if (
-        last &&
-        last.date === today
-      ) {
-
-        last.open =
-          open;
-
-
-        last.high =
-          Math.max(
-            Number(
-              last.high
-            ) || 0,
-            high,
-            currentPrice
-          );
-
-
-        const lows =
-          [
-            Number(
-              last.low
-            ),
-            low,
-            currentPrice
-          ].filter(
-            x =>
-              Number.isFinite(x) &&
-              x > 0
-          );
-
-
-        if (lows.length) {
-          last.low =
-            Math.min(
-              ...lows
-            );
-        }
-
-
-        last.close =
-          currentPrice;
-
-
-        if (
-          volume > 0
-        ) {
-          last.volume =
-            volume;
-        }
-
-      } else {
-
-        rows.push({
-
-          date:
-            today,
-
-          open,
-
-          high:
-            Math.max(
-              high,
-              currentPrice
-            ),
-
-          low:
-            Math.min(
-              low,
-              currentPrice
-            ),
-
-          close:
-            currentPrice,
-
-          volume
-
-        });
-
-      }
-
-    }
-
-
-    rows =
-      rows.slice(-300);
-
-
-    /* =========================
-       CHANGE
-    ========================= */
-
-    const change =
-      currentPrice -
-      previousClose;
-
-
-    const changePercent =
-      previousClose > 0
-        ? (
-            change /
-            previousClose
-          ) * 100
-        : 0;
-
-
-    /* =========================
-       FUNDAMENTAL
-    ========================= */
-
-    const fundamental = {
-
-      available:
-        Boolean(
-          revenue.available ||
-          financial.available
-        ),
-
-
-      revenue: {
-
-        available:
-          revenue.available,
-
-        latestDate:
-          revenue.latestDate,
-
-        year:
-          revenue.year,
-
-        month:
-          revenue.month,
-
-        latest:
-          revenue.latest,
-
-        previousMonth:
-          revenue.previousMonth,
-
-        lastYearSameMonth:
-          revenue.lastYearSameMonth,
-
-        mom:
-          revenue.mom,
-
-        yoy:
-          revenue.yoy,
-
-        recent:
-          revenue.recent
-
-      },
-
-
-      financial: {
-
-        available:
-          financial.available,
-
-        latestDate:
-          financial.latestDate,
-
-        eps:
-          financial.eps,
-
-        previousEPS:
-          financial.previousEPS,
-
-        epsGrowth:
-          financial.epsGrowth,
-
-        incomeAfterTaxes:
-          financial.incomeAfterTaxes,
-
-        previousIncomeAfterTaxes:
-          financial.previousIncomeAfterTaxes,
-
-        netIncomeGrowth:
-          financial.netIncomeGrowth,
-
-        grossProfit:
-          financial.grossProfit,
-
-        operatingIncome:
-          financial.operatingIncome,
-
-        profitable:
-          financial.profitable,
-
-        recent:
-          financial.recent
-
-      }
-
-    };
-
-
-    /* =========================
-       ERRORS
-    ========================= */
-
-    const errors = {
-
-      realtime:
-        resultError(
-          realtimeR
-        ),
-
-      institutional:
-        resultError(
-          institutionalR
-        ),
-
-      info:
-        resultError(
-          infoR
-        ),
-
-      revenue:
-        resultError(
-          revenueR
-        ),
-
-      financial:
-        resultError(
-          financialR
-        )
-
-    };
-
-
-    /* =========================
-       RESPONSE
-    ========================= */
-
-    return res
-      .status(200)
-      .json({
-
-        ok: true,
-
-        source:
-          "FinMind + Upstash Redis",
-
-        engine:
-          "Stock Analysis 6.3 Redis Cache",
-
-        symbol,
-
-        name,
-
-        market,
-
-        realtime:
-          Boolean(
-            realtime
-          ),
-
-        degraded:
-          Object
-            .values(errors)
-            .some(Boolean),
-
-        price:
-          round(
-            currentPrice
-          ),
-
-        previousClose:
-          round(
-            previousClose
-          ),
-
-        change:
-          round(
-            change
-          ),
-
-        changePercent:
-          round(
-            changePercent
-          ),
-
-        open:
-          round(open),
-
-        high:
-          round(high),
-
-        low:
-          round(low),
-
-        volume,
-
-        quoteDate:
-          today,
-
-        updatedAt:
-          new Date()
-            .toLocaleString(
-              "zh-TW",
-              {
-                timeZone:
-                  "Asia/Taipei",
-
-                hour12:
-                  false
-              }
-            ),
-
-        errors,
-
-        realtimeError:
-          errors.realtime,
-
-        institutionalError:
-          errors.institutional,
-
-        revenueError:
-          errors.revenue,
-
-        financialError:
-          errors.financial,
-
-        institutional,
-
-        fundamental,
-
-        revenue,
-
-        financial,
-
-        rows
-
-      });
-
-
-  } catch (error) {
-
-    console.error(
-      "stock api error:",
-      error
-    );
-
-
-    return res
-      .status(500)
-      .json({
-
-        ok: false,
-
-        source:
-          "FinMind + Upstash Redis",
-
-        engine:
-          "Stock Analysis 6.3 Redis Cache",
-
-        error:
-          error?.message ||
-          "股票資料取得失敗"
-
-      });
-
   }
 
-};
+  if (json?.error) {
+    throw new Error(
+      String(json.error)
+    );
+  }
+
+  return json?.result ?? null;
+}
 
 
-/* =========================
-   SMART CACHE
-========================= */
+async function redisGet(key) {
+  try {
+    const result =
+      await redisCommand([
+        "GET",
+        key
+      ]);
 
-async function smartCached(
+    if (
+      result === null ||
+      result === undefined
+    ) {
+      return null;
+    }
+
+    if (
+      typeof result === "object"
+    ) {
+      return result;
+    }
+
+    return JSON.parse(result);
+
+  } catch (error) {
+    console.error(
+      "Radar Redis GET:",
+      key,
+      error?.message
+    );
+
+    return null;
+  }
+}
+
+
+async function redisSet(
   key,
-  ttl,
-  loader
+  value,
+  expireSeconds
 ) {
+  try {
+    await redisCommand([
+      "SET",
+      key,
+      JSON.stringify(value),
+      "EX",
+      String(expireSeconds)
+    ]);
 
+    return true;
+
+  } catch (error) {
+    console.error(
+      "Radar Redis SET:",
+      key,
+      error?.message
+    );
+
+    return false;
+  }
+}
+
+
+/* =========================================================
+   Smart Cache
+========================================================= */
+
+async function smartCache({
+  key,
+  freshMs,
+  expireSeconds,
+  loader
+}) {
   const now =
     Date.now();
 
-
-  /* =========================
-     1. MEMORY
-  ========================= */
-
   const memory =
-    CACHE.get(key);
-
+    MEMORY.get(key);
 
   if (
     memory &&
@@ -852,191 +329,886 @@ async function smartCached(
   }
 
 
-  /* =========================
-     2. REDIS
-  ========================= */
+  /*
+    Redis
+  */
 
-  let redisEntry =
-    null;
+  const redis =
+    await redisGet(key);
 
+  if (
+    redis &&
+    redis.value !== undefined
+  ) {
+    const savedAt =
+      Number(redis.savedAt) || 0;
 
-  try {
-
-    redisEntry =
-      await redisGet(
-        key
+    if (
+      savedAt &&
+      now - savedAt < freshMs
+    ) {
+      MEMORY.set(
+        key,
+        {
+          value: redis.value,
+          freshUntil:
+            savedAt + freshMs
+        }
       );
 
-  } catch (error) {
-
-    console.error(
-      "Redis GET error:",
-      key,
-      error?.message
-    );
-
+      return redis.value;
+    }
   }
 
 
   /*
-    Redis fresh
+    FinMind
   */
 
-  if (
-    redisEntry &&
-    redisEntry.value !== undefined &&
-    redisEntry.value !== null
-  ) {
-
-    const savedAt =
-      Number(
-        redisEntry.savedAt
-      ) || 0;
-
-
-    if (
-      savedAt > 0 &&
-      now - savedAt <
-        ttl.fresh
-    ) {
-
-      CACHE.set(
-        key,
-        {
-          value:
-            redisEntry.value,
-
-          freshUntil:
-            savedAt +
-            ttl.fresh
-        }
-      );
-
-
-      return redisEntry.value;
-
-    }
-
-  }
-
-
-  /* =========================
-     3. FINMIND
-  ========================= */
-
   try {
-
     const value =
       await loader();
 
-
-    CACHE.set(
+    MEMORY.set(
       key,
       {
         value,
-
         freshUntil:
-          now +
-          ttl.fresh
+          now + freshMs
       }
     );
 
-
-    /*
-      Redis 寫入失敗不能影響股票分析
-    */
-
-    try {
-
-      await redisSet(
-        key,
-        {
-          savedAt:
-            Date.now(),
-
-          value
-        },
-        ttl.stale
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Redis SET error:",
-        key,
-        error?.message
-      );
-
-    }
-
+    await redisSet(
+      key,
+      {
+        savedAt: Date.now(),
+        value
+      },
+      expireSeconds
+    );
 
     return value;
 
-
   } catch (error) {
 
-
-    /* =========================
-       4. STALE REDIS FALLBACK
-    ========================= */
+    /*
+      stale Redis fallback
+    */
 
     if (
-      redisEntry &&
-      redisEntry.value !== undefined &&
-      redisEntry.value !== null
+      redis &&
+      redis.value !== undefined
     ) {
-
       console.warn(
-        "FinMind failed, use stale Redis:",
+        "Radar use stale Redis:",
         key,
         error?.message
       );
 
-
-      CACHE.set(
+      MEMORY.set(
         key,
         {
-          value:
-            redisEntry.value,
-
-          /*
-            發生 402 時，
-            暫時 5 分鐘不要一直重試 FinMind
-          */
-
+          value: redis.value,
           freshUntil:
             Date.now() +
             5 * 60 * 1000
         }
       );
 
-
-      return redisEntry.value;
-
+      return redis.value;
     }
 
 
-    /* =========================
-       5. STALE MEMORY FALLBACK
-    ========================= */
+    /*
+      stale memory fallback
+    */
 
     if (
       memory &&
       memory.value !== undefined
     ) {
-
       console.warn(
-        "FinMind failed, use stale memory:",
-        key,
+        "Radar use stale Memory:",
+        key
+      );
+
+      return memory.value;
+    }
+
+    throw error;
+  }
+}
+
+
+/* =========================================================
+   FinMind Request
+========================================================= */
+
+async function finmindFetch(
+  url,
+  token,
+  timeout = 7000
+) {
+  const controller =
+    new AbortController();
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeout
+    );
+
+  try {
+    const response =
+      await fetch(
+        url,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+
+            Accept:
+              "application/json"
+          },
+
+          signal:
+            controller.signal
+        }
+      );
+
+    let body;
+
+    try {
+      body =
+        await response.json();
+    } catch {
+      throw new Error(
+        `FinMind JSON 錯誤 HTTP ${response.status}`
+      );
+    }
+
+    if (!response.ok) {
+      if (response.status === 402) {
+        throw new Error(
+          "FinMind API 額度已達上限（HTTP 402）"
+        );
+      }
+
+      throw new Error(
+        body?.msg ||
+        body?.message ||
+        `FinMind HTTP ${response.status}`
+      );
+    }
+
+    if (
+      body?.status !== undefined &&
+      Number(body.status) !== 200
+    ) {
+      throw new Error(
+        body?.msg ||
+        body?.message ||
+        "FinMind API 錯誤"
+      );
+    }
+
+    return body;
+
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+
+/* =========================================================
+   Snapshot
+========================================================= */
+
+async function fetchSnapshot(token) {
+  return smartCache({
+    key:
+      "radar:v62:snapshot",
+
+    freshMs:
+      CACHE_TTL.snapshot,
+
+    expireSeconds:
+      REDIS_EXPIRE.snapshot,
+
+    loader:
+      async () => {
+        const body =
+          await finmindFetch(
+            SNAPSHOT_URL,
+            token,
+            7000
+          );
+
+        return Array.isArray(
+          body?.data
+        )
+          ? body.data
+          : [];
+      }
+  });
+}
+
+
+/* =========================================================
+   股票名稱
+========================================================= */
+
+async function fetchTaiwanStockNames(
+  token
+) {
+  return smartCache({
+    key:
+      "radar:v62:stock-info",
+
+    freshMs:
+      CACHE_TTL.names,
+
+    expireSeconds:
+      REDIS_EXPIRE.names,
+
+    loader:
+      async () => {
+        const body =
+          await finmindFetch(
+            `${DATA_URL}?dataset=TaiwanStockInfo`,
+            token,
+            7000
+          );
+
+        const names = {};
+
+        for (
+          const stock of
+          body?.data || []
+        ) {
+          const id =
+            String(
+              stock?.stock_id ||
+              ""
+            );
+
+          if (
+            id &&
+            stock?.stock_name
+          ) {
+            names[id] =
+              String(
+                stock.stock_name
+              );
+          }
+        }
+
+        return names;
+      }
+  });
+}
+
+
+/* =========================================================
+   技術指標
+========================================================= */
+
+function SMA(arr, period) {
+  if (
+    !Array.isArray(arr) ||
+    arr.length < period
+  ) {
+    return NaN;
+  }
+
+  return avg(
+    arr
+      .slice(-period)
+      .map(Number)
+  );
+}
+
+
+function EMA(arr, period) {
+  if (
+    !Array.isArray(arr) ||
+    arr.length < period
+  ) {
+    return NaN;
+  }
+
+  let value =
+    avg(
+      arr
+        .slice(0, period)
+        .map(Number)
+    );
+
+  const k =
+    2 / (period + 1);
+
+  for (
+    let i = period;
+    i < arr.length;
+    i++
+  ) {
+    value =
+      Number(arr[i]) * k +
+      value * (1 - k);
+  }
+
+  return value;
+}
+
+
+function RSI(arr, period = 14) {
+  if (
+    !Array.isArray(arr) ||
+    arr.length <= period
+  ) {
+    return NaN;
+  }
+
+  const values =
+    arr.slice(
+      -(period + 1)
+    );
+
+  let gain = 0;
+  let loss = 0;
+
+  for (
+    let i = 1;
+    i < values.length;
+    i++
+  ) {
+    const diff =
+      Number(values[i]) -
+      Number(values[i - 1]);
+
+    if (diff > 0) {
+      gain += diff;
+    } else {
+      loss += Math.abs(diff);
+    }
+  }
+
+  gain /= period;
+  loss /= period;
+
+  if (loss === 0) {
+    return 100;
+  }
+
+  const rs =
+    gain / loss;
+
+  return (
+    100 -
+    100 / (1 + rs)
+  );
+}
+
+
+function ATR(rows, period = 14) {
+  if (
+    !Array.isArray(rows) ||
+    rows.length <= period
+  ) {
+    return NaN;
+  }
+
+  const tr = [];
+
+  for (
+    let i = 1;
+    i < rows.length;
+    i++
+  ) {
+    const high =
+      num(rows[i].high);
+
+    const low =
+      num(rows[i].low);
+
+    const previousClose =
+      num(
+        rows[i - 1].close
+      );
+
+    tr.push(
+      Math.max(
+        high - low,
+        Math.abs(
+          high -
+          previousClose
+        ),
+        Math.abs(
+          low -
+          previousClose
+        )
+      )
+    );
+  }
+
+  return SMA(
+    tr,
+    period
+  );
+}
+
+
+/* =========================================================
+   Snapshot 評分
+========================================================= */
+
+function scoreSnapshot(x) {
+  const symbol =
+    String(
+      x.stock_id || ""
+    );
+
+  const price =
+    num(x.close);
+
+  const open =
+    num(x.open);
+
+  const high =
+    num(x.high);
+
+  const low =
+    num(x.low);
+
+  if (
+    !symbol ||
+    price <= 0
+  ) {
+    return null;
+  }
+
+  const change =
+    num(x.change_rate);
+
+  const volumeRatio =
+    num(x.volume_ratio);
+
+  const totalVolume =
+    num(x.total_volume);
+
+  const buyVolume =
+    num(x.buy_volume);
+
+  const sellVolume =
+    num(x.sell_volume);
+
+  const range =
+    high - low;
+
+  const dayPosition =
+    range > 0
+      ? clamp(
+          (price - low) /
+          range,
+          0,
+          1
+        )
+      : 0.5;
+
+  const orderTotal =
+    buyVolume +
+    sellVolume;
+
+  const buyStrength =
+    orderTotal > 0
+      ? buyVolume /
+        orderTotal
+      : 0.5;
+
+  let score = 0;
+
+
+  if (
+    change >= 0.5 &&
+    change <= 4
+  ) {
+    score += 20;
+
+  } else if (
+    change > 4 &&
+    change <= 6.5
+  ) {
+    score += 15;
+
+  } else if (
+    change >= -1
+  ) {
+    score += 9;
+
+  } else if (
+    change < -3
+  ) {
+    score -= 15;
+  }
+
+
+  if (
+    volumeRatio >= 2
+  ) {
+    score += 25;
+
+  } else if (
+    volumeRatio >= 1.5
+  ) {
+    score += 20;
+
+  } else if (
+    volumeRatio >= 1.1
+  ) {
+    score += 14;
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+    score += 7;
+  }
+
+
+  if (
+    dayPosition >= 0.8
+  ) {
+    score += 18;
+
+  } else if (
+    dayPosition >= 0.6
+  ) {
+    score += 12;
+
+  } else if (
+    dayPosition >= 0.45
+  ) {
+    score += 5;
+  }
+
+
+  if (
+    open > 0 &&
+    price >= open
+  ) {
+    score += 7;
+  }
+
+
+  if (
+    buyStrength >= 0.62
+  ) {
+    score += 10;
+
+  } else if (
+    buyStrength >= 0.52
+  ) {
+    score += 5;
+
+  } else if (
+    buyStrength <= 0.35
+  ) {
+    score -= 5;
+  }
+
+
+  if (
+    totalVolume >= 5000
+  ) {
+    score += 10;
+
+  } else if (
+    totalVolume >= 1500
+  ) {
+    score += 7;
+
+  } else if (
+    totalVolume >= 500
+  ) {
+    score += 3;
+
+  } else if (
+    totalVolume < 200
+  ) {
+    score -= 20;
+  }
+
+
+  if (
+    change > 7
+  ) {
+    score -= 25;
+  }
+
+
+  return {
+    symbol,
+
+    name: "",
+
+    price:
+      round(price),
+
+    open:
+      round(open),
+
+    high:
+      round(high),
+
+    low:
+      round(low),
+
+    changePercent:
+      round(change),
+
+    volumeRatio:
+      round(
+        volumeRatio,
+        2
+      ),
+
+    totalVolume,
+
+    dayPosition:
+      round(
+        dayPosition * 100,
+        1
+      ),
+
+    buyStrength:
+      round(
+        buyStrength * 100,
+        1
+      ),
+
+    snapshotScore:
+      clamp(
+        Math.round(score),
+        0,
+        100
+      )
+  };
+}
+
+
+/* =========================================================
+   Daily K
+   與 stock.js 6.3 共用 Redis：
+   stock:v63:price:2330
+========================================================= */
+
+async function fetchDailyRows(
+  token,
+  symbol
+) {
+  const sharedKey =
+    `stock:v63:price:${symbol}`;
+
+  const now =
+    Date.now();
+
+
+  /*
+    先看 Memory
+  */
+
+  const memoryKey =
+    `daily:${symbol}`;
+
+  const memory =
+    MEMORY.get(
+      memoryKey
+    );
+
+  if (
+    memory &&
+    memory.freshUntil > now
+  ) {
+    return memory.value;
+  }
+
+
+  /*
+    再看 stock.js 6.3 共用 Redis
+  */
+
+  const redis =
+    await redisGet(
+      sharedKey
+    );
+
+
+  if (
+    redis &&
+    Array.isArray(
+      redis.value
+    )
+  ) {
+    const savedAt =
+      Number(
+        redis.savedAt
+      ) || 0;
+
+    if (
+      savedAt &&
+      now - savedAt <
+      CACHE_TTL.daily
+    ) {
+      MEMORY.set(
+        memoryKey,
+        {
+          value:
+            redis.value,
+
+          freshUntil:
+            savedAt +
+            CACHE_TTL.daily
+        }
+      );
+
+      return redis.value;
+    }
+  }
+
+
+  /*
+    Cache 不新鮮 → FinMind
+  */
+
+  try {
+    const url =
+      `${DATA_URL}` +
+      `?dataset=TaiwanStockPrice` +
+      `&data_id=${encodeURIComponent(symbol)}` +
+      `&start_date=${dateString(500)}`;
+
+
+    const body =
+      await finmindFetch(
+        url,
+        token,
+        DAILY_TIMEOUT_MS
+      );
+
+
+    const rows =
+      (body?.data || [])
+
+        .map(
+          x => ({
+            date:
+              String(
+                x.date || ""
+              ).slice(0, 10),
+
+            open:
+              num(x.open),
+
+            high:
+              num(
+                x.max ??
+                x.high
+              ),
+
+            low:
+              num(
+                x.min ??
+                x.low
+              ),
+
+            close:
+              num(x.close),
+
+            volume:
+              num(
+                x.Trading_Volume ??
+                x.volume
+              )
+          })
+        )
+
+        .filter(
+          x =>
+            x.date &&
+            x.close > 0 &&
+            x.high > 0 &&
+            x.low > 0
+        )
+
+        .sort(
+          (a, b) =>
+            String(a.date)
+              .localeCompare(
+                String(b.date)
+              )
+        );
+
+
+    if (
+      rows.length >= 60
+    ) {
+      const payload = {
+        savedAt:
+          Date.now(),
+
+        value:
+          rows
+      };
+
+
+      await redisSet(
+        sharedKey,
+        payload,
+        REDIS_EXPIRE.daily
+      );
+
+
+      MEMORY.set(
+        memoryKey,
+        {
+          value: rows,
+
+          freshUntil:
+            Date.now() +
+            CACHE_TTL.daily
+        }
+      );
+    }
+
+
+    return rows;
+
+
+  } catch (error) {
+
+    /*
+      FinMind 402 / timeout
+      → stale Redis
+    */
+
+    if (
+      redis &&
+      Array.isArray(
+        redis.value
+      ) &&
+      redis.value.length >= 60
+    ) {
+      console.warn(
+        "Radar daily stale:",
+        symbol,
         error?.message
       );
 
 
-      CACHE.set(
-        key,
+      MEMORY.set(
+        memoryKey,
         {
           value:
-            memory.value,
+            redis.value,
 
           freshUntil:
             Date.now() +
@@ -1045,2104 +1217,886 @@ async function smartCached(
       );
 
 
-      return memory.value;
-
+      return redis.value;
     }
 
 
     throw error;
-
   }
-
 }
 
 
-/* =========================
-   REDIS
-========================= */
+/* =========================================================
+   第二階段
+========================================================= */
 
-function redisConfig() {
-
-  const url =
-    process.env
-      .UPSTASH_REDIS_REST_URL ||
-    process.env
-      .KV_REST_API_URL ||
-    "";
-
-
-  const token =
-    process.env
-      .UPSTASH_REDIS_REST_TOKEN ||
-    process.env
-      .KV_REST_API_TOKEN ||
-    "";
-
-
+function analyzeKline(
+  stock,
+  rows
+) {
   if (
-    !url ||
-    !token
+    !Array.isArray(rows) ||
+    rows.length < 65
   ) {
     return null;
   }
 
+  const closes =
+    rows.map(
+      x => x.close
+    );
 
-  return {
-    url:
-      url.replace(
-        /\/+$/,
-        ""
+  const price =
+    stock.price > 0
+      ? stock.price
+      : closes[
+          closes.length - 1
+        ];
+
+  const ma5 =
+    SMA(closes, 5);
+
+  const ma10 =
+    SMA(closes, 10);
+
+  const ma20 =
+    SMA(closes, 20);
+
+  const ma60 =
+    SMA(closes, 60);
+
+  const previousMA20 =
+    SMA(
+      closes.slice(
+        0,
+        -5
       ),
-
-    token
-  };
-
-}
-
-
-async function redisGet(
-  key
-) {
-
-  const config =
-    redisConfig();
-
-
-  if (!config) {
-    return null;
-  }
-
-
-  const result =
-    await redisCommand(
-      [
-        "GET",
-        redisKey(key)
-      ]
+      20
     );
 
-
-  if (
-    result === null ||
-    result === undefined
-  ) {
-    return null;
-  }
-
-
-  if (
-    typeof result === "object"
-  ) {
-    return result;
-  }
-
-
-  try {
-    return JSON.parse(
-      result
+  const rsi =
+    RSI(
+      closes,
+      14
     );
-  } catch {
-    return null;
+
+  const macd =
+    EMA(
+      closes.slice(-100),
+      12
+    ) -
+    EMA(
+      closes.slice(-100),
+      26
+    );
+
+  let atr =
+    ATR(
+      rows,
+      14
+    );
+
+  if (!(atr > 0)) {
+    atr =
+      Math.max(
+        price * 0.015,
+        0.01
+      );
   }
 
-}
+  const previous20 =
+    rows.slice(
+      -21,
+      -1
+    );
 
-
-async function redisSet(
-  key,
-  value,
-  seconds
-) {
-
-  const config =
-    redisConfig();
-
-
-  if (!config) {
-    return false;
-  }
-
-
-  const ttl =
+  const resistance20 =
     Math.max(
-      60,
-      Math.floor(
-        Number(seconds) ||
-        3600
+      ...previous20.map(
+        x => x.high
       )
     );
 
-
-  await redisCommand(
-    [
-      "SET",
-      redisKey(key),
-      JSON.stringify(value),
-      "EX",
-      String(ttl)
-    ]
-  );
-
-
-  return true;
-
-}
-
-
-async function redisCommand(
-  command
-) {
-
-  const config =
-    redisConfig();
-
-
-  if (!config) {
-    throw new Error(
-      "Redis 尚未設定"
-    );
-  }
-
-
-  const response =
-    await fetch(
-      config.url,
-      {
-        method:
-          "POST",
-
-        headers: {
-
-          Authorization:
-            `Bearer ${config.token}`,
-
-          "Content-Type":
-            "application/json"
-
-        },
-
-        body:
-          JSON.stringify(
-            command
-          )
-      }
+  const low20 =
+    Math.min(
+      ...rows
+        .slice(-20)
+        .map(
+          x => x.low
+        )
     );
 
-
-  const text =
-    await response.text();
-
-
-  if (!response.ok) {
-
-    throw new Error(
-      `Redis HTTP ${response.status}: ${text.slice(0, 200)}`
+  const avgVolume20 =
+    avg(
+      rows
+        .slice(
+          -21,
+          -1
+        )
+        .map(
+          x => x.volume
+        )
     );
 
-  }
+  const latestVolume =
+    rows[
+      rows.length - 1
+    ].volume;
+
+  const volumeRatio =
+    stock.volumeRatio > 0
+      ? stock.volumeRatio
+      : avgVolume20 > 0
+      ? latestVolume /
+        avgVolume20
+      : 0;
 
 
-  let json;
-
-
-  try {
-
-    json =
-      JSON.parse(text);
-
-  } catch {
-
-    throw new Error(
-      "Redis JSON 解析失敗"
-    );
-
-  }
-
+  let technical = 0;
 
   if (
-    json &&
-    json.error
+    price > ma20
   ) {
-
-    throw new Error(
-      String(
-        json.error
-      )
-    );
-
+    technical += 4;
   }
-
-
-  return json
-    ? json.result
-    : null;
-
-}
-
-
-function redisKey(
-  key
-) {
-
-  return (
-    "stock:v63:" +
-    key
-  );
-
-}
-
-
-/* =========================
-   PRICE
-========================= */
-
-async function getPrice(
-  symbol,
-  start,
-  end,
-  token
-) {
-
-  const json =
-    await finmind(
-      "TaiwanStockPrice",
-      symbol,
-      start,
-      end,
-      token
-    );
-
-
-  const rows =
-    (json.data || [])
-
-      .map(
-        x => ({
-
-          date:
-            normalizeDate(
-              x.date
-            ),
-
-          open:
-            positive(
-              x.open
-            ),
-
-          high:
-            positive(
-              x.max,
-              x.high
-            ),
-
-          low:
-            positive(
-              x.min,
-              x.low
-            ),
-
-          close:
-            positive(
-              x.close
-            ),
-
-          volume:
-            nonNegative(
-              x.Trading_Volume,
-              x.volume
-            )
-
-        })
-      )
-
-      .filter(
-        x =>
-          x.date &&
-          x.open > 0 &&
-          x.high > 0 &&
-          x.low > 0 &&
-          x.close > 0
-      )
-
-      .sort(
-        (a, b) =>
-          a.date.localeCompare(
-            b.date
-          )
-      );
-
-
-  const map =
-    new Map();
-
-
-  for (
-    const row of rows
-  ) {
-    map.set(
-      row.date,
-      row
-    );
-  }
-
-
-  return [
-    ...map.values()
-  ];
-
-}
-
-
-/* =========================
-   REALTIME
-========================= */
-
-async function getRealtime(
-  symbol,
-  token
-) {
-
-  const url =
-    "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot" +
-    "?data_id=" +
-    encodeURIComponent(
-      symbol
-    );
-
-
-  const json =
-    await requestJSON(
-      url,
-      token
-    );
-
-
-  check(
-    json,
-    "即時報價"
-  );
-
-
-  let data =
-    json.data;
-
 
   if (
-    Array.isArray(data)
+    ma20 > ma60
   ) {
-
-    data =
-      data.find(
-        x =>
-          String(
-            x.stock_id ||
-            x.code ||
-            x.symbol ||
-            ""
-          ) === symbol
-      ) ||
-      data[0];
-
+    technical += 5;
   }
-
 
   if (
-    !data ||
-    typeof data !== "object"
+    price > ma5 &&
+    ma5 >= ma10
   ) {
-
-    throw new Error(
-      "即時報價沒有資料"
-    );
-
+    technical += 3;
   }
-
-
-  return {
-
-    price:
-      positive(
-        data.price,
-        data.close,
-        data.last_price,
-        data.lastPrice
-      ),
-
-    open:
-      positive(
-        data.open,
-        data.open_price,
-        data.openPrice
-      ),
-
-    high:
-      positive(
-        data.high,
-        data.max,
-        data.high_price,
-        data.highPrice
-      ),
-
-    low:
-      positive(
-        data.low,
-        data.min,
-        data.low_price,
-        data.lowPrice
-      ),
-
-    volume:
-      nonNegative(
-        data.total_volume,
-        data.totalVolume,
-        data.volume,
-        data.Trading_Volume
-      ),
-
-    previousClose:
-      positive(
-        data.previous_close,
-        data.previousClose,
-        data.reference_price,
-        data.referencePrice
-      )
-
-  };
-
-}
-
-
-/* =========================
-   STOCK INFO
-========================= */
-
-async function getStockInfo(
-  token
-) {
-
-  const json =
-    await finmind(
-      "TaiwanStockInfo",
-      "",
-      "",
-      "",
-      token
-    );
-
-
-  return Array.isArray(
-    json.data
-  )
-    ? json.data
-    : [];
-
-}
-
-
-/* =========================
-   INSTITUTIONAL
-========================= */
-
-async function getInstitutional(
-  symbol,
-  start,
-  end,
-  token
-) {
-
-  const json =
-    await finmind(
-      "TaiwanStockInstitutionalInvestorsBuySell",
-      symbol,
-      start,
-      end,
-      token
-    );
-
-
-  const daily =
-    {};
-
-
-  for (
-    const x of
-    json.data || []
-  ) {
-
-    const d =
-      normalizeDate(
-        x.date
-      );
-
-
-    if (!d) {
-      continue;
-    }
-
-
-    if (!daily[d]) {
-
-      daily[d] = {
-
-        date:
-          d,
-
-        foreign:
-          0,
-
-        trust:
-          0,
-
-        dealer:
-          0,
-
-        total:
-          0
-
-      };
-
-    }
-
-
-    const net =
-      nonNegative(
-        x.buy
-      ) -
-      nonNegative(
-        x.sell
-      );
-
-
-    const n =
-      String(
-        x.name || ""
-      )
-        .toLowerCase();
-
-
-    if (
-      n.includes(
-        "foreign"
-      ) ||
-      n.includes(
-        "外資"
-      )
-    ) {
-
-      daily[d].foreign +=
-        net;
-
-    } else if (
-      n.includes(
-        "investment_trust"
-      ) ||
-      n.includes(
-        "investment trust"
-      ) ||
-      n.includes(
-        "投信"
-      )
-    ) {
-
-      daily[d].trust +=
-        net;
-
-    } else if (
-      n.includes(
-        "dealer"
-      ) ||
-      n.includes(
-        "自營"
-      )
-    ) {
-
-      daily[d].dealer +=
-        net;
-
-    }
-
-
-    daily[d].total +=
-      net;
-
-  }
-
-
-  const dates =
-    Object
-      .keys(daily)
-      .sort();
-
 
   if (
-    !dates.length
+    Number.isFinite(
+      previousMA20
+    ) &&
+    ma20 >
+    previousMA20
   ) {
-    return emptyInstitutional();
+    technical += 3;
+  }
+
+  if (
+    rsi >= 45 &&
+    rsi <= 72
+  ) {
+    technical += 3;
+  }
+
+  if (
+    macd >= 0
+  ) {
+    technical += 2;
   }
 
 
-  const latest =
-    daily[
-      dates[
-        dates.length - 1
-      ]
-    ];
+  let volumePrice = 0;
+
+  if (
+    volumeRatio >= 1.5
+  ) {
+    volumePrice += 7;
+
+  } else if (
+    volumeRatio >= 1.1
+  ) {
+    volumePrice += 5;
+
+  } else if (
+    volumeRatio >= 0.8
+  ) {
+    volumePrice += 2;
+  }
+
+  if (
+    stock.changePercent >= 0 &&
+    stock.changePercent <= 5
+  ) {
+    volumePrice += 4;
+
+  } else if (
+    stock.changePercent >= -1.5
+  ) {
+    volumePrice += 2;
+  }
+
+  if (
+    stock.dayPosition >= 65
+  ) {
+    volumePrice += 4;
+
+  } else if (
+    stock.dayPosition >= 50
+  ) {
+    volumePrice += 2;
+  }
+
+  const breakoutDistance =
+    (
+      price -
+      resistance20
+    ) /
+    atr;
+
+  if (
+    breakoutDistance >= -0.6 &&
+    breakoutDistance <= 1.2
+  ) {
+    volumePrice += 3;
+  }
+
+  if (
+    stock.buyStrength >= 52
+  ) {
+    volumePrice += 2;
+  }
 
 
-  const r3 =
-    recent(
-      daily,
-      dates,
-      3
+  technical =
+    clamp(
+      technical,
+      0,
+      20
     );
 
-  const r5 =
-    recent(
-      daily,
-      dates,
-      5
-    );
-
-  const r10 =
-    recent(
-      daily,
-      dates,
-      10
-    );
-
-  const r20 =
-    recent(
-      daily,
-      dates,
+  volumePrice =
+    clamp(
+      volumePrice,
+      0,
       20
     );
 
 
-  return {
-
-    available:
-      true,
-
-    latestDate:
-      latest.date,
-
-    foreignLatest:
-      latest.foreign,
-
-    trustLatest:
-      latest.trust,
-
-    dealerLatest:
-      latest.dealer,
-
-    totalLatest:
-      latest.total,
-
-    foreign3:
-      sum(
-        r3,
-        "foreign"
-      ),
-
-    trust3:
-      sum(
-        r3,
-        "trust"
-      ),
-
-    dealer3:
-      sum(
-        r3,
-        "dealer"
-      ),
-
-    total3:
-      sum(
-        r3,
-        "total"
-      ),
-
-    foreign5:
-      sum(
-        r5,
-        "foreign"
-      ),
-
-    trust5:
-      sum(
-        r5,
-        "trust"
-      ),
-
-    dealer5:
-      sum(
-        r5,
-        "dealer"
-      ),
-
-    total5:
-      sum(
-        r5,
-        "total"
-      ),
-
-    foreign10:
-      sum(
-        r10,
-        "foreign"
-      ),
-
-    trust10:
-      sum(
-        r10,
-        "trust"
-      ),
-
-    dealer10:
-      sum(
-        r10,
-        "dealer"
-      ),
-
-    total10:
-      sum(
-        r10,
-        "total"
-      ),
-
-    foreign20:
-      sum(
-        r20,
-        "foreign"
-      ),
-
-    trust20:
-      sum(
-        r20,
-        "trust"
-      ),
-
-    dealer20:
-      sum(
-        r20,
-        "dealer"
-      ),
-
-    total20:
-      sum(
-        r20,
-        "total"
-      ),
-
-    foreignBuyDays5:
-      r5.filter(
-        x =>
-          x.foreign > 0
-      ).length,
-
-    trustBuyDays5:
-      r5.filter(
-        x =>
-          x.trust > 0
-      ).length,
-
-    totalBuyDays5:
-      r5.filter(
-        x =>
-          x.total > 0
-      ).length,
-
-    recent:
-      r20
-
-  };
-
-}
-
-
-/* =========================
-   REVENUE
-========================= */
-
-async function getRevenue(
-  symbol,
-  start,
-  end,
-  token
-) {
-
-  const json =
-    await finmind(
-      "TaiwanStockMonthRevenue",
-      symbol,
-      start,
-      end,
-      token
+  const fastScore =
+    Math.round(
+      technical * 2.3 +
+      volumePrice * 2.1 +
+      stock.snapshotScore *
+      0.12
     );
 
 
-  const rows =
-    (json.data || [])
+  const support =
+    Math.max(
+      low20,
+      ma20 -
+      atr * 0.7
+    );
 
-      .map(
-        x => ({
 
-          date:
-            normalizeDate(
-              x.date
-            ),
+  const distanceMA20 =
+    atr > 0
+      ? (
+          price -
+          ma20
+        ) /
+        atr
+      : 0;
 
-          year:
-            Number(
-              x.revenue_year
-            ) || 0,
 
-          month:
-            Number(
-              x.revenue_month
-            ) || 0,
-
-          revenue:
-            Number(
-              x.revenue
-            ) || 0
-
-        })
-      )
-
-      .filter(
-        x =>
-          x.year > 0 &&
-          x.month >= 1 &&
-          x.month <= 12
-      )
-
-      .sort(
-        (a, b) =>
-          a.year === b.year
-            ? a.month -
-              b.month
-            : a.year -
-              b.year
-      );
+  let adjustedScore =
+    fastScore;
 
 
   if (
-    !rows.length
+    distanceMA20 > 3
   ) {
-    return emptyRevenue();
+    adjustedScore -= 10;
   }
-
-
-  const map =
-    new Map();
-
-
-  for (
-    const x of rows
-  ) {
-
-    map.set(
-      `${x.year}-${x.month}`,
-      x
-    );
-
-  }
-
-
-  const clean =
-    [
-      ...map.values()
-    ].sort(
-      (a, b) =>
-        a.year === b.year
-          ? a.month -
-            b.month
-          : a.year -
-            b.year
-    );
-
-
-  const latest =
-    clean[
-      clean.length - 1
-    ];
-
-
-  const prev =
-    clean.length > 1
-      ? clean[
-          clean.length - 2
-        ]
-      : null;
-
-
-  const lastYear =
-    clean.find(
-      x =>
-        x.year ===
-          latest.year - 1 &&
-        x.month ===
-          latest.month
-    ) ||
-    null;
-
-
-  return {
-
-    available:
-      true,
-
-    latestDate:
-      latest.date,
-
-    year:
-      latest.year,
-
-    month:
-      latest.month,
-
-    latest:
-      latest.revenue,
-
-    previousMonth:
-      prev?.revenue ??
-      null,
-
-    lastYearSameMonth:
-      lastYear?.revenue ??
-      null,
-
-    mom:
-      prev &&
-      prev.revenue > 0
-
-        ? round(
-            (
-              (
-                latest.revenue -
-                prev.revenue
-              ) /
-              prev.revenue
-            ) * 100
-          )
-
-        : null,
-
-    yoy:
-      lastYear &&
-      lastYear.revenue > 0
-
-        ? round(
-            (
-              (
-                latest.revenue -
-                lastYear.revenue
-              ) /
-              lastYear.revenue
-            ) * 100
-          )
-
-        : null,
-
-    recent:
-      clean.slice(-13)
-
-  };
-
-}
-
-
-/* =========================
-   FINANCIAL
-========================= */
-
-async function getFinancial(
-  symbol,
-  start,
-  end,
-  token
-) {
-
-  const json =
-    await finmind(
-      "TaiwanStockFinancialStatements",
-      symbol,
-      start,
-      end,
-      token
-    );
-
-
-  const quarters =
-    {};
-
-
-  for (
-    const x of
-    json.data || []
-  ) {
-
-    const d =
-      normalizeDate(
-        x.date
-      );
-
-
-    if (!d) {
-      continue;
-    }
-
-
-    if (!quarters[d]) {
-
-      quarters[d] = {
-
-        date:
-          d,
-
-        eps:
-          null,
-
-        incomeAfterTaxes:
-          null,
-
-        grossProfit:
-          null,
-
-        operatingIncome:
-          null
-
-      };
-
-    }
-
-
-    const type =
-      String(
-        x.type || ""
-      );
-
-
-    const origin =
-      String(
-        x.origin_name || ""
-      );
-
-
-    const value =
-      finite(
-        x.value
-      );
-
-
-    if (
-      value === null
-    ) {
-      continue;
-    }
-
-
-    if (
-      type === "EPS" ||
-      origin.includes(
-        "每股盈餘"
-      )
-    ) {
-
-      quarters[d].eps =
-        value;
-
-    } else if (
-      type ===
-        "IncomeAfterTaxes" ||
-      origin.includes(
-        "本期淨利"
-      ) ||
-      origin.includes(
-        "本期淨損"
-      )
-    ) {
-
-      quarters[d]
-        .incomeAfterTaxes =
-        value;
-
-    } else if (
-      type ===
-        "GrossProfit" ||
-      origin.includes(
-        "營業毛利"
-      )
-    ) {
-
-      quarters[d]
-        .grossProfit =
-        value;
-
-    } else if (
-      type ===
-        "OperatingIncome" ||
-      type ===
-        "OperatingIncomeLoss" ||
-      origin.includes(
-        "營業利益"
-      ) ||
-      origin.includes(
-        "營業損失"
-      )
-    ) {
-
-      quarters[d]
-        .operatingIncome =
-        value;
-
-    }
-
-  }
-
-
-  const clean =
-    Object
-      .values(
-        quarters
-      )
-
-      .filter(
-        x =>
-          x.eps !== null ||
-          x.incomeAfterTaxes !==
-            null ||
-          x.grossProfit !==
-            null ||
-          x.operatingIncome !==
-            null
-      )
-
-      .sort(
-        (a, b) =>
-          a.date.localeCompare(
-            b.date
-          )
-      );
 
 
   if (
-    !clean.length
+    stock.changePercent > 6.5
   ) {
-    return emptyFinancial();
+    adjustedScore -= 10;
   }
 
 
-  const latest =
-    clean[
-      clean.length - 1
-    ];
-
-
-  const epsRows =
-    clean.filter(
-      x =>
-        x.eps !== null
+  adjustedScore =
+    clamp(
+      adjustedScore,
+      0,
+      100
     );
 
 
-  const incomeRows =
-    clean.filter(
-      x =>
-        x.incomeAfterTaxes !==
-        null
-    );
-
-
-  const eps =
-    epsRows.length
-      ? epsRows[
-          epsRows.length - 1
-        ].eps
-      : null;
-
-
-  const previousEPS =
-    epsRows.length > 1
-      ? epsRows[
-          epsRows.length - 2
-        ].eps
-      : null;
-
-
-  const income =
-    incomeRows.length
-      ? incomeRows[
-          incomeRows.length - 1
-        ].incomeAfterTaxes
-      : null;
-
-
-  const previousIncome =
-    incomeRows.length > 1
-      ? incomeRows[
-          incomeRows.length - 2
-        ].incomeAfterTaxes
-      : null;
-
-
-  let profitable =
-    null;
+  let status =
+    "等待";
 
 
   if (
-    income !== null
+    adjustedScore >= 70
   ) {
-
-    profitable =
-      income > 0;
+    status =
+      "優先分析";
 
   } else if (
-    eps !== null
+    adjustedScore >= 55
   ) {
-
-    profitable =
-      eps > 0;
-
+    status =
+      "值得觀察";
   }
 
 
   return {
+    ...stock,
 
-    available:
-      true,
+    score:
+      adjustedScore,
 
-    latestDate:
-      latest.date,
+    entryScore:
+      adjustedScore,
 
-    eps:
-      nullableRound(
-        eps
+    fastScore:
+      adjustedScore,
+
+    technicalScore:
+      technical,
+
+    volumePriceScore:
+      volumePrice,
+
+    ma5:
+      round(ma5),
+
+    ma10:
+      round(ma10),
+
+    ma20:
+      round(ma20),
+
+    ma60:
+      round(ma60),
+
+    rsi:
+      round(rsi, 1),
+
+    macd:
+      round(macd, 2),
+
+    atr:
+      round(atr),
+
+    support:
+      round(support),
+
+    resistance:
+      round(
+        resistance20
       ),
 
-    previousEPS:
-      nullableRound(
-        previousEPS
+    volumeRatio:
+      round(
+        volumeRatio,
+        2
       ),
 
-    epsGrowth:
-      eps !== null &&
-      previousEPS !== null &&
-      previousEPS > 0
+    status,
 
-        ? round(
-            (
-              (
-                eps -
-                previousEPS
-              ) /
-              Math.abs(
-                previousEPS
-              )
-            ) * 100
-          )
+    recommendedStrategy:
+      "波段候選",
 
-        : null,
+    strategyEmoji:
+      "📊",
 
-    incomeAfterTaxes:
-      income,
+    strategyKey:
+      "SWING",
 
-    previousIncomeAfterTaxes:
-      previousIncome,
+    strategyGrade:
+      adjustedScore >= 70
+        ? "優先分析"
+        : adjustedScore >= 55
+        ? "值得觀察"
+        : "等待",
 
-    netIncomeGrowth:
-      income !== null &&
-      previousIncome !== null &&
-      previousIncome > 0
+    pullbackScore:
+      adjustedScore,
 
-        ? round(
-            (
-              (
-                income -
-                previousIncome
-              ) /
-              Math.abs(
-                previousIncome
-              )
-            ) * 100
-          )
+    highRScore:
+      adjustedScore,
 
-        : null,
+    surgeScore:
+      adjustedScore,
 
-    grossProfit:
-      latest.grossProfit,
+    structureLow:
+      round(support),
 
-    operatingIncome:
-      latest.operatingIncome,
+    structureStop:
+      round(
+        support -
+        atr * 0.35
+      ),
 
-    profitable,
+    structureValid:
+      price >
+      support -
+      atr * 0.35,
 
-    recent:
-      clean.slice(-8)
+    entryLow:
+      round(
+        Math.max(
+          support,
+          ma20 -
+          atr * 0.5
+        )
+      ),
 
+    entryHigh:
+      round(
+        ma20 +
+        atr * 0.5
+      )
   };
-
 }
 
 
-/* =========================
-   FINMIND
-========================= */
+/* =========================================================
+   API
+========================================================= */
 
-async function finmind(
-  dataset,
-  symbol,
-  start,
-  end,
-  token
+export default async function handler(
+  req,
+  res
 ) {
-
-  let url =
-    "https://api.finmindtrade.com/api/v4/data" +
-    "?dataset=" +
-    encodeURIComponent(
-      dataset
-    );
-
-
-  if (symbol) {
-
-    url +=
-      "&data_id=" +
-      encodeURIComponent(
-        symbol
-      );
-
-  }
-
-
-  if (start) {
-
-    url +=
-      "&start_date=" +
-      encodeURIComponent(
-        start
-      );
-
-  }
-
-
-  if (end) {
-
-    url +=
-      "&end_date=" +
-      encodeURIComponent(
-        end
-      );
-
-  }
-
-
-  const json =
-    await requestJSON(
-      url,
-      token
-    );
-
-
-  check(
-    json,
-    dataset
-  );
-
-
-  return json;
-
-}
-
-
-function check(
-  json,
-  label
-) {
-
-  if (
-    !json ||
-    typeof json !== "object"
-  ) {
-
-    throw new Error(
-      `${label} API 格式錯誤`
-    );
-
-  }
-
-
-  if (
-    json.status !== undefined &&
-    Number(
-      json.status
-    ) !== 200
-  ) {
-
-    throw new Error(
-      json.msg ||
-      json.message ||
-      `${label}取得失敗`
-    );
-
-  }
-
-}
-
-
-/* =========================
-   HTTPS
-========================= */
-
-function requestJSON(
-  url,
-  token
-) {
-
-  return new Promise(
-    (
-      resolve,
-      reject
-    ) => {
-
-      let done =
-        false;
-
-
-      const request =
-        https.get(
-
-          url,
-
-          {
-
-            headers: {
-
-              Authorization:
-                `Bearer ${token}`,
-
-              Accept:
-                "application/json",
-
-              "User-Agent":
-                "stock-analyzer/6.3"
-
-            },
-
-            timeout:
-              15000
-
-          },
-
-          response => {
-
-            let body =
-              "";
-
-
-            response.setEncoding(
-              "utf8"
-            );
-
-
-            response.on(
-              "data",
-              chunk => {
-
-                if (
-                  body.length <
-                  15 *
-                  1024 *
-                  1024
-                ) {
-
-                  body +=
-                    chunk;
-
-                }
-
-              }
-            );
-
-
-            response.on(
-              "end",
-              () => {
-
-                if (done) {
-                  return;
-                }
-
-
-                done =
-                  true;
-
-
-                if (
-                  response.statusCode <
-                    200 ||
-                  response.statusCode >=
-                    300
-                ) {
-
-                  return reject(
-                    new Error(
-                      response.statusCode ===
-                      402
-
-                        ? "FinMind API 額度已達上限（HTTP 402）"
-
-                        : `FinMind HTTP ${response.statusCode}`
-                    )
-                  );
-
-                }
-
-
-                try {
-
-                  resolve(
-                    JSON.parse(
-                      body
-                    )
-                  );
-
-                } catch {
-
-                  reject(
-                    new Error(
-                      "FinMind JSON 解析失敗"
-                    )
-                  );
-
-                }
-
-              }
-            );
-
-          }
-
+  const startedAt =
+    Date.now();
+
+  try {
+    if (
+      req.method !== "GET"
+    ) {
+      return res
+        .status(405)
+        .json({
+          ok: false,
+          error:
+            "Method Not Allowed"
+        });
+    }
+
+
+    const token =
+      process.env
+        .FINMIND_TOKEN;
+
+
+    if (!token) {
+      return res
+        .status(500)
+        .json({
+          ok: false,
+          error:
+            "Vercel 尚未設定 FINMIND_TOKEN"
+        });
+    }
+
+
+    /*
+      Snapshot + Names
+      都先走 Redis
+    */
+
+    const [
+      snapshots,
+      stockNames
+    ] =
+      await Promise.all([
+        fetchSnapshot(token),
+        fetchTaiwanStockNames(
+          token
+        )
+      ]);
+
+
+    const stocks =
+      snapshots
+
+        .filter(
+          x =>
+            isNormalTaiwanStock(
+              x.stock_id
+            )
+        )
+
+        .map(
+          scoreSnapshot
+        )
+
+        .filter(Boolean)
+
+        .map(
+          stock => ({
+            ...stock,
+
+            name:
+              stockNames[
+                stock.symbol
+              ] ||
+              ""
+          })
+        )
+
+        .filter(
+          stock =>
+            stock.price > 3 &&
+            stock.totalVolume >= 200
         );
 
 
-      request.on(
-        "timeout",
-        () => {
+    /* =====================================================
+       第一階段 Top 120
+    ===================================================== */
 
-          if (done) {
-            return;
-          }
+    const candidatePool =
+      [...stocks]
 
+        .filter(
+          stock =>
+            stock.changePercent >
+            -3.5 &&
 
-          done =
-            true;
+            stock.changePercent <=
+            7.5 &&
 
+            (
+              stock.snapshotScore >=
+              25 ||
 
-          request.destroy();
-
-
-          reject(
-            new Error(
-              "FinMind 連線逾時"
+              stock.volumeRatio >=
+              1
             )
-          );
+        )
 
-        }
-      );
+        .sort(
+          (a, b) => {
+            const liquidityA =
+              Math.min(
+                Math.log10(
+                  Math.max(
+                    a.totalVolume,
+                    1
+                  )
+                ) * 2,
+                10
+              );
 
+            const liquidityB =
+              Math.min(
+                Math.log10(
+                  Math.max(
+                    b.totalVolume,
+                    1
+                  )
+                ) * 2,
+                10
+              );
 
-      request.on(
-        "error",
-        error => {
+            const aRank =
+              a.snapshotScore +
+              liquidityA;
 
-          if (done) {
-            return;
+            const bRank =
+              b.snapshotScore +
+              liquidityB;
+
+            return (
+              bRank -
+              aRank
+            );
           }
+        )
+
+        .slice(
+          0,
+          KLINE_SCAN_LIMIT
+        );
 
 
-          done =
-            true;
+    /* =====================================================
+       第二階段 Top 120 日 K
+    ===================================================== */
+
+    const analyzed = [];
 
 
-          reject(
-            error
+    for (
+      let i = 0;
+      i < candidatePool.length;
+      i += KLINE_BATCH_SIZE
+    ) {
+      const batch =
+        candidatePool.slice(
+          i,
+          i +
+          KLINE_BATCH_SIZE
+        );
+
+
+      const results =
+        await Promise.allSettled(
+          batch.map(
+            async stock => {
+              const rows =
+                await fetchDailyRows(
+                  token,
+                  stock.symbol
+                );
+
+
+              if (
+                rows.length < 65
+              ) {
+                return null;
+              }
+
+
+              return analyzeKline(
+                stock,
+                rows
+              );
+            }
+          )
+        );
+
+
+      for (
+        const result of results
+      ) {
+        if (
+          result.status ===
+          "fulfilled" &&
+          result.value
+        ) {
+          analyzed.push(
+            result.value
           );
-
         }
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================
-   EMPTY
-========================= */
-
-function emptyInstitutional() {
-
-  return {
-
-    available:
-      false,
-
-    latestDate:
-      "",
-
-    foreignLatest:
-      0,
-
-    trustLatest:
-      0,
-
-    dealerLatest:
-      0,
-
-    totalLatest:
-      0,
-
-    foreign3:
-      0,
-
-    trust3:
-      0,
-
-    dealer3:
-      0,
-
-    total3:
-      0,
-
-    foreign5:
-      0,
-
-    trust5:
-      0,
-
-    dealer5:
-      0,
-
-    total5:
-      0,
-
-    foreign10:
-      0,
-
-    trust10:
-      0,
-
-    dealer10:
-      0,
-
-    total10:
-      0,
-
-    foreign20:
-      0,
-
-    trust20:
-      0,
-
-    dealer20:
-      0,
-
-    total20:
-      0,
-
-    foreignBuyDays5:
-      0,
-
-    trustBuyDays5:
-      0,
-
-    totalBuyDays5:
-      0,
-
-    recent:
-      []
-
-  };
-
-}
-
-
-function emptyRevenue() {
-
-  return {
-
-    available:
-      false,
-
-    latestDate:
-      "",
-
-    year:
-      0,
-
-    month:
-      0,
-
-    latest:
-      null,
-
-    previousMonth:
-      null,
-
-    lastYearSameMonth:
-      null,
-
-    mom:
-      null,
-
-    yoy:
-      null,
-
-    recent:
-      []
-
-  };
-
-}
-
-
-function emptyFinancial() {
-
-  return {
-
-    available:
-      false,
-
-    latestDate:
-      "",
-
-    eps:
-      null,
-
-    previousEPS:
-      null,
-
-    epsGrowth:
-      null,
-
-    incomeAfterTaxes:
-      null,
-
-    previousIncomeAfterTaxes:
-      null,
-
-    netIncomeGrowth:
-      null,
-
-    grossProfit:
-      null,
-
-    operatingIncome:
-      null,
-
-    profitable:
-      null,
-
-    recent:
-      []
-
-  };
-
-}
-
-
-/* =========================
-   HELPERS
-========================= */
-
-function recent(
-  daily,
-  dates,
-  n
-) {
-
-  return dates
-    .slice(-n)
-    .map(
-      d =>
-        daily[d]
-    );
-
-}
-
-
-function sum(
-  rows,
-  key
-) {
-
-  return rows.reduce(
-    (
-      total,
-      x
-    ) =>
-      total +
-      (
-        Number(
-          x[key]
-        ) || 0
-      ),
-    0
-  );
-
-}
-
-
-function resultError(
-  result
-) {
-
-  return result.status ===
-    "rejected"
-
-    ? result.reason?.message ||
-      "資料暫時無法取得"
-
-    : "";
-
-}
-
-
-function marketName(
-  value
-) {
-
-  const x =
-    String(
-      value || ""
-    )
-      .toLowerCase();
-
-
-  if (
-    x.includes(
-      "twse"
-    ) ||
-    x.includes(
-      "上市"
-    )
-  ) {
-    return "上市";
-  }
-
-
-  if (
-    x.includes(
-      "tpex"
-    ) ||
-    x.includes(
-      "otc"
-    ) ||
-    x.includes(
-      "上櫃"
-    )
-  ) {
-    return "上櫃";
-  }
-
-
-  if (
-    x.includes(
-      "emerging"
-    ) ||
-    x.includes(
-      "興櫃"
-    )
-  ) {
-    return "興櫃";
-  }
-
-
-  return value || "";
-
-}
-
-
-function date(
-  d
-) {
-
-  return (
-    d.getFullYear() +
-    "-" +
-    String(
-      d.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    ) +
-    "-" +
-    String(
-      d.getDate()
-    ).padStart(
-      2,
-      "0"
-    )
-  );
-
-}
-
-
-function normalizeDate(
-  value
-) {
-
-  const m =
-    String(
-      value || ""
-    )
-      .match(
-        /^(\d{4}-\d{2}-\d{2})/
-      );
-
-
-  return m
-    ? m[1]
-    : "";
-
-}
-
-
-function finite(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return null;
-  }
-
-
-  const n =
-    Number(
-      value
-    );
-
-
-  return Number.isFinite(
-    n
-  )
-    ? n
-    : null;
-
-}
-
-
-function positive(
-  ...values
-) {
-
-  for (
-    const value of values
-  ) {
-
-    const n =
-      finite(
-        value
-      );
-
-
-    if (
-      n !== null &&
-      n > 0
-    ) {
-      return n;
+      }
     }
 
-  }
+
+    /* =====================================================
+       Top 40
+    ===================================================== */
+
+    const strategyReady =
+      [...analyzed]
+
+        .filter(
+          stock =>
+            stock.fastScore >=
+            45
+        )
+
+        .sort(
+          (a, b) =>
+            b.fastScore -
+            a.fastScore
+        )
+
+        .slice(
+          0,
+          FRONTEND_LIMIT
+        );
 
 
-  return 0;
+    const finalCandidates =
+      strategyReady.length
+        ? strategyReady
+        : [...analyzed]
 
-}
+            .sort(
+              (a, b) =>
+                b.fastScore -
+                a.fastScore
+            )
 
-
-function nonNegative(
-  ...values
-) {
-
-  for (
-    const value of values
-  ) {
-
-    const n =
-      finite(
-        value
-      );
-
-
-    if (
-      n !== null &&
-      n >= 0
-    ) {
-      return n;
-    }
-
-  }
+            .slice(
+              0,
+              Math.min(
+                20,
+                FRONTEND_LIMIT
+              )
+            );
 
 
-  return 0;
+    const radar =
+      [...stocks]
 
-}
+        .sort(
+          (a, b) =>
+            b.snapshotScore -
+            a.snapshotScore
+        )
+
+        .slice(
+          0,
+          30
+        )
+
+        .map(
+          stock => ({
+            ...stock,
+
+            score:
+              stock.snapshotScore,
+
+            longStatus:
+              stock.snapshotScore >=
+              55
+                ? "優先觀察"
+                : "等待確認"
+          })
+        );
 
 
-function round(
-  value
-) {
+    const longWatch =
+      finalCandidates
+        .slice(0, 30);
 
-  const n =
-    Number(
-      value
+
+    const volumeLeaders =
+      [...stocks]
+
+        .filter(
+          x =>
+            x.volumeRatio > 0
+        )
+
+        .sort(
+          (a, b) =>
+            b.volumeRatio -
+            a.volumeRatio
+        )
+
+        .slice(0, 15);
+
+
+    const momentumLeaders =
+      [...stocks]
+
+        .filter(
+          x =>
+            x.changePercent > 0
+        )
+
+        .sort(
+          (a, b) =>
+            b.changePercent -
+            a.changePercent
+        )
+
+        .slice(0, 15);
+
+
+    const elapsedMs =
+      Date.now() -
+      startedAt;
+
+
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=180"
     );
 
 
-  return Number.isFinite(
-    n
-  )
-    ? Math.round(
-        n * 100
-      ) / 100
-    : 0;
+    return res
+      .status(200)
+      .json({
+        ok: true,
 
-}
+        platform:
+          "波段分析 Radar 6.2",
+
+        engine:
+          "FAST_TWO_STAGE_120_REDIS",
+
+        market:
+          "TW",
+
+        source:
+          "FinMind + Upstash Redis",
+
+        updatedAt:
+          new Date()
+            .toISOString(),
+
+        taipeiTime:
+          getTaipeiTime(),
+
+        elapsedMs,
+
+        scanned:
+          stocks.length,
+
+        strategyCandidateCount:
+          candidatePool.length,
+
+        strategyScannedCount:
+          analyzed.length,
+
+        strategyReadyCount:
+          finalCandidates.length,
+
+        found:
+          radar.length,
+
+        longWatchCount:
+          longWatch.length,
+
+        strategyReady:
+          finalCandidates,
+
+        radar,
+
+        longWatch,
+
+        volumeLeaders,
+
+        momentumLeaders,
+
+        notice:
+          "Radar 6.2：全市場 Snapshot → Top 120 日 K → Top 40；Snapshot、股票名稱與日 K 已加入 Upstash Redis，日 K 與 Stock API 6.3 共用快取。"
+      });
 
 
-function nullableRound(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return null;
-  }
-
-
-  const n =
-    Number(
-      value
+  } catch (error) {
+    console.error(
+      "Radar server error:",
+      error
     );
 
 
-  return Number.isFinite(
-    n
-  )
-    ? Math.round(
-        n * 100
-      ) / 100
-    : null;
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
 
+
+    return res
+      .status(500)
+      .json({
+        ok: false,
+
+        platform:
+          "波段分析 Radar 6.2",
+
+        engine:
+          "FAST_TWO_STAGE_120_REDIS",
+
+        error:
+          error?.name ===
+          "AbortError"
+            ? "FinMind 連線逾時，請重新掃描"
+            : error?.message ||
+              "Radar server error"
+      });
+  }
 }
