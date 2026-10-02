@@ -43,7 +43,7 @@ const CACHE_TTL = {
 
 
 /*
-  Redis 實際保存時間（秒）
+  Redis 實際保存時間
 */
 
 const REDIS_EXPIRE = {
@@ -327,7 +327,6 @@ async function smartCache({
     return memory.value;
   }
 
-
   const redis =
     await redisGet(key);
 
@@ -354,7 +353,6 @@ async function smartCache({
       return redis.value;
     }
   }
-
 
   try {
     const value =
@@ -404,7 +402,6 @@ async function smartCache({
 
       return redis.value;
     }
-
 
     if (
       memory &&
@@ -801,7 +798,6 @@ function scoreSnapshot(x) {
 
   let score = 0;
 
-
   if (
     change >= 0.5 &&
     change <= 4
@@ -825,7 +821,6 @@ function scoreSnapshot(x) {
     score -= 15;
   }
 
-
   if (
     volumeRatio >= 2
   ) {
@@ -847,7 +842,6 @@ function scoreSnapshot(x) {
     score += 7;
   }
 
-
   if (
     dayPosition >= 0.8
   ) {
@@ -864,14 +858,12 @@ function scoreSnapshot(x) {
     score += 5;
   }
 
-
   if (
     open > 0 &&
     price >= open
   ) {
     score += 7;
   }
-
 
   if (
     buyStrength >= 0.62
@@ -888,7 +880,6 @@ function scoreSnapshot(x) {
   ) {
     score -= 5;
   }
-
 
   if (
     totalVolume >= 5000
@@ -911,13 +902,11 @@ function scoreSnapshot(x) {
     score -= 20;
   }
 
-
   if (
     change > 7
   ) {
     score -= 25;
   }
-
 
   return {
     symbol,
@@ -1000,12 +989,10 @@ async function fetchDailyRows(
     return memory.value;
   }
 
-
   const redis =
     await redisGet(
       sharedKey
     );
-
 
   if (
     redis &&
@@ -1039,7 +1026,6 @@ async function fetchDailyRows(
     }
   }
 
-
   try {
     const url =
       `${DATA_URL}` +
@@ -1047,14 +1033,12 @@ async function fetchDailyRows(
       `&data_id=${encodeURIComponent(symbol)}` +
       `&start_date=${dateString(500)}`;
 
-
     const body =
       await finmindFetch(
         url,
         token,
         DAILY_TIMEOUT_MS
       );
-
 
     const rows =
       (body?.data || [])
@@ -1108,7 +1092,6 @@ async function fetchDailyRows(
               )
         );
 
-
     if (
       rows.length >= 60
     ) {
@@ -1120,13 +1103,11 @@ async function fetchDailyRows(
           rows
       };
 
-
       await redisSet(
         sharedKey,
         payload,
         REDIS_EXPIRE.daily
       );
-
 
       MEMORY.set(
         memoryKey,
@@ -1140,9 +1121,7 @@ async function fetchDailyRows(
       );
     }
 
-
     return rows;
-
 
   } catch (error) {
 
@@ -1159,7 +1138,6 @@ async function fetchDailyRows(
         error?.message
       );
 
-
       MEMORY.set(
         memoryKey,
         {
@@ -1172,10 +1150,8 @@ async function fetchDailyRows(
         }
       );
 
-
       return redis.value;
     }
-
 
     throw error;
   }
@@ -1308,7 +1284,6 @@ function analyzeKline(
         avgVolume20
       : 0;
 
-
   let technical = 0;
 
   if (price > ma20) {
@@ -1345,7 +1320,6 @@ function analyzeKline(
   if (macd >= 0) {
     technical += 2;
   }
-
 
   let volumePrice = 0;
 
@@ -1408,7 +1382,6 @@ function analyzeKline(
     volumePrice += 2;
   }
 
-
   technical =
     clamp(
       technical,
@@ -1423,7 +1396,6 @@ function analyzeKline(
       20
     );
 
-
   const fastScore =
     Math.round(
       technical * 2.3 +
@@ -1432,14 +1404,12 @@ function analyzeKline(
       0.12
     );
 
-
   const support =
     Math.max(
       low20,
       ma20 -
       atr * 0.7
     );
-
 
   const distanceMA20 =
     atr > 0
@@ -1450,10 +1420,8 @@ function analyzeKline(
         atr
       : 0;
 
-
   let adjustedScore =
     fastScore;
-
 
   if (
     distanceMA20 > 3
@@ -1461,13 +1429,11 @@ function analyzeKline(
     adjustedScore -= 10;
   }
 
-
   if (
     stock.changePercent > 6.5
   ) {
     adjustedScore -= 10;
   }
-
 
   adjustedScore =
     clamp(
@@ -1476,10 +1442,8 @@ function analyzeKline(
       100
     );
 
-
   let status =
     "等待";
-
 
   if (
     adjustedScore >= 70
@@ -1493,7 +1457,6 @@ function analyzeKline(
     status =
       "值得觀察";
   }
-
 
   return {
     ...stock,
@@ -1631,11 +1594,9 @@ export default async function handler(
         });
     }
 
-
     const token =
       process.env
         .FINMIND_TOKEN;
-
 
     if (!token) {
       return res
@@ -1647,7 +1608,6 @@ export default async function handler(
         });
     }
 
-
     const [
       snapshots,
       stockNames
@@ -1658,7 +1618,6 @@ export default async function handler(
           token
         )
       ]);
-
 
     const stocks =
       snapshots
@@ -1772,7 +1731,6 @@ export default async function handler(
 
     const analyzed = [];
 
-
     for (
       let i = 0;
       i < candidatePool.length;
@@ -1785,7 +1743,6 @@ export default async function handler(
           KLINE_BATCH_SIZE
         );
 
-
       const results =
         await Promise.allSettled(
           batch.map(
@@ -1796,13 +1753,11 @@ export default async function handler(
                   stock.symbol
                 );
 
-
               if (
                 rows.length < 65
               ) {
                 return null;
               }
-
 
               return analyzeKline(
                 stock,
@@ -1811,7 +1766,6 @@ export default async function handler(
             }
           )
         );
-
 
       for (
         const result of results
@@ -1853,7 +1807,6 @@ export default async function handler(
           FRONTEND_LIMIT
         );
 
-
     const finalCandidates =
       strategyReady.length
         ? strategyReady
@@ -1872,7 +1825,6 @@ export default async function handler(
                 FRONTEND_LIMIT
               )
             );
-
 
     const radar =
       [...stocks]
@@ -1903,11 +1855,9 @@ export default async function handler(
           })
         );
 
-
     const longWatch =
       finalCandidates
         .slice(0, 30);
-
 
     const volumeLeaders =
       [...stocks]
@@ -1925,7 +1875,6 @@ export default async function handler(
 
         .slice(0, 15);
 
-
     const momentumLeaders =
       [...stocks]
 
@@ -1942,17 +1891,14 @@ export default async function handler(
 
         .slice(0, 15);
 
-
     const elapsedMs =
       Date.now() -
       startedAt;
-
 
     res.setHeader(
       "Cache-Control",
       "public, s-maxage=60, stale-while-revalidate=180"
     );
-
 
     return res
       .status(200)
@@ -2010,9 +1956,8 @@ export default async function handler(
         momentumLeaders,
 
         notice:
-          "Radar 6.2：全市場 Snapshot → Top 120 日 K → Top 40；Snapshot、股票名稱與日 K 已加入 Upstash Redis，日 K與 Stock API 6.3 共用快取。"
+          "Radar 6.2：全市場 Snapshot → Top 120 日 K → Top 40；Snapshot、股票名稱與日 K 已加入 Upstash Redis，日 K 與 Stock API 6.3 共用快取。"
       });
-
 
   } catch (error) {
     console.error(
@@ -2020,12 +1965,10 @@ export default async function handler(
       error
     );
 
-
     res.setHeader(
       "Cache-Control",
       "no-store"
     );
-
 
     return res
       .status(500)
