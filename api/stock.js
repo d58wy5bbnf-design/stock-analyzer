@@ -1,1214 +1,1433 @@
 const https = require("https");
 
 /*
-  api/stock.js
-  Stock Analysis API 6.1 - FinMind Save Mode
-
-  目的：
-  1. 大幅降低 FinMind API 使用量
-  2. 避免重複查詢同一資料
-  3. 非必要資料 402 不讓整頁死亡
-  4. 保留原本前端需要的欄位
-  5. 保留五大分析需要的法人 / 基本面
-
-  Cache：
-  歷史 K       10 分鐘
-  即時報價      30 秒
-  法人          30 分鐘
-  股票名稱      24 小時
-  月營收         6 小時
-  財報           6 小時
+  波段分析 Stock API 6.2
+  - 歷史 K
+  - 即時價格
+  - 法人
+  - 月營收
+  - 財報
+  - 股票名稱
+  - Memory Cache
+  - 非必要資料失敗自動降級
 */
 
+const CACHE = global.__STOCK_CACHE__ || new Map();
+global.__STOCK_CACHE__ = CACHE;
 
-/* =========================================================
-   MEMORY CACHE
-========================================================= */
-
-const CACHE =
-  global.__STOCK_API_CACHE__ ||
-  new Map();
-
-global.__STOCK_API_CACHE__ =
-  CACHE;
-
-
-function cacheGet(key) {
-
-  const item =
-    CACHE.get(key);
-
-  if (!item) {
-    return null;
-  }
-
-  if (
-    Date.now() >
-    item.expire
-  ) {
-
-    CACHE.delete(key);
-
-    return null;
-  }
-
-  return item.value;
-}
-
-
-function cacheSet(
-  key,
-  value,
-  ttl
-) {
-
-  CACHE.set(
-    key,
-    {
-      value,
-      expire:
-        Date.now() + ttl
-    }
-  );
-
-  return value;
-}
-
-
-async function cached(
-  key,
-  ttl,
-  loader
-) {
-
-  const old =
-    cacheGet(key);
-
-  if (old !== null) {
-    return old;
-  }
-
-  const value =
-    await loader();
-
-  cacheSet(
-    key,
-    value,
-    ttl
-  );
-
-  return value;
-}
-
-
-/* =========================================================
-   CACHE TIME
-========================================================= */
-
-const CACHE_TIME = {
-
-  historical:
-    10 * 60 * 1000,
-
-  realtime:
-    30 * 1000,
-
-  institutional:
-    30 * 60 * 1000,
-
-  info:
-    24 * 60 * 60 * 1000,
-
-  revenue:
-    6 * 60 * 60 * 1000,
-
-  financial:
-    6 * 60 * 60 * 1000
-
+const TTL = {
+  price: 10 * 60 * 1000,
+  realtime: 30 * 1000,
+  institutional: 30 * 60 * 1000,
+  info: 24 * 60 * 60 * 1000,
+  revenue: 6 * 60 * 60 * 1000,
+  financial: 6 * 60 * 60 * 1000
 };
 
+module.exports = async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "no-store");
 
-/* =========================================================
-   MAIN
-========================================================= */
-
-module.exports =
-async function handler(
-  req,
-  res
-) {
-
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "*"
-  );
-
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, OPTIONS"
-  );
-
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type"
-  );
-
-  res.setHeader(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate, proxy-revalidate"
-  );
-
-
-  if (
-    req.method ===
-    "OPTIONS"
-  ) {
-
-    return res
-      .status(200)
-      .end();
-
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
-
   try {
-
-    const token =
-      process.env.FINMIND_TOKEN;
-
+    const token = process.env.FINMIND_TOKEN;
 
     if (!token) {
-
-      throw new Error(
-        "Vercel 尚未設定 FINMIND_TOKEN"
-      );
-
+      throw new Error("Vercel 尚未設定 FINMIND_TOKEN");
     }
 
-
-    const symbol =
-      String(
-        req.query.symbol ||
-        ""
-      )
+    const symbol = String(req.query.symbol || "")
       .trim()
       .toUpperCase();
 
-
-    if (
-      !/^[0-9A-Z]{4,10}$/
-        .test(symbol)
-    ) {
-
-      throw new Error(
-        "股票代號格式錯誤"
-      );
-
+    if (!/^[0-9A-Z]{4,10}$/.test(symbol)) {
+      throw new Error("股票代號格式錯誤");
     }
 
+    const end = new Date();
 
-    const end =
-      new Date();
+    const priceStart = new Date();
+    priceStart.setDate(priceStart.getDate() - 500);
 
+    const revenueStart = new Date();
+    revenueStart.setMonth(revenueStart.getMonth() - 18);
 
-    const priceStart =
-      new Date();
+    const financialStart = new Date();
+    financialStart.setFullYear(financialStart.getFullYear() - 2);
 
-    priceStart.setDate(
-      priceStart.getDate() -
-      500
-    );
+    const startDate = date(priceStart);
+    const endDate = date(end);
+    const revenueStartDate = date(revenueStart);
+    const financialStartDate = date(financialStart);
 
+    const results = await Promise.allSettled([
+      cached(
+        `price:${symbol}:${endDate}`,
+        TTL.price,
+        () => getPrice(symbol, startDate, endDate, token)
+      ),
 
-    const revenueStart =
-      new Date();
+      cached(
+        `rt:${symbol}`,
+        TTL.realtime,
+        () => getRealtime(symbol, token)
+      ),
 
-    revenueStart.setMonth(
-      revenueStart.getMonth() -
-      18
-    );
+      cached(
+        `inst:${symbol}:${endDate}`,
+        TTL.institutional,
+        () => getInstitutional(symbol, startDate, endDate, token)
+      ),
 
+      cached(
+        "stock-info",
+        TTL.info,
+        () => getStockInfo(token)
+      ),
 
-    const financialStart =
-      new Date();
+      cached(
+        `revenue:${symbol}`,
+        TTL.revenue,
+        () => getRevenue(
+          symbol,
+          revenueStartDate,
+          endDate,
+          token
+        )
+      ),
 
-    financialStart.setFullYear(
-      financialStart.getFullYear() -
-      2
-    );
-
-
-    const startDate =
-      formatDate(
-        priceStart
-      );
-
-
-    const endDate =
-      formatDate(
-        end
-      );
-
-
-    const revenueStartDate =
-      formatDate(
-        revenueStart
-      );
-
-
-    const financialStartDate =
-      formatDate(
-        financialStart
-      );
-
-
-    /*
-      六種資料仍然並行取得，
-      但每一種都有自己的 Cache。
-
-      同一個 Vercel instance 裡，
-      重複搜尋不會一直打 FinMind。
-    */
+      cached(
+        `financial:${symbol}`,
+        TTL.financial,
+        () => getFinancial(
+          symbol,
+          financialStartDate,
+          endDate,
+          token
+        )
+      )
+    ]);
 
     const [
-      priceResult,
-      realtimeResult,
-      institutionalResult,
-      infoResult,
-      revenueResult,
-      financialResult
-    ] =
-      await Promise.allSettled([
-
-
-        cached(
-
-          `historical:${symbol}:${startDate}:${endDate}`,
-
-          CACHE_TIME.historical,
-
-          () =>
-            getHistorical(
-              symbol,
-              startDate,
-              endDate,
-              token
-            )
-
-        ),
-
-
-        cached(
-
-          `realtime:${symbol}`,
-
-          CACHE_TIME.realtime,
-
-          () =>
-            getRealtime(
-              symbol,
-              token
-            )
-
-        ),
-
-
-        cached(
-
-          `institutional:${symbol}:${endDate}`,
-
-          CACHE_TIME.institutional,
-
-          () =>
-            getInstitutional(
-              symbol,
-              startDate,
-              endDate,
-              token
-            )
-
-        ),
-
-
-        cached(
-
-          "stock-info",
-
-          CACHE_TIME.info,
-
-          () =>
-            getStockInfo(
-              token
-            )
-
-        ),
-
-
-        cached(
-
-          `revenue:${symbol}`,
-
-          CACHE_TIME.revenue,
-
-          () =>
-            getMonthRevenue(
-              symbol,
-              revenueStartDate,
-              endDate,
-              token
-            )
-
-        ),
-
-
-        cached(
-
-          `financial:${symbol}`,
-
-          CACHE_TIME.financial,
-
-          () =>
-            getFinancialStatements(
-              symbol,
-              financialStartDate,
-              endDate,
-              token
-            )
-
-        )
-
-      ]);
-
+      priceR,
+      realtimeR,
+      institutionalR,
+      infoR,
+      revenueR,
+      financialR
+    ] = results;
 
     /*
-      歷史 K 是唯一真正必要的資料。
-
-      沒有 K 線無法做技術分析。
-
-      其他資料失敗：
-      降級處理，不讓整頁掛掉。
+      K 線是唯一必要資料
     */
-
-    if (
-      priceResult.status !==
-      "fulfilled"
-    ) {
-
-      throw (
-        priceResult.reason ||
-        new Error(
-          "歷史股價取得失敗"
-        )
-      );
-
+    if (priceR.status !== "fulfilled") {
+      throw priceR.reason || new Error("歷史股價取得失敗");
     }
 
+    let rows = priceR.value;
 
-    const rows =
-      priceResult.value;
-
-
-    if (
-      !Array.isArray(rows)
-      ||
-      rows.length < 60
-    ) {
-
-      throw new Error(
-        "歷史 K 線不足 60 根"
-      );
-
+    if (!Array.isArray(rows) || rows.length < 60) {
+      throw new Error("歷史 K 線不足 60 根");
     }
 
+    /*
+      其他資料失敗時降級
+    */
+    const realtime =
+      realtimeR.status === "fulfilled"
+        ? realtimeR.value
+        : null;
 
-    /* =====================================================
-       STOCK INFO
-    ===================================================== */
+    const institutional =
+      institutionalR.status === "fulfilled"
+        ? institutionalR.value
+        : emptyInstitutional();
 
-    let name =
-      "";
+    const revenue =
+      revenueR.status === "fulfilled"
+        ? revenueR.value
+        : emptyRevenue();
 
-    let market =
-      "";
+    const financial =
+      financialR.status === "fulfilled"
+        ? financialR.value
+        : emptyFinancial();
 
+    /*
+      股票名稱
+    */
+    let name = symbol;
+    let market = "";
 
-    let infoError =
-      "";
-
-
-    if (
-      infoResult.status ===
-      "fulfilled"
-    ) {
-
-      const info =
-        infoResult.value.find(
-          x =>
-            String(
-              x.stock_id ||
-              ""
-            ) ===
-            symbol
-        );
-
+    if (infoR.status === "fulfilled") {
+      const info = infoR.value.find(
+        x => String(x.stock_id || "") === symbol
+      );
 
       if (info) {
-
-        name =
-          String(
-            info.stock_name ||
-            ""
-          );
-
-
-        market =
-          normalizeMarket(
-            info.type ||
-            info.industry_category ||
-            ""
-          );
-
+        name = String(info.stock_name || symbol);
+        market = marketName(
+          info.type || info.industry_category || ""
+        );
       }
-
     }
-    else {
-
-      infoError =
-        safeError(
-          infoResult.reason,
-          "股票名稱暫時無法取得"
-        );
-
-    }
-
-
-    /* =====================================================
-       REALTIME
-    ===================================================== */
-
-    let realtime =
-      null;
-
-
-    let realtimeError =
-      "";
-
-
-    if (
-      realtimeResult.status ===
-      "fulfilled"
-    ) {
-
-      realtime =
-        realtimeResult.value;
-
-    }
-    else {
-
-      realtimeError =
-        safeError(
-          realtimeResult.reason,
-          "即時報價暫時無法取得"
-        );
-
-    }
-
-
-    /* =====================================================
-       INSTITUTIONAL
-    ===================================================== */
-
-    let institutional =
-      emptyInstitutional();
-
-
-    let institutionalError =
-      "";
-
-
-    if (
-      institutionalResult.status ===
-      "fulfilled"
-    ) {
-
-      institutional =
-        institutionalResult.value;
-
-    }
-    else {
-
-      institutionalError =
-        safeError(
-          institutionalResult.reason,
-          "法人籌碼暫時無法取得"
-        );
-
-    }
-
-
-    /* =====================================================
-       REVENUE
-    ===================================================== */
-
-    let revenue =
-      emptyRevenue();
-
-
-    let revenueError =
-      "";
-
-
-    if (
-      revenueResult.status ===
-      "fulfilled"
-    ) {
-
-      revenue =
-        revenueResult.value;
-
-    }
-    else {
-
-      revenueError =
-        safeError(
-          revenueResult.reason,
-          "月營收暫時無法取得"
-        );
-
-    }
-
-
-    /* =====================================================
-       FINANCIAL
-    ===================================================== */
-
-    let financial =
-      emptyFinancial();
-
-
-    let financialError =
-      "";
-
-
-    if (
-      financialResult.status ===
-      "fulfilled"
-    ) {
-
-      financial =
-        financialResult.value;
-
-    }
-    else {
-
-      financialError =
-        safeError(
-          financialResult.reason,
-          "財報暫時無法取得"
-        );
-
-    }
-
-
-    /* =====================================================
-       PRICE
-    ===================================================== */
-
-    const latest =
-      rows[
-        rows.length - 1
-      ];
-
-
-    const previous =
-      rows.length >= 2
-        ?
-        rows[
-          rows.length - 2
-        ]
-        :
-        latest;
-
 
     /*
-      即時資料失敗時，
-      自動退回最後一根 K。
+      價格
     */
-
-    const currentPrice =
-      positive(
-
-        realtime?.price,
-
-        realtime?.close,
-
-        realtime?.last_price,
-
-        realtime?.lastPrice,
-
-        latest.close
-
-      );
-
-
-    const previousClose =
-      positive(
-
-        realtime?.previous_close,
-
-        realtime?.previousClose,
-
-        realtime?.reference_price,
-
-        realtime?.referencePrice,
-
-        previous.close
-
-      );
-
-
-    const currentOpen =
-      positive(
-
-        realtime?.open,
-
-        realtime?.open_price,
-
-        realtime?.openPrice,
-
-        latest.open
-
-      );
-
-
-    const currentHigh =
-      positive(
-
-        realtime?.high,
-
-        realtime?.max,
-
-        realtime?.high_price,
-
-        realtime?.highPrice,
-
-        latest.high,
-
-        currentPrice
-
-      );
-
-
-    const currentLow =
-      positive(
-
-        realtime?.low,
-
-        realtime?.min,
-
-        realtime?.low_price,
-
-        realtime?.lowPrice,
-
-        latest.low,
-
-        currentPrice
-
-      );
-
-
-    const currentVolume =
-      nonNegative(
-
-        realtime?.volume,
-
-        realtime?.total_volume,
-
-        realtime?.totalVolume,
-
-        realtime?.Trading_Volume,
-
-        latest.volume
-
-      );
-
-
-    /* =====================================================
-       MERGE TODAY K
-    ===================================================== */
-
-    const today =
-      formatDate(
-        new Date()
-      );
-
-
-    let mergedRows =
-      rows.map(
-        x => ({
-          ...x
-        })
-      );
-
-
-    const last =
-      mergedRows[
-        mergedRows.length - 1
-      ];
-
-
-    if (
-      realtime
-      &&
-      currentPrice > 0
-    ) {
-
-      if (
-        last
-        &&
-        normalizeDate(
-          last.date
-        ) ===
-        today
-      ) {
-
-        last.open =
-          currentOpen ||
-          last.open;
-
-
-        last.high =
-          Math.max(
-
-            last.high || 0,
-
-            currentHigh || 0,
-
+    const latest = rows[rows.length - 1];
+    const previous =
+      rows.length > 1
+        ? rows[rows.length - 2]
+        : latest;
+
+    const currentPrice = positive(
+      realtime?.price,
+      latest.close
+    );
+
+    const previousClose = positive(
+      realtime?.previousClose,
+      previous.close
+    );
+
+    const open = positive(
+      realtime?.open,
+      latest.open,
+      currentPrice
+    );
+
+    const high = positive(
+      realtime?.high,
+      latest.high,
+      currentPrice
+    );
+
+    const low = positive(
+      realtime?.low,
+      latest.low,
+      currentPrice
+    );
+
+    const volume = nonNegative(
+      realtime?.volume,
+      latest.volume
+    );
+
+    /*
+      把即時價併入今日 K
+    */
+    const today = date(new Date());
+
+    rows = rows.map(x => ({ ...x }));
+
+    const last = rows[rows.length - 1];
+
+    if (realtime && currentPrice > 0) {
+      if (last && last.date === today) {
+        last.open = open;
+        last.high = Math.max(
+          Number(last.high) || 0,
+          high,
+          currentPrice
+        );
+
+        last.low = Math.min(
+          ...[
+            Number(last.low),
+            low,
             currentPrice
+          ].filter(x => Number.isFinite(x) && x > 0)
+        );
 
-          );
+        last.close = currentPrice;
 
-
-        const lows =
-          [
-
-            last.low,
-
-            currentLow,
-
-            currentPrice
-
-          ]
-          .filter(
-            x =>
-              Number.isFinite(
-                Number(x)
-              )
-              &&
-              Number(x) > 0
-          );
-
-
-        if (
-          lows.length
-        ) {
-
-          last.low =
-            Math.min(
-              ...lows
-            );
-
+        if (volume > 0) {
+          last.volume = volume;
         }
-
-
-        last.close =
-          currentPrice;
-
-
-        if (
-          currentVolume > 0
-        ) {
-
-          last.volume =
-            currentVolume;
-
-        }
-
-      }
-      else {
-
-        const lows =
-          [
-
-            currentLow,
-
-            currentPrice
-
-          ]
-          .filter(
-            x =>
-              Number.isFinite(
-                Number(x)
-              )
-              &&
-              Number(x) > 0
-          );
-
-
-        mergedRows.push({
-
-          date:
-            today,
-
-          open:
-            currentOpen ||
-            currentPrice,
-
-          high:
-            Math.max(
-              currentHigh ||
-              currentPrice,
-              currentPrice
-            ),
-
-          low:
-            lows.length
-              ?
-              Math.min(
-                ...lows
-              )
-              :
-              currentPrice,
-
-          close:
-            currentPrice,
-
-          volume:
-            currentVolume ||
-            0
-
+      } else {
+        rows.push({
+          date: today,
+          open,
+          high: Math.max(high, currentPrice),
+          low: Math.min(low, currentPrice),
+          close: currentPrice,
+          volume
         });
-
       }
-
     }
 
+    rows = rows.slice(-300);
 
-    mergedRows =
-      mergedRows.slice(-300);
-
-
-    /* =====================================================
-       CHANGE
-    ===================================================== */
-
-    const change =
-      currentPrice -
-      previousClose;
-
+    const change = currentPrice - previousClose;
 
     const changePercent =
       previousClose > 0
-        ?
-        change /
-        previousClose *
-        100
-        :
-        0;
+        ? (change / previousClose) * 100
+        : 0;
 
-
-    /* =====================================================
-       FUNDAMENTAL
-    ===================================================== */
-
+    /*
+      基本面
+    */
     const fundamental = {
-
-      available:
-        Boolean(
-          revenue.available ||
-          financial.available
-        ),
-
+      available: Boolean(
+        revenue.available ||
+        financial.available
+      ),
 
       revenue: {
-
-        available:
-          revenue.available,
-
-        latestDate:
-          revenue.latestDate,
-
-        year:
-          revenue.year,
-
-        month:
-          revenue.month,
-
-        latest:
-          revenue.latest,
-
-        previousMonth:
-          revenue.previousMonth,
-
-        lastYearSameMonth:
-          revenue.lastYearSameMonth,
-
-        mom:
-          revenue.mom,
-
-        yoy:
-          revenue.yoy,
-
-        recent:
-          revenue.recent
-
+        available: revenue.available,
+        latestDate: revenue.latestDate,
+        year: revenue.year,
+        month: revenue.month,
+        latest: revenue.latest,
+        previousMonth: revenue.previousMonth,
+        lastYearSameMonth: revenue.lastYearSameMonth,
+        mom: revenue.mom,
+        yoy: revenue.yoy,
+        recent: revenue.recent
       },
 
-
       financial: {
-
-        available:
-          financial.available,
-
-        latestDate:
-          financial.latestDate,
-
-        eps:
-          financial.eps,
-
-        previousEPS:
-          financial.previousEPS,
-
-        epsGrowth:
-          financial.epsGrowth,
-
-        incomeAfterTaxes:
-          financial.incomeAfterTaxes,
-
+        available: financial.available,
+        latestDate: financial.latestDate,
+        eps: financial.eps,
+        previousEPS: financial.previousEPS,
+        epsGrowth: financial.epsGrowth,
+        incomeAfterTaxes: financial.incomeAfterTaxes,
         previousIncomeAfterTaxes:
           financial.previousIncomeAfterTaxes,
-
-        netIncomeGrowth:
-          financial.netIncomeGrowth,
-
-        grossProfit:
-          financial.grossProfit,
-
-        operatingIncome:
-          financial.operatingIncome,
-
-        profitable:
-          financial.profitable,
-
-        recent:
-          financial.recent
-
+        netIncomeGrowth: financial.netIncomeGrowth,
+        grossProfit: financial.grossProfit,
+        operatingIncome: financial.operatingIncome,
+        profitable: financial.profitable,
+        recent: financial.recent
       }
-
     };
 
+    const errors = {
+      realtime: resultError(realtimeR),
+      institutional: resultError(institutionalR),
+      info: resultError(infoR),
+      revenue: resultError(revenueR),
+      financial: resultError(financialR)
+    };
 
-    /* =====================================================
-       DEGRADED
-    ===================================================== */
+    return res.status(200).json({
+      ok: true,
 
-    const degraded =
-      Boolean(
+      source: "FinMind",
+      engine: "Stock Analysis 6.2 Save Mode",
 
-        realtimeError ||
+      symbol,
+      name,
+      market,
 
-        institutionalError ||
+      realtime: Boolean(realtime),
 
-        infoError ||
+      degraded: Object.values(errors).some(Boolean),
 
-        revenueError ||
+      price: round(currentPrice),
+      previousClose: round(previousClose),
+      change: round(change),
+      changePercent: round(changePercent),
 
-        financialError
+      open: round(open),
+      high: round(high),
+      low: round(low),
+      volume,
 
-      );
+      quoteDate: today,
 
+      updatedAt: new Date().toLocaleString(
+        "zh-TW",
+        {
+          timeZone: "Asia/Taipei",
+          hour12: false
+        }
+      ),
 
-    /* =====================================================
-       RESPONSE
-    ===================================================== */
+      errors,
 
-    return res
-      .status(200)
-      .json({
+      realtimeError: errors.realtime,
+      institutionalError: errors.institutional,
+      revenueError: errors.revenue,
+      financialError: errors.financial,
 
-        ok:
-          true,
+      institutional,
+      fundamental,
+      revenue,
+      financial,
 
-        source:
-          "FinMind",
+      rows
+    });
 
-        engine:
-          "Stock Analysis 6.1 Save Mode",
+  } catch (error) {
+    console.error("stock api error:", error);
 
-        symbol,
-
-        name:
-          name ||
-          symbol,
-
-        market,
-
-        realtime:
-          Boolean(
-            realtime
-          ),
-
-        degraded,
-
-        price:
-          round(
-            currentPrice
-          ),
-
-        previousClose:
-          round(
-            previousClose
-          ),
-
-        change:
-          round(
-            change
-          ),
-
-        changePercent:
-          round(
-            changePercent
-          ),
-
-        open:
-          round(
-            currentOpen
-          ),
-
-        high:
-          round(
-            currentHigh
-          ),
-
-        low:
-          round(
-            currentLow
-          ),
-
-        volume:
-          currentVolume,
-
-        quoteDate:
-          today,
-
-        updatedAt:
-          new Date()
-            .toLocaleString(
-              "zh-TW",
-              {
-
-                timeZone:
-                  "Asia/Taipei",
-
-                hour12:
-                  false
-
-              }
-            ),
-
-
-        errors: {
-
-          realtime:
-            realtimeError,
-
-          institutional:
-            institutionalError,
-
-          info:
-            infoError,
-
-          revenue:
-            revenueError,
-
-          financial:
-            financialError
-
-        },
-
-
-        /*
-          保留舊欄位，
-          避免舊前端讀不到。
-        */
-
-        realtimeError,
-
-        institutionalError,
-
-        revenueError,
-
-        financialError,
-
-
-        institutional,
-
-        fundamental,
-
-        revenue,
-
-        financial,
-
-        rows:
-          mergedRows
-
-      });
-
-
+    return res.status(500).json({
+      ok: false,
+      source: "FinMind",
+      engine: "Stock Analysis 6.2 Save Mode",
+      error:
+        error?.message ||
+        "股票資料取得失敗"
+    });
   }
-  catch (error) {
-
-    console.error(
-      "stock api error:",
-      error
-    );
-
-
-    return res
-      .status(500)
-      .json({
-
-        ok:
-          false,
-
-        source:
-          "FinMind",
-
-        engine:
-          "Stock Analysis 6.1 Save Mode",
-
-        error:
-          safeError(
-            error,
-            "股票資料取得失敗"
-          )
-
-      });
-
-  }
-
 };
 
 
-/* =========================================================
-   HISTORICAL
-========================================================= */
+/* =========================
+   CACHE
+========================= */
 
-async function getHistorical(
+async function cached(key, ttl, loader) {
+  const old = CACHE.get(key);
+
+  if (old && old.expire > Date.now()) {
+    return old.value;
+  }
+
+  if (old) {
+    CACHE.delete(key);
+  }
+
+  const value = await loader();
+
+  CACHE.set(key, {
+    value,
+    expire: Date.now() + ttl
+  });
+
+  return value;
+}
+
+
+/* =========================
+   PRICE
+========================= */
+
+async function getPrice(
   symbol,
-  startDate,
-  endDate,
+  start,
+  end,
   token
 ) {
+  const json = await finmind(
+    "TaiwanStockPrice",
+    symbol,
+    start,
+    end,
+    token
+  );
 
+  const rows = (json.data || [])
+    .map(x => ({
+      date: normalizeDate(x.date),
+
+      open: positive(x.open),
+
+      high: positive(
+        x.max,
+        x.high
+      ),
+
+      low: positive(
+        x.min,
+        x.low
+      ),
+
+      close: positive(x.close),
+
+      volume: nonNegative(
+        x.Trading_Volume,
+        x.volume
+      )
+    }))
+    .filter(
+      x =>
+        x.date &&
+        x.open > 0 &&
+        x.high > 0 &&
+        x.low > 0 &&
+        x.close > 0
+    )
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date)
+    );
+
+  /*
+    去除重複日期
+  */
+  const map = new Map();
+
+  for (const row of rows) {
+    map.set(row.date, row);
+  }
+
+  return [...map.values()];
+}
+
+
+/* =========================
+   REALTIME
+========================= */
+
+async function getRealtime(
+  symbol,
+  token
+) {
   const url =
+    "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot" +
+    "?data_id=" +
+    encodeURIComponent(symbol);
+
+  const json = await requestJSON(
+    url,
+    token
+  );
+
+  check(json, "即時報價");
+
+  let data = json.data;
+
+  if (Array.isArray(data)) {
+    data =
+      data.find(
+        x =>
+          String(
+            x.stock_id ||
+            x.code ||
+            x.symbol ||
+            ""
+          ) === symbol
+      ) ||
+      data[0];
+  }
+
+  if (!data || typeof data !== "object") {
+    throw new Error("即時報價沒有資料");
+  }
+
+  return {
+    price: positive(
+      data.price,
+      data.close,
+      data.last_price,
+      data.lastPrice
+    ),
+
+    open: positive(
+      data.open,
+      data.open_price,
+      data.openPrice
+    ),
+
+    high: positive(
+      data.high,
+      data.max,
+      data.high_price,
+      data.highPrice
+    ),
+
+    low: positive(
+      data.low,
+      data.min,
+      data.low_price,
+      data.lowPrice
+    ),
+
+    volume: nonNegative(
+      data.total_volume,
+      data.totalVolume,
+      data.volume,
+      data.Trading_Volume
+    ),
+
+    previousClose: positive(
+      data.previous_close,
+      data.previousClose,
+      data.reference_price,
+      data.referencePrice
+    )
+  };
+}
+
+
+/* =========================
+   STOCK INFO
+========================= */
+
+async function getStockInfo(token) {
+  const json = await finmind(
+    "TaiwanStockInfo",
+    "",
+    "",
+    "",
+    token
+  );
+
+  return Array.isArray(json.data)
+    ? json.data
+    : [];
+}
+
+
+/* =========================
+   INSTITUTIONAL
+========================= */
+
+async function getInstitutional(
+  symbol,
+  start,
+  end,
+  token
+) {
+  const json = await finmind(
+    "TaiwanStockInstitutionalInvestorsBuySell",
+    symbol,
+    start,
+    end,
+    token
+  );
+
+  const daily = {};
+
+  for (const x of json.data || []) {
+    const d = normalizeDate(x.date);
+
+    if (!d) continue;
+
+    if (!daily[d]) {
+      daily[d] = {
+        date: d,
+        foreign: 0,
+        trust: 0,
+        dealer: 0,
+        total: 0
+      };
+    }
+
+    const net =
+      nonNegative(x.buy) -
+      nonNegative(x.sell);
+
+    const n =
+      String(x.name || "")
+        .toLowerCase();
+
+    if (
+      n.includes("foreign") ||
+      n.includes("外資")
+    ) {
+      daily[d].foreign += net;
+    } else if (
+      n.includes("investment_trust") ||
+      n.includes("investment trust") ||
+      n.includes("投信")
+    ) {
+      daily[d].trust += net;
+    } else if (
+      n.includes("dealer") ||
+      n.includes("自營")
+    ) {
+      daily[d].dealer += net;
+    }
+
+    daily[d].total += net;
+  }
+
+  const dates =
+    Object.keys(daily).sort();
+
+  if (!dates.length) {
+    return emptyInstitutional();
+  }
+
+  const latest =
+    daily[dates[dates.length - 1]];
+
+  const r3 = recent(daily, dates, 3);
+  const r5 = recent(daily, dates, 5);
+  const r10 = recent(daily, dates, 10);
+  const r20 = recent(daily, dates, 20);
+
+  return {
+    available: true,
+
+    latestDate: latest.date,
+
+    foreignLatest: latest.foreign,
+    trustLatest: latest.trust,
+    dealerLatest: latest.dealer,
+    totalLatest: latest.total,
+
+    foreign3: sum(r3, "foreign"),
+    trust3: sum(r3, "trust"),
+    dealer3: sum(r3, "dealer"),
+    total3: sum(r3, "total"),
+
+    foreign5: sum(r5, "foreign"),
+    trust5: sum(r5, "trust"),
+    dealer5: sum(r5, "dealer"),
+    total5: sum(r5, "total"),
+
+    foreign10: sum(r10, "foreign"),
+    trust10: sum(r10, "trust"),
+    dealer10: sum(r10, "dealer"),
+    total10: sum(r10, "total"),
+
+    foreign20: sum(r20, "foreign"),
+    trust20: sum(r20, "trust"),
+    dealer20: sum(r20, "dealer"),
+    total20: sum(r20, "total"),
+
+    foreignBuyDays5:
+      r5.filter(x => x.foreign > 0).length,
+
+    trustBuyDays5:
+      r5.filter(x => x.trust > 0).length,
+
+    totalBuyDays5:
+      r5.filter(x => x.total > 0).length,
+
+    recent: r20
+  };
+}
+
+
+/* =========================
+   REVENUE
+========================= */
+
+async function getRevenue(
+  symbol,
+  start,
+  end,
+  token
+) {
+  const json = await finmind(
+    "TaiwanStockMonthRevenue",
+    symbol,
+    start,
+    end,
+    token
+  );
+
+  const rows = (json.data || [])
+    .map(x => ({
+      date: normalizeDate(x.date),
+
+      year:
+        Number(x.revenue_year) || 0,
+
+      month:
+        Number(x.revenue_month) || 0,
+
+      revenue:
+        Number(x.revenue) || 0
+    }))
+    .filter(
+      x =>
+        x.year > 0 &&
+        x.month >= 1 &&
+        x.month <= 12
+    )
+    .sort(
+      (a, b) =>
+        a.year === b.year
+          ? a.month - b.month
+          : a.year - b.year
+    );
+
+  if (!rows.length) {
+    return emptyRevenue();
+  }
+
+  const map = new Map();
+
+  for (const x of rows) {
+    map.set(
+      `${x.year}-${x.month}`,
+      x
+    );
+  }
+
+  const clean =
+    [...map.values()].sort(
+      (a, b) =>
+        a.year === b.year
+          ? a.month - b.month
+          : a.year - b.year
+    );
+
+  const latest =
+    clean[clean.length - 1];
+
+  const prev =
+    clean.length > 1
+      ? clean[clean.length - 2]
+      : null;
+
+  const lastYear =
+    clean.find(
+      x =>
+        x.year === latest.year - 1 &&
+        x.month === latest.month
+    ) || null;
+
+  return {
+    available: true,
+
+    latestDate: latest.date,
+
+    year: latest.year,
+    month: latest.month,
+
+    latest: latest.revenue,
+
+    previousMonth:
+      prev?.revenue ?? null,
+
+    lastYearSameMonth:
+      lastYear?.revenue ?? null,
+
+    mom:
+      prev && prev.revenue > 0
+        ? round(
+            (
+              (latest.revenue - prev.revenue) /
+              prev.revenue
+            ) * 100
+          )
+        : null,
+
+    yoy:
+      lastYear &&
+      lastYear.revenue > 0
+        ? round(
+            (
+              (latest.revenue - lastYear.revenue) /
+              lastYear.revenue
+            ) * 100
+          )
+        : null,
+
+    recent:
+      clean.slice(-13)
+  };
+}
+
+
+/* =========================
+   FINANCIAL
+========================= */
+
+async function getFinancial(
+  symbol,
+  start,
+  end,
+  token
+) {
+  const json = await finmind(
+    "TaiwanStockFinancialStatements",
+    symbol,
+    start,
+    end,
+    token
+  );
+
+  const quarters = {};
+
+  for (const x of json.data || []) {
+    const d = normalizeDate(x.date);
+
+    if (!d) continue;
+
+    if (!quarters[d]) {
+      quarters[d] = {
+        date: d,
+        eps: null,
+        incomeAfterTaxes: null,
+        grossProfit: null,
+        operatingIncome: null
+      };
+    }
+
+    const type =
+      String(x.type || "");
+
+    const origin =
+      String(x.origin_name || "");
+
+    const value =
+      finite(x.value);
+
+    if (value === null) continue;
+
+    if (
+      type === "EPS" ||
+      origin.includes("每股盈餘")
+    ) {
+      quarters[d].eps = value;
+    } else if (
+      type === "IncomeAfterTaxes" ||
+      origin.includes("本期淨利") ||
+      origin.includes("本期淨損")
+    ) {
+      quarters[d].incomeAfterTaxes =
+        value;
+    } else if (
+      type === "GrossProfit" ||
+      origin.includes("營業毛利")
+    ) {
+      quarters[d].grossProfit =
+        value;
+    } else if (
+      type === "OperatingIncome" ||
+      type === "OperatingIncomeLoss" ||
+      origin.includes("營業利益") ||
+      origin.includes("營業損失")
+    ) {
+      quarters[d].operatingIncome =
+        value;
+    }
+  }
+
+  const clean =
+    Object.values(quarters)
+      .filter(
+        x =>
+          x.eps !== null ||
+          x.incomeAfterTaxes !== null ||
+          x.grossProfit !== null ||
+          x.operatingIncome !== null
+      )
+      .sort(
+        (a, b) =>
+          a.date.localeCompare(b.date)
+      );
+
+  if (!clean.length) {
+    return emptyFinancial();
+  }
+
+  const latest =
+    clean[clean.length - 1];
+
+  const epsRows =
+    clean.filter(x => x.eps !== null);
+
+  const incomeRows =
+    clean.filter(
+      x =>
+        x.incomeAfterTaxes !== null
+    );
+
+  const eps =
+    epsRows.length
+      ? epsRows[epsRows.length - 1].eps
+      : null;
+
+  const previousEPS =
+    epsRows.length > 1
+      ? epsRows[epsRows.length - 2].eps
+      : null;
+
+  const income =
+    incomeRows.length
+      ? incomeRows[incomeRows.length - 1]
+          .incomeAfterTaxes
+      : null;
+
+  const previousIncome =
+    incomeRows.length > 1
+      ? incomeRows[incomeRows.length - 2]
+          .incomeAfterTaxes
+      : null;
+
+  let profitable = null;
+
+  if (income !== null) {
+    profitable = income > 0;
+  } else if (eps !== null) {
+    profitable = eps > 0;
+  }
+
+  return {
+    available: true,
+
+    latestDate: latest.date,
+
+    eps: nullableRound(eps),
+
+    previousEPS:
+      nullableRound(previousEPS),
+
+    epsGrowth:
+      eps !== null &&
+      previousEPS !== null &&
+      previousEPS > 0
+        ? round(
+            (
+              (eps - previousEPS) /
+              Math.abs(previousEPS)
+            ) * 100
+          )
+        : null,
+
+    incomeAfterTaxes: income,
+
+    previousIncomeAfterTaxes:
+      previousIncome,
+
+    netIncomeGrowth:
+      income !== null &&
+      previousIncome !== null &&
+      previousIncome > 0
+        ? round(
+            (
+              (income - previousIncome) /
+              Math.abs(previousIncome)
+            ) * 100
+          )
+        : null,
+
+    grossProfit:
+      latest.grossProfit,
+
+    operatingIncome:
+      latest.operatingIncome,
+
+    profitable,
+
+    recent:
+      clean.slice(-8)
+  };
+}
+
+
+/* =========================
+   FINMIND
+========================= */
+
+async function finmind(
+  dataset,
+  symbol,
+  start,
+  end,
+  token
+) {
+  let url =
+    "https://api.finmindtrade.com/api/v4/data" +
+    "?dataset=" +
+    encodeURIComponent(dataset);
+
+  if (symbol) {
+    url +=
+      "&data_id=" +
+      encodeURIComponent(symbol);
+  }
+
+  if (start) {
+    url +=
+      "&start_date=" +
+      encodeURIComponent(start);
+  }
+
+  if (end) {
+    url +=
+      "&end_date=" +
+      encodeURIComponent(end);
+  }
+
+  const json =
+    await requestJSON(
+      url,
+      token
+    );
+
+  check(json, dataset);
+
+  return json;
+}
+
+
+function check(json, label) {
+  if (
+    !json ||
+    typeof json !== "object"
+  ) {
+    throw new Error(
+      `${label} API 格式錯誤`
+    );
+  }
+
+  if (
+    json.status !== undefined &&
+    Number(json.status) !== 200
+  ) {
+    throw new Error(
+      json.msg ||
+      json.message ||
+      `${label}取得失敗`
+    );
+  }
+}
+
+
+/* =========================
+   HTTPS
+========================= */
+
+function requestJSON(url, token) {
+  return new Promise(
+    (resolve, reject) => {
+      let done = false;
+
+      const request =
+        https.get(
+          url,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+
+              Accept:
+                "application/json",
+
+              "User-Agent":
+                "stock-analyzer/6.2"
+            },
+
+            timeout: 15000
+          },
+
+          response => {
+            let body = "";
+
+            response.setEncoding(
+              "utf8"
+            );
+
+            response.on(
+              "data",
+              chunk => {
+                if (
+                  body.length <
+                  15 * 1024 * 1024
+                ) {
+                  body += chunk;
+                }
+              }
+            );
+
+            response.on(
+              "end",
+              () => {
+                if (done) return;
+                done = true;
+
+                if (
+                  response.statusCode < 200 ||
+                  response.statusCode >= 300
+                ) {
+                  return reject(
+                    new Error(
+                      response.statusCode === 402
+                        ? "FinMind API 額度已達上限（HTTP 402）"
+                        : `FinMind HTTP ${response.statusCode}`
+                    )
+                  );
+                }
+
+                try {
+                  resolve(
+                    JSON.parse(body)
+                  );
+                } catch {
+                  reject(
+                    new Error(
+                      "FinMind JSON 解析失敗"
+                    )
+                  );
+                }
+              }
+            );
+          }
+        );
+
+      request.on(
+        "timeout",
+        () => {
+          if (done) return;
+
+          done = true;
+          request.destroy();
+
+          reject(
+            new Error(
+              "FinMind 連線逾時"
+            )
+          );
+        }
+      );
+
+      request.on(
+        "error",
+        error => {
+          if (done) return;
+
+          done = true;
+          reject(error);
+        }
+      );
+    }
+  );
+}
+
+
+/* =========================
+   EMPTY
+========================= */
+
+function emptyInstitutional() {
+  return {
+    available: false,
+    latestDate: "",
+
+    foreignLatest: 0,
+    trustLatest: 0,
+    dealerLatest: 0,
+    totalLatest: 0,
+
+    foreign3: 0,
+    trust3: 0,
+    dealer3: 0,
+    total3: 0,
+
+    foreign5: 0,
+    trust5: 0,
+    dealer5: 0,
+    total5: 0,
+
+    foreign10: 0,
+    trust10: 0,
+    dealer10: 0,
+    total10: 0,
+
+    foreign20: 0,
+    trust20: 0,
+    dealer20: 0,
+    total20: 0,
+
+    foreignBuyDays5: 0,
+    trustBuyDays5: 0,
+    totalBuyDays5: 0,
+
+    recent: []
+  };
+}
+
+
+function emptyRevenue() {
+  return {
+    available: false,
+    latestDate: "",
+    year: 0,
+    month: 0,
+    latest: null,
+    previousMonth: null,
+    lastYearSameMonth: null,
+    mom: null,
+    yoy: null,
+    recent: []
+  };
+}
+
+
+function emptyFinancial() {
+  return {
+    available: false,
+    latestDate: "",
+    eps: null,
+    previousEPS: null,
+    epsGrowth: null,
+    incomeAfterTaxes: null,
+    previousIncomeAfterTaxes: null,
+    netIncomeGrowth: null,
+    grossProfit: null,
+    operatingIncome: null,
+    profitable: null,
+    recent: []
+  };
+}
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function recent(
+  daily,
+  dates,
+  n
+) {
+  return dates
+    .slice(-n)
+    .map(d => daily[d]);
+}
+
+
+function sum(rows, key) {
+  return rows.reduce(
+    (total, x) =>
+      total +
+      (Number(x[key]) || 0),
+    0
+  );
+}
+
+
+function resultError(result) {
+  return result.status === "rejected"
+    ? result.reason?.message ||
+        "資料暫時無法取得"
+    : "";
+}
+
+
+function marketName(value) {
+  const x =
+    String(value || "")
+      .toLowerCase();
+
+  if (
+    x.includes("twse") ||
+    x.includes("上市")
+  ) {
+    return "上市";
+  }
+
+  if (
+    x.includes("tpex") ||
+    x.includes("otc") ||
+    x.includes("上櫃")
+  ) {
+    return "上櫃";
+  }
+
+  if (
+    x.includes("emerging") ||
+    x.includes("興櫃")
+  ) {
+    return "興櫃";
+  }
+
+  return value || "";
+}
+
+
+function date(d) {
+  return (
+    d.getFullYear() +
+    "-" +
+    String(
+      d.getMonth() + 1
+    ).padStart(2, "0") +
+    "-" +
+    String(
+      d.getDate()
+    ).padStart(2, "0")
+  );
+}
+
+
+function normalizeDate(value) {
+  const m =
+    String(value || "")
+      .match(
+        /^(\d{4}-\d{2}-\d{2})/
+      );
+
+  return m ? m[1] : "";
+}
+
+
+function finite(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? n
+    : null;
+}
+
+
+function positive(...values) {
+  for (const value of values) {
+    const n = finite(value);
+
+    if (
+      n !== null &&
+      n > 0
+    ) {
+      return n;
+    }
+  }
+
+  return 0;
+}
+
+
+function nonNegative(...values) {
+  for (const value of values) {
+    const n = finite(value);
+
+    if (
+      n !== null &&
+      n >= 0
+    ) {
+      return n;
+    }
+  }
+
+  return 0;
+}
+
+
+function round(value) {
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? Math.round(n * 100) / 100
+    : 0;
+}
+
+
+function nullableRound(value) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? Math.round(n * 100) / 100
+    : null;
+}
