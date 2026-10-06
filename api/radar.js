@@ -1,18 +1,24 @@
 // api/radar.js
-// 波段分析 Radar 6.2 Redis Cache
+// 波段分析 Radar 6.3 Fast
 //
 // 全市場 Snapshot
-// → Snapshot 高速初篩
-// → Top 120 才抓日 K
+// → 多路強勢初篩
+// → 最多 Top 160 抓日 K
 // → 技術 + 量價二次篩選
-// → Top 40 回傳首頁做完整分析
+// → Top 60 回傳首頁
 //
-// 6.2：
+// 6.3 Fast：
+// - 修正漲跌幅：深度分析後統一用「現價 vs 前一交易日收盤」
+// - 強勢 / 動能 / 爆量 / 買盤強，多路候選去重
+// - Top 120 → Top 160
+// - Top 40 → Top 60
+// - Batch 12 → 20
 // - Snapshot Redis Cache
 // - Stock Info Redis Cache
 // - Daily K Redis Cache
 // - 與 stock.js 6.3 共用 price cache
 // - FinMind 402 時使用 stale Redis
+// - CDN stale-while-revalidate 加速首頁
 
 const SNAPSHOT_URL =
   "https://api.finmindtrade.com/api/v4/taiwan_stock_tick_snapshot";
@@ -25,15 +31,15 @@ const DATA_URL =
    設定
 ========================================================= */
 
-const KLINE_SCAN_LIMIT = 120;
-const KLINE_BATCH_SIZE = 12;
-const DAILY_TIMEOUT_MS = 5000;
-const FRONTEND_LIMIT = 40;
+const KLINE_SCAN_LIMIT = 160;
+const KLINE_BATCH_SIZE = 20;
+const DAILY_TIMEOUT_MS = 4500;
+const FRONTEND_LIMIT = 60;
 
 
-/*
-  Redis Fresh TTL
-*/
+/* =========================================================
+   Redis Fresh TTL
+========================================================= */
 
 const CACHE_TTL = {
   snapshot: 60 * 1000,
@@ -42,9 +48,9 @@ const CACHE_TTL = {
 };
 
 
-/*
-  Redis 實際保存時間
-*/
+/* =========================================================
+   Redis 保存時間
+========================================================= */
 
 const REDIS_EXPIRE = {
   snapshot: 6 * 60 * 60,
@@ -137,6 +143,19 @@ function dateString(daysAgo = 0) {
   return d
     .toISOString()
     .slice(0, 10);
+}
+
+
+function getTaipeiDate() {
+  return new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }
+  ).format(new Date());
 }
 
 
@@ -502,7 +521,7 @@ async function finmindFetch(
 async function fetchSnapshot(token) {
   return smartCache({
     key:
-      "radar:v62:snapshot",
+      "radar:v63:snapshot",
 
     freshMs:
       CACHE_TTL.snapshot,
@@ -538,7 +557,7 @@ async function fetchTaiwanStockNames(
 ) {
   return smartCache({
     key:
-      "radar:v62:stock-info",
+      "radar:v63:stock-info",
 
     freshMs:
       CACHE_TTL.names,
@@ -760,6 +779,11 @@ function scoreSnapshot(x) {
     return null;
   }
 
+  /*
+    Snapshot change_rate 只拿來做第一階段高速初篩。
+    最終顯示值會在日 K 階段重新計算。
+  */
+
   const change =
     num(x.change_rate);
 
@@ -927,6 +951,9 @@ function scoreSnapshot(x) {
 
     changePercent:
       round(change),
+
+    changeSource:
+      "SNAPSHOT",
 
     volumeRatio:
       round(
@@ -1155,6 +1182,102 @@ async function fetchDailyRows(
 
     throw error;
   }
+}
+
+
+/* =========================================================
+   修正漲跌幅
+
+   1. 如果日 K 最後一筆就是今天：
+      使用倒數第二筆 close 當昨收
+
+   2. 如果日 K 尚未包含今天：
+      使用最後一筆 close 當昨收
+
+   最終：
+   (目前價格 - 昨收) / 昨收 * 100
+========================================================= */
+
+function normalizeChangePercent(
+  stock,
+  rows
+) {
+  if (
+    !stock ||
+    !Array.isArray(rows) ||
+    rows.length < 2
+  ) {
+    return stock;
+  }
+
+  const price =
+    num(stock.price);
+
+  if (!(price > 0)) {
+    return stock;
+  }
+
+  const today =
+    getTaipeiDate();
+
+  const last =
+    rows[
+      rows.length - 1
+    ];
+
+  let previousRow;
+
+  if (
+    String(
+      last?.date || ""
+    ) === today
+  ) {
+    previousRow =
+      rows[
+        rows.length - 2
+      ];
+  } else {
+    previousRow =
+      last;
+  }
+
+  const previousClose =
+    num(
+      previousRow?.close
+    );
+
+  if (!(previousClose > 0)) {
+    return stock;
+  }
+
+  const change =
+    price -
+    previousClose;
+
+  const changePercent =
+    (
+      change /
+      previousClose
+    ) * 100;
+
+  return {
+    ...stock,
+
+    previousClose:
+      round(previousClose),
+
+    change:
+      round(change),
+
+    changePercent:
+      round(
+        changePercent,
+        2
+      ),
+
+    changeSource:
+      "CURRENT_VS_PREVIOUS_CLOSE"
+  };
 }
 
 
@@ -1571,6 +1694,60 @@ function analyzeKline(
 
 
 /* =========================================================
+   強勢候選 Ranking
+========================================================= */
+
+function candidateRank(stock) {
+  const liquidity =
+    Math.min(
+      Math.log10(
+        Math.max(
+          stock.totalVolume,
+          1
+        )
+      ) * 2,
+      10
+    );
+
+  const volumeBoost =
+    Math.min(
+      Math.max(
+        stock.volumeRatio - 1,
+        0
+      ) * 5,
+      10
+    );
+
+  const momentumBoost =
+    stock.changePercent > 0
+      ? Math.min(
+          stock.changePercent * 1.2,
+          8
+        )
+      : 0;
+
+  const buyBoost =
+    stock.buyStrength >= 55
+      ? Math.min(
+          (
+            stock.buyStrength -
+            50
+          ) * 0.25,
+          6
+        )
+      : 0;
+
+  return (
+    stock.snapshotScore +
+    liquidity +
+    volumeBoost +
+    momentumBoost +
+    buyBoost
+  );
+}
+
+
+/* =========================================================
    API
 ========================================================= */
 
@@ -1656,66 +1833,174 @@ export default async function handler(
 
     /* =====================================================
        第一階段：
-       全市場初掃 → Top 120
+       全市場多路強勢初掃
     ===================================================== */
 
-    const candidatePool =
+    const baseCandidates =
       [...stocks]
 
         .filter(
           stock =>
             stock.changePercent >
-              -3.5 &&
+              -4.5 &&
 
             stock.changePercent <=
-              7.5 &&
+              9.8 &&
 
             (
               stock.snapshotScore >=
-                25 ||
+                18 ||
 
               stock.volumeRatio >=
-                1
+                0.8 ||
+
+              stock.buyStrength >=
+                52 ||
+
+              stock.changePercent >=
+                1.5
             )
+        );
+
+
+    /*
+      A. 綜合強勢
+    */
+
+    const strongest =
+      [...baseCandidates]
+
+        .sort(
+          (a, b) =>
+            candidateRank(b) -
+            candidateRank(a)
+        )
+
+        .slice(
+          0,
+          110
+        );
+
+
+    /*
+      B. 漲幅動能
+    */
+
+    const momentum =
+      [...baseCandidates]
+
+        .filter(
+          stock =>
+            stock.changePercent > 0
         )
 
         .sort(
-          (a, b) => {
-            const liquidityA =
-              Math.min(
-                Math.log10(
-                  Math.max(
-                    a.totalVolume,
-                    1
-                  )
-                ) * 2,
-                10
-              );
+          (a, b) =>
+            b.changePercent -
+            a.changePercent
+        )
 
-            const liquidityB =
-              Math.min(
-                Math.log10(
-                  Math.max(
-                    b.totalVolume,
-                    1
-                  )
-                ) * 2,
-                10
-              );
+        .slice(
+          0,
+          45
+        );
 
-            const aRank =
-              a.snapshotScore +
-              liquidityA;
 
-            const bRank =
-              b.snapshotScore +
-              liquidityB;
+    /*
+      C. 爆量
+    */
 
-            return (
-              bRank -
-              aRank
-            );
-          }
+    const volumeStrong =
+      [...baseCandidates]
+
+        .filter(
+          stock =>
+            stock.volumeRatio >= 1
+        )
+
+        .sort(
+          (a, b) =>
+            (
+              b.volumeRatio * 10 +
+              b.snapshotScore
+            ) -
+            (
+              a.volumeRatio * 10 +
+              a.snapshotScore
+            )
+        )
+
+        .slice(
+          0,
+          45
+        );
+
+
+    /*
+      D. 買盤強
+    */
+
+    const buyStrong =
+      [...baseCandidates]
+
+        .filter(
+          stock =>
+            stock.buyStrength >= 55
+        )
+
+        .sort(
+          (a, b) =>
+            (
+              b.buyStrength +
+              b.snapshotScore
+            ) -
+            (
+              a.buyStrength +
+              a.snapshotScore
+            )
+        )
+
+        .slice(
+          0,
+          35
+        );
+
+
+    /*
+      四路合併去重
+    */
+
+    const candidateMap =
+      new Map();
+
+    for (
+      const stock of [
+        ...strongest,
+        ...momentum,
+        ...volumeStrong,
+        ...buyStrong
+      ]
+    ) {
+      if (
+        !candidateMap.has(
+          stock.symbol
+        )
+      ) {
+        candidateMap.set(
+          stock.symbol,
+          stock
+        );
+      }
+    }
+
+
+    const candidatePool =
+      [...candidateMap.values()]
+
+        .sort(
+          (a, b) =>
+            candidateRank(b) -
+            candidateRank(a)
         )
 
         .slice(
@@ -1726,7 +2011,7 @@ export default async function handler(
 
     /* =====================================================
        第二階段：
-       Top 120 日 K
+       最多 Top 160 日 K
     ===================================================== */
 
     const analyzed = [];
@@ -1754,13 +2039,25 @@ export default async function handler(
                 );
 
               if (
+                !Array.isArray(rows) ||
                 rows.length < 65
               ) {
                 return null;
               }
 
+              /*
+                在真正技術分析前，
+                先統一修正漲跌幅。
+              */
+
+              const normalizedStock =
+                normalizeChangePercent(
+                  stock,
+                  rows
+                );
+
               return analyzeKline(
-                stock,
+                normalizedStock,
                 rows
               );
             }
@@ -1784,7 +2081,7 @@ export default async function handler(
 
 
     /* =====================================================
-       Top 40
+       Top 60
     ===================================================== */
 
     const strategyReady =
@@ -1807,6 +2104,7 @@ export default async function handler(
           FRONTEND_LIMIT
         );
 
+
     const finalCandidates =
       strategyReady.length
         ? strategyReady
@@ -1821,23 +2119,69 @@ export default async function handler(
             .slice(
               0,
               Math.min(
-                20,
+                30,
                 FRONTEND_LIMIT
               )
             );
 
+
+    /*
+      把已深度分析的股票資料覆蓋回去，
+      讓首頁排行榜優先使用修正後的漲跌幅。
+    */
+
+    const analyzedMap =
+      new Map(
+        analyzed.map(
+          stock => [
+            stock.symbol,
+            stock
+          ]
+        )
+      );
+
+
+    const displayStocks =
+      stocks.map(
+        stock =>
+          analyzedMap.get(
+            stock.symbol
+          ) ||
+          stock
+      );
+
+
+    /* =====================================================
+       Radar 強勢關注
+    ===================================================== */
+
     const radar =
-      [...stocks]
+      [...displayStocks]
 
         .sort(
-          (a, b) =>
-            b.snapshotScore -
-            a.snapshotScore
+          (a, b) => {
+            const scoreA =
+              num(
+                a.fastScore ??
+                a.snapshotScore
+              );
+
+            const scoreB =
+              num(
+                b.fastScore ??
+                b.snapshotScore
+              );
+
+            return (
+              scoreB -
+              scoreA
+            );
+          }
         )
 
         .slice(
           0,
-          30
+          50
         )
 
         .map(
@@ -1845,22 +2189,40 @@ export default async function handler(
             ...stock,
 
             score:
-              stock.snapshotScore,
+              num(
+                stock.fastScore ??
+                stock.snapshotScore
+              ),
 
             longStatus:
-              stock.snapshotScore >=
-                55
+              num(
+                stock.fastScore ??
+                stock.snapshotScore
+              ) >= 55
                 ? "優先觀察"
                 : "等待確認"
           })
         );
 
+
+    /*
+      深度強勢關注
+    */
+
     const longWatch =
       finalCandidates
-        .slice(0, 30);
+        .slice(
+          0,
+          50
+        );
+
+
+    /*
+      爆量榜
+    */
 
     const volumeLeaders =
-      [...stocks]
+      [...displayStocks]
 
         .filter(
           x =>
@@ -1873,10 +2235,18 @@ export default async function handler(
             a.volumeRatio
         )
 
-        .slice(0, 15);
+        .slice(
+          0,
+          30
+        );
+
+
+    /*
+      動能榜
+    */
 
     const momentumLeaders =
-      [...stocks]
+      [...displayStocks]
 
         .filter(
           x =>
@@ -1889,16 +2259,28 @@ export default async function handler(
             a.changePercent
         )
 
-        .slice(0, 15);
+        .slice(
+          0,
+          30
+        );
+
 
     const elapsedMs =
       Date.now() -
       startedAt;
 
+
+    /*
+      首頁加速：
+      CDN 可直接使用 2 分鐘結果，
+      背景可使用舊資料 10 分鐘並重新驗證。
+    */
+
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=60, stale-while-revalidate=180"
+      "public, s-maxage=120, stale-while-revalidate=600"
     );
+
 
     return res
       .status(200)
@@ -1906,10 +2288,10 @@ export default async function handler(
         ok: true,
 
         platform:
-          "波段分析 Radar 6.2",
+          "波段分析 Radar 6.3 Fast",
 
         engine:
-          "FAST_TWO_STAGE_120_REDIS",
+          "FAST_MULTI_STAGE_160_REDIS",
 
         market:
           "TW",
@@ -1928,6 +2310,21 @@ export default async function handler(
 
         scanned:
           stocks.length,
+
+        baseCandidateCount:
+          baseCandidates.length,
+
+        strongCandidateCount:
+          strongest.length,
+
+        momentumCandidateCount:
+          momentum.length,
+
+        volumeCandidateCount:
+          volumeStrong.length,
+
+        buyCandidateCount:
+          buyStrong.length,
 
         strategyCandidateCount:
           candidatePool.length,
@@ -1955,8 +2352,28 @@ export default async function handler(
 
         momentumLeaders,
 
+        rules: {
+          klineScanLimit:
+            KLINE_SCAN_LIMIT,
+
+          frontendLimit:
+            FRONTEND_LIMIT,
+
+          batchSize:
+            KLINE_BATCH_SIZE,
+
+          correctedChangePercent:
+            true,
+
+          changeFormula:
+            "(currentPrice - previousClose) / previousClose * 100",
+
+          multiSourceCandidates:
+            true
+        },
+
         notice:
-          "Radar 6.2：全市場 Snapshot → Top 120 日 K → Top 40；Snapshot、股票名稱與日 K 已加入 Upstash Redis，日 K 與 Stock API 6.3 共用快取。"
+          "Radar 6.3 Fast：全市場 Snapshot → 強勢/動能/爆量/買盤多路初篩 → 最多 Top 160 日 K → Top 60；深度分析股票以現價對前一交易日收盤重新計算漲跌幅；沿用 Upstash Redis 與 Stock API 6.3 共用日 K 快取。"
       });
 
   } catch (error) {
@@ -1976,10 +2393,10 @@ export default async function handler(
         ok: false,
 
         platform:
-          "波段分析 Radar 6.2",
+          "波段分析 Radar 6.3 Fast",
 
         engine:
-          "FAST_TWO_STAGE_120_REDIS",
+          "FAST_MULTI_STAGE_160_REDIS",
 
         error:
           error?.name ===
