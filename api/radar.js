@@ -1,5 +1,5 @@
 // api/radar.js
-// 波段分析 Radar 6.3 Fast
+// 波段分析 Radar 6.3.1 Fast
 //
 // 全市場 Snapshot
 // → 多路強勢初篩
@@ -7,17 +7,19 @@
 // → 技術 + 量價二次篩選
 // → Top 60 回傳首頁
 //
-// 6.3 Fast：
-// - 修正漲跌幅：深度分析後統一用「現價 vs 前一交易日收盤」
+// 6.3.1：
+// - 修正盤後 / 凌晨漲跌幅變成 0%
+// - 盤中：即時價 vs 前一交易日收盤
+// - 盤後：當日收盤 vs 前一交易日收盤
+// - 休市 / 凌晨：最近交易日收盤 vs 前一交易日收盤
 // - 強勢 / 動能 / 爆量 / 買盤強，多路候選去重
-// - Top 120 → Top 160
-// - Top 40 → Top 60
-// - Batch 12 → 20
+// - Top 160 日 K
+// - Top 60 首頁候選
+// - Batch 20
 // - Snapshot Redis Cache
 // - Stock Info Redis Cache
-// - Daily K Redis Cache
-// - 與 stock.js 6.3 共用 price cache
-// - FinMind 402 時使用 stale Redis
+// - Daily K 與 stock.js 6.3 共用
+// - FinMind 402 使用 stale Redis
 // - CDN stale-while-revalidate 加速首頁
 
 const SNAPSHOT_URL =
@@ -38,7 +40,7 @@ const FRONTEND_LIMIT = 60;
 
 
 /* =========================================================
-   Redis Fresh TTL
+   Cache
 ========================================================= */
 
 const CACHE_TTL = {
@@ -47,10 +49,6 @@ const CACHE_TTL = {
   daily: 30 * 60 * 1000
 };
 
-
-/* =========================================================
-   Redis 保存時間
-========================================================= */
 
 const REDIS_EXPIRE = {
   snapshot: 6 * 60 * 60,
@@ -91,7 +89,8 @@ function round(v, d = 2) {
     return null;
   }
 
-  const p = 10 ** d;
+  const p =
+    10 ** d;
 
   return (
     Math.round(
@@ -104,14 +103,19 @@ function round(v, d = 2) {
 function clamp(v, min, max) {
   return Math.min(
     max,
-    Math.max(min, v)
+    Math.max(
+      min,
+      v
+    )
   );
 }
 
 
 function avg(arr) {
   const values =
-    arr.filter(Number.isFinite);
+    arr.filter(
+      Number.isFinite
+    );
 
   if (!values.length) {
     return 0;
@@ -121,58 +125,229 @@ function avg(arr) {
     values.reduce(
       (a, b) => a + b,
       0
-    ) / values.length
+    ) /
+    values.length
   );
 }
 
 
 function isNormalTaiwanStock(id) {
   return /^\d{4}$/.test(
-    String(id || "")
+    String(
+      id || ""
+    )
   );
 }
 
 
 function dateString(daysAgo = 0) {
-  const d = new Date();
+  const d =
+    new Date();
 
   d.setDate(
-    d.getDate() - daysAgo
+    d.getDate() -
+    daysAgo
   );
 
   return d
     .toISOString()
-    .slice(0, 10);
+    .slice(
+      0,
+      10
+    );
+}
+
+
+function getTaipeiParts() {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone:
+          "Asia/Taipei",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+
+        second:
+          "2-digit",
+
+        weekday:
+          "short",
+
+        hour12:
+          false
+      }
+    )
+      .formatToParts(
+        new Date()
+      );
+
+  const map = {};
+
+  for (
+    const part of parts
+  ) {
+    if (
+      part.type !==
+      "literal"
+    ) {
+      map[
+        part.type
+      ] =
+        part.value;
+    }
+  }
+
+  return {
+    year:
+      Number(
+        map.year
+      ),
+
+    month:
+      Number(
+        map.month
+      ),
+
+    day:
+      Number(
+        map.day
+      ),
+
+    hour:
+      Number(
+        map.hour
+      ),
+
+    minute:
+      Number(
+        map.minute
+      ),
+
+    second:
+      Number(
+        map.second
+      ),
+
+    weekday:
+      map.weekday
+  };
 }
 
 
 function getTaipeiDate() {
-  return new Intl.DateTimeFormat(
-    "en-CA",
-    {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }
-  ).format(new Date());
+  const p =
+    getTaipeiParts();
+
+  return (
+    `${p.year}-` +
+    `${String(
+      p.month
+    ).padStart(
+      2,
+      "0"
+    )}-` +
+    `${String(
+      p.day
+    ).padStart(
+      2,
+      "0"
+    )}`
+  );
 }
 
 
 function getTaipeiTime() {
-  return new Intl.DateTimeFormat(
-    "zh-TW",
-    {
-      timeZone: "Asia/Taipei",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false
-    }
-  ).format(new Date());
+  return new Intl
+    .DateTimeFormat(
+      "zh-TW",
+      {
+        timeZone:
+          "Asia/Taipei",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+
+        second:
+          "2-digit",
+
+        hour12:
+          false
+      }
+    )
+    .format(
+      new Date()
+    );
+}
+
+
+function isTaiwanWeekday() {
+  const weekday =
+    getTaipeiParts()
+      .weekday;
+
+  return ![
+    "Sat",
+    "Sun"
+  ].includes(
+    weekday
+  );
+}
+
+
+function isTaiwanMarketSession() {
+  if (
+    !isTaiwanWeekday()
+  ) {
+    return false;
+  }
+
+  const p =
+    getTaipeiParts();
+
+  const minutes =
+    p.hour * 60 +
+    p.minute;
+
+  /*
+    台股正常交易：
+    09:00 ~ 13:30
+
+    多留幾分鐘容錯：
+    08:55 ~ 13:40
+  */
+
+  return (
+    minutes >=
+      8 * 60 + 55 &&
+    minutes <=
+      13 * 60 + 40
+  );
 }
 
 
@@ -182,27 +357,41 @@ function getTaipeiTime() {
 
 function redisConfig() {
   const url =
-    process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.KV_REST_API_URL ||
+    process.env
+      .UPSTASH_REDIS_REST_URL ||
+    process.env
+      .KV_REST_API_URL ||
     "";
 
   const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ||
-    process.env.KV_REST_API_TOKEN ||
+    process.env
+      .UPSTASH_REDIS_REST_TOKEN ||
+    process.env
+      .KV_REST_API_TOKEN ||
     "";
 
-  if (!url || !token) {
+  if (
+    !url ||
+    !token
+  ) {
     return null;
   }
 
   return {
-    url: url.replace(/\/+$/, ""),
+    url:
+      url.replace(
+        /\/+$/,
+        ""
+      ),
+
     token
   };
 }
 
 
-async function redisCommand(command) {
+async function redisCommand(
+  command
+) {
   const config =
     redisConfig();
 
@@ -216,7 +405,8 @@ async function redisCommand(command) {
     await fetch(
       config.url,
       {
-        method: "POST",
+        method:
+          "POST",
 
         headers: {
           Authorization:
@@ -227,14 +417,18 @@ async function redisCommand(command) {
         },
 
         body:
-          JSON.stringify(command)
+          JSON.stringify(
+            command
+          )
       }
     );
 
   const text =
     await response.text();
 
-  if (!response.ok) {
+  if (
+    !response.ok
+  ) {
     throw new Error(
       `Redis HTTP ${response.status}`
     );
@@ -243,24 +437,36 @@ async function redisCommand(command) {
   let json;
 
   try {
-    json = JSON.parse(text);
+    json =
+      JSON.parse(
+        text
+      );
   } catch {
     throw new Error(
       "Redis JSON 解析失敗"
     );
   }
 
-  if (json?.error) {
+  if (
+    json?.error
+  ) {
     throw new Error(
-      String(json.error)
+      String(
+        json.error
+      )
     );
   }
 
-  return json?.result ?? null;
+  return (
+    json?.result ??
+    null
+  );
 }
 
 
-async function redisGet(key) {
+async function redisGet(
+  key
+) {
   try {
     const result =
       await redisCommand([
@@ -276,12 +482,15 @@ async function redisGet(key) {
     }
 
     if (
-      typeof result === "object"
+      typeof result ===
+      "object"
     ) {
       return result;
     }
 
-    return JSON.parse(result);
+    return JSON.parse(
+      result
+    );
 
   } catch (error) {
     console.error(
@@ -304,9 +513,13 @@ async function redisSet(
     await redisCommand([
       "SET",
       key,
-      JSON.stringify(value),
+      JSON.stringify(
+        value
+      ),
       "EX",
-      String(expireSeconds)
+      String(
+        expireSeconds
+      )
     ]);
 
     return true;
@@ -337,39 +550,55 @@ async function smartCache({
     Date.now();
 
   const memory =
-    MEMORY.get(key);
+    MEMORY.get(
+      key
+    );
 
   if (
     memory &&
-    memory.freshUntil > now
+    memory.freshUntil >
+      now
   ) {
-    return memory.value;
+    return (
+      memory.value
+    );
   }
 
   const redis =
-    await redisGet(key);
+    await redisGet(
+      key
+    );
 
   if (
     redis &&
-    redis.value !== undefined
+    redis.value !==
+      undefined
   ) {
     const savedAt =
-      Number(redis.savedAt) || 0;
+      Number(
+        redis.savedAt
+      ) || 0;
 
     if (
       savedAt &&
-      now - savedAt < freshMs
+      now - savedAt <
+        freshMs
     ) {
       MEMORY.set(
         key,
         {
-          value: redis.value,
+          value:
+            redis.value,
+
           freshUntil:
-            savedAt + freshMs
+            savedAt +
+            freshMs
         }
       );
 
-      return redis.value;
+      return (
+        redis.value
+      );
     }
   }
 
@@ -381,15 +610,19 @@ async function smartCache({
       key,
       {
         value,
+
         freshUntil:
-          now + freshMs
+          now +
+          freshMs
       }
     );
 
     await redisSet(
       key,
       {
-        savedAt: Date.now(),
+        savedAt:
+          Date.now(),
+
         value
       },
       expireSeconds
@@ -401,7 +634,8 @@ async function smartCache({
 
     if (
       redis &&
-      redis.value !== undefined
+      redis.value !==
+        undefined
     ) {
       console.warn(
         "Radar use stale Redis:",
@@ -412,21 +646,30 @@ async function smartCache({
       MEMORY.set(
         key,
         {
-          value: redis.value,
+          value:
+            redis.value,
+
           freshUntil:
             Date.now() +
-            5 * 60 * 1000
+            5 *
+            60 *
+            1000
         }
       );
 
-      return redis.value;
+      return (
+        redis.value
+      );
     }
 
     if (
       memory &&
-      memory.value !== undefined
+      memory.value !==
+        undefined
     ) {
-      return memory.value;
+      return (
+        memory.value
+      );
     }
 
     throw error;
@@ -435,7 +678,7 @@ async function smartCache({
 
 
 /* =========================================================
-   FinMind Request
+   FinMind
 ========================================================= */
 
 async function finmindFetch(
@@ -448,7 +691,8 @@ async function finmindFetch(
 
   const timer =
     setTimeout(
-      () => controller.abort(),
+      () =>
+        controller.abort(),
       timeout
     );
 
@@ -475,14 +719,20 @@ async function finmindFetch(
     try {
       body =
         await response.json();
+
     } catch {
       throw new Error(
         `FinMind JSON 錯誤 HTTP ${response.status}`
       );
     }
 
-    if (!response.ok) {
-      if (response.status === 402) {
+    if (
+      !response.ok
+    ) {
+      if (
+        response.status ===
+        402
+      ) {
         throw new Error(
           "FinMind API 額度已達上限（HTTP 402）"
         );
@@ -496,8 +746,11 @@ async function finmindFetch(
     }
 
     if (
-      body?.status !== undefined &&
-      Number(body.status) !== 200
+      body?.status !==
+        undefined &&
+      Number(
+        body.status
+      ) !== 200
     ) {
       throw new Error(
         body?.msg ||
@@ -509,7 +762,9 @@ async function finmindFetch(
     return body;
 
   } finally {
-    clearTimeout(timer);
+    clearTimeout(
+      timer
+    );
   }
 }
 
@@ -518,10 +773,12 @@ async function finmindFetch(
    Snapshot
 ========================================================= */
 
-async function fetchSnapshot(token) {
+async function fetchSnapshot(
+  token
+) {
   return smartCache({
     key:
-      "radar:v63:snapshot",
+      "radar:v631:snapshot",
 
     freshMs:
       CACHE_TTL.snapshot,
@@ -557,7 +814,7 @@ async function fetchTaiwanStockNames(
 ) {
   return smartCache({
     key:
-      "radar:v63:stock-info",
+      "radar:v631:stock-info",
 
     freshMs:
       CACHE_TTL.names,
@@ -574,7 +831,8 @@ async function fetchTaiwanStockNames(
             7000
           );
 
-        const names = {};
+        const names =
+          {};
 
         for (
           const stock of
@@ -607,26 +865,42 @@ async function fetchTaiwanStockNames(
    技術指標
 ========================================================= */
 
-function SMA(arr, period) {
+function SMA(
+  arr,
+  period
+) {
   if (
-    !Array.isArray(arr) ||
-    arr.length < period
+    !Array.isArray(
+      arr
+    ) ||
+    arr.length <
+      period
   ) {
     return NaN;
   }
 
   return avg(
     arr
-      .slice(-period)
-      .map(Number)
+      .slice(
+        -period
+      )
+      .map(
+        Number
+      )
   );
 }
 
 
-function EMA(arr, period) {
+function EMA(
+  arr,
+  period
+) {
   if (
-    !Array.isArray(arr) ||
-    arr.length < period
+    !Array.isArray(
+      arr
+    ) ||
+    arr.length <
+      period
   ) {
     return NaN;
   }
@@ -634,12 +908,20 @@ function EMA(arr, period) {
   let value =
     avg(
       arr
-        .slice(0, period)
-        .map(Number)
+        .slice(
+          0,
+          period
+        )
+        .map(
+          Number
+        )
     );
 
   const k =
-    2 / (period + 1);
+    2 /
+    (
+      period + 1
+    );
 
   for (
     let i = period;
@@ -647,25 +929,39 @@ function EMA(arr, period) {
     i++
   ) {
     value =
-      Number(arr[i]) * k +
-      value * (1 - k);
+      Number(
+        arr[i]
+      ) *
+      k +
+      value *
+      (
+        1 - k
+      );
   }
 
   return value;
 }
 
 
-function RSI(arr, period = 14) {
+function RSI(
+  arr,
+  period = 14
+) {
   if (
-    !Array.isArray(arr) ||
-    arr.length <= period
+    !Array.isArray(
+      arr
+    ) ||
+    arr.length <=
+      period
   ) {
     return NaN;
   }
 
   const values =
     arr.slice(
-      -(period + 1)
+      -(
+        period + 1
+      )
     );
 
   let gain = 0;
@@ -673,71 +969,112 @@ function RSI(arr, period = 14) {
 
   for (
     let i = 1;
-    i < values.length;
+    i <
+      values.length;
     i++
   ) {
     const diff =
-      Number(values[i]) -
-      Number(values[i - 1]);
+      Number(
+        values[i]
+      ) -
+      Number(
+        values[
+          i - 1
+        ]
+      );
 
-    if (diff > 0) {
-      gain += diff;
+    if (
+      diff > 0
+    ) {
+      gain +=
+        diff;
+
     } else {
-      loss += Math.abs(diff);
+      loss +=
+        Math.abs(
+          diff
+        );
     }
   }
 
-  gain /= period;
-  loss /= period;
+  gain /=
+    period;
 
-  if (loss === 0) {
+  loss /=
+    period;
+
+  if (
+    loss === 0
+  ) {
     return 100;
   }
 
   const rs =
-    gain / loss;
+    gain /
+    loss;
 
   return (
     100 -
-    100 / (1 + rs)
+    100 /
+    (
+      1 + rs
+    )
   );
 }
 
 
-function ATR(rows, period = 14) {
+function ATR(
+  rows,
+  period = 14
+) {
   if (
-    !Array.isArray(rows) ||
-    rows.length <= period
+    !Array.isArray(
+      rows
+    ) ||
+    rows.length <=
+      period
   ) {
     return NaN;
   }
 
-  const tr = [];
+  const tr =
+    [];
 
   for (
     let i = 1;
-    i < rows.length;
+    i <
+      rows.length;
     i++
   ) {
     const high =
-      num(rows[i].high);
+      num(
+        rows[i].high
+      );
 
     const low =
-      num(rows[i].low);
+      num(
+        rows[i].low
+      );
 
     const previousClose =
       num(
-        rows[i - 1].close
+        rows[
+          i - 1
+        ].close
       );
 
     tr.push(
       Math.max(
         high - low,
+
         Math.abs(
-          high - previousClose
+          high -
+          previousClose
         ),
+
         Math.abs(
-          low - previousClose
+          low -
+          previousClose
         )
       )
     );
@@ -754,23 +1091,34 @@ function ATR(rows, period = 14) {
    Snapshot 第一階段評分
 ========================================================= */
 
-function scoreSnapshot(x) {
+function scoreSnapshot(
+  x
+) {
   const symbol =
     String(
-      x.stock_id || ""
+      x.stock_id ||
+      ""
     );
 
   const price =
-    num(x.close);
+    num(
+      x.close
+    );
 
   const open =
-    num(x.open);
+    num(
+      x.open
+    );
 
   const high =
-    num(x.high);
+    num(
+      x.high
+    );
 
   const low =
-    num(x.low);
+    num(
+      x.low
+    );
 
   if (
     !symbol ||
@@ -780,32 +1128,50 @@ function scoreSnapshot(x) {
   }
 
   /*
-    Snapshot change_rate 只拿來做第一階段高速初篩。
-    最終顯示值會在日 K 階段重新計算。
+    change_rate：
+    只做高速初篩。
+
+    深度分析後，
+    一律重新算正式 changePercent。
   */
 
-  const change =
-    num(x.change_rate);
+  const snapshotChange =
+    num(
+      x.change_rate
+    );
 
   const volumeRatio =
-    num(x.volume_ratio);
+    num(
+      x.volume_ratio
+    );
 
   const totalVolume =
-    num(x.total_volume);
+    num(
+      x.total_volume
+    );
 
   const buyVolume =
-    num(x.buy_volume);
+    num(
+      x.buy_volume
+    );
 
   const sellVolume =
-    num(x.sell_volume);
+    num(
+      x.sell_volume
+    );
 
   const range =
-    high - low;
+    high -
+    low;
 
   const dayPosition =
     range > 0
       ? clamp(
-          (price - low) / range,
+          (
+            price -
+            low
+          ) /
+          range,
           0,
           1
         )
@@ -817,30 +1183,37 @@ function scoreSnapshot(x) {
 
   const buyStrength =
     orderTotal > 0
-      ? buyVolume / orderTotal
+      ? buyVolume /
+        orderTotal
       : 0.5;
 
   let score = 0;
 
   if (
-    change >= 0.5 &&
-    change <= 4
+    snapshotChange >=
+      0.5 &&
+    snapshotChange <=
+      4
   ) {
     score += 20;
 
   } else if (
-    change > 4 &&
-    change <= 6.5
+    snapshotChange >
+      4 &&
+    snapshotChange <=
+      6.5
   ) {
     score += 15;
 
   } else if (
-    change >= -1
+    snapshotChange >=
+      -1
   ) {
     score += 9;
 
   } else if (
-    change < -3
+    snapshotChange <
+      -3
   ) {
     score -= 15;
   }
@@ -890,44 +1263,52 @@ function scoreSnapshot(x) {
   }
 
   if (
-    buyStrength >= 0.62
+    buyStrength >=
+      0.62
   ) {
     score += 10;
 
   } else if (
-    buyStrength >= 0.52
+    buyStrength >=
+      0.52
   ) {
     score += 5;
 
   } else if (
-    buyStrength <= 0.35
+    buyStrength <=
+      0.35
   ) {
     score -= 5;
   }
 
   if (
-    totalVolume >= 5000
+    totalVolume >=
+      5000
   ) {
     score += 10;
 
   } else if (
-    totalVolume >= 1500
+    totalVolume >=
+      1500
   ) {
     score += 7;
 
   } else if (
-    totalVolume >= 500
+    totalVolume >=
+      500
   ) {
     score += 3;
 
   } else if (
-    totalVolume < 200
+    totalVolume <
+      200
   ) {
     score -= 20;
   }
 
   if (
-    change > 7
+    snapshotChange >
+      7
   ) {
     score -= 25;
   }
@@ -935,22 +1316,38 @@ function scoreSnapshot(x) {
   return {
     symbol,
 
-    name: "",
+    name:
+      "",
 
     price:
-      round(price),
+      round(
+        price
+      ),
 
     open:
-      round(open),
+      round(
+        open
+      ),
 
     high:
-      round(high),
+      round(
+        high
+      ),
 
     low:
-      round(low),
+      round(
+        low
+      ),
 
     changePercent:
-      round(change),
+      round(
+        snapshotChange
+      ),
+
+    snapshotChangePercent:
+      round(
+        snapshotChange
+      ),
 
     changeSource:
       "SNAPSHOT",
@@ -965,19 +1362,23 @@ function scoreSnapshot(x) {
 
     dayPosition:
       round(
-        dayPosition * 100,
+        dayPosition *
+        100,
         1
       ),
 
     buyStrength:
       round(
-        buyStrength * 100,
+        buyStrength *
+        100,
         1
       ),
 
     snapshotScore:
       clamp(
-        Math.round(score),
+        Math.round(
+          score
+        ),
         0,
         100
       )
@@ -987,7 +1388,8 @@ function scoreSnapshot(x) {
 
 /* =========================================================
    日 K
-   與 stock.js 6.3 共用：
+
+   與 Stock 6.3 共用：
    stock:v63:price:2330
 ========================================================= */
 
@@ -1011,9 +1413,12 @@ async function fetchDailyRows(
 
   if (
     memory &&
-    memory.freshUntil > now
+    memory.freshUntil >
+      now
   ) {
-    return memory.value;
+    return (
+      memory.value
+    );
   }
 
   const redis =
@@ -1035,7 +1440,7 @@ async function fetchDailyRows(
     if (
       savedAt &&
       now - savedAt <
-      CACHE_TTL.daily
+        CACHE_TTL.daily
     ) {
       MEMORY.set(
         memoryKey,
@@ -1049,7 +1454,9 @@ async function fetchDailyRows(
         }
       );
 
-      return redis.value;
+      return (
+        redis.value
+      );
     }
   }
 
@@ -1068,17 +1475,26 @@ async function fetchDailyRows(
       );
 
     const rows =
-      (body?.data || [])
+      (
+        body?.data ||
+        []
+      )
 
         .map(
           x => ({
             date:
               String(
-                x.date || ""
-              ).slice(0, 10),
+                x.date ||
+                ""
+              ).slice(
+                0,
+                10
+              ),
 
             open:
-              num(x.open),
+              num(
+                x.open
+              ),
 
             high:
               num(
@@ -1093,7 +1509,9 @@ async function fetchDailyRows(
               ),
 
             close:
-              num(x.close),
+              num(
+                x.close
+              ),
 
             volume:
               num(
@@ -1106,29 +1524,40 @@ async function fetchDailyRows(
         .filter(
           x =>
             x.date &&
-            x.close > 0 &&
-            x.high > 0 &&
-            x.low > 0
+            x.close >
+              0 &&
+            x.high >
+              0 &&
+            x.low >
+              0
         )
 
         .sort(
-          (a, b) =>
-            String(a.date)
-              .localeCompare(
-                String(b.date)
+          (
+            a,
+            b
+          ) =>
+            String(
+              a.date
+            ).localeCompare(
+              String(
+                b.date
               )
+            )
         );
 
     if (
-      rows.length >= 60
+      rows.length >=
+      60
     ) {
-      const payload = {
-        savedAt:
-          Date.now(),
+      const payload =
+        {
+          savedAt:
+            Date.now(),
 
-        value:
-          rows
-      };
+          value:
+            rows
+        };
 
       await redisSet(
         sharedKey,
@@ -1139,7 +1568,8 @@ async function fetchDailyRows(
       MEMORY.set(
         memoryKey,
         {
-          value: rows,
+          value:
+            rows,
 
           freshUntil:
             Date.now() +
@@ -1157,7 +1587,8 @@ async function fetchDailyRows(
       Array.isArray(
         redis.value
       ) &&
-      redis.value.length >= 60
+      redis.value.length >=
+        60
     ) {
       console.warn(
         "Radar daily stale:",
@@ -1173,11 +1604,15 @@ async function fetchDailyRows(
 
           freshUntil:
             Date.now() +
-            5 * 60 * 1000
+            5 *
+            60 *
+            1000
         }
       );
 
-      return redis.value;
+      return (
+        redis.value
+      );
     }
 
     throw error;
@@ -1186,16 +1621,22 @@ async function fetchDailyRows(
 
 
 /* =========================================================
-   修正漲跌幅
+   漲跌幅修正 6.3.1
 
-   1. 如果日 K 最後一筆就是今天：
-      使用倒數第二筆 close 當昨收
+   核心規則：
 
-   2. 如果日 K 尚未包含今天：
-      使用最後一筆 close 當昨收
+   【盤中】
+   Snapshot 現價
+   vs
+   最近一個已完成交易日收盤
 
-   最終：
-   (目前價格 - 昨收) / 昨收 * 100
+   【盤後 / 凌晨 / 休市】
+   Snapshot 通常就是最近交易日收盤
+   如果它與日 K 最後 close 相同，
+   就拿倒數第二個交易日當 previousClose。
+
+   這可以避免：
+   40.35 vs 40.35 = 0%
 ========================================================= */
 
 function normalizeChangePercent(
@@ -1204,49 +1645,196 @@ function normalizeChangePercent(
 ) {
   if (
     !stock ||
-    !Array.isArray(rows) ||
-    rows.length < 2
+    !Array.isArray(
+      rows
+    ) ||
+    rows.length <
+      2
   ) {
     return stock;
   }
 
   const price =
-    num(stock.price);
+    num(
+      stock.price
+    );
 
-  if (!(price > 0)) {
+  if (
+    !(price > 0)
+  ) {
     return stock;
   }
+
+  const lastIndex =
+    rows.length - 1;
+
+  const lastRow =
+    rows[
+      lastIndex
+    ];
+
+  const secondLastRow =
+    rows[
+      lastIndex - 1
+    ];
+
+  const lastClose =
+    num(
+      lastRow?.close
+    );
+
+  const secondLastClose =
+    num(
+      secondLastRow?.close
+    );
 
   const today =
     getTaipeiDate();
 
-  const last =
-    rows[
-      rows.length - 1
-    ];
+  const marketSession =
+    isTaiwanMarketSession();
 
-  let previousRow;
+  let previousClose = 0;
+
+  let referenceDate =
+    "";
+
+  let calculationMode =
+    "";
+
+
+  /*
+    情況 A：
+    日 K 最後一筆就是今天。
+
+    不論盤中或盤後，
+    前一交易日都是倒數第二筆。
+  */
 
   if (
     String(
-      last?.date || ""
+      lastRow?.date ||
+      ""
     ) === today
   ) {
-    previousRow =
-      rows[
-        rows.length - 2
-      ];
-  } else {
-    previousRow =
-      last;
+    previousClose =
+      secondLastClose;
+
+    referenceDate =
+      String(
+        secondLastRow?.date ||
+        ""
+      );
+
+    calculationMode =
+      marketSession
+        ? "INTRADAY_TODAY_K"
+        : "AFTER_HOURS_TODAY_K";
   }
 
-  const previousClose =
-    num(
-      previousRow?.close
-    );
 
-  if (!(previousClose > 0)) {
+  /*
+    情況 B：
+    日 K 還沒有今天。
+
+    盤中：
+    最新日 K = 昨收，
+    所以直接用 lastClose。
+
+    例如：
+    今天 10:00
+    Snapshot = 今天即時價
+    lastClose = 昨天收盤
+  */
+
+  else if (
+    marketSession
+  ) {
+    previousClose =
+      lastClose;
+
+    referenceDate =
+      String(
+        lastRow?.date ||
+        ""
+      );
+
+    calculationMode =
+      "INTRADAY_PREVIOUS_K";
+  }
+
+
+  /*
+    情況 C：
+    目前不是交易時間。
+
+    如果 Snapshot price
+    跟最後一根日 K close 幾乎相同：
+
+    Snapshot = 最近交易日收盤
+    lastRow = 最近交易日
+
+    所以昨收應該取倒數第二筆。
+  */
+
+  else {
+    const tolerance =
+      Math.max(
+        0.01,
+        price *
+        0.0005
+      );
+
+    const sameAsLastClose =
+      lastClose > 0 &&
+      Math.abs(
+        price -
+        lastClose
+      ) <= tolerance;
+
+    if (
+      sameAsLastClose &&
+      secondLastClose > 0
+    ) {
+      previousClose =
+        secondLastClose;
+
+      referenceDate =
+        String(
+          secondLastRow?.date ||
+          ""
+        );
+
+      calculationMode =
+        "CLOSED_SNAPSHOT_MATCH_LAST_K";
+
+    } else {
+      /*
+        Snapshot 與最後 K 不同，
+        代表 Snapshot 可能已經更新到
+        下一個交易日/盤前資料。
+
+        這時 lastClose 才是合理昨收。
+      */
+
+      previousClose =
+        lastClose;
+
+      referenceDate =
+        String(
+          lastRow?.date ||
+          ""
+        );
+
+      calculationMode =
+        "CLOSED_SNAPSHOT_DIFF_LAST_K";
+    }
+  }
+
+
+  if (
+    !(previousClose > 0)
+  ) {
     return stock;
   }
 
@@ -1258,16 +1846,24 @@ function normalizeChangePercent(
     (
       change /
       previousClose
-    ) * 100;
+    ) *
+    100;
 
   return {
     ...stock,
 
     previousClose:
-      round(previousClose),
+      round(
+        previousClose
+      ),
+
+    previousCloseDate:
+      referenceDate,
 
     change:
-      round(change),
+      round(
+        change
+      ),
 
     changePercent:
       round(
@@ -1276,7 +1872,10 @@ function normalizeChangePercent(
       ),
 
     changeSource:
-      "CURRENT_VS_PREVIOUS_CLOSE"
+      "CURRENT_VS_PREVIOUS_CLOSE",
+
+    changeCalculationMode:
+      calculationMode
   };
 }
 
@@ -1291,35 +1890,52 @@ function analyzeKline(
   rows
 ) {
   if (
-    !Array.isArray(rows) ||
-    rows.length < 65
+    !Array.isArray(
+      rows
+    ) ||
+    rows.length <
+      65
   ) {
     return null;
   }
 
   const closes =
     rows.map(
-      x => x.close
+      x =>
+        x.close
     );
 
   const price =
     stock.price > 0
       ? stock.price
       : closes[
-          closes.length - 1
+          closes.length -
+          1
         ];
 
   const ma5 =
-    SMA(closes, 5);
+    SMA(
+      closes,
+      5
+    );
 
   const ma10 =
-    SMA(closes, 10);
+    SMA(
+      closes,
+      10
+    );
 
   const ma20 =
-    SMA(closes, 20);
+    SMA(
+      closes,
+      20
+    );
 
   const ma60 =
-    SMA(closes, 60);
+    SMA(
+      closes,
+      60
+    );
 
   const previousMA20 =
     SMA(
@@ -1338,11 +1954,15 @@ function analyzeKline(
 
   const macd =
     EMA(
-      closes.slice(-100),
+      closes.slice(
+        -100
+      ),
       12
     ) -
     EMA(
-      closes.slice(-100),
+      closes.slice(
+        -100
+      ),
       26
     );
 
@@ -1352,10 +1972,13 @@ function analyzeKline(
       14
     );
 
-  if (!(atr > 0)) {
+  if (
+    !(atr > 0)
+  ) {
     atr =
       Math.max(
-        price * 0.015,
+        price *
+        0.015,
         0.01
       );
   }
@@ -1369,16 +1992,20 @@ function analyzeKline(
   const resistance20 =
     Math.max(
       ...previous20.map(
-        x => x.high
+        x =>
+          x.high
       )
     );
 
   const low20 =
     Math.min(
       ...rows
-        .slice(-20)
+        .slice(
+          -20
+        )
         .map(
-          x => x.low
+          x =>
+            x.low
         )
     );
 
@@ -1390,99 +2017,139 @@ function analyzeKline(
           -1
         )
         .map(
-          x => x.volume
+          x =>
+            x.volume
         )
     );
 
   const latestVolume =
     rows[
-      rows.length - 1
+      rows.length -
+      1
     ].volume;
 
   const volumeRatio =
-    stock.volumeRatio > 0
+    stock.volumeRatio >
+      0
       ? stock.volumeRatio
-      : avgVolume20 > 0
+      : avgVolume20 >
+        0
       ? latestVolume /
         avgVolume20
       : 0;
 
-  let technical = 0;
+  let technical =
+    0;
 
-  if (price > ma20) {
-    technical += 4;
-  }
-
-  if (ma20 > ma60) {
-    technical += 5;
+  if (
+    price >
+    ma20
+  ) {
+    technical +=
+      4;
   }
 
   if (
-    price > ma5 &&
-    ma5 >= ma10
+    ma20 >
+    ma60
   ) {
-    technical += 3;
+    technical +=
+      5;
+  }
+
+  if (
+    price >
+      ma5 &&
+    ma5 >=
+      ma10
+  ) {
+    technical +=
+      3;
   }
 
   if (
     Number.isFinite(
       previousMA20
     ) &&
-    ma20 > previousMA20
+    ma20 >
+      previousMA20
   ) {
-    technical += 3;
+    technical +=
+      3;
   }
 
   if (
-    rsi >= 45 &&
-    rsi <= 72
+    rsi >=
+      45 &&
+    rsi <=
+      72
   ) {
-    technical += 3;
-  }
-
-  if (macd >= 0) {
-    technical += 2;
-  }
-
-  let volumePrice = 0;
-
-  if (
-    volumeRatio >= 1.5
-  ) {
-    volumePrice += 7;
-
-  } else if (
-    volumeRatio >= 1.1
-  ) {
-    volumePrice += 5;
-
-  } else if (
-    volumeRatio >= 0.8
-  ) {
-    volumePrice += 2;
+    technical +=
+      3;
   }
 
   if (
-    stock.changePercent >= 0 &&
-    stock.changePercent <= 5
+    macd >= 0
   ) {
-    volumePrice += 4;
+    technical +=
+      2;
+  }
+
+  let volumePrice =
+    0;
+
+  if (
+    volumeRatio >=
+      1.5
+  ) {
+    volumePrice +=
+      7;
 
   } else if (
-    stock.changePercent >= -1.5
+    volumeRatio >=
+      1.1
   ) {
-    volumePrice += 2;
+    volumePrice +=
+      5;
+
+  } else if (
+    volumeRatio >=
+      0.8
+  ) {
+    volumePrice +=
+      2;
   }
 
   if (
-    stock.dayPosition >= 65
+    stock.changePercent >=
+      0 &&
+    stock.changePercent <=
+      5
   ) {
-    volumePrice += 4;
+    volumePrice +=
+      4;
 
   } else if (
-    stock.dayPosition >= 50
+    stock.changePercent >=
+      -1.5
   ) {
-    volumePrice += 2;
+    volumePrice +=
+      2;
+  }
+
+  if (
+    stock.dayPosition >=
+      65
+  ) {
+    volumePrice +=
+      4;
+
+  } else if (
+    stock.dayPosition >=
+      50
+  ) {
+    volumePrice +=
+      2;
   }
 
   const breakoutDistance =
@@ -1493,16 +2160,21 @@ function analyzeKline(
     atr;
 
   if (
-    breakoutDistance >= -0.6 &&
-    breakoutDistance <= 1.2
+    breakoutDistance >=
+      -0.6 &&
+    breakoutDistance <=
+      1.2
   ) {
-    volumePrice += 3;
+    volumePrice +=
+      3;
   }
 
   if (
-    stock.buyStrength >= 52
+    stock.buyStrength >=
+      52
   ) {
-    volumePrice += 2;
+    volumePrice +=
+      2;
   }
 
   technical =
@@ -1521,17 +2193,20 @@ function analyzeKline(
 
   const fastScore =
     Math.round(
-      technical * 2.3 +
-      volumePrice * 2.1 +
+      technical *
+        2.3 +
+      volumePrice *
+        2.1 +
       stock.snapshotScore *
-      0.12
+        0.12
     );
 
   const support =
     Math.max(
       low20,
       ma20 -
-      atr * 0.7
+      atr *
+      0.7
     );
 
   const distanceMA20 =
@@ -1547,15 +2222,19 @@ function analyzeKline(
     fastScore;
 
   if (
-    distanceMA20 > 3
+    distanceMA20 >
+      3
   ) {
-    adjustedScore -= 10;
+    adjustedScore -=
+      10;
   }
 
   if (
-    stock.changePercent > 6.5
+    stock.changePercent >
+      6.5
   ) {
-    adjustedScore -= 10;
+    adjustedScore -=
+      10;
   }
 
   adjustedScore =
@@ -1569,13 +2248,15 @@ function analyzeKline(
     "等待";
 
   if (
-    adjustedScore >= 70
+    adjustedScore >=
+      70
   ) {
     status =
       "優先分析";
 
   } else if (
-    adjustedScore >= 55
+    adjustedScore >=
+      55
   ) {
     status =
       "值得觀察";
@@ -1600,28 +2281,46 @@ function analyzeKline(
       volumePrice,
 
     ma5:
-      round(ma5),
+      round(
+        ma5
+      ),
 
     ma10:
-      round(ma10),
+      round(
+        ma10
+      ),
 
     ma20:
-      round(ma20),
+      round(
+        ma20
+      ),
 
     ma60:
-      round(ma60),
+      round(
+        ma60
+      ),
 
     rsi:
-      round(rsi, 1),
+      round(
+        rsi,
+        1
+      ),
 
     macd:
-      round(macd, 2),
+      round(
+        macd,
+        2
+      ),
 
     atr:
-      round(atr),
+      round(
+        atr
+      ),
 
     support:
-      round(support),
+      round(
+        support
+      ),
 
     resistance:
       round(
@@ -1646,9 +2345,11 @@ function analyzeKline(
       "SWING",
 
     strategyGrade:
-      adjustedScore >= 70
+      adjustedScore >=
+        70
         ? "優先分析"
-        : adjustedScore >= 55
+        : adjustedScore >=
+          55
         ? "值得觀察"
         : "等待",
 
@@ -1662,42 +2363,50 @@ function analyzeKline(
       adjustedScore,
 
     structureLow:
-      round(support),
+      round(
+        support
+      ),
 
     structureStop:
       round(
         support -
-        atr * 0.35
+        atr *
+        0.35
       ),
 
     structureValid:
       price >
       support -
-      atr * 0.35,
+      atr *
+      0.35,
 
     entryLow:
       round(
         Math.max(
           support,
           ma20 -
-          atr * 0.5
+          atr *
+          0.5
         )
       ),
 
     entryHigh:
       round(
         ma20 +
-        atr * 0.5
+        atr *
+        0.5
       )
   };
 }
 
 
 /* =========================================================
-   強勢候選 Ranking
+   強勢 Ranking
 ========================================================= */
 
-function candidateRank(stock) {
+function candidateRank(
+  stock
+) {
   const liquidity =
     Math.min(
       Math.log10(
@@ -1705,34 +2414,41 @@ function candidateRank(stock) {
           stock.totalVolume,
           1
         )
-      ) * 2,
+      ) *
+      2,
       10
     );
 
   const volumeBoost =
     Math.min(
       Math.max(
-        stock.volumeRatio - 1,
+        stock.volumeRatio -
+        1,
         0
-      ) * 5,
+      ) *
+      5,
       10
     );
 
   const momentumBoost =
-    stock.changePercent > 0
+    stock.changePercent >
+      0
       ? Math.min(
-          stock.changePercent * 1.2,
+          stock.changePercent *
+          1.2,
           8
         )
       : 0;
 
   const buyBoost =
-    stock.buyStrength >= 55
+    stock.buyStrength >=
+      55
       ? Math.min(
           (
             stock.buyStrength -
             50
-          ) * 0.25,
+          ) *
+          0.25,
           6
         )
       : 0;
@@ -1760,12 +2476,17 @@ export default async function handler(
 
   try {
     if (
-      req.method !== "GET"
+      req.method !==
+      "GET"
     ) {
       return res
-        .status(405)
+        .status(
+          405
+        )
         .json({
-          ok: false,
+          ok:
+            false,
+
           error:
             "Method Not Allowed"
         });
@@ -1775,26 +2496,37 @@ export default async function handler(
       process.env
         .FINMIND_TOKEN;
 
-    if (!token) {
+    if (
+      !token
+    ) {
       return res
-        .status(500)
+        .status(
+          500
+        )
         .json({
-          ok: false,
+          ok:
+            false,
+
           error:
             "Vercel 尚未設定 FINMIND_TOKEN"
         });
     }
+
 
     const [
       snapshots,
       stockNames
     ] =
       await Promise.all([
-        fetchSnapshot(token),
+        fetchSnapshot(
+          token
+        ),
+
         fetchTaiwanStockNames(
           token
         )
       ]);
+
 
     const stocks =
       snapshots
@@ -1810,7 +2542,9 @@ export default async function handler(
           scoreSnapshot
         )
 
-        .filter(Boolean)
+        .filter(
+          Boolean
+        )
 
         .map(
           stock => ({
@@ -1826,8 +2560,10 @@ export default async function handler(
 
         .filter(
           stock =>
-            stock.price > 3 &&
-            stock.totalVolume >= 200
+            stock.price >
+              3 &&
+            stock.totalVolume >=
+              200
         );
 
 
@@ -1863,17 +2599,22 @@ export default async function handler(
         );
 
 
-    /*
-      A. 綜合強勢
-    */
+    /* 綜合強勢 */
 
     const strongest =
       [...baseCandidates]
 
         .sort(
-          (a, b) =>
-            candidateRank(b) -
-            candidateRank(a)
+          (
+            a,
+            b
+          ) =>
+            candidateRank(
+              b
+            ) -
+            candidateRank(
+              a
+            )
         )
 
         .slice(
@@ -1882,20 +2623,22 @@ export default async function handler(
         );
 
 
-    /*
-      B. 漲幅動能
-    */
+    /* 動能 */
 
     const momentum =
       [...baseCandidates]
 
         .filter(
           stock =>
-            stock.changePercent > 0
+            stock.changePercent >
+              0
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             b.changePercent -
             a.changePercent
         )
@@ -1906,26 +2649,30 @@ export default async function handler(
         );
 
 
-    /*
-      C. 爆量
-    */
+    /* 爆量 */
 
     const volumeStrong =
       [...baseCandidates]
 
         .filter(
           stock =>
-            stock.volumeRatio >= 1
+            stock.volumeRatio >=
+              1
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             (
-              b.volumeRatio * 10 +
+              b.volumeRatio *
+                10 +
               b.snapshotScore
             ) -
             (
-              a.volumeRatio * 10 +
+              a.volumeRatio *
+                10 +
               a.snapshotScore
             )
         )
@@ -1936,20 +2683,22 @@ export default async function handler(
         );
 
 
-    /*
-      D. 買盤強
-    */
+    /* 買盤強 */
 
     const buyStrong =
       [...baseCandidates]
 
         .filter(
           stock =>
-            stock.buyStrength >= 55
+            stock.buyStrength >=
+              55
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             (
               b.buyStrength +
               b.snapshotScore
@@ -1966,9 +2715,7 @@ export default async function handler(
         );
 
 
-    /*
-      四路合併去重
-    */
+    /* 四路合併去重 */
 
     const candidateMap =
       new Map();
@@ -1995,12 +2742,21 @@ export default async function handler(
 
 
     const candidatePool =
-      [...candidateMap.values()]
+      [
+        ...candidateMap.values()
+      ]
 
         .sort(
-          (a, b) =>
-            candidateRank(b) -
-            candidateRank(a)
+          (
+            a,
+            b
+          ) =>
+            candidateRank(
+              b
+            ) -
+            candidateRank(
+              a
+            )
         )
 
         .slice(
@@ -2011,15 +2767,18 @@ export default async function handler(
 
     /* =====================================================
        第二階段：
-       最多 Top 160 日 K
+       Top 160 日 K
     ===================================================== */
 
-    const analyzed = [];
+    const analyzed =
+      [];
 
     for (
       let i = 0;
-      i < candidatePool.length;
-      i += KLINE_BATCH_SIZE
+      i <
+        candidatePool.length;
+      i +=
+        KLINE_BATCH_SIZE
     ) {
       const batch =
         candidatePool.slice(
@@ -2039,16 +2798,14 @@ export default async function handler(
                 );
 
               if (
-                !Array.isArray(rows) ||
-                rows.length < 65
+                !Array.isArray(
+                  rows
+                ) ||
+                rows.length <
+                  65
               ) {
                 return null;
               }
-
-              /*
-                在真正技術分析前，
-                先統一修正漲跌幅。
-              */
 
               const normalizedStock =
                 normalizeChangePercent(
@@ -2065,7 +2822,8 @@ export default async function handler(
         );
 
       for (
-        const result of results
+        const result of
+        results
       ) {
         if (
           result.status ===
@@ -2090,11 +2848,14 @@ export default async function handler(
         .filter(
           stock =>
             stock.fastScore >=
-            45
+              45
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             b.fastScore -
             a.fastScore
         )
@@ -2111,7 +2872,10 @@ export default async function handler(
         : [...analyzed]
 
             .sort(
-              (a, b) =>
+              (
+                a,
+                b
+              ) =>
                 b.fastScore -
                 a.fastScore
             )
@@ -2126,8 +2890,11 @@ export default async function handler(
 
 
     /*
-      把已深度分析的股票資料覆蓋回去，
-      讓首頁排行榜優先使用修正後的漲跌幅。
+      將深度分析後資料
+      覆蓋回 Snapshot 股票。
+
+      因此已分析股票會使用
+      正確 changePercent。
     */
 
     const analyzedMap =
@@ -2159,7 +2926,10 @@ export default async function handler(
       [...displayStocks]
 
         .sort(
-          (a, b) => {
+          (
+            a,
+            b
+          ) => {
             const scoreA =
               num(
                 a.fastScore ??
@@ -2205,9 +2975,7 @@ export default async function handler(
         );
 
 
-    /*
-      深度強勢關注
-    */
+    /* 強勢關注 */
 
     const longWatch =
       finalCandidates
@@ -2217,20 +2985,22 @@ export default async function handler(
         );
 
 
-    /*
-      爆量榜
-    */
+    /* 爆量榜 */
 
     const volumeLeaders =
       [...displayStocks]
 
         .filter(
           x =>
-            x.volumeRatio > 0
+            x.volumeRatio >
+              0
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             b.volumeRatio -
             a.volumeRatio
         )
@@ -2241,20 +3011,22 @@ export default async function handler(
         );
 
 
-    /*
-      動能榜
-    */
+    /* 動能榜 */
 
     const momentumLeaders =
       [...displayStocks]
 
         .filter(
           x =>
-            x.changePercent > 0
+            x.changePercent >
+              0
         )
 
         .sort(
-          (a, b) =>
+          (
+            a,
+            b
+          ) =>
             b.changePercent -
             a.changePercent
         )
@@ -2270,12 +3042,6 @@ export default async function handler(
       startedAt;
 
 
-    /*
-      首頁加速：
-      CDN 可直接使用 2 分鐘結果，
-      背景可使用舊資料 10 分鐘並重新驗證。
-    */
-
     res.setHeader(
       "Cache-Control",
       "public, s-maxage=120, stale-while-revalidate=600"
@@ -2283,15 +3049,18 @@ export default async function handler(
 
 
     return res
-      .status(200)
+      .status(
+        200
+      )
       .json({
-        ok: true,
+        ok:
+          true,
 
         platform:
-          "波段分析 Radar 6.3 Fast",
+          "波段分析 Radar 6.3.1 Fast",
 
         engine:
-          "FAST_MULTI_STAGE_160_REDIS",
+          "FAST_MULTI_STAGE_160_REDIS_CHANGE_FIX",
 
         market:
           "TW",
@@ -2305,6 +3074,9 @@ export default async function handler(
 
         taipeiTime:
           getTaipeiTime(),
+
+        marketSession:
+          isTaiwanMarketSession(),
 
         elapsedMs,
 
@@ -2368,15 +3140,20 @@ export default async function handler(
           changeFormula:
             "(currentPrice - previousClose) / previousClose * 100",
 
+          afterHoursFix:
+            true,
+
           multiSourceCandidates:
             true
         },
 
         notice:
-          "Radar 6.3 Fast：全市場 Snapshot → 強勢/動能/爆量/買盤多路初篩 → 最多 Top 160 日 K → Top 60；深度分析股票以現價對前一交易日收盤重新計算漲跌幅；沿用 Upstash Redis 與 Stock API 6.3 共用日 K 快取。"
+          "Radar 6.3.1 Fast：修正盤後與凌晨漲跌幅 0% 問題；盤中使用即時價對昨收，盤後/休市使用最近交易日收盤對前一交易日收盤；Top 160 多路強勢掃描，Top 60 候選，沿用 Upstash Redis 與 Stock API 6.3 共用日 K。"
       });
 
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Radar server error:",
       error
@@ -2388,15 +3165,18 @@ export default async function handler(
     );
 
     return res
-      .status(500)
+      .status(
+        500
+      )
       .json({
-        ok: false,
+        ok:
+          false,
 
         platform:
-          "波段分析 Radar 6.3 Fast",
+          "波段分析 Radar 6.3.1 Fast",
 
         engine:
-          "FAST_MULTI_STAGE_160_REDIS",
+          "FAST_MULTI_STAGE_160_REDIS_CHANGE_FIX",
 
         error:
           error?.name ===
