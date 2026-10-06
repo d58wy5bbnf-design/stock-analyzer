@@ -146,6 +146,31 @@ color:#7d8793
 .suggestion-code{margin-top:3px}
 .suggestion-market{white-space:nowrap}
 
+.history-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+padding:11px 14px 8px;
+background:#f8f9fa;
+border-bottom:1px solid #eef1f3
+}
+
+.history-title{
+font-size:11px;
+font-weight:850;
+color:#7d8793
+}
+
+.history-clear{
+border:0;
+background:transparent;
+padding:4px 0;
+font-size:11px;
+font-weight:800;
+color:#1769e0
+}
+
 .tabs{
 display:flex;
 gap:8px;
@@ -740,6 +765,7 @@ return id;
 
 /* =========================================================
    WATCHLIST
+   注意：保留既有 WATCH_KEY，不清除、不改名
 ========================================================= */
 
 function watch(){
@@ -863,6 +889,13 @@ d.error||
 
 }
 
+
+/*
+  自選保護：
+  本機與雲端採聯集，不讓其中一邊的空資料
+  意外覆蓋另一邊已經存在的自選。
+*/
+
 async function loadWatchlist(){
 
 const local=watch();
@@ -872,14 +905,52 @@ try{
 const cloud=
 await getCloudWatch();
 
-if(cloud.length){
+const merged=
+[
+...new Set(
+[
+...local,
+...cloud
+]
+)
+];
 
-saveWatchLocal(cloud);
+if(merged.length){
+
+saveWatchLocal(
+merged
+);
+
+const cloudSet=
+new Set(
+cloud
+);
+
+const needsCloudSync=
+merged.some(
+symbol=>
+!cloudSet.has(symbol)
+);
+
+if(needsCloudSync){
+
+try{
+
+await saveCloudWatch(
+merged
+);
 
 }
-else if(local.length){
+catch(e){
 
-await saveCloudWatch(local);
+console.warn(
+'自選保護同步失敗',
+e
+);
+
+}
+
+}
 
 }
 
@@ -911,7 +982,55 @@ localStorage.getItem(HISTORY_KEY)||
 '[]'
 );
 
-return Array.isArray(x)?x:[];
+if(!Array.isArray(x)){
+
+return [];
+
+}
+
+return x
+.map(
+item=>{
+
+if(
+typeof item==='string'
+){
+
+return {
+symbol:item,
+name:'',
+time:0
+};
+
+}
+
+return {
+symbol:String(
+item?.symbol||
+''
+),
+name:String(
+item?.name||
+''
+),
+time:Number(
+item?.time||
+0
+)
+};
+
+}
+)
+.filter(
+item=>
+/^\d{4,6}$/.test(
+item.symbol
+)
+)
+.slice(
+0,
+10
+);
 
 }
 catch{
@@ -929,12 +1048,14 @@ if(!a?.symbol)return;
 let h=
 searchHistory()
 .filter(
-x=>x.symbol!==a.symbol
+x=>
+x.symbol!==
+String(a.symbol)
 );
 
 h.unshift({
-symbol:a.symbol,
-name:a.name||'',
+symbol:String(a.symbol),
+name:String(a.name||''),
 time:Date.now()
 });
 
@@ -943,6 +1064,147 @@ HISTORY_KEY,
 JSON.stringify(
 h.slice(0,10)
 )
+);
+
+}
+
+function clearHistory(){
+
+localStorage.removeItem(
+HISTORY_KEY
+);
+
+hideSuggestions();
+
+}
+
+
+/* =========================================================
+   搜尋紀錄 UI
+========================================================= */
+
+function showSearchHistory(){
+
+const box=
+$('suggestions');
+
+const history=
+searchHistory();
+
+if(!history.length){
+
+hideSuggestions();
+
+return;
+
+}
+
+box.innerHTML=
+`
+
+<div class="history-head">
+
+<div class="history-title">
+最近搜尋
+</div>
+
+<button
+id="clearSearchHistory"
+class="history-clear"
+type="button"
+>
+清除紀錄
+</button>
+
+</div>
+
+${
+
+history
+.map(
+x=>`
+
+<button
+class="suggestion history-item"
+data-symbol="${esc(x.symbol)}"
+type="button"
+>
+
+<div>
+
+<div class="suggestion-main">
+${esc(x.name||x.symbol)}
+</div>
+
+<div class="suggestion-code">
+${esc(x.symbol)}
+</div>
+
+</div>
+
+<div class="suggestion-market">
+搜尋紀錄
+</div>
+
+</button>
+
+`
+)
+.join('')
+
+}
+
+`;
+
+box.classList.remove(
+'hidden'
+);
+
+const clearButton=
+$('clearSearchHistory');
+
+if(clearButton){
+
+clearButton.onclick=
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+clearHistory();
+
+};
+
+}
+
+box
+.querySelectorAll(
+'.history-item'
+)
+.forEach(
+x=>
+x.onclick=
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+
+const symbol=
+x.dataset.symbol;
+
+selectedSearchSymbol=
+symbol;
+
+$('q').value=
+symbol;
+
+hideSuggestions();
+
+openStock(
+symbol
+);
+
+}
 );
 
 }
@@ -1192,20 +1454,6 @@ return groups;
 
 /* =========================================================
    TRADE PLAN 8.0
-
-   現價附近最佳 Entry
-   ↓
-   結構失效 SL
-   ↓
-   關鍵突破位
-   ↓
-   TP1 = 突破後第一壓力
-   ↓
-   TP2
-   ↓
-   TP3
-   ↓
-   RR
 ========================================================= */
 
 function buildTradePlan(
@@ -1232,15 +1480,7 @@ A*.45,
 price*.005
 );
 
-
-/* =========================================================
-   支撐候選
-========================================================= */
-
 const supportRaw=[];
-
-
-/* Pivot Low */
 
 for(const x of P.lows){
 
@@ -1258,9 +1498,6 @@ i:x.i
 
 }
 
-
-/* MA20 */
-
 if(
 Number.isFinite(m20) &&
 m20<=price*1.012 &&
@@ -1274,9 +1511,6 @@ i:recent.length+5
 
 }
 
-
-/* MA60 */
-
 if(
 Number.isFinite(m60) &&
 m60<=price*1.012 &&
@@ -1289,9 +1523,6 @@ i:recent.length+4
 });
 
 }
-
-
-/* 10 / 20 / 60 日低點 */
 
 for(const n of [10,20,60]){
 
@@ -1318,11 +1549,6 @@ i:recent.length+n
 }
 
 }
-
-
-/* =========================================================
-   已突破前高 → 可能轉成支撐
-========================================================= */
 
 for(const x of P.highs){
 
@@ -1356,11 +1582,6 @@ i:x.i
 
 }
 
-
-/* =========================================================
-   支撐群
-========================================================= */
-
 const supportGroups=
 clusterLevels(
 supportRaw,
@@ -1375,11 +1596,6 @@ x.value>=price*.82
 (a,b)=>
 b.value-a.value
 );
-
-
-/* =========================================================
-   第一、第二支撐
-========================================================= */
 
 const support1=
 supportGroups[0]
@@ -1401,11 +1617,6 @@ mergeDistance*.75
 null
 :
 null;
-
-
-/* =========================================================
-   找現價附近「最佳 Entry 支撐」
-========================================================= */
 
 const MAX_ENTRY_DISTANCE=
 0.045;
@@ -1485,11 +1696,6 @@ bestSupport=x;
 
 }
 
-
-/* =========================================================
-   壓力資料
-========================================================= */
-
 const pressureRaw=[];
 
 for(const x of P.highs){
@@ -1561,11 +1767,6 @@ x.value<=price*1.35
 a.value-b.value
 );
 
-
-/* =========================================================
-   關鍵突破位
-========================================================= */
-
 const abovePressures=
 allPressureGroups
 .filter(
@@ -1630,11 +1831,6 @@ breakoutState=
 }
 
 }
-
-
-/* =========================================================
-   Entry
-========================================================= */
 
 let planType='WAIT';
 
@@ -1745,17 +1941,11 @@ entryHigh+
 readyTolerance;
 
 }
-
 else{
 
 planType='WAIT';
 
 }
-
-
-/* =========================================================
-   TP
-========================================================= */
 
 let tp1=null;
 let tp2=null;
@@ -1869,11 +2059,6 @@ tp3Source=
 }
 
 }
-
-
-/* =========================================================
-   RR
-========================================================= */
 
 const risk=
 Number.isFinite(entryMid) &&
@@ -2255,11 +2440,6 @@ technical,
 20
 );
 
-
-/* =========================================================
-   量價
-========================================================= */
-
 if(vr>=1){
 
 volumeScore+=6;
@@ -2344,11 +2524,6 @@ volumeScore,
 20
 );
 
-
-/* =========================================================
-   法人
-========================================================= */
-
 const inst=
 d.institutional||
 {};
@@ -2387,11 +2562,6 @@ chipScore,
 0,
 20
 );
-
-
-/* =========================================================
-   基本面
-========================================================= */
 
 const fundamental=
 d.fundamental||
@@ -2495,11 +2665,6 @@ fundScore,
 
 }
 
-
-/* =========================================================
-   新聞
-========================================================= */
-
 if(
 newsData?.available
 ){
@@ -2518,11 +2683,6 @@ newsData.overallScore||
 );
 
 }
-
-
-/* =========================================================
-   綜合分數
-========================================================= */
 
 const availableScores=
 [
@@ -3184,11 +3344,6 @@ a.symbol
 const news=
 a.newsData;
 
-
-/* =========================================================
-   Entry 狀態
-========================================================= */
-
 let planLabel=
 '等待較佳進場';
 
@@ -3219,11 +3374,6 @@ planText=
 }
 
 }
-
-
-/* =========================================================
-   Breakout 文字
-========================================================= */
 
 let breakoutText=
 '目前上方沒有足夠明確的歷史壓力。';
@@ -3849,6 +3999,18 @@ $('detail')
 'hidden'
 );
 
+
+/*
+  每次打開個股，也從個股頁最上方開始。
+*/
+
+window.scrollTo({
+top:0,
+left:0,
+behavior:'auto'
+});
+
+
 $('detailBody').innerHTML=
 `
 <div class="card loader">
@@ -4214,7 +4376,7 @@ $('suggestions');
 
 if(!q.trim()){
 
-hideSuggestions();
+showSearchHistory();
 
 return;
 
@@ -4250,6 +4412,7 @@ x=>`
 <button
 class="suggestion"
 data-symbol="${esc(x.symbol)}"
+type="button"
 >
 
 <div>
@@ -4326,8 +4489,13 @@ if(!q)return;
 
 if(selectedSearchSymbol){
 
+const symbol=
+selectedSearchSymbol;
+
+selectedSearchSymbol='';
+
 openStock(
-selectedSearchSymbol
+symbol
 );
 
 return;
@@ -4375,6 +4543,46 @@ e.message
 
 }
 
+
+/*
+  點搜尋框：
+  如果是空白，直接顯示搜尋紀錄。
+*/
+
+$('q')
+.addEventListener(
+'focus',
+e=>{
+
+if(
+!e.target.value.trim()
+){
+
+showSearchHistory();
+
+}
+
+}
+);
+
+
+$('q')
+.addEventListener(
+'click',
+e=>{
+
+if(
+!e.target.value.trim()
+){
+
+showSearchHistory();
+
+}
+
+}
+);
+
+
 $('q')
 .addEventListener(
 'input',
@@ -4386,12 +4594,25 @@ clearTimeout(
 searchTimer
 );
 
+const value=
+e.target.value;
+
+if(
+!value.trim()
+){
+
+showSearchHistory();
+
+return;
+
+}
+
 searchTimer=
 setTimeout(
 ()=>{
 
 showSuggestions(
-e.target.value
+value
 );
 
 },
@@ -4421,8 +4642,41 @@ $('go').onclick=
 submitSearch;
 
 
+/*
+  點搜尋區域以外才收起選單。
+*/
+
+document
+.addEventListener(
+'click',
+e=>{
+
+const searchBox=
+document.querySelector(
+'.search-box'
+);
+
+if(
+searchBox &&
+!searchBox.contains(
+e.target
+)
+){
+
+hideSuggestions();
+
+}
+
+}
+);
+
+
 /* =========================================================
    BACK
+
+   重點：
+   不論上方返回或下方返回，
+   回首頁後都強制回到最上方。
 ========================================================= */
 
 $('back').onclick=
@@ -4435,6 +4689,8 @@ detailTimer
 );
 
 hideSuggestions();
+
+selectedSearchSymbol='';
 
 $('detail')
 .classList
@@ -4449,6 +4705,35 @@ $('home')
 );
 
 renderHome();
+
+
+/*
+  Safari / PWA 有時會自動還原上一個 scroll position。
+  先立即歸零，再下一幀再歸零一次。
+*/
+
+window.scrollTo(
+0,
+0
+);
+
+document.documentElement.scrollTop=0;
+document.body.scrollTop=0;
+
+requestAnimationFrame(
+()=>{
+
+window.scrollTo({
+top:0,
+left:0,
+behavior:'auto'
+});
+
+document.documentElement.scrollTop=0;
+document.body.scrollTop=0;
+
+}
+);
 
 };
 
