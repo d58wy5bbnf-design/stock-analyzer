@@ -618,7 +618,7 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <div class="note">
-高分股票與觀察名單使用伺服器共用 Radar 榜單，因此不同手機會看到相同的全市場候選。點進個股後，再進行完整技術、量價、法人、基本面、新聞與交易規劃分析。
+高分股票顯示共用 Radar 最強前 20 檔；觀察名單顯示下一批值得追蹤的股票。不同手機使用相同的伺服器 Radar 榜單。點進個股後，再進行完整技術、量價、法人、基本面、新聞與交易規劃分析。
 </div>
 
 </main>
@@ -645,6 +645,9 @@ const DEFAULT=[
 '2330','2317','2454','2308','2382','3231',
 '2881','2882','2891','2886','2603','2615'
 ];
+
+const HIGH_SCORE_LIMIT=20;
+const WATCH_RADAR_LIMIT=50;
 
 let tab='signal';
 let cache={};
@@ -1863,8 +1866,63 @@ const score=Number(a.fastScore??a.score??0);
 
 if(score>=70)return ['強勢關注','green'];
 if(score>=55)return ['觀察','yellow'];
+if(score>=45)return ['雷達觀察','blue'];
 
 return ['等待','gray'];
+}
+
+/* RADAR SORT */
+
+function sortRadarList(list){
+
+return [...(list||[])].sort((a,b)=>{
+
+const scoreA=Number(a.fastScore??a.score??0);
+const scoreB=Number(b.fastScore??b.score??0);
+
+if(scoreB!==scoreA){
+return scoreB-scoreA;
+}
+
+const valueA=Number(a.tradingValue||0);
+const valueB=Number(b.tradingValue||0);
+
+if(valueB!==valueA){
+return valueB-valueA;
+}
+
+const rankA=Number(a.radarRank||0);
+const rankB=Number(b.radarRank||0);
+
+if(rankB!==rankA){
+return rankB-rankA;
+}
+
+return String(a.symbol||'')
+.localeCompare(String(b.symbol||''));
+
+});
+
+}
+
+function uniqueRadarList(list){
+
+const seen=new Set();
+
+return (list||[]).filter(x=>{
+
+const symbol=String(x?.symbol||'');
+
+if(!symbol||seen.has(symbol)){
+return false;
+}
+
+seen.add(symbol);
+
+return true;
+
+});
+
 }
 
 /* RADAR CARD */
@@ -1962,47 +2020,35 @@ function renderHome(){
 
 let html='';
 
+/*
+  高分股票：
+  不再把所有 >=70 分全部列入。
+  固定取 strategyReady 排序後最強前 20 檔。
+*/
+
+const highScoreList=
+uniqueRadarList(
+sortRadarList(unified.strategyReady||[])
+)
+.slice(0,HIGH_SCORE_LIMIT);
+
+const highScoreSymbols=
+new Set(
+highScoreList.map(x=>String(x.symbol||''))
+);
+
 /* 高分股票 */
 
 if(tab==='signal'){
 
-const list=
-(unified.strategyReady||[])
-.filter(
-x=>
-Number(x.fastScore??x.score??0)>=70
-)
-.sort(
-(a,b)=>{
-
-const scoreA=Number(a.fastScore??a.score??0);
-const scoreB=Number(b.fastScore??b.score??0);
-
-if(scoreB!==scoreA){
-return scoreB-scoreA;
-}
-
-const valueA=Number(a.tradingValue||0);
-const valueB=Number(b.tradingValue||0);
-
-if(valueB!==valueA){
-return valueB-valueA;
-}
-
-return String(a.symbol||'')
-.localeCompare(String(b.symbol||''));
-
-}
-);
-
 html=
-list.length
+highScoreList.length
 ?
-list.map(renderRadarCard).join('')
+highScoreList.map(renderRadarCard).join('')
 :
 `
 <div class="empty">
-目前共用 Radar 沒有 70 分以上的高分股票。
+目前共用 Radar 暫時沒有高分股票。
 </div>
 `;
 
@@ -2013,149 +2059,75 @@ list.map(renderRadarCard).join('')
 else if(tab==='near'){
 
 /*
-  先找出高分股票，
-  避免同一檔同時出現在兩個頁面。
-*/
-
-const strongSymbols=
-new Set(
-
-(unified.strategyReady||[])
-
-.filter(
-x=>
-Number(x.fastScore??x.score??0)>=70
-)
-
-.map(
-x=>String(x.symbol||'')
-)
-
-);
-
-
-/*
-  觀察名單正式改用 longWatch
+  觀察名單主要使用 longWatch。
+  只排除「實際顯示在高分股票頁的前 20 檔」。
+  不再把所有 70 分以上股票全部排除。
 */
 
 let list=
-(unified.longWatch||[])
-.filter(
-x=>{
+uniqueRadarList(
+sortRadarList(unified.longWatch||[])
+)
+.filter(x=>{
 
 const symbol=String(x.symbol||'');
 
-if(!symbol){
-return false;
-}
-
-if(strongSymbols.has(symbol)){
-return false;
-}
-
-return true;
-
-}
+return (
+symbol &&
+!highScoreSymbols.has(symbol)
 );
 
+});
 
 /*
-  如果 longWatch 暫時沒有資料，
-  才退回 strategyReady 未滿 70 分的股票。
+  如果 longWatch 剛好全部和前 20 名重複，
+  使用 strategyReady 第 21 名以後作為第一層備援。
 */
 
 if(!list.length){
 
 list=
-(unified.strategyReady||[])
-.filter(
-x=>{
+uniqueRadarList(
+sortRadarList(unified.strategyReady||[])
+)
+.filter(x=>{
 
 const symbol=String(x.symbol||'');
-
-const score=
-Number(x.fastScore??x.score??0);
 
 return (
 symbol &&
-score<70 &&
-!strongSymbols.has(symbol)
+!highScoreSymbols.has(symbol)
 );
 
-}
-);
+});
 
 }
-
 
 /*
-  去除重複
+  第二層備援使用 Radar 全市場榜單，
+  同樣排除高分股票前 20 檔。
 */
 
-const seen=new Set();
+if(!list.length){
 
 list=
-list.filter(
-x=>{
+uniqueRadarList(
+sortRadarList(unified.radar||[])
+)
+.filter(x=>{
 
 const symbol=String(x.symbol||'');
 
-if(!symbol||seen.has(symbol)){
-return false;
-}
-
-seen.add(symbol);
-
-return true;
-
-}
+return (
+symbol &&
+!highScoreSymbols.has(symbol)
 );
 
-
-/*
-  統一排序：
-  1. Radar 分數
-  2. 成交金額
-  3. Radar Rank
-  4. 股票代號
-*/
-
-list.sort(
-(a,b)=>{
-
-const scoreA=Number(a.fastScore??a.score??0);
-const scoreB=Number(b.fastScore??b.score??0);
-
-if(scoreB!==scoreA){
-return scoreB-scoreA;
-}
-
-const valueA=Number(a.tradingValue||0);
-const valueB=Number(b.tradingValue||0);
-
-if(valueB!==valueA){
-return valueB-valueA;
-}
-
-const rankA=Number(a.radarRank||0);
-const rankB=Number(b.radarRank||0);
-
-if(rankB!==rankA){
-return rankB-rankA;
-}
-
-return String(a.symbol||'')
-.localeCompare(String(b.symbol||''));
+});
 
 }
-);
 
-
-/*
-  最多顯示 50 檔
-*/
-
-list=list.slice(0,50);
+list=list.slice(0,WATCH_RADAR_LIMIT);
 
 html=
 list.length
