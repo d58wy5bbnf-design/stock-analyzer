@@ -4,78 +4,132 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="波段分析">
-<meta name="theme-color" content="#f6f7f9">
-
+<meta name="theme-color" content="#07111f">
 <link rel="manifest" href="/manifest.json">
-
 <title>波段分析</title>
 
 <style>
+:root{
+--bg:#07111f;
+--bg2:#0b1628;
+--card:#101d31;
+--card2:#13233a;
+--line:rgba(255,255,255,.075);
+--text:#f5f8ff;
+--muted:#8190a7;
+--blue:#4d8dff;
+--cyan:#42d7ff;
+--purple:#806cff;
+--green:#35d98a;
+--red:#ff6677;
+--yellow:#ffc85c;
+--shadow:0 16px 45px rgba(0,0,0,.25)
+}
+
 *{
-box-sizing:border-box
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent
 }
 
 html{
-scroll-behavior:auto
+scroll-behavior:auto;
+background:var(--bg)
 }
 
 body{
 margin:0;
-background:#f6f7f9;
-color:#17202a;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+min-height:100vh;
+background:
+radial-gradient(circle at 15% -5%,rgba(68,125,255,.18),transparent 28%),
+radial-gradient(circle at 100% 5%,rgba(128,92,255,.13),transparent 25%),
+linear-gradient(180deg,#07111f 0%,#081322 48%,#06101d 100%);
+background-attachment:fixed;
+color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+-webkit-font-smoothing:antialiased
+}
+
+button,input{
+font:inherit
+}
+
+button{
+cursor:pointer
 }
 
 .app{
 width:100%;
 max-width:760px;
 margin:0 auto;
-padding-top:calc(env(safe-area-inset-top,0px) + 22px);
+padding-top:calc(env(safe-area-inset-top,0px) + 18px);
 padding-right:max(16px,env(safe-area-inset-right,0px));
-padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));
+padding-bottom:calc(100px + env(safe-area-inset-bottom,0px));
 padding-left:max(16px,env(safe-area-inset-left,0px))
 }
+
+/* HEADER */
 
 .top{
 display:flex;
 justify-content:space-between;
 align-items:center;
 gap:14px;
-min-height:62px;
-margin:0 0 22px
+min-height:64px;
+margin-bottom:22px
 }
 
 .brand{
-font-size:25px;
-font-weight:900
+font-size:27px;
+line-height:1;
+font-weight:950;
+letter-spacing:-1px;
+background:linear-gradient(100deg,#fff 10%,#9cc5ff 55%,#9d8aff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent
 }
 
 .brand small{
 display:block;
-color:#7c8795;
 font-size:11px;
-font-weight:600;
-margin-top:2px
+line-height:1.4;
+font-weight:650;
+letter-spacing:.3px;
+margin-top:7px;
+color:#7f90a9;
+-webkit-text-fill-color:#7f90a9
 }
 
 .icon{
-border:1px solid #e0e4e9;
-background:#fff;
-border-radius:13px;
-padding:10px 12px
+min-width:44px;
+height:44px;
+border:1px solid var(--line);
+background:rgba(255,255,255,.055);
+color:#fff;
+border-radius:15px;
+padding:0 13px;
+box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px)
+}
+
+.icon:active{
+transform:scale(.97)
 }
 
 .icon.push-on{
-background:#e9f8ef;
-border-color:#c8ead5
+background:rgba(53,217,138,.12);
+border-color:rgba(53,217,138,.28)
 }
+
+/* SEARCH */
 
 .search{
 display:flex;
-gap:8px;
-position:relative
+gap:9px;
+position:relative;
+margin-bottom:15px
 }
 
 .search-box{
@@ -86,41 +140,70 @@ position:relative
 
 .search input{
 width:100%;
-border:1px solid #dfe4e9;
-background:#fff;
-border-radius:14px;
-padding:14px;
-font-size:16px;
-outline:none
+height:52px;
+border:1px solid var(--line);
+background:rgba(17,31,51,.88);
+color:#fff;
+border-radius:17px;
+padding:0 16px 0 43px;
+font-size:15px;
+outline:none;
+box-shadow:0 10px 28px rgba(0,0,0,.12);
+transition:.18s ease
+}
+
+.search-box:before{
+content:"⌕";
+position:absolute;
+left:16px;
+top:50%;
+transform:translateY(-53%);
+font-size:23px;
+color:#6f819c;
+z-index:2
+}
+
+.search input::placeholder{
+color:#667892
 }
 
 .search input:focus{
-border-color:#1769e0;
-box-shadow:0 0 0 3px rgba(23,105,224,.08)
+border-color:rgba(77,141,255,.6);
+box-shadow:0 0 0 3px rgba(77,141,255,.10),0 12px 30px rgba(0,0,0,.16)
 }
 
 .primary{
+height:52px;
 border:0;
-background:#1769e0;
 color:#fff;
-border-radius:14px;
-padding:0 18px;
-font-weight:800
+border-radius:17px;
+padding:0 19px;
+font-weight:850;
+background:linear-gradient(135deg,#397cff,#7166ff);
+box-shadow:0 10px 25px rgba(61,108,255,.25)
 }
+
+.primary:active{
+transform:scale(.97)
+}
+
+/* SEARCH SUGGESTIONS */
 
 .suggestions{
 position:absolute;
 left:0;
 right:0;
-top:calc(100% + 7px);
+top:calc(100% + 8px);
 z-index:100;
-background:#fff;
-border:1px solid #dfe4e9;
-border-radius:15px;
-box-shadow:0 12px 32px rgba(24,34,45,.14);
+background:rgba(12,25,43,.98);
+border:1px solid rgba(255,255,255,.09);
+border-radius:18px;
+box-shadow:0 22px 55px rgba(0,0,0,.42);
 overflow:hidden;
-max-height:360px;
-overflow-y:auto
+max-height:390px;
+overflow-y:auto;
+backdrop-filter:blur(22px);
+-webkit-backdrop-filter:blur(22px)
 }
 
 .suggestion{
@@ -130,15 +213,19 @@ align-items:center;
 gap:12px;
 width:100%;
 border:0;
-border-bottom:1px solid #eef1f3;
-background:#fff;
-padding:13px 14px;
+border-bottom:1px solid rgba(255,255,255,.055);
+background:transparent;
+padding:14px 15px;
 text-align:left;
-color:#17202a
+color:#fff
 }
 
 .suggestion:last-child{
 border-bottom:0
+}
+
+.suggestion:active{
+background:rgba(255,255,255,.055)
 }
 
 .suggestion-main{
@@ -149,11 +236,11 @@ font-size:15px
 .suggestion-code,
 .suggestion-market{
 font-size:11px;
-color:#7d8793
+color:#7f90a8
 }
 
 .suggestion-code{
-margin-top:3px
+margin-top:4px
 }
 
 .suggestion-market{
@@ -165,15 +252,15 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 gap:10px;
-padding:11px 14px 8px;
-background:#f8f9fa;
-border-bottom:1px solid #eef1f3
+padding:12px 15px 9px;
+background:rgba(255,255,255,.025);
+border-bottom:1px solid var(--line)
 }
 
 .history-title{
 font-size:11px;
 font-weight:850;
-color:#7d8793
+color:#788aa4
 }
 
 .history-clear{
@@ -181,55 +268,92 @@ border:0;
 background:transparent;
 padding:4px 0;
 font-size:11px;
-font-weight:800;
-color:#1769e0
+font-weight:850;
+color:#72a5ff
 }
 
+/* TABS */
+
 .tabs{
-display:flex;
-gap:8px;
-margin:14px 0 18px;
-overflow-x:auto
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:5px;
+margin:4px 0 18px;
+padding:5px;
+border:1px solid var(--line);
+border-radius:17px;
+background:rgba(255,255,255,.035)
 }
 
 .tab{
-border:1px solid #dfe4e9;
-background:#fff;
-border-radius:999px;
-padding:9px 13px;
-font-weight:700;
-color:#687382;
-white-space:nowrap
+height:39px;
+border:0;
+background:transparent;
+border-radius:12px;
+font-size:13px;
+font-weight:800;
+color:#7d8da5;
+white-space:nowrap;
+transition:.18s ease
 }
 
 .tab.on{
-background:#17202a;
 color:#fff;
-border-color:#17202a
+background:linear-gradient(135deg,rgba(69,124,255,.95),rgba(111,91,245,.95));
+box-shadow:0 7px 20px rgba(59,100,225,.25)
 }
+
+/* GENERAL */
 
 .muted{
-color:#7d8793
+color:var(--muted)
 }
 
-.empty,
-.card{
-background:#fff;
-border:1px solid #e4e8ec;
-border-radius:18px;
-box-shadow:0 4px 18px rgba(24,34,45,.04)
+.card,
+.empty{
+background:
+linear-gradient(145deg,rgba(19,35,58,.94),rgba(12,25,43,.94));
+border:1px solid var(--line);
+border-radius:21px;
+box-shadow:var(--shadow);
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px)
 }
 
 .empty{
-padding:18px;
-color:#7d8793;
-line-height:1.55
+padding:22px;
+color:#8392a8;
+font-size:13px;
+line-height:1.65
 }
 
+/* STOCK CARDS */
+
 .stock-card{
-padding:15px;
-margin-bottom:9px;
-cursor:pointer
+position:relative;
+padding:17px 17px 15px;
+margin-bottom:10px;
+overflow:hidden;
+cursor:pointer;
+transition:transform .14s ease,border-color .14s ease
+}
+
+.stock-card:before{
+content:"";
+position:absolute;
+width:120px;
+height:120px;
+right:-60px;
+top:-60px;
+border-radius:50%;
+background:rgba(75,133,255,.08);
+filter:blur(2px);
+pointer-events:none
+}
+
+.stock-card:active{
+transform:scale(.985);
+border-color:rgba(93,147,255,.28)
 }
 
 .row{
@@ -240,34 +364,37 @@ align-items:flex-start
 }
 
 .symbol{
-font-size:17px;
-font-weight:900
+font-size:18px;
+font-weight:950;
+letter-spacing:.1px
 }
 
 .name{
 font-size:12px;
-color:#7d8793;
-margin-top:3px
+color:#8191a8;
+margin-top:4px;
+font-weight:650
 }
 
 .price{
 text-align:right;
-font-size:19px;
-font-weight:900
+font-size:21px;
+font-weight:950;
+letter-spacing:-.3px
 }
 
 .change{
 font-size:12px;
-font-weight:800;
-margin-top:3px
+font-weight:850;
+margin-top:4px
 }
 
 .up{
-color:#d73a49
+color:var(--red)
 }
 
 .down{
-color:#159447
+color:var(--green)
 }
 
 .status{
@@ -275,285 +402,137 @@ display:inline-flex;
 align-items:center;
 gap:5px;
 border-radius:999px;
-padding:6px 9px;
+padding:6px 10px;
 font-size:11px;
-font-weight:800;
-margin-top:10px
+font-weight:850;
+margin-top:11px;
+border:1px solid transparent
 }
 
 .green{
-background:#e9f8ef;
-color:#148244
+background:rgba(53,217,138,.10);
+border-color:rgba(53,217,138,.15);
+color:#55e49c
 }
 
 .blue{
-background:#eaf3ff;
-color:#1769e0
+background:rgba(77,141,255,.11);
+border-color:rgba(77,141,255,.16);
+color:#7cacff
 }
 
 .yellow{
-background:#fff5d8;
-color:#a06a00
+background:rgba(255,200,92,.10);
+border-color:rgba(255,200,92,.16);
+color:#ffd06d
 }
 
 .gray{
-background:#f0f2f4;
-color:#6f7882
+background:rgba(255,255,255,.055);
+border-color:rgba(255,255,255,.06);
+color:#9aa6b8
 }
 
 .score{
 font-size:11px;
-color:#65717d;
-margin-top:9px
+color:#6f8098;
+margin-top:10px
+}
+
+.radar-score-row{
+display:flex;
+align-items:center;
+gap:9px;
+margin-top:11px
+}
+
+.mini-bar{
+height:4px;
+flex:1;
+border-radius:999px;
+background:rgba(255,255,255,.06);
+overflow:hidden
+}
+
+.mini-bar i{
+display:block;
+height:100%;
+border-radius:999px;
+background:linear-gradient(90deg,#3f8cff,#7869ff)
+}
+
+.score-number{
+font-size:11px;
+font-weight:850;
+color:#9cacbf
+}
+
+/* DETAIL HERO */
+
+.back{
+margin-bottom:13px
 }
 
 .hero{
-padding:18px
+position:relative;
+padding:21px;
+overflow:hidden;
+background:
+radial-gradient(circle at 100% 0%,rgba(99,93,255,.22),transparent 42%),
+radial-gradient(circle at 0% 100%,rgba(44,154,255,.12),transparent 42%),
+linear-gradient(145deg,#132541,#0d1b30)
+}
+
+.hero:after{
+content:"";
+position:absolute;
+width:180px;
+height:180px;
+border-radius:50%;
+right:-100px;
+bottom:-110px;
+background:rgba(72,133,255,.09)
+}
+
+.hero-top{
+display:flex;
+justify-content:space-between;
+gap:14px;
+align-items:flex-start
+}
+
+.hero-code{
+font-size:12px;
+font-weight:800;
+color:#7fa8e8;
+letter-spacing:.7px
+}
+
+.hero-name{
+font-size:21px;
+font-weight:950;
+margin-top:4px
 }
 
 .hero-price{
-font-size:34px;
+font-size:42px;
+line-height:1;
 font-weight:950;
+letter-spacing:-1.3px;
+margin-top:22px
+}
+
+.hero-change{
+display:inline-block;
+font-size:14px;
+font-weight:900;
 margin-top:8px
 }
 
 .live{
-font-size:11px;
-color:#697581;
-margin-top:5px
-}
-
-.strategy{
-padding:17px;
-margin-top:12px
-}
-
-.strategy-head{
-display:flex;
-justify-content:space-between;
-align-items:center
-}
-
-.strategy-title{
-font-size:20px;
-font-weight:950
-}
-
-.bigscore{
-font-size:29px;
-font-weight:950
-}
-
-.section-title{
-font-size:16px;
-font-weight:900;
-margin-top:19px;
-margin-bottom:8px
-}
-
-.score-grid,
-.levels,
-.chip-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px
-}
-
-.score-grid,
-.levels{
-margin-top:12px
-}
-
-.score-box,
-.level{
-padding:13px;
-border-radius:13px;
-background:#f7f8fa;
-border:1px solid #e7eaee
-}
-
-.level.full{
-grid-column:1/-1
-}
-
-.score-box span,
-.level span,
-.chip-item span{
-display:block;
 font-size:10px;
-color:#7c8793
-}
-
-.score-box strong,
-.level strong{
-display:block;
-font-size:17px;
-margin-top:4px
-}
-
-.score-box small,
-.level small{
-display:block;
-font-size:10px;
-line-height:1.45;
-color:#7c8793;
-margin-top:5px
-}
-
-.current-price{
-background:#f2f5ff;
-border-color:#d7def8
-}
-
-.entry{
-background:#edf5ff;
-border-color:#cfe1fa
-}
-
-.sl{
-background:#fff0f0;
-border-color:#f4d0d0
-}
-
-.tp{
-background:#eef9f1;
-border-color:#d0ebd8
-}
-
-.support{
-background:#ecfaf7;
-border-color:#cbece5
-}
-
-.pressure{
-background:#fff5ed;
-border-color:#f2dccb
-}
-
-.wait{
-background:#f5f5f5;
-border-color:#e0e3e7
-}
-
-.chip{
-margin-top:12px;
-padding:14px;
-border:1px solid #e7eaee;
-border-radius:14px;
-background:#fafbfc
-}
-
-.chip-grid{
-margin-top:10px
-}
-
-.chip-item{
-padding:10px;
-background:#fff;
-border:1px solid #eceff2;
-border-radius:11px
-}
-
-.chip-item strong{
-display:block;
-font-size:15px;
-margin-top:3px
-}
-
-.conditions{
-margin-top:15px;
-border-top:1px solid #edf0f2;
-padding-top:8px
-}
-
-.cond{
-padding:10px 0;
-border-bottom:1px solid #f0f2f4;
-font-size:13px
-}
-
-.ok{
-color:#16864a
-}
-
-.no{
-color:#c44848
-}
-
-.cond small{
-display:block;
-color:#7c8793;
-margin:4px 0 0 19px;
-line-height:1.4
-}
-
-.news-item{
-padding:11px 0;
-border-bottom:1px solid #edf0f2
-}
-
-.news-title{
-font-size:13px;
-font-weight:800
-}
-
-.news-meta{
-font-size:10px;
-color:#7c8793;
-margin-top:4px
-}
-
-.fav{
-width:100%;
-border:1px solid #dfe4e9;
-background:#fff;
-border-radius:12px;
-padding:11px;
-font-weight:800;
-margin-top:13px
-}
-
-.detail-actions{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:13px
-}
-
-.detail-actions .fav{
-margin-top:0;
-height:46px
-}
-
-.detail-back{
-width:100%;
-height:46px;
-border:1px solid #dfe4e9;
-background:#f7f8fa;
-color:#17202a;
-border-radius:12px;
-font-weight:800;
-font-size:14px
-}
-
-.back{
-margin-bottom:12px
-}
-
-.hidden{
-display:none!important
-}
-
-.note{
-font-size:11px;
-line-height:1.55;
-color:#7c8793;
-margin-top:20px
-}
-
-.loader{
-padding:28px;
-text-align:center
+color:#788aa3;
+margin-top:14px
 }
 
 .pulse{
@@ -561,8 +540,469 @@ display:inline-block;
 width:7px;
 height:7px;
 border-radius:50%;
-background:#19a15f;
-margin-right:5px
+background:#37db8a;
+box-shadow:0 0 0 4px rgba(55,219,138,.08);
+margin-right:6px
+}
+
+/* STRATEGY */
+
+.strategy{
+padding:18px;
+margin-top:12px
+}
+
+.strategy-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:14px
+}
+
+.strategy-title{
+font-size:21px;
+font-weight:950;
+letter-spacing:-.4px
+}
+
+.bigscore-wrap{
+text-align:right
+}
+
+.bigscore{
+font-size:34px;
+line-height:1;
+font-weight:950;
+background:linear-gradient(135deg,#73a8ff,#9b86ff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent
+}
+
+.bigscore-label{
+font-size:9px;
+color:#6f819a;
+margin-top:4px;
+font-weight:750
+}
+
+.section-title{
+display:flex;
+align-items:center;
+gap:7px;
+font-size:16px;
+font-weight:900;
+margin-top:24px;
+margin-bottom:10px
+}
+
+.section-title:before{
+content:"";
+display:block;
+width:3px;
+height:15px;
+border-radius:999px;
+background:linear-gradient(180deg,#4b91ff,#806cff)
+}
+
+/* FIVE SCORES */
+
+.score-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:11px
+}
+
+.score-box{
+padding:14px;
+border-radius:16px;
+background:rgba(255,255,255,.032);
+border:1px solid var(--line)
+}
+
+.score-box:last-child:nth-child(odd){
+grid-column:1/-1
+}
+
+.score-box-head{
+display:flex;
+justify-content:space-between;
+gap:8px;
+align-items:center
+}
+
+.score-box span{
+display:block;
+font-size:11px;
+color:#8796ab;
+font-weight:750
+}
+
+.score-box strong{
+font-size:16px;
+font-weight:950
+}
+
+.score-progress{
+height:5px;
+border-radius:999px;
+background:rgba(255,255,255,.055);
+overflow:hidden;
+margin-top:10px
+}
+
+.score-progress i{
+display:block;
+height:100%;
+border-radius:999px;
+background:linear-gradient(90deg,#438fff,#796cff)
+}
+
+.score-box small{
+display:block;
+font-size:10px;
+line-height:1.5;
+color:#6f8098;
+margin-top:9px
+}
+
+/* LEVELS */
+
+.levels,
+.chip-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px
+}
+
+.levels{
+margin-top:11px
+}
+
+.level{
+position:relative;
+padding:14px;
+border-radius:16px;
+background:rgba(255,255,255,.032);
+border:1px solid var(--line);
+overflow:hidden
+}
+
+.level.full{
+grid-column:1/-1
+}
+
+.level span,
+.chip-item span{
+display:block;
+font-size:10px;
+font-weight:750;
+color:#7f8fa7
+}
+
+.level strong{
+display:block;
+font-size:18px;
+font-weight:950;
+margin-top:5px;
+line-height:1.25
+}
+
+.level small{
+display:block;
+font-size:10px;
+line-height:1.5;
+color:#708098;
+margin-top:7px
+}
+
+.current-price{
+background:rgba(72,123,255,.07);
+border-color:rgba(83,139,255,.15)
+}
+
+.entry{
+background:rgba(64,142,255,.08);
+border-color:rgba(64,142,255,.20)
+}
+
+.entry strong{
+color:#80b0ff
+}
+
+.sl{
+background:rgba(255,90,107,.07);
+border-color:rgba(255,90,107,.16)
+}
+
+.sl strong{
+color:#ff8390
+}
+
+.tp{
+background:rgba(53,217,138,.065);
+border-color:rgba(53,217,138,.15)
+}
+
+.tp strong{
+color:#62e7a4
+}
+
+.support{
+background:rgba(44,210,176,.06);
+border-color:rgba(44,210,176,.14)
+}
+
+.support strong{
+color:#62dbc4
+}
+
+.pressure{
+background:rgba(255,174,80,.065);
+border-color:rgba(255,174,80,.15)
+}
+
+.pressure strong{
+color:#ffc277
+}
+
+.wait{
+background:rgba(255,255,255,.035)
+}
+
+/* INFO CARDS */
+
+.chip{
+margin-top:12px;
+padding:16px;
+border:1px solid var(--line);
+border-radius:18px;
+background:rgba(255,255,255,.025)
+}
+
+.chip>b{
+font-size:14px
+}
+
+.chip-grid{
+margin-top:12px
+}
+
+.chip-item{
+padding:12px;
+background:rgba(255,255,255,.028);
+border:1px solid rgba(255,255,255,.055);
+border-radius:13px
+}
+
+.chip-item strong{
+display:block;
+font-size:15px;
+margin-top:4px
+}
+
+/* CONDITIONS */
+
+.conditions{
+margin-top:12px;
+border-top:1px solid var(--line)
+}
+
+.cond{
+padding:12px 1px;
+border-bottom:1px solid rgba(255,255,255,.055);
+font-size:13px;
+font-weight:750
+}
+
+.ok{
+color:#52dc98
+}
+
+.no{
+color:#ff7d89
+}
+
+.cond small{
+display:block;
+color:#708098;
+margin:5px 0 0 20px;
+line-height:1.45;
+font-weight:500
+}
+
+/* NEWS */
+
+.news-item{
+padding:12px 0;
+border-bottom:1px solid rgba(255,255,255,.055)
+}
+
+.news-item:last-child{
+border-bottom:0
+}
+
+.news-title{
+font-size:13px;
+font-weight:800;
+line-height:1.5
+}
+
+.news-meta{
+font-size:10px;
+color:#6f8098;
+margin-top:5px
+}
+
+/* BUTTONS */
+
+.fav,
+.detail-back{
+width:100%;
+height:48px;
+border-radius:14px;
+font-weight:850;
+font-size:14px
+}
+
+.fav{
+border:1px solid rgba(83,142,255,.24);
+background:linear-gradient(135deg,rgba(61,128,255,.18),rgba(111,89,255,.14));
+color:#8bb6ff;
+margin-top:0
+}
+
+.detail-back{
+border:1px solid var(--line);
+background:rgba(255,255,255,.035);
+color:#dbe5f3
+}
+
+.detail-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:17px
+}
+
+.hidden{
+display:none!important
+}
+
+.note{
+font-size:10px;
+line-height:1.65;
+color:#64758e;
+margin-top:20px;
+padding:0 2px
+}
+
+/* LOADER / SKELETON */
+
+.loader{
+padding:30px;
+text-align:center;
+color:#7f90a8;
+font-size:13px
+}
+
+.loading-dot{
+display:inline-flex;
+gap:5px;
+margin-right:8px
+}
+
+.loading-dot i{
+width:5px;
+height:5px;
+border-radius:50%;
+background:#6799ff;
+animation:blink 1.1s infinite
+}
+
+.loading-dot i:nth-child(2){
+animation-delay:.15s
+}
+
+.loading-dot i:nth-child(3){
+animation-delay:.3s
+}
+
+@keyframes blink{
+0%,80%,100%{opacity:.25;transform:scale(.8)}
+40%{opacity:1;transform:scale(1)}
+}
+
+.skeleton{
+overflow:hidden;
+position:relative
+}
+
+.skeleton:after{
+content:"";
+position:absolute;
+inset:0;
+transform:translateX(-100%);
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.045),transparent);
+animation:shimmer 1.3s infinite
+}
+
+@keyframes shimmer{
+100%{transform:translateX(100%)}
+}
+
+.skeleton-line{
+height:12px;
+border-radius:999px;
+background:rgba(255,255,255,.055);
+margin-bottom:10px
+}
+
+.skeleton-line.big{
+height:25px;
+width:45%
+}
+
+.skeleton-line.mid{
+width:70%
+}
+
+.skeleton-line.small{
+width:32%
+}
+
+.quick-hero{
+padding:21px
+}
+
+.quick-loading{
+margin-top:12px;
+font-size:11px;
+color:#6f8098
+}
+
+@media(max-width:380px){
+
+.app{
+padding-left:13px;
+padding-right:13px
+}
+
+.score-grid,
+.levels,
+.chip-grid{
+gap:7px
+}
+
+.level,
+.score-box{
+padding:12px
+}
+
+.hero-price{
+font-size:38px
+}
+
 }
 </style>
 </head>
@@ -572,53 +1012,43 @@ margin-right:5px
 <div class="app">
 
 <header class="top">
-
 <div class="brand">
 波段分析
-<small>台股全市場股票分析雷達</small>
+<small>TW SWING ANALYTICS</small>
 </div>
-
-<button id="notify" class="icon">🔔</button>
-
+<button id="notify" class="icon" aria-label="通知">🔔</button>
 </header>
 
 <main id="home">
 
 <div class="search">
-
 <div class="search-box">
-
 <input
 id="q"
 inputmode="search"
 autocomplete="off"
-placeholder="輸入代號或名稱，例如 2330、台積、聯發"
+placeholder="搜尋股票代號或名稱"
 >
-
 <div id="suggestions" class="suggestions hidden"></div>
-
 </div>
-
 <button id="go" class="primary">分析</button>
-
 </div>
 
 <div class="tabs">
-
 <button class="tab on" data-tab="signal">高分股票</button>
 <button class="tab" data-tab="near">觀察名單</button>
 <button class="tab" data-tab="watch">我的自選</button>
-
 </div>
 
 <div id="homeList">
 <div class="card loader">
-正在載入全市場共用雷達...
+<span class="loading-dot"><i></i><i></i><i></i></span>
+正在載入全市場雷達
 </div>
 </div>
 
 <div class="note">
-高分股票顯示共用 Radar 最強前 20 檔；觀察名單顯示下一批值得追蹤的股票。不同手機使用相同的伺服器 Radar 榜單。點進個股後，再進行完整技術、量價、法人、基本面、新聞與交易規劃分析。
+高分股票顯示共用 Radar 最強前 20 檔；觀察名單顯示下一批值得追蹤的股票。不同裝置使用相同的伺服器 Radar 榜單。點進個股後進行完整技術、量價、法人、基本面、新聞與交易規劃分析。
 </div>
 
 </main>
@@ -636,7 +1066,6 @@ placeholder="輸入代號或名稱，例如 2330、台積、聯發"
 </div>
 
 <script>
-
 const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
 const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
@@ -648,9 +1077,11 @@ const DEFAULT=[
 
 const HIGH_SCORE_LIMIT=20;
 const WATCH_RADAR_LIMIT=50;
+const DETAIL_CACHE_MS=90000;
 
 let tab='signal';
 let cache={};
+let detailCache={};
 
 let unified={
 strategyReady:[],
@@ -688,7 +1119,6 @@ maximumFractionDigits:d
 '--';
 
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
-
 const sma=(a,n)=>a.length>=n?avg(a.slice(-n)):avg(a);
 
 function ema(a,n){
@@ -703,8 +1133,7 @@ return e;
 
 function rsi(a,n=14){
 if(a.length<=n)return 50;
-let g=0;
-let l=0;
+let g=0,l=0;
 
 for(let i=a.length-n;i<a.length;i++){
 const d=a[i]-a[i-1];
@@ -713,13 +1142,16 @@ else l-=d;
 }
 
 if(l===0)return 100;
+
 return 100-100/(1+(g/n)/(l/n));
 }
 
 function atr(rows,n=14){
+
 const v=[];
 
 for(let i=Math.max(1,rows.length-n);i<rows.length;i++){
+
 const x=rows[i];
 const p=rows[i-1].close;
 
@@ -730,6 +1162,7 @@ Math.abs(x.high-p),
 Math.abs(x.low-p)
 )
 );
+
 }
 
 return avg(v);
@@ -793,7 +1226,10 @@ const clean=[
 )
 ];
 
-localStorage.setItem(WATCH_KEY,JSON.stringify(clean));
+localStorage.setItem(
+WATCH_KEY,
+JSON.stringify(clean)
+);
 
 return clean;
 }
@@ -836,6 +1272,7 @@ const d=await r.json();
 if(!r.ok||!d.ok){
 throw Error(d.error||'雲端自選儲存失敗');
 }
+
 }
 
 async function loadWatchlist(){
@@ -846,7 +1283,12 @@ try{
 
 const cloud=await getCloudWatch();
 
-const merged=[...new Set([...local,...cloud])];
+const merged=[
+...new Set([
+...local,
+...cloud
+])
+];
 
 if(merged.length){
 
@@ -874,9 +1316,11 @@ return watch();
 }catch(e){
 
 console.warn(e);
+
 return local;
 
 }
+
 }
 
 /* HISTORY */
@@ -885,14 +1329,22 @@ function searchHistory(){
 
 try{
 
-const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+const x=JSON.parse(
+localStorage.getItem(HISTORY_KEY)||'[]'
+);
 
 if(!Array.isArray(x))return [];
 
 return x.map(item=>{
 
 if(typeof item==='string'){
-return {symbol:item,name:'',time:0};
+
+return {
+symbol:item,
+name:'',
+time:0
+};
+
 }
 
 return {
@@ -906,7 +1358,9 @@ time:Number(item?.time||0)
 .slice(0,10);
 
 }catch{
+
 return [];
+
 }
 
 }
@@ -915,7 +1369,8 @@ function saveHistory(a){
 
 if(!a?.symbol)return;
 
-let h=searchHistory()
+let h=
+searchHistory()
 .filter(x=>x.symbol!==String(a.symbol));
 
 h.unshift({
@@ -928,11 +1383,15 @@ localStorage.setItem(
 HISTORY_KEY,
 JSON.stringify(h.slice(0,10))
 );
+
 }
 
 function clearHistory(){
+
 localStorage.removeItem(HISTORY_KEY);
+
 hideSuggestions();
+
 }
 
 function showSearchHistory(){
@@ -941,17 +1400,29 @@ const box=$('suggestions');
 const history=searchHistory();
 
 if(!history.length){
+
 hideSuggestions();
+
 return;
+
 }
 
 box.innerHTML=`
 
 <div class="history-head">
-<div class="history-title">最近搜尋</div>
-<button id="clearSearchHistory" class="history-clear" type="button">
+
+<div class="history-title">
+最近搜尋
+</div>
+
+<button
+id="clearSearchHistory"
+class="history-clear"
+type="button"
+>
 清除紀錄
 </button>
+
 </div>
 
 ${history.map(x=>`
@@ -963,11 +1434,20 @@ type="button"
 >
 
 <div>
-<div class="suggestion-main">${esc(x.name||x.symbol)}</div>
-<div class="suggestion-code">${esc(x.symbol)}</div>
+
+<div class="suggestion-main">
+${esc(x.name||x.symbol)}
 </div>
 
-<div class="suggestion-market">搜尋紀錄</div>
+<div class="suggestion-code">
+${esc(x.symbol)}
+</div>
+
+</div>
+
+<div class="suggestion-market">
+搜尋紀錄
+</div>
 
 </button>
 
@@ -981,14 +1461,19 @@ const clearButton=$('clearSearchHistory');
 if(clearButton){
 
 clearButton.onclick=e=>{
+
 e.preventDefault();
 e.stopPropagation();
+
 clearHistory();
+
 };
 
 }
 
-box.querySelectorAll('.history-item').forEach(x=>{
+box
+.querySelectorAll('.history-item')
+.forEach(x=>{
 
 x.onclick=e=>{
 
@@ -998,9 +1483,11 @@ e.stopPropagation();
 const symbol=x.dataset.symbol;
 
 selectedSearchSymbol=symbol;
+
 $('q').value=symbol;
 
 hideSuggestions();
+
 openStock(symbol);
 
 };
@@ -1009,7 +1496,7 @@ openStock(symbol);
 
 }
 
-/* STOCK API */
+/* API */
 
 async function getStock(symbol){
 
@@ -1023,19 +1510,26 @@ encodeURIComponent(symbol)+
 let d;
 
 try{
+
 d=await r.json();
+
 }catch{
+
 throw Error('股票資料格式錯誤');
+
 }
 
 if(!r.ok||!d.ok){
-throw Error(d.error||'資料取得失敗');
+
+throw Error(
+d.error||
+'資料取得失敗'
+);
+
 }
 
 return d;
 }
-
-/* NEWS */
 
 async function getNews(symbol){
 
@@ -1050,10 +1544,14 @@ encodeURIComponent(symbol)+
 
 const d=await r.json();
 
-if(r.ok&&d.ok)return d;
+if(r.ok&&d.ok){
+return d;
+}
 
 }catch(e){
+
 console.warn(e);
+
 }
 
 return {
@@ -1062,6 +1560,7 @@ overall:'資料不足',
 overallScore:0,
 news:[]
 };
+
 }
 
 /* PIVOTS */
@@ -1071,7 +1570,11 @@ function pivots(rows,left=3,right=3){
 const lows=[];
 const highs=[];
 
-for(let i=left;i<rows.length-right;i++){
+for(
+let i=left;
+i<rows.length-right;
+i++
+){
 
 let lo=true;
 let hi=true;
@@ -1090,33 +1593,70 @@ if(rows[i].high<rows[i+j].high)hi=false;
 
 }
 
-if(lo)lows.push({i,value:rows[i].low});
-if(hi)highs.push({i,value:rows[i].high});
+if(lo){
+lows.push({
+i,
+value:rows[i].low
+});
+}
+
+if(hi){
+highs.push({
+i,
+value:rows[i].high
+});
+}
 
 }
 
-return {lows,highs};
+return {
+lows,
+highs
+};
+
 }
 
 function clusterLevels(items,distance){
 
 const sorted=
 items
-.filter(x=>Number.isFinite(+x.value)&&+x.value>0)
-.sort((a,b)=>a.value-b.value);
+.filter(
+x=>
+Number.isFinite(+x.value)&&
++x.value>0
+)
+.sort(
+(a,b)=>a.value-b.value
+);
 
 const groups=[];
 
 for(const item of sorted){
 
-const last=groups[groups.length-1];
+const last=
+groups[
+groups.length-1
+];
 
-if(last&&Math.abs(item.value-last.value)<=distance){
+if(
+last&&
+Math.abs(
+item.value-last.value
+)<=distance
+){
 
 last.values.push(item.value);
-last.value=avg(last.values);
+
+last.value=
+avg(last.values);
+
 last.count++;
-last.latest=Math.max(last.latest,item.i||0);
+
+last.latest=
+Math.max(
+last.latest,
+item.i||0
+);
 
 }else{
 
@@ -1136,55 +1676,128 @@ return groups;
 
 /* TRADE PLAN */
 
-function buildTradePlan(rows,price,A,m20,m60){
+function buildTradePlan(
+rows,
+price,
+A,
+m20,
+m60
+){
 
-const recent=rows.slice(-240);
-const P=pivots(recent,3,3);
+const recent=
+rows.slice(-240);
 
-const mergeDistance=Math.max(A*.45,price*.005);
+const P=
+pivots(
+recent,
+3,
+3
+);
+
+const mergeDistance=
+Math.max(
+A*.45,
+price*.005
+);
 
 const supportRaw=[];
 
 for(const x of P.lows){
 
-if(x.value<=price*1.012&&x.value>=price*.82){
-supportRaw.push({value:x.value,i:x.i});
-}
+if(
+x.value<=price*1.012&&
+x.value>=price*.82
+){
+
+supportRaw.push({
+value:x.value,
+i:x.i
+});
 
 }
 
-if(Number.isFinite(m20)&&m20<=price*1.012&&m20>=price*.82){
-supportRaw.push({value:m20,i:recent.length+5});
 }
 
-if(Number.isFinite(m60)&&m60<=price*1.012&&m60>=price*.82){
-supportRaw.push({value:m60,i:recent.length+4});
+if(
+Number.isFinite(m20)&&
+m20<=price*1.012&&
+m20>=price*.82
+){
+
+supportRaw.push({
+value:m20,
+i:recent.length+5
+});
+
+}
+
+if(
+Number.isFinite(m60)&&
+m60<=price*1.012&&
+m60>=price*.82
+){
+
+supportRaw.push({
+value:m60,
+i:recent.length+4
+});
+
 }
 
 for(const n of [10,20,60]){
 
-const part=rows.slice(-n);
+const part=
+rows.slice(-n);
 
 if(!part.length)continue;
 
-const low=Math.min(...part.map(x=>x.low));
+const low=
+Math.min(
+...part.map(
+x=>x.low
+)
+);
 
-if(low<=price*1.012&&low>=price*.82){
-supportRaw.push({value:low,i:recent.length+n});
+if(
+low<=price*1.012&&
+low>=price*.82
+){
+
+supportRaw.push({
+value:low,
+i:recent.length+n
+});
+
 }
 
 }
 
 for(const x of P.highs){
 
-if(x.value>=price*.88&&x.value<price){
+if(
+x.value>=price*.88&&
+x.value<price
+){
 
-const after=recent.slice(x.i+1);
+const after=
+recent.slice(
+x.i+1
+);
 
-const broken=after.some(r=>r.close>x.value*1.004);
+const broken=
+after.some(
+r=>
+r.close>
+x.value*1.004
+);
 
 if(broken){
-supportRaw.push({value:x.value,i:x.i});
+
+supportRaw.push({
+value:x.value,
+i:x.i
+});
+
 }
 
 }
@@ -1192,28 +1805,50 @@ supportRaw.push({value:x.value,i:x.i});
 }
 
 const supportGroups=
-clusterLevels(supportRaw,mergeDistance)
-.filter(x=>x.value<=price*1.012&&x.value>=price*.82)
-.sort((a,b)=>b.value-a.value);
+clusterLevels(
+supportRaw,
+mergeDistance
+)
+.filter(
+x=>
+x.value<=price*1.012&&
+x.value>=price*.82
+)
+.sort(
+(a,b)=>b.value-a.value
+);
 
-const support1=supportGroups[0]?supportGroups[0].value:null;
+const support1=
+supportGroups[0]
+?
+supportGroups[0].value
+:
+null;
 
 const support2=
 support1
 ?
 supportGroups.find(
-x=>x.value<support1-mergeDistance*.75
+x=>
+x.value<
+support1-
+mergeDistance*.75
 )?.value||null
 :
 null;
 
 const MAX_ENTRY_DISTANCE=.045;
 
-const nearbySupports=supportGroups.filter(x=>{
+const nearbySupports=
+supportGroups.filter(x=>{
 
-const distance=(price-x.value)/price;
+const distance=
+(price-x.value)/price;
 
-return distance>=-.012&&distance<=MAX_ENTRY_DISTANCE;
+return (
+distance>=-.012&&
+distance<=MAX_ENTRY_DISTANCE
+);
 
 });
 
@@ -1222,12 +1857,23 @@ let bestSupportScore=-Infinity;
 
 for(const x of nearbySupports){
 
-const distance=Math.max(0,(price-x.value)/price);
+const distance=
+Math.max(
+0,
+(price-x.value)/price
+);
 
 const distanceScore=
-Math.max(0,1-distance/MAX_ENTRY_DISTANCE)*45;
+Math.max(
+0,
+1-distance/MAX_ENTRY_DISTANCE
+)*45;
 
-const clusterScore=Math.min(x.count,4)*10;
+const clusterScore=
+Math.min(
+x.count,
+4
+)*10;
 
 const recentScore=
 recent.length
@@ -1241,7 +1887,10 @@ distanceScore+
 clusterScore+
 recentScore;
 
-if(score>bestSupportScore){
+if(
+score>
+bestSupportScore
+){
 
 bestSupportScore=score;
 bestSupport=x;
@@ -1250,46 +1899,94 @@ bestSupport=x;
 
 }
 
-/* 壓力 */
+/* PRESSURE */
 
 const pressureRaw=[];
 
 for(const x of P.highs){
 
-if(x.value>=price*.90&&x.value<=price*1.35){
-pressureRaw.push({value:x.value,i:x.i});
-}
+if(
+x.value>=price*.90&&
+x.value<=price*1.35
+){
+
+pressureRaw.push({
+value:x.value,
+i:x.i
+});
 
 }
 
-for(let end=20;end<=recent.length;end+=10){
+}
+
+for(
+let end=20;
+end<=recent.length;
+end+=10
+){
 
 const block=
-recent.slice(Math.max(0,end-20),end);
+recent.slice(
+Math.max(0,end-20),
+end
+);
 
 if(!block.length)continue;
 
-const high=Math.max(...block.map(x=>x.high));
+const high=
+Math.max(
+...block.map(
+x=>x.high
+)
+);
 
-if(high>=price*.90&&high<=price*1.35){
-pressureRaw.push({value:high,i:end});
+if(
+high>=price*.90&&
+high<=price*1.35
+){
+
+pressureRaw.push({
+value:high,
+i:end
+});
+
 }
 
 }
 
 const allPressureGroups=
-clusterLevels(pressureRaw,mergeDistance)
-.filter(x=>x.value>=price*.90&&x.value<=price*1.35)
-.sort((a,b)=>a.value-b.value);
+clusterLevels(
+pressureRaw,
+mergeDistance
+)
+.filter(
+x=>
+x.value>=price*.90&&
+x.value<=price*1.35
+)
+.sort(
+(a,b)=>a.value-b.value
+);
 
 const abovePressures=
 allPressureGroups
-.filter(x=>x.value>price+mergeDistance*.15);
+.filter(
+x=>
+x.value>
+price+
+mergeDistance*.15
+);
 
 const recentlyCrossed=
 allPressureGroups
-.filter(x=>x.value<=price&&x.value>=price*.98)
-.sort((a,b)=>b.value-a.value);
+.filter(
+x=>
+x.value<=price&&
+x.value>=price*.98
+)
+.sort(
+(a,b)=>b.value-a.value
+);
 
 const nextResistance=
 abovePressures[0]
@@ -1305,18 +2002,27 @@ recentlyCrossed[0].value
 :
 null;
 
-let breakout=nextResistance;
-let breakoutState='BELOW';
+let breakout=
+nextResistance;
+
+let breakoutState=
+'BELOW';
 
 if(crossedResistance){
 
 const crossedDistance=
-(price-crossedResistance)/price;
+(price-crossedResistance)/
+price;
 
-if(crossedDistance<=.02){
+if(
+crossedDistance<=.02
+){
 
-breakout=crossedResistance;
-breakoutState='BROKEN';
+breakout=
+crossedResistance;
+
+breakoutState=
+'BROKEN';
 
 }
 
@@ -1335,19 +2041,31 @@ if(bestSupport){
 
 planType='LIMIT';
 
-const base=bestSupport.value;
+const base=
+bestSupport.value;
 
 entryLow=
 base-
-Math.max(A*.18,price*.002);
+Math.max(
+A*.18,
+price*.002
+);
 
 entryHigh=
 base+
-Math.max(A*.30,price*.0035);
+Math.max(
+A*.30,
+price*.0035
+);
 
-entryHigh=Math.min(entryHigh,price*1.006);
+entryHigh=
+Math.min(
+entryHigh,
+price*1.006
+);
 
-entryMid=(entryLow+entryHigh)/2;
+entryMid=
+(entryLow+entryHigh)/2;
 
 const lowerStructures=[
 ...P.lows.map(x=>x.value),
@@ -1355,10 +2073,14 @@ const lowerStructures=[
 ]
 .filter(
 v=>
-v<base-mergeDistance*.20&&
+v<
+base-
+mergeDistance*.20&&
 v>=base*.90
 )
-.sort((a,b)=>b-a);
+.sort(
+(a,b)=>b-a
+);
 
 const invalidation=
 lowerStructures[0]
@@ -1369,22 +2091,35 @@ support2
 
 sl=
 invalidation-
-Math.max(A*.25,price*.003);
+Math.max(
+A*.25,
+price*.003
+);
 
 if(sl>=entryLow){
 
 sl=
 entryLow-
-Math.max(A*.45,price*.005);
+Math.max(
+A*.45,
+price*.005
+);
 
 }
 
 const readyTolerance=
-Math.max(A*.25,price*.0035);
+Math.max(
+A*.25,
+price*.0035
+);
 
 entryReady=
-price>=entryLow-readyTolerance&&
-price<=entryHigh+readyTolerance;
+price>=
+entryLow-
+readyTolerance&&
+price<=
+entryHigh+
+readyTolerance;
 
 }
 
@@ -1395,47 +2130,87 @@ let tp2=null;
 let tp3=null;
 let tp3Source='';
 
-if(Number.isFinite(entryMid)&&breakout){
+if(
+Number.isFinite(entryMid)&&
+breakout
+){
 
 const targetPressures=
 allPressureGroups
-.map(x=>x.value)
-.filter(v=>v>breakout+mergeDistance*.55)
-.sort((a,b)=>a-b);
+.map(
+x=>x.value
+)
+.filter(
+v=>
+v>
+breakout+
+mergeDistance*.55
+)
+.sort(
+(a,b)=>a-b
+);
 
 const cleanTargets=[];
 
 for(const v of targetPressures){
 
-const last=cleanTargets[cleanTargets.length-1];
+const last=
+cleanTargets[
+cleanTargets.length-1
+];
 
-if(!last||v-last>mergeDistance*.75){
+if(
+!last||
+v-last>
+mergeDistance*.75
+){
+
 cleanTargets.push(v);
-}
 
 }
 
-tp1=cleanTargets[0]||null;
+}
+
+tp1=
+cleanTargets[0]||
+null;
 
 tp2=
 tp1
 ?
-cleanTargets.find(v=>v>tp1+mergeDistance)||null
+cleanTargets.find(
+v=>
+v>
+tp1+
+mergeDistance
+)||null
 :
 null;
 
 tp3=
 tp2
 ?
-cleanTargets.find(v=>v>tp2+mergeDistance)||null
+cleanTargets.find(
+v=>
+v>
+tp2+
+mergeDistance
+)||null
 :
 null;
 
 if(tp3){
-tp3Source='第三層歷史壓力';
+
+tp3Source=
+'第三層歷史壓力';
+
 }
 
-if(!tp3&&tp1&&tp2){
+if(
+!tp3&&
+tp1&&
+tp2
+){
 
 const extensionBase=
 support2||
@@ -1449,7 +2224,8 @@ tp2-extensionBase,
 A*3
 )*.618;
 
-tp3Source='歷史壓力不足，Fib 0.618 延伸';
+tp3Source=
+'歷史壓力不足，Fib 0.618 延伸';
 
 }
 
@@ -1475,11 +2251,20 @@ null;
 
 function rr(target){
 
-if(!Number.isFinite(target)||!risk||risk<=0){
+if(
+!Number.isFinite(target)||
+!risk||
+risk<=0
+){
+
 return null;
+
 }
 
-return (target-entryMid)/risk;
+return (
+target-entryMid
+)/risk;
+
 }
 
 const rr1=rr(tp1);
@@ -1489,14 +2274,22 @@ const rr3=rr(tp3);
 const entryDistance=
 bestSupport
 ?
-(price-bestSupport.value)/price*100
+(
+price-
+bestSupport.value
+)/
+price*100
 :
 null;
 
 const breakoutDistance=
 breakout
 ?
-(breakout-price)/price*100
+(
+breakout-
+price
+)/
+price*100
 :
 null;
 
@@ -1513,8 +2306,18 @@ tp1>breakout;
 return {
 support1,
 support2,
-bestSupport:bestSupport?bestSupport.value:null,
-bestSupportStrength:bestSupport?bestSupport.count:0,
+bestSupport:
+bestSupport
+?
+bestSupport.value
+:
+null,
+bestSupportStrength:
+bestSupport
+?
+bestSupport.count
+:
+0,
 breakout,
 breakoutState,
 nextResistance,
@@ -1535,22 +2338,35 @@ rr2,
 rr3,
 entryReady,
 validPlan,
-pressureCount:allPressureGroups.length,
+pressureCount:
+allPressureGroups.length,
 entryDistance,
 breakoutDistance
 };
 
 }
 
-/* 五大分析 */
+/* FIVE CATEGORY ANALYSIS */
 
-function analyzeData(d,newsData=null){
+function analyzeData(
+d,
+newsData=null
+){
 
-if(!Array.isArray(d.rows)||d.rows.length<60){
-throw Error('歷史資料不足，無法分析');
+if(
+!Array.isArray(d.rows)||
+d.rows.length<60
+){
+
+throw Error(
+'歷史資料不足，無法分析'
+);
+
 }
 
-const rows=d.rows.map(x=>({
+const rows=
+d.rows
+.map(x=>({
 date:x.date||'',
 open:+x.open,
 high:+x.high,
@@ -1558,45 +2374,96 @@ low:+x.low,
 close:+x.close,
 volume:+x.volume||0
 }))
-.filter(x=>Number.isFinite(x.close)&&x.close>0);
+.filter(
+x=>
+Number.isFinite(x.close)&&
+x.close>0
+);
 
 if(rows.length<60){
-throw Error('有效 K 線不足');
+
+throw Error(
+'有效 K 線不足'
+);
+
 }
 
-const closes=rows.map(x=>x.close);
+const closes=
+rows.map(
+x=>x.close
+);
 
-let price=+d.price;
+let price=
++d.price;
 
-if(!Number.isFinite(price)||price<=0){
-price=rows.at(-1).close;
+if(
+!Number.isFinite(price)||
+price<=0
+){
+
+price=
+rows.at(-1).close;
+
 }
 
-const m20=sma(closes,20);
-const m60=sma(closes,60);
-const m120=sma(closes,120);
+const m20=
+sma(closes,20);
 
-const A=Math.max(atr(rows),price*.006);
-const R=rsi(closes);
+const m60=
+sma(closes,60);
+
+const m120=
+sma(closes,120);
+
+const A=
+Math.max(
+atr(rows),
+price*.006
+);
+
+const R=
+rsi(closes);
 
 const macd=
-ema(closes.slice(-120),12)-
-ema(closes.slice(-120),26);
+ema(
+closes.slice(-120),
+12
+)
+-
+ema(
+closes.slice(-120),
+26
+);
 
 const signal=
 ema(
-closes.slice(-120).map(
+closes.slice(-120)
+.map(
 (_,i,a)=>
-ema(a.slice(0,i+1),12)-
-ema(a.slice(0,i+1),26)
+ema(
+a.slice(0,i+1),
+12
+)
+-
+ema(
+a.slice(0,i+1),
+26
+)
 ),
 9
 );
 
-const volume=rows.at(-1).volume;
+const volume=
+rows.at(-1).volume;
 
 const volumeAverage=
-avg(rows.slice(-21,-1).map(x=>x.volume));
+avg(
+rows
+.slice(-21,-1)
+.map(
+x=>x.volume
+)
+);
 
 const vr=
 volumeAverage
@@ -1606,7 +2473,13 @@ volume/volumeAverage
 0;
 
 const high20=
-Math.max(...rows.slice(-20).map(x=>x.high));
+Math.max(
+...rows
+.slice(-20)
+.map(
+x=>x.high
+)
+);
 
 let technical=0;
 let volumeScore=0;
@@ -1616,9 +2489,16 @@ let newsScore=null;
 
 const conditions=[];
 
-function techCondition(name,ok,points,description){
+function techCondition(
+name,
+ok,
+points,
+description
+){
 
-if(ok)technical+=points;
+if(ok){
+technical+=points;
+}
 
 conditions.push([
 name,
@@ -1670,63 +2550,138 @@ price>=high20*.96,
 '價格接近近期高點，波段結構仍有強度'
 );
 
-technical=clamp(technical,0,20);
+technical=
+clamp(
+technical,
+0,
+20
+);
 
-/* 量價 */
+/* VOLUME */
 
-if(vr>=1)volumeScore+=6;
-else if(vr>=.8)volumeScore+=4;
-else if(vr>=.6)volumeScore+=2;
+if(vr>=1){
+volumeScore+=6;
+}else if(vr>=.8){
+volumeScore+=4;
+}else if(vr>=.6){
+volumeScore+=2;
+}
 
-const changePercent=+d.changePercent||0;
+const changePercent=
++d.changePercent||0;
 
-if(changePercent>0&&vr>=1){
+if(
+changePercent>0&&
+vr>=1
+){
+
 volumeScore+=5;
-}else if(changePercent>=0){
+
+}else if(
+changePercent>=0
+){
+
 volumeScore+=3;
+
 }
 
 let upVolumeDays=0;
 
-const last10=rows.slice(-10);
+const last10=
+rows.slice(-10);
 
-for(let i=1;i<last10.length;i++){
+for(
+let i=1;
+i<last10.length;
+i++
+){
 
 if(
-last10[i].close>last10[i-1].close&&
-last10[i].volume>=volumeAverage*.8
+last10[i].close>
+last10[i-1].close&&
+last10[i].volume>=
+volumeAverage*.8
 ){
+
 upVolumeDays++;
-}
 
 }
 
-volumeScore+=clamp(upVolumeDays,0,5);
+}
 
-if(price>=high20*.98&&vr>=1.1){
+volumeScore+=
+clamp(
+upVolumeDays,
+0,
+5
+);
+
+if(
+price>=high20*.98&&
+vr>=1.1
+){
+
 volumeScore+=4;
+
 }
 
-volumeScore=clamp(volumeScore,0,20);
+volumeScore=
+clamp(
+volumeScore,
+0,
+20
+);
 
-/* 法人 */
+/* INSTITUTION */
 
-const inst=d.institutional||{};
+const inst=
+d.institutional||{};
 
-if(+inst.total5>0)chipScore+=5;
-if(+inst.foreign5>0)chipScore+=4;
-if(+inst.trust5>0)chipScore+=4;
-if(+inst.total10>0)chipScore+=3;
-if((+inst.totalBuyDays5||0)>=3)chipScore+=2;
-if((+inst.foreignBuyDays5||0)>=3)chipScore+=2;
+if(+inst.total5>0){
+chipScore+=5;
+}
 
-chipScore=clamp(chipScore,0,20);
+if(+inst.foreign5>0){
+chipScore+=4;
+}
 
-/* 基本面 */
+if(+inst.trust5>0){
+chipScore+=4;
+}
 
-const fundamental=d.fundamental||{};
-const revenue=fundamental.revenue||{};
-const financial=fundamental.financial||{};
+if(+inst.total10>0){
+chipScore+=3;
+}
+
+if(
+(+inst.totalBuyDays5||0)>=3
+){
+chipScore+=2;
+}
+
+if(
+(+inst.foreignBuyDays5||0)>=3
+){
+chipScore+=2;
+}
+
+chipScore=
+clamp(
+chipScore,
+0,
+20
+);
+
+/* FUNDAMENTAL */
+
+const fundamental=
+d.fundamental||{};
+
+const revenue=
+fundamental.revenue||{};
+
+const financial=
+fundamental.financial||{};
 
 const fundAvailable=
 !!(
@@ -1738,44 +2693,76 @@ if(fundAvailable){
 
 fundScore=0;
 
-if(financial.profitable===true){
+if(
+financial.profitable===true
+){
+
 fundScore+=6;
+
 }else if(
 financial.profitable===undefined||
 financial.profitable===null
 ){
+
 fundScore+=3;
+
 }
 
-if(Number.isFinite(+financial.eps)&&+financial.eps>0){
+if(
+Number.isFinite(+financial.eps)&&
++financial.eps>0
+){
+
 fundScore+=4;
+
 }
 
 if(
 Number.isFinite(+financial.epsGrowth)&&
 +financial.epsGrowth>0
 ){
+
 fundScore+=3;
+
 }
 
-if(Number.isFinite(+revenue.yoy)){
+if(
+Number.isFinite(+revenue.yoy)
+){
 
 if(+revenue.yoy>10){
+
 fundScore+=4;
-}else if(+revenue.yoy>0){
+
+}else if(
++revenue.yoy>0
+){
+
 fundScore+=3;
-}
 
 }
 
-if(Number.isFinite(+revenue.mom)&&+revenue.mom>0){
+}
+
+if(
+Number.isFinite(+revenue.mom)&&
++revenue.mom>0
+){
+
 fundScore+=3;
+
 }
 
-fundScore=clamp(fundScore,0,20);
+fundScore=
+clamp(
+fundScore,
+0,
+20
+);
+
 }
 
-/* 新聞 */
+/* NEWS */
 
 if(newsData?.available){
 
@@ -1783,7 +2770,9 @@ newsScore=
 clamp(
 Math.round(
 10+
-Number(newsData.overallScore||0)
+Number(
+newsData.overallScore||0
+)
 ),
 0,
 20
@@ -1791,7 +2780,7 @@ Number(newsData.overallScore||0)
 
 }
 
-/* 綜合 */
+/* TOTAL */
 
 const availableScores=[
 technical,
@@ -1801,21 +2790,37 @@ fundScore,
 newsScore
 ]
 .filter(
-x=>x!==null&&Number.isFinite(+x)
+x=>
+x!==null&&
+Number.isFinite(+x)
 );
 
 const normalized=
 availableScores.length
 ?
-availableScores.reduce((a,b)=>a+b,0)/
-(availableScores.length*20)*100
+availableScores.reduce(
+(a,b)=>a+b,
+0
+)/
+(
+availableScores.length*
+20
+)*
+100
 :
 0;
 
-const score=clamp(Math.round(normalized),0,100);
+const score=
+clamp(
+Math.round(normalized),
+0,
+100
+);
 
 const completeness=
-availableScores.length/5*100;
+availableScores.length/
+5*
+100;
 
 const plan=
 buildTradePlan(
@@ -1853,53 +2858,110 @@ conditions,
 
 function statusOf(a){
 
-if(a.score>=80)return ['強勢關注','green'];
-if(a.score>=70)return ['偏多波段','blue'];
-if(a.score>=60)return ['觀察','yellow'];
+if(a.score>=80){
+return ['強勢關注','green'];
+}
+
+if(a.score>=70){
+return ['偏多波段','blue'];
+}
+
+if(a.score>=60){
+return ['觀察','yellow'];
+}
 
 return ['等待','gray'];
+
 }
 
 function radarStatusOf(a){
 
-const score=Number(a.fastScore??a.score??0);
+const score=
+Number(
+a.fastScore??
+a.score??
+0
+);
 
-if(score>=70)return ['強勢關注','green'];
-if(score>=55)return ['觀察','yellow'];
-if(score>=45)return ['雷達觀察','blue'];
+if(score>=70){
+return ['強勢關注','green'];
+}
+
+if(score>=55){
+return ['觀察','yellow'];
+}
+
+if(score>=45){
+return ['雷達觀察','blue'];
+}
 
 return ['等待','gray'];
+
 }
 
 /* RADAR SORT */
 
 function sortRadarList(list){
 
-return [...(list||[])].sort((a,b)=>{
+return [
+...(list||[])
+]
+.sort((a,b)=>{
 
-const scoreA=Number(a.fastScore??a.score??0);
-const scoreB=Number(b.fastScore??b.score??0);
+const scoreA=
+Number(
+a.fastScore??
+a.score??
+0
+);
+
+const scoreB=
+Number(
+b.fastScore??
+b.score??
+0
+);
 
 if(scoreB!==scoreA){
 return scoreB-scoreA;
 }
 
-const valueA=Number(a.tradingValue||0);
-const valueB=Number(b.tradingValue||0);
+const valueA=
+Number(
+a.tradingValue||0
+);
+
+const valueB=
+Number(
+b.tradingValue||0
+);
 
 if(valueB!==valueA){
 return valueB-valueA;
 }
 
-const rankA=Number(a.radarRank||0);
-const rankB=Number(b.radarRank||0);
+const rankA=
+Number(
+a.radarRank||0
+);
+
+const rankB=
+Number(
+b.radarRank||0
+);
 
 if(rankB!==rankA){
 return rankB-rankA;
 }
 
-return String(a.symbol||'')
-.localeCompare(String(b.symbol||''));
+return String(
+a.symbol||''
+)
+.localeCompare(
+String(
+b.symbol||''
+)
+);
 
 });
 
@@ -1907,14 +2969,24 @@ return String(a.symbol||'')
 
 function uniqueRadarList(list){
 
-const seen=new Set();
+const seen=
+new Set();
 
-return (list||[]).filter(x=>{
+return (list||[])
+.filter(x=>{
 
-const symbol=String(x?.symbol||'');
+const symbol=
+String(
+x?.symbol||''
+);
 
-if(!symbol||seen.has(symbol)){
+if(
+!symbol||
+seen.has(symbol)
+){
+
 return false;
+
 }
 
 seen.add(symbol);
@@ -1929,31 +3001,54 @@ return true;
 
 function renderRadarCard(a){
 
-const [label,cls]=radarStatusOf(a);
+const [label,cls]=
+radarStatusOf(a);
 
-const cp=Number(a.changePercent||0);
+const cp=
+Number(
+a.changePercent||0
+);
 
 const score=
 Math.round(
-Number(a.fastScore??a.score??0)
+Number(
+a.fastScore??
+a.score??
+0
+)
 );
 
 return `
 
-<div class="card stock-card" data-symbol="${esc(a.symbol)}">
+<div
+class="card stock-card"
+data-symbol="${esc(a.symbol)}"
+>
 
 <div class="row">
 
 <div>
-<div class="symbol">${esc(a.symbol)}</div>
-<div class="name">${esc(a.name||'')}</div>
+
+<div class="symbol">
+${esc(a.symbol)}
+</div>
+
+<div class="name">
+${esc(a.name||'')}
+</div>
+
 </div>
 
 <div>
-<div class="price">${fmt(a.price)}</div>
+
+<div class="price">
+${fmt(a.price)}
+</div>
+
 <div class="change ${cp>=0?'up':'down'}">
 ${cp>=0?'+':''}${fmt(cp)}%
 </div>
+
 </div>
 
 </div>
@@ -1962,39 +3057,65 @@ ${cp>=0?'+':''}${fmt(cp)}%
 ${label}
 </div>
 
-<div class="score">
-Radar 共用評分 ${score}/100
+<div class="radar-score-row">
+
+<div class="mini-bar">
+<i style="width:${clamp(score,0,100)}%"></i>
+</div>
+
+<div class="score-number">
+${score}/100
+</div>
+
 </div>
 
 </div>
 
 `;
+
 }
 
 /* WATCH CARD */
 
 function renderCard(a){
 
-const [label,cls]=statusOf(a);
+const [label,cls]=
+statusOf(a);
 
-const cp=+a.changePercent||0;
+const cp=
++a.changePercent||0;
 
 return `
 
-<div class="card stock-card" data-symbol="${esc(a.symbol)}">
+<div
+class="card stock-card"
+data-symbol="${esc(a.symbol)}"
+>
 
 <div class="row">
 
 <div>
-<div class="symbol">${esc(a.symbol)}</div>
-<div class="name">${esc(a.name||'')}</div>
+
+<div class="symbol">
+${esc(a.symbol)}
+</div>
+
+<div class="name">
+${esc(a.name||'')}
+</div>
+
 </div>
 
 <div>
-<div class="price">${fmt(a.price)}</div>
+
+<div class="price">
+${fmt(a.price)}
+</div>
+
 <div class="change ${cp>=0?'up':'down'}">
 ${cp>=0?'+':''}${fmt(cp)}%
 </div>
+
 </div>
 
 </div>
@@ -2003,48 +3124,61 @@ ${cp>=0?'+':''}${fmt(cp)}%
 ${label}
 </div>
 
-<div class="score">
-綜合評分 ${a.score}/100
+<div class="radar-score-row">
+
+<div class="mini-bar">
+<i style="width:${clamp(a.score,0,100)}%"></i>
+</div>
+
+<div class="score-number">
+${a.score}/100
+</div>
+
 </div>
 
 </div>
 
 `;
+
 }
 
-/* =========================================================
-   HOME 6.4 UNIFIED
-========================================================= */
+/* HOME */
 
 function renderHome(){
 
 let html='';
 
-/*
-  高分股票：
-  不再把所有 >=70 分全部列入。
-  固定取 strategyReady 排序後最強前 20 檔。
-*/
-
 const highScoreList=
 uniqueRadarList(
-sortRadarList(unified.strategyReady||[])
+sortRadarList(
+unified.strategyReady||[]
 )
-.slice(0,HIGH_SCORE_LIMIT);
+)
+.slice(
+0,
+HIGH_SCORE_LIMIT
+);
 
 const highScoreSymbols=
 new Set(
-highScoreList.map(x=>String(x.symbol||''))
+highScoreList.map(
+x=>
+String(
+x.symbol||''
+)
+)
 );
 
-/* 高分股票 */
+/* HIGH SCORE */
 
 if(tab==='signal'){
 
 html=
 highScoreList.length
 ?
-highScoreList.map(renderRadarCard).join('')
+highScoreList
+.map(renderRadarCard)
+.join('')
 :
 `
 <div class="empty">
@@ -2054,48 +3188,47 @@ highScoreList.map(renderRadarCard).join('')
 
 }
 
-/* 觀察名單 */
+/* WATCH RADAR */
 
 else if(tab==='near'){
 
-/*
-  觀察名單主要使用 longWatch。
-  只排除「實際顯示在高分股票頁的前 20 檔」。
-  不再把所有 70 分以上股票全部排除。
-*/
-
 let list=
 uniqueRadarList(
-sortRadarList(unified.longWatch||[])
+sortRadarList(
+unified.longWatch||[]
+)
 )
 .filter(x=>{
 
-const symbol=String(x.symbol||'');
+const symbol=
+String(
+x.symbol||''
+);
 
 return (
-symbol &&
+symbol&&
 !highScoreSymbols.has(symbol)
 );
 
 });
 
-/*
-  如果 longWatch 剛好全部和前 20 名重複，
-  使用 strategyReady 第 21 名以後作為第一層備援。
-*/
-
 if(!list.length){
 
 list=
 uniqueRadarList(
-sortRadarList(unified.strategyReady||[])
+sortRadarList(
+unified.strategyReady||[]
+)
 )
 .filter(x=>{
 
-const symbol=String(x.symbol||'');
+const symbol=
+String(
+x.symbol||''
+);
 
 return (
-symbol &&
+symbol&&
 !highScoreSymbols.has(symbol)
 );
 
@@ -2103,23 +3236,23 @@ symbol &&
 
 }
 
-/*
-  第二層備援使用 Radar 全市場榜單，
-  同樣排除高分股票前 20 檔。
-*/
-
 if(!list.length){
 
 list=
 uniqueRadarList(
-sortRadarList(unified.radar||[])
+sortRadarList(
+unified.radar||[]
+)
 )
 .filter(x=>{
 
-const symbol=String(x.symbol||'');
+const symbol=
+String(
+x.symbol||''
+);
 
 return (
-symbol &&
+symbol&&
 !highScoreSymbols.has(symbol)
 );
 
@@ -2127,12 +3260,18 @@ symbol &&
 
 }
 
-list=list.slice(0,WATCH_RADAR_LIMIT);
+list=
+list.slice(
+0,
+WATCH_RADAR_LIMIT
+);
 
 html=
 list.length
 ?
-list.map(renderRadarCard).join('')
+list
+.map(renderRadarCard)
+.join('')
 :
 `
 <div class="empty">
@@ -2142,22 +3281,29 @@ list.map(renderRadarCard).join('')
 
 }
 
-/* 我的自選 */
+/* MY WATCH */
 
 else if(tab==='watch'){
 
-const symbols=watch();
+const symbols=
+watch();
 
 const list=
 symbols
-.map(symbol=>cache[symbol])
+.map(
+symbol=>cache[symbol]
+)
 .filter(Boolean);
 
-if(symbols.length&&!list.length){
+if(
+symbols.length&&
+!list.length
+){
 
 html=`
 <div class="card loader">
-正在載入我的自選...
+<span class="loading-dot"><i></i><i></i><i></i></span>
+正在載入我的自選
 </div>
 `;
 
@@ -2166,7 +3312,9 @@ html=`
 html=
 list.length
 ?
-list.map(renderCard).join('')
+list
+.map(renderCard)
+.join('')
 :
 `
 <div class="empty">
@@ -2178,37 +3326,163 @@ list.map(renderCard).join('')
 
 }
 
-$('homeList').innerHTML=html;
+$('homeList').innerHTML=
+html;
 
 document
 .querySelectorAll('.stock-card')
-.forEach(
-x=>
-x.onclick=
-()=>{
+.forEach(x=>{
+
+x.onclick=()=>{
 
 hideSuggestions();
 
-openStock(x.dataset.symbol);
+openStock(
+x.dataset.symbol,
+getRadarPreview(
+x.dataset.symbol
+)
+);
+
+};
+
+});
 
 }
+
+/* PREVIEW */
+
+function getRadarPreview(symbol){
+
+const all=[
+...(unified.strategyReady||[]),
+...(unified.longWatch||[]),
+...(unified.radar||[])
+];
+
+return all.find(
+x=>
+String(x.symbol)===
+String(symbol)
+)||null;
+
+}
+
+function renderQuickDetail(
+symbol,
+preview
+){
+
+if(!preview){
+
+return `
+
+<div class="card quick-hero skeleton">
+
+<div class="skeleton-line small"></div>
+<div class="skeleton-line big"></div>
+<div class="skeleton-line mid"></div>
+
+<div class="quick-loading">
+正在取得 ${esc(symbol)} 完整分析資料...
+</div>
+
+</div>
+
+`;
+
+}
+
+const cp=
+Number(
+preview.changePercent||0
 );
+
+return `
+
+<div class="card hero">
+
+<div class="hero-top">
+
+<div>
+
+<div class="hero-code">
+${esc(preview.symbol)}
+</div>
+
+<div class="hero-name">
+${esc(preview.name||'')}
+</div>
+
+</div>
+
+<div class="status ${
+radarStatusOf(preview)[1]
+}">
+${radarStatusOf(preview)[0]}
+</div>
+
+</div>
+
+<div class="hero-price">
+${fmt(preview.price)}
+</div>
+
+<div class="hero-change ${cp>=0?'up':'down'}">
+${cp>=0?'+':''}${fmt(cp)}%
+</div>
+
+<div class="quick-loading">
+正在載入完整五大分析與交易規劃...
+</div>
+
+</div>
+
+`;
 
 }
 
 /* SCORE BOX */
 
-function scoreBox(name,score,description){
+function scoreBox(
+name,
+score,
+description
+){
+
+const value=
+score===null
+?
+0
+:
+clamp(
+Number(score)||0,
+0,
+20
+);
+
+const pct=
+value/20*100;
 
 return `
 
 <div class="score-box">
 
-<span>${esc(name)}</span>
+<div class="score-box-head">
+
+<span>
+${esc(name)}
+</span>
 
 <strong>
-${score===null?'資料不足':score+'/20'}
+${score===null?'--':score+'/20'}
 </strong>
+
+</div>
+
+<div class="score-progress">
+<i style="width:${pct}%"></i>
+</div>
 
 <small>
 ${esc(description)}
@@ -2217,9 +3491,10 @@ ${esc(description)}
 </div>
 
 `;
+
 }
 
-/* 法人 */
+/* INSTITUTION */
 
 function chipHTML(i){
 
@@ -2228,15 +3503,26 @@ if(!i){
 return `
 
 <div class="chip">
+
 <b>法人籌碼</b>
-<div class="muted">目前沒有法人資料</div>
+
+<div class="muted">
+目前沒有法人資料
+</div>
+
 </div>
 
 `;
 
 }
 
-const sign=n=>+n>0?'+':'';
+const sign=
+n=>
++n>0
+?
+'+'
+:
+'';
 
 return `
 
@@ -2247,23 +3533,51 @@ return `
 <div class="chip-grid">
 
 <div class="chip-item">
-<span>外資近 5 日</span>
-<strong>${sign(i.foreign5)}${fmt(i.foreign5,0)}</strong>
+
+<span>
+外資近 5 日
+</span>
+
+<strong>
+${sign(i.foreign5)}${fmt(i.foreign5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>投信近 5 日</span>
-<strong>${sign(i.trust5)}${fmt(i.trust5,0)}</strong>
+
+<span>
+投信近 5 日
+</span>
+
+<strong>
+${sign(i.trust5)}${fmt(i.trust5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>三大法人近 5 日</span>
-<strong>${sign(i.total5)}${fmt(i.total5,0)}</strong>
+
+<span>
+三大法人近 5 日
+</span>
+
+<strong>
+${sign(i.total5)}${fmt(i.total5,0)}
+</strong>
+
 </div>
 
 <div class="chip-item">
-<span>三大法人近 20 日</span>
-<strong>${sign(i.total20)}${fmt(i.total20,0)}</strong>
+
+<span>
+三大法人近 20 日
+</span>
+
+<strong>
+${sign(i.total20)}${fmt(i.total20,0)}
+</strong>
+
 </div>
 
 </div>
@@ -2271,15 +3585,21 @@ return `
 </div>
 
 `;
+
 }
 
 /* FUNDAMENTAL */
 
 function fundamentalHTML(a){
 
-const f=a.fundamental||{};
-const r=f.revenue||{};
-const x=f.financial||{};
+const f=
+a.fundamental||{};
+
+const r=
+f.revenue||{};
+
+const x=
+f.financial||{};
 
 return `
 
@@ -2290,14 +3610,30 @@ return `
 <div class="chip-grid">
 
 <div class="chip-item">
-<span>最新 EPS</span>
+
+<span>
+最新 EPS
+</span>
+
 <strong>
-${x.eps===null||x.eps===undefined?'--':fmt(x.eps)}
+${
+x.eps===null||
+x.eps===undefined
+?
+'--'
+:
+fmt(x.eps)
+}
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>公司獲利</span>
+
+<span>
+公司獲利
+</span>
+
 <strong>
 ${
 x.profitable===true
@@ -2311,32 +3647,49 @@ x.profitable===false
 '資料不足'
 }
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>月營收 YoY</span>
+
+<span>
+月營收 YoY
+</span>
+
 <strong>
 ${
-r.yoy===null||r.yoy===undefined
+r.yoy===null||
+r.yoy===undefined
 ?
 '--'
 :
-(+r.yoy>=0?'+':'')+fmt(r.yoy)+'%'
+(+r.yoy>=0?'+':'')+
+fmt(r.yoy)+
+'%'
 }
 </strong>
+
 </div>
 
 <div class="chip-item">
-<span>月營收 MoM</span>
+
+<span>
+月營收 MoM
+</span>
+
 <strong>
 ${
-r.mom===null||r.mom===undefined
+r.mom===null||
+r.mom===undefined
 ?
 '--'
 :
-(+r.mom>=0?'+':'')+fmt(r.mom)+'%'
+(+r.mom>=0?'+':'')+
+fmt(r.mom)+
+'%'
 }
 </strong>
+
 </div>
 
 </div>
@@ -2344,6 +3697,7 @@ r.mom===null||r.mom===undefined
 </div>
 
 `;
+
 }
 
 /* NEWS */
@@ -2355,10 +3709,13 @@ if(!n?.available){
 return `
 
 <div class="chip">
+
 <b>近期新聞</b>
+
 <div class="muted">
 目前沒有足夠新聞資料，不硬判斷利多利空。
 </div>
+
 </div>
 
 `;
@@ -2369,18 +3726,23 @@ return `
 
 <div class="chip">
 
-<b>近期新聞｜${esc(n.overall)}</b>
+<b>
+近期新聞｜${esc(n.overall)}
+</b>
 
 ${
 (n.news||[])
 .slice(0,5)
-.map(
-x=>`
+.map(x=>`
 
 <div class="news-item">
 
 <div class="news-title">
-${esc(x.title||x.description||'')}
+${esc(
+x.title||
+x.description||
+''
+)}
 </div>
 
 <div class="news-meta">
@@ -2393,43 +3755,52 @@ ${esc(x.sentiment||'中性')}
 
 </div>
 
-`
-)
+`)
 .join('')
 }
 
 </div>
 
 `;
+
 }
 
 /* DETAIL */
 
 function renderDetail(a){
 
-const [label,cls]=statusOf(a);
+const [label,cls]=
+statusOf(a);
 
-const has=watch().includes(a.symbol);
+const has=
+watch()
+.includes(a.symbol);
 
-const news=a.newsData;
+const news=
+a.newsData;
 
-let planLabel='等待較佳進場';
+let planLabel=
+'等待較佳進場';
 
 let planText=
 '現價附近沒有足夠明確的有效支撐，不為了顯示數字硬給進場價。';
 
-if(a.planType==='LIMIT'){
+if(
+a.planType==='LIMIT'
+){
 
 if(a.entryReady){
 
-planLabel='接近最佳進場區';
+planLabel=
+'接近最佳進場區';
 
 planText=
 '目前價格已接近系統計算的最佳限價進場區，可配合盤中價格行為確認。';
 
 }else{
 
-planLabel='等待回到最佳進場區';
+planLabel=
+'等待回到最佳進場區';
 
 planText=
 `系統已找到現價附近的有效支撐 ${fmt(a.bestSupport)}，等待價格回到合理 Entry，而不是追到壓力附近。`;
@@ -2443,7 +3814,10 @@ let breakoutText=
 
 if(a.breakout){
 
-if(a.breakoutState==='BROKEN'){
+if(
+a.breakoutState===
+'BROKEN'
+){
 
 breakoutText=
 '價格目前位於剛突破的關鍵壓力上方；此位置保留作為突破確認基準。';
@@ -2457,27 +3831,49 @@ breakoutText=
 
 }
 
+const cp=
++a.changePercent||0;
+
 $('detailBody').innerHTML=`
 
 <div class="card hero">
 
-<div class="symbol">
-${esc(a.symbol)}　${esc(a.name||'')}
+<div class="hero-top">
+
+<div>
+
+<div class="hero-code">
+${esc(a.symbol)}
+</div>
+
+<div class="hero-name">
+${esc(a.name||'')}
+</div>
+
+</div>
+
+<div class="status ${cls}">
+${label}
+</div>
+
 </div>
 
 <div class="hero-price">
 ${fmt(a.price)}
 </div>
 
-<div class="change ${(+a.changePercent||0)>=0?'up':'down'}">
-${(+a.changePercent||0)>=0?'+':''}${fmt(a.changePercent)}%
+<div class="hero-change ${cp>=0?'up':'down'}">
+${cp>=0?'+':''}${fmt(cp)}%
 </div>
 
 <div class="live">
+
 <span class="pulse"></span>
+
 ${a.realtime?'即時報價':'最新報價'}
  ·
 ${esc(a.updatedAt||'')}
+
 </div>
 
 </div>
@@ -2489,17 +3885,25 @@ ${esc(a.updatedAt||'')}
 <div>
 
 <div class="strategy-title">
-${label}
+波段綜合分析
 </div>
 
 <div class="status ${cls}">
-股票綜合分析
+${label}
 </div>
 
 </div>
+
+<div class="bigscore-wrap">
 
 <div class="bigscore">
-${a.score}/100
+${a.score}
+</div>
+
+<div class="bigscore-label">
+TOTAL / 100
+</div>
+
 </div>
 
 </div>
@@ -2558,7 +3962,9 @@ news?.available
 
 <div class="level support">
 
-<span>第一支撐</span>
+<span>
+第一支撐
+</span>
 
 <strong>
 ${a.support1?fmt(a.support1):'暫無明確支撐'}
@@ -2572,7 +3978,9 @@ ${a.support1?fmt(a.support1):'暫無明確支撐'}
 
 <div class="level support">
 
-<span>第二支撐</span>
+<span>
+第二支撐
+</span>
 
 <strong>
 ${a.support2?fmt(a.support2):'暫無明確第二支撐'}
@@ -2586,21 +3994,25 @@ ${a.support2?fmt(a.support2):'暫無明確第二支撐'}
 
 <div class="level entry full">
 
-<span>最佳進場支撐</span>
+<span>
+最佳進場支撐
+</span>
 
 <strong>
 ${a.bestSupport?fmt(a.bestSupport):'附近沒有合理進場支撐'}
 </strong>
 
 <small>
-優先尋找現價附近具有結構依據的位置，不再使用距離現價過遠的深度支撐當 Entry。
+優先尋找現價附近具有結構依據的位置，不使用距離現價過遠的深度支撐當 Entry。
 </small>
 
 </div>
 
 <div class="level pressure full">
 
-<span>關鍵突破位</span>
+<span>
+關鍵突破位
+</span>
 
 <strong>
 ${a.breakout?fmt(a.breakout):'上方暫無明確壓力'}
@@ -2622,7 +4034,9 @@ ${breakoutText}
 
 <div class="level current-price">
 
-<span>現價</span>
+<span>
+現價
+</span>
 
 <strong>
 ${fmt(a.price)}
@@ -2636,7 +4050,9 @@ ${a.realtime?'目前即時成交價':'目前最新報價'}
 
 <div class="level ${a.planType==='WAIT'?'wait':'entry'}">
 
-<span>目前策略</span>
+<span>
+目前策略
+</span>
 
 <strong>
 ${planLabel}
@@ -2650,11 +4066,14 @@ ${planText}
 
 <div class="level entry full">
 
-<span>最佳限價進場區 Entry</span>
+<span>
+最佳限價進場區 ENTRY
+</span>
 
 <strong>
 ${
-a.entryLow!==null&&a.entryHigh!==null
+a.entryLow!==null&&
+a.entryHigh!==null
 ?
 `${fmt(a.entryLow)} ～ ${fmt(a.entryHigh)}`
 :
@@ -2680,7 +4099,9 @@ a.entryReady
 
 <div class="level sl">
 
-<span>停損 SL</span>
+<span>
+停損 SL
+</span>
 
 <strong>
 ${a.sl!==null?fmt(a.sl):'等待 Entry'}
@@ -2690,7 +4111,7 @@ ${a.sl!==null?fmt(a.sl):'等待 Entry'}
 ${
 a.sl!==null
 ?
-`放在最佳 Entry 下方的結構失效位置${a.riskPct?`｜進場中位風險約 ${fmt(a.riskPct)}%`:''}`
+`放在最佳 Entry 下方的結構失效位置${a.riskPct?`｜風險約 ${fmt(a.riskPct)}%`:''}`
 :
 '尚未形成合理 Entry，因此不硬給停損。'
 }
@@ -2700,7 +4121,9 @@ a.sl!==null
 
 <div class="level pressure">
 
-<span>必須突破</span>
+<span>
+必須突破
+</span>
 
 <strong>
 ${a.breakout?fmt(a.breakout):'尚無明確突破位'}
@@ -2714,19 +4137,21 @@ ${a.breakout?fmt(a.breakout):'尚無明確突破位'}
 
 <div class="level tp">
 
-<span>TP1</span>
+<span>
+TP1
+</span>
 
 <strong>
-${a.tp1?fmt(a.tp1):'突破後暫無明確壓力'}
+${a.tp1?fmt(a.tp1):'暫無目標'}
 </strong>
 
 <small>
 ${
 a.tp1
 ?
-`突破 ${fmt(a.breakout)} 後第一個有效歷史壓力${a.rr1!==null?`｜約 ${fmt(a.rr1)}R`:''}`
+`第一有效歷史壓力${a.rr1!==null?`｜${fmt(a.rr1)}R`:''}`
 :
-'找不到突破關卡上方的有效歷史壓力，不硬製造 TP1。'
+'突破後暫無明確歷史壓力。'
 }
 </small>
 
@@ -2734,7 +4159,9 @@ a.tp1
 
 <div class="level tp">
 
-<span>TP2</span>
+<span>
+TP2
+</span>
 
 <strong>
 ${a.tp2?fmt(a.tp2):'暫無第二目標'}
@@ -2744,7 +4171,7 @@ ${a.tp2?fmt(a.tp2):'暫無第二目標'}
 ${
 a.tp2
 ?
-`第二層有效歷史壓力${a.rr2!==null?`｜約 ${fmt(a.rr2)}R`:''}`
+`第二層有效歷史壓力${a.rr2!==null?`｜${fmt(a.rr2)}R`:''}`
 :
 '目前沒有第二層有效壓力。'
 }
@@ -2754,7 +4181,9 @@ a.tp2
 
 <div class="level tp full">
 
-<span>TP3</span>
+<span>
+TP3
+</span>
 
 <strong>
 ${a.tp3?fmt(a.tp3):'暫無第三目標'}
@@ -2764,9 +4193,9 @@ ${a.tp3?fmt(a.tp3):'暫無第三目標'}
 ${
 a.tp3
 ?
-`${esc(a.tp3Source)}${a.rr3!==null?`｜約 ${fmt(a.rr3)}R`:''}`
+`${esc(a.tp3Source)}${a.rr3!==null?`｜${fmt(a.rr3)}R`:''}`
 :
-'優先尋找第三層歷史壓力；只有 TP1、TP2 已成立但更高歷史壓力不足時才使用延伸。'
+'優先尋找第三層歷史壓力；不足時才使用延伸。'
 }
 </small>
 
@@ -2788,8 +4217,7 @@ ${newsHTML(news)}
 
 ${
 a.conditions
-.map(
-x=>`
+.map(x=>`
 
 <div class="cond ${x[1]?'ok':'no'}">
 
@@ -2802,8 +4230,7 @@ ${esc(x[2])}
 
 </div>
 
-`
-)
+`)
 .join('')
 }
 
@@ -2811,18 +4238,24 @@ ${esc(x[2])}
 
 <div class="detail-actions">
 
-<button id="fav" class="fav">
-${has?'移除自選':'加入自選'}
+<button
+id="fav"
+class="fav"
+>
+${has?'移除自選':'＋ 加入自選'}
 </button>
 
-<button id="detailBack" class="detail-back">
+<button
+id="detailBack"
+class="detail-back"
+>
 ← 返回
 </button>
 
 </div>
 
 <div class="note">
-交易規劃 8.0：先分析現價附近最有結構依據的限價 Entry，再設定結構失效 SL。上方最近有效壓力是「必須突破的關卡」，不是 TP1；突破後第一個有效歷史壓力才是 TP1，再依序尋找 TP2、TP3。附近沒有合理支撐時不硬給 Entry。
+交易規劃：先分析現價附近最有結構依據的限價 Entry，再設定結構失效 SL。上方最近有效壓力是必須突破的關卡，不是 TP1；突破後第一個有效歷史壓力才是 TP1，再依序尋找 TP2、TP3。
 </div>
 
 </div>
@@ -2830,24 +4263,37 @@ ${has?'移除自選':'加入自選'}
 `;
 
 $('detailBack').onclick=()=>{
+
 $('back').click();
+
 };
 
-$('fav').onclick=async()=>{
+$('fav').onclick=
+async()=>{
 
 $('fav').disabled=true;
 
-let x=watch();
+let x=
+watch();
 
-if(x.includes(a.symbol)){
+if(
+x.includes(a.symbol)
+){
 
-x=x.filter(s=>s!==a.symbol);
+x=
+x.filter(
+s=>
+s!==a.symbol
+);
 
 }else{
 
 x=[
 a.symbol,
-...x.filter(s=>s!==a.symbol)
+...x.filter(
+s=>
+s!==a.symbol
+)
 ];
 
 }
@@ -2858,6 +4304,7 @@ cache[a.symbol]=a;
 
 renderDetail(a);
 renderHome();
+
 syncPushSymbols();
 
 try{
@@ -2877,29 +4324,74 @@ alert(
 
 }
 
-/* ANALYZE STOCK */
+/* ANALYZE */
 
-async function analyzeStock(symbol,withNews=false){
+async function analyzeStock(
+symbol,
+withNews=false,
+force=false
+){
 
-const results=
+const cached=
+detailCache[symbol];
+
+if(
+!force&&
+withNews&&
+cached&&
+Date.now()-cached.time<
+DETAIL_CACHE_MS
+){
+
+return cached.data;
+
+}
+
+const [
+stockResult,
+newsResult
+]=
 await Promise.all([
 getStock(symbol),
-withNews?getNews(symbol):Promise.resolve(null)
+withNews
+?
+getNews(symbol)
+:
+Promise.resolve(null)
 ]);
 
-return analyzeData(
-results[0],
-results[1]
+const analyzed=
+analyzeData(
+stockResult,
+newsResult
 );
+
+if(withNews){
+
+detailCache[symbol]={
+time:Date.now(),
+data:analyzed
+};
+
+}
+
+return analyzed;
 }
 
 /* OPEN STOCK */
 
-async function openStock(symbol){
+async function openStock(
+symbol,
+preview=null
+){
 
 hideSuggestions();
 
-if(!$('home').classList.contains('hidden')){
+if(
+!$('home')
+.classList
+.contains('hidden')
+){
 
 homeScrollY=
 window.scrollY||
@@ -2909,10 +4401,16 @@ document.body.scrollTop||
 
 }
 
-current=String(symbol).trim();
+current=
+String(symbol).trim();
 
-$('home').classList.add('hidden');
-$('detail').classList.remove('hidden');
+$('home')
+.classList
+.add('hidden');
+
+$('detail')
+.classList
+.remove('hidden');
 
 window.scrollTo({
 top:0,
@@ -2920,16 +4418,49 @@ left:0,
 behavior:'auto'
 });
 
-$('detailBody').innerHTML=`
-<div class="card loader">
-正在分析技術、量價、法人、基本面與新聞...
-</div>
-`;
+const cached=
+detailCache[current];
+
+if(
+cached&&
+Date.now()-cached.time<
+DETAIL_CACHE_MS
+){
+
+cache[current]=
+cached.data;
+
+saveHistory(
+cached.data
+);
+
+renderDetail(
+cached.data
+);
+
+}else{
+
+$('detailBody').innerHTML=
+renderQuickDetail(
+current,
+preview||
+getRadarPreview(current)
+);
 
 try{
 
 const a=
-await analyzeStock(current,true);
+await analyzeStock(
+current,
+true
+);
+
+if(
+current!==
+String(symbol).trim()
+){
+return;
+}
 
 cache[current]=a;
 
@@ -2940,14 +4471,20 @@ renderDetail(a);
 }catch(e){
 
 $('detailBody').innerHTML=`
+
 <div class="empty">
 ${esc(e.message)}
 </div>
+
 `;
 
 }
 
-clearInterval(detailTimer);
+}
+
+clearInterval(
+detailTimer
+);
 
 detailTimer=
 setInterval(
@@ -2963,18 +4500,32 @@ async function refreshDetail(){
 
 if(!current)return;
 
+const symbol=
+current;
+
 try{
 
 const a=
-await analyzeStock(current,true);
+await analyzeStock(
+symbol,
+true,
+true
+);
 
-cache[current]=a;
+if(current!==symbol){
+return;
+}
+
+cache[symbol]=a;
 
 renderDetail(a);
 
 }catch(e){
 
-console.warn('個股更新失敗',e);
+console.warn(
+'個股更新失敗',
+e
+);
 
 }
 
@@ -2984,16 +4535,26 @@ console.warn('個股更新失敗',e);
 
 async function loadWatchStocks(){
 
-const symbols=watch();
+const symbols=
+watch();
 
-if(!symbols.length)return;
+if(!symbols.length){
+return;
+}
 
 const BATCH_SIZE=5;
 
-for(let i=0;i<symbols.length;i+=BATCH_SIZE){
+for(
+let i=0;
+i<symbols.length;
+i+=BATCH_SIZE
+){
 
 const batch=
-symbols.slice(i,i+BATCH_SIZE);
+symbols.slice(
+i,
+i+BATCH_SIZE
+);
 
 const results=
 await Promise.allSettled(
@@ -3002,9 +4563,15 @@ batch.map(
 async symbol=>{
 
 const a=
-await analyzeStock(symbol,false);
+await analyzeStock(
+symbol,
+false
+);
 
-return {symbol,a};
+return {
+symbol,
+a
+};
 
 }
 )
@@ -3013,23 +4580,31 @@ return {symbol,a};
 
 for(const result of results){
 
-if(result.status==='fulfilled'){
+if(
+result.status===
+'fulfilled'
+){
 
-cache[result.value.symbol]=result.value.a;
+cache[
+result.value.symbol
+]=
+result.value.a;
 
 }
 
 }
 
 if(tab==='watch'){
+
 renderHome();
-}
 
 }
 
 }
 
-/* RADAR 6.4 UNIFIED */
+}
+
+/* RADAR */
 
 async function radar(){
 
@@ -3039,48 +4614,81 @@ try{
 
 const r=
 await fetch(
-'/api/radar?t='+Date.now(),
-{cache:'no-store'}
+'/api/radar?t='+
+Date.now(),
+{
+cache:'no-store'
+}
 );
 
-d=await r.json();
+d=
+await r.json();
 
-if(!r.ok||!d.ok){
-throw Error(d.error||'Radar 載入失敗');
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+'Radar 載入失敗'
+);
+
 }
 
-if(d.unified!==true){
-console.warn('目前 Radar 尚未回傳 unified:true');
+if(
+d.unified!==true
+){
+
+console.warn(
+'目前 Radar 尚未回傳 unified:true'
+);
+
 }
 
 unified={
 
 strategyReady:
-Array.isArray(d.strategyReady)
+Array.isArray(
+d.strategyReady
+)
 ?
 d.strategyReady
 :
 [],
 
 radar:
-Array.isArray(d.radar)
+Array.isArray(
+d.radar
+)
 ?
 d.radar
 :
 [],
 
 longWatch:
-Array.isArray(d.longWatch)
+Array.isArray(
+d.longWatch
+)
 ?
 d.longWatch
 :
 [],
 
-generatedAt:Number(d.generatedAt||0),
+generatedAt:
+Number(
+d.generatedAt||0
+),
 
-updatedAt:String(d.updatedAt||''),
+updatedAt:
+String(
+d.updatedAt||''
+),
 
-cache:String(d.cache||'')
+cache:
+String(
+d.cache||''
+)
 
 };
 
@@ -3090,7 +4698,10 @@ return d;
 
 }catch(e){
 
-console.warn('全市場共用雷達失敗',e);
+console.warn(
+'全市場共用雷達失敗',
+e
+);
 
 if(
 unified.strategyReady.length||
@@ -3104,9 +4715,11 @@ return null;
 }
 
 $('homeList').innerHTML=`
+
 <div class="empty">
 全市場 Radar 暫時載入失敗：${esc(e.message||'請稍後重新整理')}
 </div>
+
 `;
 
 return null;
@@ -3118,7 +4731,11 @@ return null;
 /* SEARCH */
 
 function hideSuggestions(){
-$('suggestions').classList.add('hidden');
+
+$('suggestions')
+.classList
+.add('hidden');
+
 }
 
 async function searchStocks(q){
@@ -3127,50 +4744,71 @@ const r=
 await fetch(
 '/api/search?q='+
 encodeURIComponent(q)+
-'&t='+Date.now(),
-{cache:'no-store'}
+'&t='+
+Date.now(),
+{
+cache:'no-store'
+}
 );
 
-const d=await r.json();
+const d=
+await r.json();
 
-if(!r.ok||!d.ok){
-throw Error(d.error||'搜尋失敗');
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+'搜尋失敗'
+);
+
 }
 
 return d.items||[];
+
 }
 
 async function showSuggestions(q){
 
-const box=$('suggestions');
+const box=
+$('suggestions');
 
 if(!q.trim()){
 
 showSearchHistory();
 
 return;
+
 }
 
 try{
 
-const items=await searchStocks(q);
+const items=
+await searchStocks(q);
 
 if(!items.length){
 
 box.innerHTML=`
+
 <div class="empty">
 找不到符合的股票
 </div>
+
 `;
 
-box.classList.remove('hidden');
+box
+.classList
+.remove('hidden');
 
 return;
+
 }
 
 box.innerHTML=
-items.map(
-x=>`
+items
+.map(x=>`
 
 <button
 class="suggestion"
@@ -3196,24 +4834,32 @@ ${esc(x.market||'')}
 
 </button>
 
-`
-).join('');
+`)
+.join('');
 
-box.classList.remove('hidden');
+box
+.classList
+.remove('hidden');
 
-box.querySelectorAll('.suggestion').forEach(x=>{
+box
+.querySelectorAll('.suggestion')
+.forEach(x=>{
 
 x.onclick=e=>{
 
 e.stopPropagation();
 
-selectedSearchSymbol=x.dataset.symbol;
+selectedSearchSymbol=
+x.dataset.symbol;
 
-$('q').value=x.dataset.symbol;
+$('q').value=
+x.dataset.symbol;
 
 hideSuggestions();
 
-openStock(x.dataset.symbol);
+openStock(
+x.dataset.symbol
+);
 
 };
 
@@ -3231,45 +4877,60 @@ async function submitSearch(){
 
 hideSuggestions();
 
-const q=$('q').value.trim();
+const q=
+$('q')
+.value
+.trim();
 
 if(!q)return;
 
 if(selectedSearchSymbol){
 
-const symbol=selectedSearchSymbol;
+const symbol=
+selectedSearchSymbol;
 
 selectedSearchSymbol='';
 
 openStock(symbol);
 
 return;
+
 }
 
-if(/^\d{4,6}$/.test(q)){
+if(
+/^\d{4,6}$/.test(q)
+){
 
 openStock(q);
 
 return;
+
 }
 
 try{
 
-const x=await searchStocks(q);
+const x=
+await searchStocks(q);
 
 if(x[0]){
 
-openStock(x[0].symbol);
+openStock(
+x[0].symbol
+);
 
 }else{
 
-alert('找不到股票');
+alert(
+'找不到股票'
+);
 
 }
 
 }catch(e){
 
-alert(e.message);
+alert(
+e.message
+);
 
 }
 
@@ -3277,66 +4938,119 @@ alert(e.message);
 
 /* SEARCH EVENTS */
 
-$('q').addEventListener('focus',e=>{
+$('q')
+.addEventListener(
+'focus',
+e=>{
 
-if(!e.target.value.trim()){
+if(
+!e.target.value.trim()
+){
+
 showSearchHistory();
+
 }
 
-});
+}
+);
 
-$('q').addEventListener('click',e=>{
+$('q')
+.addEventListener(
+'click',
+e=>{
 
-if(!e.target.value.trim()){
+if(
+!e.target.value.trim()
+){
+
 showSearchHistory();
+
 }
 
-});
+}
+);
 
-$('q').addEventListener('input',e=>{
+$('q')
+.addEventListener(
+'input',
+e=>{
 
 selectedSearchSymbol='';
 
-clearTimeout(searchTimer);
+clearTimeout(
+searchTimer
+);
 
-const value=e.target.value;
+const value=
+e.target.value;
 
-if(!value.trim()){
+if(
+!value.trim()
+){
 
 showSearchHistory();
 
 return;
+
 }
 
 searchTimer=
 setTimeout(
 ()=>{
-showSuggestions(value);
+
+showSuggestions(
+value
+);
+
 },
 180
 );
 
-});
+}
+);
 
-$('q').addEventListener('keydown',e=>{
+$('q')
+.addEventListener(
+'keydown',
+e=>{
 
-if(e.key==='Enter'){
+if(
+e.key==='Enter'
+){
+
 submitSearch();
+
 }
 
-});
+}
+);
 
-$('go').onclick=submitSearch;
+$('go').onclick=
+submitSearch;
 
-document.addEventListener('click',e=>{
+document
+.addEventListener(
+'click',
+e=>{
 
-const searchBox=document.querySelector('.search-box');
+const searchBox=
+document.querySelector(
+'.search-box'
+);
 
-if(searchBox&&!searchBox.contains(e.target)){
+if(
+searchBox&&
+!searchBox.contains(
+e.target
+)
+){
+
 hideSuggestions();
+
 }
 
-});
+}
+);
 
 /* BACK */
 
@@ -3344,19 +5058,26 @@ $('back').onclick=()=>{
 
 current='';
 
-clearInterval(detailTimer);
+clearInterval(
+detailTimer
+);
 
 hideSuggestions();
 
 selectedSearchSymbol='';
 
-$('detail').classList.add('hidden');
+$('detail')
+.classList
+.add('hidden');
 
-$('home').classList.remove('hidden');
+$('home')
+.classList
+.remove('hidden');
 
 renderHome();
 
-const restoreY=homeScrollY;
+const restoreY=
+homeScrollY;
 
 requestAnimationFrame(
 ()=>{
@@ -3370,8 +5091,11 @@ left:0,
 behavior:'auto'
 });
 
-document.documentElement.scrollTop=restoreY;
-document.body.scrollTop=restoreY;
+document.documentElement.scrollTop=
+restoreY;
+
+document.body.scrollTop=
+restoreY;
 
 }
 );
@@ -3385,29 +5109,39 @@ document.body.scrollTop=restoreY;
 
 document
 .querySelectorAll('.tab')
-.forEach(
-x=>
+.forEach(x=>{
+
 x.onclick=
 async()=>{
 
-tab=x.dataset.tab;
+tab=
+x.dataset.tab;
 
 document
 .querySelectorAll('.tab')
-.forEach(
-y=>
+.forEach(y=>{
+
 y.classList.toggle(
 'on',
 y===x
-)
 );
+
+});
 
 if(tab==='watch'){
 
 $('homeList').innerHTML=`
+
 <div class="card loader">
-正在載入我的自選...
+
+<span class="loading-dot">
+<i></i><i></i><i></i>
+</span>
+
+正在載入我的自選
+
 </div>
+
 `;
 
 await loadWatchStocks();
@@ -3416,8 +5150,9 @@ await loadWatchStocks();
 
 renderHome();
 
-}
-);
+};
+
+});
 
 /* PUSH */
 
@@ -3432,47 +5167,93 @@ return [
 
 }
 
-function urlBase64ToUint8Array(base64String){
+function urlBase64ToUint8Array(
+base64String
+){
 
 const padding=
-'='.repeat((4-base64String.length%4)%4);
+'='.repeat(
+(
+4-
+base64String.length%4
+)%4
+);
 
 const base64=
-(base64String+padding)
+(
+base64String+
+padding
+)
 .replace(/-/g,'+')
 .replace(/_/g,'/');
 
-const rawData=window.atob(base64);
+const rawData=
+window.atob(
+base64
+);
 
 const outputArray=
-new Uint8Array(rawData.length);
+new Uint8Array(
+rawData.length
+);
 
-for(let i=0;i<rawData.length;++i){
-outputArray[i]=rawData.charCodeAt(i);
+for(
+let i=0;
+i<rawData.length;
+++i
+){
+
+outputArray[i]=
+rawData.charCodeAt(i);
+
 }
 
 return outputArray;
+
 }
 
-async function savePushSubscription(subscription){
+async function savePushSubscription(
+subscription
+){
 
 const r=
-await fetch('/api/push-subscribe',{
+await fetch(
+'/api/push-subscribe',
+{
 method:'POST',
+
 headers:{
-'Content-Type':'application/json'
+'Content-Type':
+'application/json'
 },
-body:JSON.stringify({
-deviceId:getDeviceId(),
-subscription:subscription.toJSON(),
-symbols:pushSymbols()
+
+body:
+JSON.stringify({
+deviceId:
+getDeviceId(),
+
+subscription:
+subscription.toJSON(),
+
+symbols:
+pushSymbols()
 })
-});
+}
+);
 
-const d=await r.json();
+const d=
+await r.json();
 
-if(!r.ok||!d.ok){
-throw Error(d.error||'Push 訂閱儲存失敗');
+if(
+!r.ok||
+!d.ok
+){
+
+throw Error(
+d.error||
+'Push 訂閱儲存失敗'
+);
+
 }
 
 }
@@ -3481,25 +5262,42 @@ async function syncPushSymbols(){
 
 try{
 
-if(!('serviceWorker' in navigator)){
+if(
+!('serviceWorker' in navigator)
+){
+
 return;
+
 }
 
 const registration=
-await navigator.serviceWorker.getRegistration('/');
+await navigator
+.serviceWorker
+.getRegistration('/');
 
-if(!registration)return;
+if(!registration){
+return;
+}
 
 const subscription=
-await registration.pushManager.getSubscription();
+await registration
+.pushManager
+.getSubscription();
 
-if(!subscription)return;
+if(!subscription){
+return;
+}
 
-await savePushSubscription(subscription);
+await savePushSubscription(
+subscription
+);
 
 }catch(e){
 
-console.warn('Push 股票同步失敗',e);
+console.warn(
+'Push 股票同步失敗',
+e
+);
 
 }
 
@@ -3507,37 +5305,80 @@ console.warn('Push 股票同步失敗',e);
 
 async function enablePush(){
 
-if(!('Notification' in window)){
-throw Error('此瀏覽器不支援通知');
+if(
+!('Notification' in window)
+){
+
+throw Error(
+'此瀏覽器不支援通知'
+);
+
 }
 
-if(!('PushManager' in window)){
-throw Error('此瀏覽器不支援背景 Push');
+if(
+!('PushManager' in window)
+){
+
+throw Error(
+'此瀏覽器不支援背景 Push'
+);
+
 }
 
 const permission=
-await Notification.requestPermission();
+await Notification
+.requestPermission();
 
-if(permission!=='granted'){
-throw Error('通知權限沒有開啟');
+if(
+permission!=='granted'
+){
+
+throw Error(
+'通知權限沒有開啟'
+);
+
 }
 
 const registration=
-await navigator.serviceWorker.register(
+await navigator
+.serviceWorker
+.register(
 '/sw.js',
-{scope:'/'}
+{
+scope:'/',
+updateViaCache:'none'
+}
 );
 
-await navigator.serviceWorker.ready;
+try{
+
+await registration.update();
+
+}catch(e){
+
+console.warn(
+'Service Worker 更新檢查失敗',
+e
+);
+
+}
+
+await navigator
+.serviceWorker
+.ready;
 
 const configResponse=
 await fetch(
-'/api/push-config?t='+Date.now(),
-{cache:'no-store'}
+'/api/push-config?t='+
+Date.now(),
+{
+cache:'no-store'
+}
 );
 
 const config=
-await configResponse.json();
+await configResponse
+.json();
 
 if(
 !configResponse.ok||
@@ -3553,35 +5394,54 @@ config.error||
 }
 
 const oldSubscription=
-await registration.pushManager.getSubscription();
+await registration
+.pushManager
+.getSubscription();
 
 if(oldSubscription){
 
 try{
-await oldSubscription.unsubscribe();
+
+await oldSubscription
+.unsubscribe();
+
 }catch(e){
-console.warn('取消舊 Push 失敗',e);
+
+console.warn(
+'取消舊 Push 失敗',
+e
+);
+
 }
 
 }
 
 const subscription=
-await registration.pushManager.subscribe({
+await registration
+.pushManager
+.subscribe({
 
 userVisibleOnly:true,
 
 applicationServerKey:
-urlBase64ToUint8Array(config.publicKey)
+urlBase64ToUint8Array(
+config.publicKey
+)
 
 });
 
-await savePushSubscription(subscription);
+await savePushSubscription(
+subscription
+);
 
-$('notify').classList.add('push-on');
+$('notify')
+.classList
+.add('push-on');
 
 }
 
-$('notify').onclick=async()=>{
+$('notify').onclick=
+async()=>{
 
 $('notify').disabled=true;
 
@@ -3589,19 +5449,32 @@ try{
 
 await enablePush();
 
-alert('通知已重新設定完成。');
+alert(
+'通知已重新設定完成。'
+);
 
 }catch(e){
 
 const isiOS=
-/iPad|iPhone|iPod/.test(navigator.userAgent);
+/iPad|iPhone|iPod/
+.test(
+navigator.userAgent
+);
 
 const standalone=
-window.matchMedia('(display-mode: standalone)').matches
+window
+.matchMedia(
+'(display-mode: standalone)'
+)
+.matches
 ||
-window.navigator.standalone===true;
+window.navigator.standalone===
+true;
 
-if(isiOS&&!standalone){
+if(
+isiOS&&
+!standalone
+){
 
 alert(
 '請先把「波段分析」加入 iPhone／iPad 主畫面，再從主畫面開啟後按 🔔。'
@@ -3631,17 +5504,25 @@ async function openStockFromURL(){
 try{
 
 const params=
-new URLSearchParams(location.search);
+new URLSearchParams(
+location.search
+);
 
 const symbol=
 params.get('stock')||
 params.get('symbol');
 
-if(symbol&&/^\d{4,6}$/.test(symbol)){
+if(
+symbol&&
+/^\d{4,6}$/.test(symbol)
+){
 
-await openStock(symbol);
+await openStock(
+symbol
+);
 
-window.history.replaceState(
+window.history
+.replaceState(
 {},
 '',
 location.pathname
@@ -3664,9 +5545,17 @@ async function startApp(){
 hideSuggestions();
 
 $('homeList').innerHTML=`
+
 <div class="card loader">
-正在同步我的自選...
+
+<span class="loading-dot">
+<i></i><i></i><i></i>
+</span>
+
+正在同步我的自選
+
 </div>
+
 `;
 
 getDeviceId();
@@ -3677,22 +5566,51 @@ await loadWatchlist();
 
 }catch(e){
 
-console.warn('自選初始化失敗',e);
+console.warn(
+'自選初始化失敗',
+e
+);
 
 }
 
-if('serviceWorker' in navigator){
+/* SW */
+
+if(
+'serviceWorker' in navigator
+){
 
 try{
 
-await navigator.serviceWorker.register(
+const registration=
+await navigator
+.serviceWorker
+.register(
 '/sw.js',
-{scope:'/'}
+{
+scope:'/',
+updateViaCache:'none'
+}
 );
+
+try{
+
+await registration.update();
 
 }catch(e){
 
-console.warn('Service Worker 註冊失敗',e);
+console.warn(
+'Service Worker 更新檢查失敗',
+e
+);
+
+}
+
+}catch(e){
+
+console.warn(
+'Service Worker 註冊失敗',
+e
+);
 
 }
 
@@ -3701,34 +5619,66 @@ console.warn('Service Worker 註冊失敗',e);
 syncPushSymbols();
 
 $('homeList').innerHTML=`
+
 <div class="card loader">
-正在載入全市場共用雷達...
+
+<span class="loading-dot">
+<i></i><i></i><i></i>
+</span>
+
+正在載入全市場共用雷達
+
 </div>
+
 `;
 
-try{
+/*
+  Radar 與自選不再完全串行等待。
+  Radar 先決定首頁，自選背景同步。
+*/
 
-await radar();
+const radarPromise=
+radar()
+.catch(e=>{
 
-}catch(e){
+console.warn(
+'第一次全市場雷達失敗',
+e
+);
 
-console.warn('第一次全市場雷達失敗',e);
+});
 
-}
+const watchPromise=
+loadWatchStocks()
+.catch(e=>{
 
-try{
+console.warn(
+'自選股票載入失敗',
+e
+);
 
-await loadWatchStocks();
+});
 
-}catch(e){
-
-console.warn('自選股票載入失敗',e);
-
-}
+await radarPromise;
 
 renderHome();
 
-clearInterval(radarTimer);
+/*
+  自選可以在背景完成，
+  不阻塞首頁 Radar 顯示。
+*/
+
+watchPromise.then(()=>{
+
+if(tab==='watch'){
+renderHome();
+}
+
+});
+
+clearInterval(
+radarTimer
+);
 
 radarTimer=
 setInterval(
@@ -3740,7 +5690,10 @@ await radar();
 
 }catch(e){
 
-console.warn('全市場雷達更新失敗',e);
+console.warn(
+'全市場雷達更新失敗',
+e
+);
 
 }
 
@@ -3754,12 +5707,17 @@ await openStockFromURL();
 
 /* BOOT */
 
-if(document.readyState==='loading'){
+if(
+document.readyState===
+'loading'
+){
 
 document.addEventListener(
 'DOMContentLoaded',
 startApp,
-{once:true}
+{
+once:true
+}
 );
 
 }else{
@@ -3767,7 +5725,6 @@ startApp,
 startApp();
 
 }
-
 </script>
 
 </body>
