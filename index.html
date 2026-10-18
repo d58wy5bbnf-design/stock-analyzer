@@ -65,8 +65,6 @@ calc(105px + env(safe-area-inset-bottom))
 max(16px,env(safe-area-inset-left))
 }
 
-/* HEADER */
-
 .top{
 display:flex;
 justify-content:space-between;
@@ -108,8 +106,6 @@ background:rgba(53,217,138,.12);
 border-color:rgba(53,217,138,.28)
 }
 
-/* WELCOME */
-
 .welcome{
 margin:4px 2px 14px
 }
@@ -125,8 +121,6 @@ margin:0;
 color:var(--muted);
 font-size:12px
 }
-
-/* SEARCH */
 
 .search{
 display:flex;
@@ -172,8 +166,6 @@ padding:0 19px;
 font-weight:850;
 background:linear-gradient(135deg,#397cff,#7166ff)
 }
-
-/* SEARCH SUGGESTIONS */
 
 .suggestions{
 position:absolute;
@@ -236,8 +228,6 @@ color:#72a5ff;
 font-size:11px
 }
 
-/* SUMMARY */
-
 .summary{
 display:grid;
 grid-template-columns:repeat(3,1fr);
@@ -262,8 +252,6 @@ font-size:20px
 font-size:10px;
 color:var(--muted)
 }
-
-/* TABS */
 
 .tabs{
 display:grid;
@@ -291,16 +279,9 @@ color:#fff;
 background:linear-gradient(135deg,#457cff,#6f5bf5)
 }
 
-/* GENERAL */
-
 .card,
 .empty{
-background:
-linear-gradient(
-145deg,
-rgba(19,35,58,.94),
-rgba(12,25,43,.94)
-);
+background:linear-gradient(145deg,rgba(19,35,58,.94),rgba(12,25,43,.94));
 border:1px solid var(--line);
 border-radius:21px;
 box-shadow:var(--shadow)
@@ -322,29 +303,6 @@ color:#8eb8ff;
 padding:10px 13px;
 font-weight:800
 }
-
-.hidden{
-display:none!important
-}
-
-.muted{
-color:var(--muted)
-}
-
-.note{
-font-size:10px;
-line-height:1.65;
-color:#64758e;
-margin-top:20px
-}
-
-.loader{
-padding:30px;
-text-align:center;
-color:#7f90a8
-}
-
-/* STOCK CARDS */
 
 .stock-card{
 padding:17px;
@@ -457,28 +415,6 @@ color:#9cacbf;
 font-weight:850
 }
 
-/* DETAIL TOP */
-
-.detail-topbar{
-position:sticky;
-top:calc(env(safe-area-inset-top) + 6px);
-z-index:50;
-display:flex;
-justify-content:space-between;
-gap:8px;
-margin-bottom:10px
-}
-
-.detail-topbar .icon{
-background:#0d1b30ef
-}
-
-.top-fav.active{
-color:#ffd76b
-}
-
-/* HERO */
-
 .hero{
 padding:21px;
 background:
@@ -532,34 +468,23 @@ background:#37db8a;
 margin-right:6px
 }
 
-/* QUICK NAV */
-
-.quicknav{
+.detail-topbar{
 position:sticky;
-top:calc(env(safe-area-inset-top) + 58px);
-z-index:40;
+top:calc(env(safe-area-inset-top) + 6px);
+z-index:50;
 display:flex;
-gap:7px;
-overflow:auto;
-margin:12px 0;
-padding:6px;
-background:#091728ee;
-border:1px solid var(--line);
-border-radius:15px
+justify-content:space-between;
+gap:8px;
+margin-bottom:10px
 }
 
-.quicknav button{
-flex:0 0 auto;
-border:0;
-border-radius:10px;
-background:#ffffff09;
-color:#9dadc2;
-padding:9px 11px;
-font-size:11px;
-font-weight:800
+.detail-topbar .icon{
+background:#0d1b30ef
 }
 
-/* STRATEGY */
+.top-fav.active{
+color:#ffd76b
+}
 
 .strategy{
 padding:18px;
@@ -589,18 +514,11 @@ font-size:9px;
 color:#6f819a
 }
 
-/* CONCLUSION */
-
 .conclusion{
 margin-top:14px;
 padding:16px;
 border-radius:18px;
-background:
-linear-gradient(
-135deg,
-#4d8dff12,
-#806cff12
-);
+background:linear-gradient(135deg,#4d8dff12,#806cff12);
 border:1px solid #6b8dff2b
 }
 
@@ -632,7 +550,30 @@ background:#ffffff0c;
 color:#b5c3d6
 }
 
-/* SECTIONS */
+.quicknav{
+position:sticky;
+top:calc(env(safe-area-inset-top) + 58px);
+z-index:40;
+display:flex;
+gap:7px;
+overflow:auto;
+margin:12px 0;
+padding:6px;
+background:#091728ee;
+border:1px solid var(--line);
+border-radius:15px
+}
+
+.quicknav button{
+flex:0 0 auto;
+border:0;
+border-radius:10px;
+background:#ffffff09;
+color:#9dadc2;
+padding:9px 11px;
+font-size:11px;
+font-weight:800
+}
 
 .section-title{
 display:flex;
@@ -649,14 +590,8 @@ content:"";
 width:3px;
 height:15px;
 border-radius:99px;
-background:
-linear-gradient(
-#4b91ff,
-#806cff
-)
+background:linear-gradient(#4b91ff,#806cff)
 }
-
-/* SCORES */
 
 .score-grid,
 .levels,
@@ -704,12 +639,7 @@ margin-top:10px
 .score-progress i{
 display:block;
 height:100%;
-background:
-linear-gradient(
-90deg,
-#438fff,
-#796cff
-)
+background:linear-gradient(90deg,#438fff,#796cff)
 }
 
 .score-box small,
@@ -727,27 +657,11 @@ font-size:18px;
 margin-top:5px
 }
 
-.entry strong{
-color:#80b0ff
-}
-
-.sl strong{
-color:#ff8390
-}
-
-.tp strong{
-color:#62e7a4
-}
-
-.support strong{
-color:#62dbc4
-}
-
-.pressure strong{
-color:#ffc277
-}
-
-/* CHIP */
+.entry strong{color:#80b0ff}
+.sl strong{color:#ff8390}
+.tp strong{color:#62e7a4}
+.support strong{color:#62dbc4}
+.pressure strong{color:#ffc277}
 
 .chip{
 margin-top:12px;
@@ -767,8 +681,6 @@ font-size:15px;
 margin-top:4px
 }
 
-/* CONDITIONS */
-
 .conditions{
 margin-top:12px;
 border-top:1px solid var(--line)
@@ -781,21 +693,14 @@ font-size:13px;
 font-weight:750
 }
 
-.ok{
-color:#52dc98
-}
-
-.no{
-color:#ff7d89
-}
+.ok{color:#52dc98}
+.no{color:#ff7d89}
 
 .cond small{
 display:block;
 color:#708098;
 margin:5px 0 0 20px
 }
-
-/* NEWS */
 
 .news-item{
 padding:12px 0;
@@ -813,15 +718,32 @@ color:#6f8098;
 margin-top:5px
 }
 
-/* QUICK LOADING */
+.hidden{
+display:none!important
+}
+
+.muted{
+color:var(--muted)
+}
+
+.note{
+font-size:10px;
+line-height:1.65;
+color:#64758e;
+margin-top:20px
+}
+
+.loader{
+padding:30px;
+text-align:center;
+color:#7f90a8
+}
 
 .quick-loading{
 margin-top:12px;
 font-size:11px;
 color:#6f8098
 }
-
-/* BOTTOM NAV */
 
 .bottom-nav,
 .detail-dock{
@@ -872,41 +794,12 @@ color:#dce7f6
 }
 
 .detail-dock .dock-fav{
-background:
-linear-gradient(
-135deg,
-#397cff,
-#7166ff
-);
+background:linear-gradient(135deg,#397cff,#7166ff);
 color:#fff
 }
 
 .detail-dock .dock-fav.active{
-background:
-linear-gradient(
-135deg,
-#b78b2d,
-#e2b746
-)
-}
-
-@media(max-width:380px){
-
-.app{
-padding-left:13px;
-padding-right:13px
-}
-
-.hero-price{
-font-size:38px
-}
-
-.score-grid,
-.levels,
-.chip-grid{
-gap:7px
-}
-
+background:linear-gradient(135deg,#b78b2d,#e2b746)
 }
 </style>
 </head>
@@ -916,58 +809,34 @@ gap:7px
 <div class="app">
 
 <header class="top">
-
 <div class="brand">
 波段分析
 <small>TW SWING ANALYTICS</small>
 </div>
 
-<button
-id="notify"
-class="icon"
-aria-label="通知"
->
-🔔
-</button>
-
+<button id="notify" class="icon">🔔</button>
 </header>
 
 <main id="home">
 
 <div class="welcome">
-
-<h1>
-今天想研究哪一檔？
-</h1>
-
-<p>
-先用全市場 Radar 找機會，再看完整波段交易規劃。
-</p>
-
+<h1>今天想研究哪一檔？</h1>
+<p>先用全市場 Radar 找機會，再看完整波段交易規劃。</p>
 </div>
 
 <div class="search">
 
 <div class="search-box">
-
 <input
 id="q"
 inputmode="search"
 autocomplete="off"
 placeholder="搜尋股票代號或名稱"
 >
-
-<div
-id="suggestions"
-class="suggestions hidden"
-></div>
-
+<div id="suggestions" class="suggestions hidden"></div>
 </div>
 
-<button
-id="go"
-class="primary"
->
+<button id="go" class="primary">
 分析
 </button>
 
@@ -994,35 +863,24 @@ class="primary"
 
 <div class="tabs">
 
-<button
-class="tab on"
-data-tab="signal"
->
+<button class="tab on" data-tab="signal">
 高分股票
 </button>
 
-<button
-class="tab"
-data-tab="near"
->
+<button class="tab" data-tab="near">
 觀察名單
 </button>
 
-<button
-class="tab"
-data-tab="watch"
->
+<button class="tab" data-tab="watch">
 我的自選
 </button>
 
 </div>
 
 <div id="homeList">
-
 <div class="card loader">
 正在載入全市場雷達
 </div>
-
 </div>
 
 <div class="note">
@@ -1031,24 +889,15 @@ Radar 負責全市場快速篩選；點進個股後，再使用完整技術、�
 
 </main>
 
-<main
-id="detail"
-class="hidden"
->
+<main id="detail" class="hidden">
 
 <div class="detail-topbar">
 
-<button
-id="back"
-class="icon"
->
+<button id="back" class="icon">
 ← 返回
 </button>
 
-<button
-id="topFav"
-class="icon top-fav"
->
+<button id="topFav" class="icon top-fav">
 ☆ 自選
 </button>
 
@@ -1060,54 +909,36 @@ class="icon top-fav"
 
 </div>
 
-<nav
-id="bottomNav"
-class="bottom-nav"
->
+<nav id="bottomNav" class="bottom-nav">
 
-<button
-data-nav="home"
-class="on"
->
+<button data-nav="home" class="on">
 ⌂<br>首頁
 </button>
 
-<button
-data-nav="search"
->
-⌕<br>搜尋
+<button data-nav="radar">
+◎<br>今日雷達
 </button>
 
-<button
-data-nav="watch"
->
+<button data-nav="watch">
 ★<br>我的自選
 </button>
 
 </nav>
 
-<div
-id="detailDock"
-class="detail-dock hidden"
->
+<div id="detailDock" class="detail-dock hidden">
 
-<button
-id="dockBack"
-class="dock-back"
->
+<button id="dockBack" class="dock-back">
 ← 返回
 </button>
 
-<button
-id="dockFav"
-class="dock-fav"
->
+<button id="dockFav" class="dock-fav">
 ☆ 加入自選
 </button>
 
 </div>
 
 <script>
+
 const WATCH_KEY='swing_tw_watch_v1';
 const HISTORY_KEY='swing_tw_search_history_v1';
 const PUSH_DEVICE_KEY='swing_tw_push_device_v1';
@@ -1122,6 +953,7 @@ const WATCH_RADAR_LIMIT=50;
 const DETAIL_CACHE_MS=90000;
 
 let tab='signal';
+
 let cache={};
 let detailCache={};
 
@@ -1136,9 +968,11 @@ cache:''
 
 let current='';
 let currentDetail=null;
+
 let detailTimer=null;
 let radarTimer=null;
 let searchTimer=null;
+
 let selectedSearchSymbol='';
 
 const tabScroll={
@@ -1153,7 +987,8 @@ let touchStartX=0;
 let touchStartY=0;
 let touchTracking=false;
 
-const $=id=>document.getElementById(id);
+const $=id=>
+document.getElementById(id);
 
 const esc=s=>
 String(s??'')
@@ -1194,7 +1029,6 @@ function ema(a,n){
 if(!a.length)return 0;
 
 let e=a[0];
-
 const k=2/(n+1);
 
 for(let i=1;i<a.length;i++){
@@ -1206,6 +1040,7 @@ e*(1-k);
 }
 
 return e;
+
 }
 
 function rsi(a,n=14){
@@ -1215,11 +1050,7 @@ if(a.length<=n)return 50;
 let g=0;
 let l=0;
 
-for(
-let i=a.length-n;
-i<a.length;
-i++
-){
+for(let i=a.length-n;i<a.length;i++){
 
 const d=
 a[i]-
@@ -1271,6 +1102,7 @@ Math.abs(x.low-p)
 }
 
 return avg(v);
+
 }
 
 function clamp(v,min,max){
@@ -1294,17 +1126,11 @@ PUSH_DEVICE_KEY
 if(!id){
 
 id=
-window.crypto&&
-crypto.randomUUID
+window.crypto&&crypto.randomUUID
 ?
 crypto.randomUUID()
 :
-'device-'+
-Date.now()+
-'-'+
-Math.random()
-.toString(36)
-.slice(2);
+'device-'+Date.now()+'-'+Math.random().toString(36).slice(2);
 
 localStorage.setItem(
 PUSH_DEVICE_KEY,
@@ -1314,6 +1140,7 @@ id
 }
 
 return id;
+
 }
 
 /* WATCH */
@@ -1326,8 +1153,7 @@ const x=
 JSON.parse(
 localStorage.getItem(
 WATCH_KEY
-)||
-'[]'
+)||'[]'
 );
 
 return Array.isArray(x)
@@ -1338,8 +1164,7 @@ x
 .map(String)
 .filter(
 v=>
-/^\d{4,6}$/
-.test(v)
+/^\d{4,6}$/.test(v)
 )
 )
 ]
@@ -1362,8 +1187,7 @@ const clean=[
 .map(String)
 .filter(
 v=>
-/^\d{4,6}$/
-.test(v)
+/^\d{4,6}$/.test(v)
 )
 )
 ];
@@ -1374,6 +1198,7 @@ JSON.stringify(clean)
 );
 
 return clean;
+
 }
 
 async function getCloudWatch(){
@@ -1394,10 +1219,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -1406,16 +1228,13 @@ d.error||
 
 }
 
-return Array.isArray(
-d.symbols
-)
+return Array.isArray(d.symbols)
 ?
 d.symbols
 .map(String)
 .filter(
 v=>
-/^\d{4,6}$/
-.test(v)
+/^\d{4,6}$/.test(v)
 )
 :
 [];
@@ -1429,17 +1248,11 @@ await fetch(
 '/api/watchlist',
 {
 method:'POST',
-
 headers:{
-'Content-Type':
-'application/json'
+'Content-Type':'application/json'
 },
-
-body:
-JSON.stringify({
-deviceId:
-getDeviceId(),
-
+body:JSON.stringify({
+deviceId:getDeviceId(),
 symbols
 })
 }
@@ -1448,10 +1261,7 @@ symbols
 const d=
 await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -1485,15 +1295,15 @@ saveWatchLocal(
 merged
 );
 
-const cloudSet=
+const cs=
 new Set(
 cloud
 );
 
 if(
 merged.some(
-symbol=>
-!cloudSet.has(symbol)
+s=>
+!cs.has(s)
 )
 ){
 
@@ -1505,10 +1315,7 @@ merged
 
 }catch(e){
 
-console.warn(
-'自選保護同步失敗',
-e
-);
+console.warn(e);
 
 }
 
@@ -1538,70 +1345,36 @@ const x=
 JSON.parse(
 localStorage.getItem(
 HISTORY_KEY
-)||
-'[]'
+)||'[]'
 );
 
-if(
-!Array.isArray(x)
-){
-
-return [];
-
-}
+if(!Array.isArray(x))return[];
 
 return x
-.map(item=>{
-
-if(
-typeof item===
-'string'
-){
-
-return {
-symbol:item,
+.map(i=>
+typeof i==='string'
+?
+{
+symbol:i,
 name:'',
 time:0
-};
-
 }
-
-return {
-symbol:
-String(
-item?.symbol||
-''
-),
-
-name:
-String(
-item?.name||
-''
-),
-
-time:
-Number(
-item?.time||
-0
+:
+{
+symbol:String(i?.symbol||''),
+name:String(i?.name||''),
+time:Number(i?.time||0)
+}
 )
-};
-
-})
 .filter(
-item=>
-/^\d{4,6}$/
-.test(
-item.symbol
+i=>
+/^\d{4,6}$/.test(i.symbol)
 )
-)
-.slice(
-0,
-10
-);
+.slice(0,10);
 
 }catch{
 
-return [];
+return[];
 
 }
 
@@ -1609,11 +1382,7 @@ return [];
 
 function saveHistory(a){
 
-if(
-!a?.symbol
-){
-return;
-}
+if(!a?.symbol)return;
 
 let h=
 searchHistory()
@@ -1624,17 +1393,9 @@ String(a.symbol)
 );
 
 h.unshift({
-symbol:
-String(a.symbol),
-
-name:
-String(
-a.name||
-''
-),
-
-time:
-Date.now()
+symbol:String(a.symbol),
+name:String(a.name||''),
+time:Date.now()
 });
 
 localStorage.setItem(
@@ -1661,15 +1422,12 @@ function showSearchHistory(){
 const box=
 $('suggestions');
 
-const history=
+const h=
 searchHistory();
 
-if(
-!history.length
-){
+if(!h.length){
 
 hideSuggestions();
-
 return;
 
 }
@@ -1685,19 +1443,17 @@ box.innerHTML=`
 <button
 id="clearSearchHistory"
 class="history-clear"
-type="button"
 >
 清除紀錄
 </button>
 
 </div>
 
-${history.map(x=>`
+${h.map(x=>`
 
 <button
 class="suggestion history-item"
 data-symbol="${esc(x.symbol)}"
-type="button"
 >
 
 <div>
@@ -1722,27 +1478,17 @@ ${esc(x.symbol)}
 
 `;
 
-box
-.classList
-.remove(
+box.classList.remove(
 'hidden'
 );
 
-const clearButton=
-$('clearSearchHistory');
+$('clearSearchHistory').onclick=e=>{
 
-if(clearButton){
-
-clearButton.onclick=e=>{
-
-e.preventDefault();
 e.stopPropagation();
 
 clearHistory();
 
 };
-
-}
 
 box
 .querySelectorAll(
@@ -1752,22 +1498,15 @@ box
 
 x.onclick=e=>{
 
-e.preventDefault();
 e.stopPropagation();
 
-const symbol=
-x.dataset.symbol;
-
-selectedSearchSymbol=
-symbol;
-
 $('q').value=
-symbol;
+x.dataset.symbol;
 
 hideSuggestions();
 
 openStock(
-symbol
+x.dataset.symbol
 );
 
 };
@@ -1776,7 +1515,7 @@ symbol
 
 }
 
-/* API */
+/* STOCK API */
 
 async function getStock(symbol){
 
@@ -1806,10 +1545,7 @@ throw Error(
 
 }
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -1819,7 +1555,10 @@ d.error||
 }
 
 return d;
+
 }
+
+/* NEWS API */
 
 async function getNews(symbol){
 
@@ -1839,10 +1578,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-r.ok&&
-d.ok
-){
+if(r.ok&&d.ok){
 
 return d;
 
@@ -1854,7 +1590,7 @@ console.warn(e);
 
 }
 
-return {
+return{
 available:false,
 overall:'資料不足',
 overallScore:0,
@@ -1892,16 +1628,12 @@ j++
 if(
 rows[i].low>
 rows[i-j].low
-){
-lo=false;
-}
+)lo=false;
 
 if(
 rows[i].high<
 rows[i-j].high
-){
-hi=false;
-}
+)hi=false;
 
 }
 
@@ -1914,16 +1646,12 @@ j++
 if(
 rows[i].low>
 rows[i+j].low
-){
-lo=false;
-}
+)lo=false;
 
 if(
 rows[i].high<
 rows[i+j].high
-){
-hi=false;
-}
+)hi=false;
 
 }
 
@@ -1931,8 +1659,7 @@ if(lo){
 
 lows.push({
 i,
-value:
-rows[i].low
+value:rows[i].low
 });
 
 }
@@ -1941,20 +1668,21 @@ if(hi){
 
 highs.push({
 i,
-value:
-rows[i].high
+value:rows[i].high
 });
 
 }
 
 }
 
-return {
+return{
 lows,
 highs
 };
 
 }
+
+/* LEVEL CLUSTER */
 
 function clusterLevels(
 items,
@@ -1965,27 +1693,20 @@ const sorted=
 items
 .filter(
 x=>
-Number.isFinite(
-+x.value
-)&&
+Number.isFinite(+x.value)&&
 +x.value>0
 )
 .sort(
 (a,b)=>
-a.value-
-b.value
+a.value-b.value
 );
 
 const groups=[];
 
-for(
-const item of sorted
-){
+for(const item of sorted){
 
 const last=
-groups[
-groups.length-1
-];
+groups.at(-1);
 
 if(
 last&&
@@ -2015,17 +1736,10 @@ item.i||0
 }else{
 
 groups.push({
-value:
-item.value,
-
-values:[
-item.value
-],
-
+value:item.value,
+values:[item.value],
 count:1,
-
-latest:
-item.i||0
+latest:item.i||0
 });
 
 }
@@ -2033,6 +1747,7 @@ item.i||0
 }
 
 return groups;
+
 }
 
 /* TRADE PLAN */
@@ -2063,9 +1778,7 @@ price*.005
 
 const supportRaw=[];
 
-for(
-const x of P.lows
-){
+for(const x of P.lows){
 
 if(
 x.value<=price*1.012&&
@@ -2107,18 +1820,12 @@ i:recent.length+4
 
 }
 
-for(
-const n of [10,20,60]
-){
+for(const n of [10,20,60]){
 
 const part=
 rows.slice(-n);
 
-if(
-!part.length
-){
-continue;
-}
+if(!part.length)continue;
 
 const low=
 Math.min(
@@ -2141,35 +1848,23 @@ i:recent.length+n
 
 }
 
-for(
-const x of P.highs
-){
+for(const x of P.highs){
 
 if(
 x.value>=price*.88&&
-x.value<price
-){
-
-const after=
-recent.slice(
-x.i+1
-);
-
-const broken=
-after.some(
+x.value<price&&
+recent
+.slice(x.i+1)
+.some(
 r=>
-r.close>
-x.value*1.004
-);
-
-if(broken){
+r.close>x.value*1.004
+)
+){
 
 supportRaw.push({
 value:x.value,
 i:x.i
 });
-
-}
 
 }
 
@@ -2191,15 +1886,13 @@ b.value-a.value
 );
 
 const support1=
-supportGroups[0]
-?
-supportGroups[0].value
-:
+supportGroups[0]?.value||
 null;
 
 const support2=
 support1
 ?
+(
 supportGroups.find(
 x=>
 x.value<
@@ -2207,26 +1900,22 @@ support1-
 mergeDistance*.75
 )?.value||
 null
+)
 :
 null;
 
-const MAX_ENTRY_DISTANCE=.045;
-
-const nearbySupports=
+const nearby=
 supportGroups.filter(x=>{
 
-const distance=
+const d=
 (
 price-
 x.value
 )/
 price;
 
-return (
-distance>=-.012&&
-distance<=
-MAX_ENTRY_DISTANCE
-);
+return d>=-.012&&
+d<=.045;
 
 });
 
@@ -2234,11 +1923,9 @@ let bestSupport=null;
 let bestSupportScore=
 -Infinity;
 
-for(
-const x of nearbySupports
-){
+for(const x of nearby){
 
-const distance=
+const d=
 Math.max(
 0,
 (
@@ -2248,34 +1935,27 @@ x.value
 price
 );
 
-const distanceScore=
+const score=
 Math.max(
 0,
 1-
-distance/
-MAX_ENTRY_DISTANCE
-)*45;
-
-const clusterScore=
+d/.045
+)*45
++
 Math.min(
 x.count,
 4
-)*10;
-
-const recentScore=
+)*10
++
+(
 recent.length
 ?
-(
 x.latest/
-recent.length
-)*15
+recent.length*
+15
 :
-0;
-
-const score=
-distanceScore+
-clusterScore+
-recentScore;
+0
+);
 
 if(
 score>
@@ -2292,13 +1972,9 @@ x;
 
 }
 
-/* PRESSURE */
-
 const pressureRaw=[];
 
-for(
-const x of P.highs
-){
+for(const x of P.highs){
 
 if(
 x.value>=price*.90&&
@@ -2329,11 +2005,7 @@ end-20
 end
 );
 
-if(
-!block.length
-){
-continue;
-}
+if(!block.length)continue;
 
 const high=
 Math.max(
@@ -2368,20 +2040,18 @@ x.value<=price*1.35
 )
 .sort(
 (a,b)=>
-a.value-
-b.value
+a.value-b.value
 );
 
-const abovePressures=
-allPressureGroups
-.filter(
+const above=
+allPressureGroups.filter(
 x=>
 x.value>
 price+
 mergeDistance*.15
 );
 
-const recentlyCrossed=
+const crossed=
 allPressureGroups
 .filter(
 x=>
@@ -2390,22 +2060,15 @@ x.value>=price*.98
 )
 .sort(
 (a,b)=>
-b.value-
-a.value
+b.value-a.value
 );
 
 const nextResistance=
-abovePressures[0]
-?
-abovePressures[0].value
-:
+above[0]?.value||
 null;
 
 const crossedResistance=
-recentlyCrossed[0]
-?
-recentlyCrossed[0].value
-:
+crossed[0]?.value||
 null;
 
 let breakout=
@@ -2415,18 +2078,12 @@ let breakoutState=
 'BELOW';
 
 if(
-crossedResistance
-){
-
-const crossedDistance=
+crossedResistance&&
 (
 price-
 crossedResistance
 )/
-price;
-
-if(
-crossedDistance<=.02
+price<=.02
 ){
 
 breakout=
@@ -2437,10 +2094,6 @@ breakoutState=
 
 }
 
-}
-
-/* ENTRY */
-
 let planType=
 'WAIT';
 
@@ -2450,9 +2103,7 @@ let entryMid=null;
 let sl=null;
 let entryReady=false;
 
-if(
-bestSupport
-){
+if(bestSupport){
 
 planType=
 'LIMIT';
@@ -2468,15 +2119,12 @@ price*.002
 );
 
 entryHigh=
+Math.min(
 base+
 Math.max(
 A*.30,
 price*.0035
-);
-
-entryHigh=
-Math.min(
-entryHigh,
+),
 price*1.006
 );
 
@@ -2486,7 +2134,7 @@ entryLow+
 entryHigh
 )/2;
 
-const lowerStructures=[
+const lower=[
 ...P.lows.map(
 x=>x.value
 ),
@@ -2507,10 +2155,8 @@ b-a
 );
 
 const invalidation=
-lowerStructures[0]
-||
-support2
-||
+lower[0]||
+support2||
 (
 base-
 A*.80
@@ -2536,23 +2182,17 @@ price*.005
 
 }
 
-const readyTolerance=
+const tol=
 Math.max(
 A*.25,
 price*.0035
 );
 
 entryReady=
-price>=
-entryLow-
-readyTolerance&&
-price<=
-entryHigh+
-readyTolerance;
+price>=entryLow-tol&&
+price<=entryHigh+tol;
 
 }
-
-/* TP */
 
 let tp1=null;
 let tp2=null;
@@ -2560,13 +2200,11 @@ let tp3=null;
 let tp3Source='';
 
 if(
-Number.isFinite(
-entryMid
-)&&
+Number.isFinite(entryMid)&&
 breakout
 ){
 
-const targetPressures=
+const targets=
 allPressureGroups
 .map(
 x=>x.value
@@ -2582,16 +2220,12 @@ mergeDistance*.55
 a-b
 );
 
-const cleanTargets=[];
+const clean=[];
 
-for(
-const v of targetPressures
-){
+for(const v of targets){
 
 const last=
-cleanTargets[
-cleanTargets.length-1
-];
+clean.at(-1);
 
 if(
 !last||
@@ -2599,40 +2233,43 @@ v-last>
 mergeDistance*.75
 ){
 
-cleanTargets.push(v);
+clean.push(v);
 
 }
 
 }
 
 tp1=
-cleanTargets[0]
-||
+clean[0]||
 null;
 
 tp2=
 tp1
 ?
-cleanTargets.find(
+(
+clean.find(
 v=>
 v>
 tp1+
 mergeDistance
 )||
 null
+)
 :
 null;
 
 tp3=
 tp2
 ?
-cleanTargets.find(
+(
+clean.find(
 v=>
 v>
 tp2+
 mergeDistance
 )||
 null
+)
 :
 null;
 
@@ -2649,7 +2286,7 @@ tp1&&
 tp2
 ){
 
-const extensionBase=
+const base=
 support2||
 support1||
 entryMid;
@@ -2657,8 +2294,7 @@ entryMid;
 tp3=
 tp2+
 Math.max(
-tp2-
-extensionBase,
+tp2-base,
 A*3
 )*.618;
 
@@ -2669,15 +2305,9 @@ tp3Source=
 
 }
 
-/* RISK */
-
 const risk=
-Number.isFinite(
-entryMid
-)&&
-Number.isFinite(
-sl
-)&&
+Number.isFinite(entryMid)&&
+Number.isFinite(sl)&&
 entryMid>sl
 ?
 entryMid-sl
@@ -2693,87 +2323,23 @@ entryMid*
 :
 null;
 
-function rr(target){
-
-if(
-!Number.isFinite(target)||
-!risk||
-risk<=0
-){
-
-return null;
-
-}
-
-return (
-target-
+const rr=t=>
+Number.isFinite(t)&&
+risk>0
+?
+(
+t-
 entryMid
 )/
-risk;
-
-}
-
-const rr1=
-rr(tp1);
-
-const rr2=
-rr(tp2);
-
-const rr3=
-rr(tp3);
-
-const entryDistance=
-bestSupport
-?
-(
-price-
-bestSupport.value
-)/
-price*
-100
+risk
 :
 null;
 
-const breakoutDistance=
-breakout
-?
-(
-breakout-
-price
-)/
-price*
-100
-:
-null;
-
-const validPlan=
-planType==='LIMIT'&&
-Number.isFinite(entryLow)&&
-Number.isFinite(entryHigh)&&
-Number.isFinite(sl)&&
-sl<entryLow&&
-Number.isFinite(breakout)&&
-Number.isFinite(tp1)&&
-tp1>breakout;
-
-return {
+return{
 support1,
 support2,
-
-bestSupport:
-bestSupport
-?
-bestSupport.value
-:
-null,
-
-bestSupportStrength:
-bestSupport
-?
-bestSupport.count
-:
-0,
-
+bestSupport:bestSupport?.value||null,
+bestSupportStrength:bestSupport?.count||0,
 breakout,
 breakoutState,
 nextResistance,
@@ -2789,22 +2355,48 @@ tp1,
 tp2,
 tp3,
 tp3Source,
-rr1,
-rr2,
-rr3,
+rr1:rr(tp1),
+rr2:rr(tp2),
+rr3:rr(tp3),
 entryReady,
-validPlan,
-
+validPlan:
+planType==='LIMIT'&&
+Number.isFinite(entryLow)&&
+Number.isFinite(entryHigh)&&
+Number.isFinite(sl)&&
+sl<entryLow&&
+Number.isFinite(breakout)&&
+Number.isFinite(tp1)&&
+tp1>breakout,
 pressureCount:
 allPressureGroups.length,
-
-entryDistance,
-breakoutDistance
+entryDistance:
+bestSupport
+?
+(
+price-
+bestSupport.value
+)/
+price*
+100
+:
+null,
+breakoutDistance:
+breakout
+?
+(
+breakout-
+price
+)/
+price*
+100
+:
+null
 };
 
 }
 
-/* FIVE CATEGORY ANALYSIS */
+/* FULL ANALYSIS */
 
 function analyzeData(
 d,
@@ -2834,15 +2426,11 @@ volume:+x.volume||0
 }))
 .filter(
 x=>
-Number.isFinite(
-x.close
-)&&
+Number.isFinite(x.close)&&
 x.close>0
 );
 
-if(
-rows.length<60
-){
+if(rows.length<60){
 
 throw Error(
 '有效 K 線不足'
@@ -2913,18 +2501,12 @@ closes
 .map(
 (_,i,a)=>
 ema(
-a.slice(
-0,
-i+1
-),
+a.slice(0,i+1),
 12
 )
 -
 ema(
-a.slice(
-0,
-i+1
-),
+a.slice(0,i+1),
 26
 )
 ),
@@ -2937,10 +2519,7 @@ rows.at(-1).volume;
 const volumeAverage=
 avg(
 rows
-.slice(
--21,
--1
-)
+.slice(-21,-1)
 .map(
 x=>x.volume
 )
@@ -2971,7 +2550,7 @@ let newsScore=null;
 
 const conditions=[];
 
-function techCondition(
+function tc(
 name,
 ok,
 points,
@@ -2993,28 +2572,28 @@ description
 
 }
 
-techCondition(
+tc(
 '股價站上 MA20',
 price>=m20,
 4,
 '短線趨勢維持在 20 日均線上方'
 );
 
-techCondition(
+tc(
 'MA20 高於 MA60',
 m20>m60,
 5,
 '中期均線維持多頭排列'
 );
 
-techCondition(
+tc(
 'MA60 趨勢健康',
 m60>=m120*.985,
 3,
 '中長期趨勢沒有明顯轉弱'
 );
 
-techCondition(
+tc(
 'RSI 位於健康區',
 R>=45&&
 R<=75,
@@ -3022,14 +2601,14 @@ R<=75,
 '動能足夠且尚未極端過熱'
 );
 
-techCondition(
+tc(
 'MACD 動能偏多',
 macd>=signal,
 3,
 '短線動能高於訊號線'
 );
 
-techCondition(
+tc(
 '股價位於近期相對強勢區',
 price>=high20*.96,
 2,
@@ -3043,23 +2622,15 @@ technical,
 20
 );
 
-/* VOLUME */
-
-if(
-vr>=1
-){
+if(vr>=1){
 
 volumeScore+=6;
 
-}else if(
-vr>=.8
-){
+}else if(vr>=.8){
 
 volumeScore+=4;
 
-}else if(
-vr>=.6
-){
+}else if(vr>=.6){
 
 volumeScore+=2;
 
@@ -3131,59 +2702,16 @@ volumeScore,
 20
 );
 
-/* INSTITUTION */
-
 const inst=
 d.institutional||
 {};
 
-if(
-+inst.total5>0
-){
-
-chipScore+=5;
-
-}
-
-if(
-+inst.foreign5>0
-){
-
-chipScore+=4;
-
-}
-
-if(
-+inst.trust5>0
-){
-
-chipScore+=4;
-
-}
-
-if(
-+inst.total10>0
-){
-
-chipScore+=3;
-
-}
-
-if(
-(+inst.totalBuyDays5||0)>=3
-){
-
-chipScore+=2;
-
-}
-
-if(
-(+inst.foreignBuyDays5||0)>=3
-){
-
-chipScore+=2;
-
-}
+if(+inst.total5>0)chipScore+=5;
+if(+inst.foreign5>0)chipScore+=4;
+if(+inst.trust5>0)chipScore+=4;
+if(+inst.total10>0)chipScore+=3;
+if((+inst.totalBuyDays5||0)>=3)chipScore+=2;
+if((+inst.foreignBuyDays5||0)>=3)chipScore+=2;
 
 chipScore=
 clamp(
@@ -3191,8 +2719,6 @@ chipScore,
 0,
 20
 );
-
-/* FUNDAMENTAL */
 
 const fundamental=
 d.fundamental||
@@ -3212,24 +2738,18 @@ revenue.available||
 financial.available
 );
 
-if(
-fundAvailable
-){
+if(fundAvailable){
 
 fundScore=0;
 
 if(
-financial.profitable===
-true
+financial.profitable===true
 ){
 
 fundScore+=6;
 
 }else if(
-financial.profitable===
-undefined||
-financial.profitable===
-null
+financial.profitable==null
 ){
 
 fundScore+=3;
@@ -3237,9 +2757,7 @@ fundScore+=3;
 }
 
 if(
-Number.isFinite(
-+financial.eps
-)&&
+Number.isFinite(+financial.eps)&&
 +financial.eps>0
 ){
 
@@ -3248,9 +2766,7 @@ fundScore+=4;
 }
 
 if(
-Number.isFinite(
-+financial.epsGrowth
-)&&
+Number.isFinite(+financial.epsGrowth)&&
 +financial.epsGrowth>0
 ){
 
@@ -3259,31 +2775,24 @@ fundScore+=3;
 }
 
 if(
-Number.isFinite(
-+revenue.yoy
-)
+Number.isFinite(+revenue.yoy)
 ){
 
-if(
+fundScore+=
 +revenue.yoy>10
-){
-
-fundScore+=4;
-
-}else if(
+?
+4
+:
 +revenue.yoy>0
-){
-
-fundScore+=3;
-
-}
+?
+3
+:
+0;
 
 }
 
 if(
-Number.isFinite(
-+revenue.mom
-)&&
+Number.isFinite(+revenue.mom)&&
 +revenue.mom>0
 ){
 
@@ -3299,8 +2808,6 @@ fundScore,
 );
 
 }
-
-/* NEWS */
 
 if(
 newsData?.available
@@ -3321,9 +2828,7 @@ newsData.overallScore||
 
 }
 
-/* TOTAL */
-
-const availableScores=[
+const available=[
 technical,
 volumeScore,
 chipScore,
@@ -3336,32 +2841,29 @@ x!==null&&
 Number.isFinite(+x)
 );
 
-const normalized=
-availableScores.length
+const score=
+clamp(
+Math.round(
+available.length
 ?
-availableScores.reduce(
+available.reduce(
 (a,b)=>a+b,
 0
 )/
 (
-availableScores.length*
+available.length*
 20
 )*
 100
 :
-0;
-
-const score=
-clamp(
-Math.round(
-normalized
+0
 ),
 0,
 100
 );
 
 const completeness=
-availableScores.length/
+available.length/
 5*
 100;
 
@@ -3374,7 +2876,7 @@ m20,
 m60
 );
 
-return {
+return{
 ...d,
 newsData,
 price,
@@ -3401,105 +2903,54 @@ conditions,
 
 function statusOf(a){
 
-if(
-a.score>=80
-){
-
-return [
-'強勢關注',
-'green'
-];
-
-}
-
-if(
+return a.score>=80
+?
+['強勢關注','green']
+:
 a.score>=70
-){
-
-return [
-'偏多波段',
-'blue'
-];
-
-}
-
-if(
+?
+['偏多波段','blue']
+:
 a.score>=60
-){
-
-return [
-'觀察',
-'yellow'
-];
-
-}
-
-return [
-'等待',
-'gray'
-];
+?
+['觀察','yellow']
+:
+['等待','gray'];
 
 }
 
 function radarStatusOf(a){
 
-const score=
+const s=
 Number(
 a.fastScore??
 a.score??
 0
 );
 
-if(
-score>=70
-){
-
-return [
-'強勢關注',
-'green'
-];
-
-}
-
-if(
-score>=55
-){
-
-return [
-'觀察',
-'yellow'
-];
+return s>=70
+?
+['強勢關注','green']
+:
+s>=55
+?
+['觀察','yellow']
+:
+s>=45
+?
+['雷達觀察','blue']
+:
+['等待','gray'];
 
 }
-
-if(
-score>=45
-){
-
-return [
-'雷達觀察',
-'blue'
-];
-
-}
-
-return [
-'等待',
-'gray'
-];
-
-}
-
-/* RADAR LIST */
 
 function sortRadarList(list){
 
-return [
+return[
 ...(list||[])
 ]
 .sort(
 (a,b)=>
-
 Number(
 b.fastScore??
 b.score??
@@ -3511,9 +2962,7 @@ a.fastScore??
 a.score??
 0
 )
-
 ||
-
 Number(
 b.tradingValue||
 0
@@ -3523,9 +2972,7 @@ Number(
 a.tradingValue||
 0
 )
-
 ||
-
 Number(
 b.radarRank||
 0
@@ -3535,9 +2982,7 @@ Number(
 a.radarRank||
 0
 )
-
 ||
-
 String(
 a.symbol
 )
@@ -3546,40 +2991,34 @@ String(
 b.symbol
 )
 )
-
 );
 
 }
 
 function uniqueRadarList(list){
 
-const seen=
+const s=
 new Set();
 
-return (
-list||
-[]
-)
+return(list||[])
 .filter(x=>{
 
-const symbol=
+const y=
 String(
 x?.symbol||
 ''
 );
 
 if(
-!symbol||
-seen.has(symbol)
+!y||
+s.has(y)
 ){
 
 return false;
 
 }
 
-seen.add(
-symbol
-);
+s.add(y);
 
 return true;
 
@@ -3600,13 +3039,11 @@ unified.strategyReady
 HIGH_SCORE_LIMIT
 );
 
-const highSymbols=
+const hs=
 new Set(
 high.map(
 x=>
-String(
-x.symbol
-)
+String(x.symbol)
 )
 );
 
@@ -3618,16 +3055,12 @@ unified.longWatch
 )
 .filter(
 x=>
-!highSymbols.has(
-String(
-x.symbol
-)
+!hs.has(
+String(x.symbol)
 )
 );
 
-if(
-!near.length
-){
+if(!near.length){
 
 near=
 uniqueRadarList(
@@ -3637,18 +3070,14 @@ unified.strategyReady
 )
 .filter(
 x=>
-!highSymbols.has(
-String(
-x.symbol
-)
+!hs.has(
+String(x.symbol)
 )
 );
 
 }
 
-if(
-!near.length
-){
+if(!near.length){
 
 near=
 uniqueRadarList(
@@ -3658,18 +3087,15 @@ unified.radar
 )
 .filter(
 x=>
-!highSymbols.has(
-String(
-x.symbol
-)
+!hs.has(
+String(x.symbol)
 )
 );
 
 }
 
-return {
+return{
 high,
-
 near:
 near.slice(
 0,
@@ -3679,45 +3105,43 @@ WATCH_RADAR_LIMIT
 
 }
 
-/* RADAR REASON */
+/* CARD REASON */
 
 function radarReason(a){
 
-const technical=
+const t=
 Number(
 a.technicalScore||
 0
 );
 
-const volume=
+const v=
 Number(
 a.volumePriceScore||
 0
 );
 
-const volumeRatio=
+const vr=
 Number(
 a.volumeRatio||
 0
 );
 
-const change=
+const cp=
 Number(
 a.changePercent||
 0
 );
 
-if(
-change>6
-){
+if(cp>6){
 
 return '短線漲幅較大，強勢但留意追價風險';
 
 }
 
 if(
-technical>=16&&
-volume>=16
+t>=16&&
+v>=16
 ){
 
 return '趨勢與量價同步偏強';
@@ -3725,27 +3149,23 @@ return '趨勢與量價同步偏強';
 }
 
 if(
-volume>=16&&
-volumeRatio>=1.5
+v>=16&&
+vr>=1.5
 ){
 
-return `量能明顯放大約 ${fmt(volumeRatio,1)} 倍`;
+return `量能明顯放大約 ${fmt(vr,1)} 倍`;
 
 }
 
-if(
-technical>=16
-){
+if(t>=16){
 
 return '技術趨勢維持相對強勢';
 
 }
 
-if(
-volumeRatio>=1.2
-){
+if(vr>=1.2){
 
-return `成交量約 ${fmt(volumeRatio,1)} 倍均量，值得追蹤`;
+return `成交量約 ${fmt(vr,1)} 倍均量，值得追蹤`;
 
 }
 
@@ -3757,9 +3177,9 @@ return 'Radar 綜合條件進入觀察名單';
 
 function renderRadarCard(a){
 
-const [
-label,
-cls
+const[
+l,
+c
 ]=
 radarStatusOf(a);
 
@@ -3769,7 +3189,7 @@ a.changePercent||
 0
 );
 
-const score=
+const s=
 Math.round(
 Number(
 a.fastScore??
@@ -3778,7 +3198,7 @@ a.score??
 )
 );
 
-return `
+return`
 
 <div
 class="card stock-card"
@@ -3813,8 +3233,8 @@ ${cp>=0?'+':''}${fmt(cp)}%
 
 </div>
 
-<div class="status ${cls}">
-${label}
+<div class="status ${c}">
+${l}
 </div>
 
 <div class="radar-reason">
@@ -3824,15 +3244,11 @@ ${esc(radarReason(a))}
 <div class="radar-score-row">
 
 <div class="mini-bar">
-
-<i
-style="width:${clamp(score,0,100)}%"
-></i>
-
+<i style="width:${clamp(s,0,100)}%"></i>
 </div>
 
 <div class="score-number">
-雷達強度 ${score}/100
+雷達強度 ${s}/100
 </div>
 
 </div>
@@ -3843,13 +3259,13 @@ style="width:${clamp(score,0,100)}%"
 
 }
 
-/* WATCH CARD */
+/* NORMAL CARD */
 
 function renderCard(a){
 
-const [
-label,
-cls
+const[
+l,
+c
 ]=
 statusOf(a);
 
@@ -3857,7 +3273,7 @@ const cp=
 +a.changePercent||
 0;
 
-return `
+return`
 
 <div
 class="card stock-card"
@@ -3892,18 +3308,14 @@ ${cp>=0?'+':''}${fmt(cp)}%
 
 </div>
 
-<div class="status ${cls}">
-${label}
+<div class="status ${c}">
+${l}
 </div>
 
 <div class="radar-score-row">
 
 <div class="mini-bar">
-
-<i
-style="width:${clamp(a.score,0,100)}%"
-></i>
-
+<i style="width:${clamp(a.score,0,100)}%"></i>
 </div>
 
 <div class="score-number">
@@ -3922,14 +3334,14 @@ style="width:${clamp(a.score,0,100)}%"
 
 function updateSummary(){
 
-const lists=
+const l=
 getLists();
 
 $('sumHigh').textContent=
-lists.high.length;
+l.high.length;
 
 $('sumNear').textContent=
-lists.near.length;
+l.near.length;
 
 $('sumWatch').textContent=
 watch().length;
@@ -3940,25 +3352,21 @@ watch().length;
 
 function renderHome(){
 
-const lists=
+const l=
 getLists();
 
 updateSummary();
 
 let html='';
 
-if(
-tab==='signal'
-){
+if(tab==='signal'){
 
 html=
-lists.high.length
+l.high.length
 ?
-lists.high
-.map(
+l.high.map(
 renderRadarCard
-)
-.join('')
+).join('')
 :
 `
 
@@ -3966,9 +3374,7 @@ renderRadarCard
 
 目前沒有符合高分條件的股票。
 <br>
-
 可以先看看下一批值得追蹤的標的。
-
 <br>
 
 <button
@@ -3987,13 +3393,11 @@ tab==='near'
 ){
 
 html=
-lists.near.length
+l.near.length
 ?
-lists.near
-.map(
+l.near.map(
 renderRadarCard
-)
-.join('')
+).join('')
 :
 `
 
@@ -4005,58 +3409,44 @@ renderRadarCard
 
 }else{
 
-const symbols=
+const sy=
 watch();
 
 const list=
-symbols
-.map(
-symbol=>
-cache[symbol]
+sy.map(
+s=>
+cache[s]
 )
-.filter(
-Boolean
-);
+.filter(Boolean);
 
-if(
-symbols.length&&
-!list.length
-){
-
-html=`
+html=
+sy.length&&!list.length
+?
+`
 
 <div class="card loader">
 正在載入我的自選
 </div>
 
-`;
-
-}else{
-
-html=
+`
+:
 list.length
 ?
-list
-.map(
+list.map(
 renderCard
-)
-.join('')
+).join('')
 :
 `
 
 <div class="empty">
 
 目前還沒有加入自選股票。
-
 <br>
-
 搜尋股票後，點「加入自選」即可收藏。
 
 </div>
 
 `;
-
-}
 
 }
 
@@ -4082,25 +3472,17 @@ x.dataset.symbol
 
 });
 
-const emptyNear=
-document.querySelector(
+document
+.querySelector(
 '[data-empty-near]'
-);
-
-if(
-emptyNear
-){
-
-emptyNear.onclick=()=>{
-
-setTab(
+)
+?.addEventListener(
+'click',
+()=>setTab(
 'near',
 true
+)
 );
-
-};
-
-}
 
 }
 
@@ -4108,20 +3490,15 @@ true
 
 function getRadarPreview(symbol){
 
-const all=[
-...(unified.strategyReady||[]),
-...(unified.longWatch||[]),
-...(unified.radar||[])
-];
-
-return all.find(
+return[
+...unified.strategyReady,
+...unified.longWatch,
+...unified.radar
+]
+.find(
 x=>
-String(
-x.symbol
-)===
-String(
-symbol
-)
+String(x.symbol)===
+String(symbol)
 )
 ||
 null;
@@ -4130,14 +3507,12 @@ null;
 
 function renderQuickDetail(
 symbol,
-preview
+p
 ){
 
-if(
-!preview
-){
+if(!p){
 
-return `
+return`
 
 <div class="card hero">
 
@@ -4161,16 +3536,14 @@ ${esc(symbol)}
 
 const cp=
 Number(
-preview.changePercent||
+p.changePercent||
 0
 );
 
-const status=
-radarStatusOf(
-preview
-);
+const st=
+radarStatusOf(p);
 
-return `
+return`
 
 <div class="card hero">
 
@@ -4179,23 +3552,23 @@ return `
 <div>
 
 <div class="hero-code">
-${esc(preview.symbol)}
+${esc(p.symbol)}
 </div>
 
 <div class="hero-name">
-${esc(preview.name||'')}
+${esc(p.name||'')}
 </div>
 
 </div>
 
-<div class="status ${status[1]}">
-${status[0]}
+<div class="status ${st[1]}">
+${st[0]}
 </div>
 
 </div>
 
 <div class="hero-price">
-${fmt(preview.price)}
+${fmt(p.price)}
 </div>
 
 <div class="hero-change ${cp>=0?'up':'down'}">
@@ -4215,49 +3588,45 @@ Radar 資料已顯示，正在載入完整分析...
 /* SCORE BOX */
 
 function scoreBox(
-name,
-score,
-description
+n,
+s,
+d
 ){
 
-const value=
-score===null
+const v=
+s===null
 ?
 0
 :
 clamp(
-Number(score)||
+Number(s)||
 0,
 0,
 20
 );
 
-return `
+return`
 
 <div class="score-box">
 
 <div class="score-box-head">
 
 <span>
-${esc(name)}
+${esc(n)}
 </span>
 
 <strong>
-${score===null?'--':score+'/20'}
+${s===null?'--':s+'/20'}
 </strong>
 
 </div>
 
 <div class="score-progress">
-
-<i
-style="width:${value/20*100}%"
-></i>
-
+<i style="width:${v/20*100}%"></i>
 </div>
 
 <small>
-${esc(description)}
+${esc(d)}
 </small>
 
 </div>
@@ -4272,7 +3641,7 @@ function chipHTML(i){
 
 if(!i){
 
-return `
+return`
 
 <div
 class="chip"
@@ -4293,15 +3662,14 @@ id="chipSection"
 
 }
 
-const sign=
-n=>
+const s=n=>
 +n>0
 ?
 '+'
 :
 '';
 
-return `
+return`
 
 <div
 class="chip"
@@ -4315,51 +3683,23 @@ id="chipSection"
 <div class="chip-grid">
 
 <div class="chip-item">
-
-<span>
-外資近 5 日
-</span>
-
-<strong>
-${sign(i.foreign5)}${fmt(i.foreign5,0)}
-</strong>
-
+<span>外資近 5 日</span>
+<strong>${s(i.foreign5)}${fmt(i.foreign5,0)}</strong>
 </div>
 
 <div class="chip-item">
-
-<span>
-投信近 5 日
-</span>
-
-<strong>
-${sign(i.trust5)}${fmt(i.trust5,0)}
-</strong>
-
+<span>投信近 5 日</span>
+<strong>${s(i.trust5)}${fmt(i.trust5,0)}</strong>
 </div>
 
 <div class="chip-item">
-
-<span>
-三大法人近 5 日
-</span>
-
-<strong>
-${sign(i.total5)}${fmt(i.total5,0)}
-</strong>
-
+<span>三大法人近 5 日</span>
+<strong>${s(i.total5)}${fmt(i.total5,0)}</strong>
 </div>
 
 <div class="chip-item">
-
-<span>
-三大法人近 20 日
-</span>
-
-<strong>
-${sign(i.total20)}${fmt(i.total20,0)}
-</strong>
-
+<span>三大法人近 20 日</span>
+<strong>${s(i.total20)}${fmt(i.total20,0)}</strong>
 </div>
 
 </div>
@@ -4386,7 +3726,7 @@ const x=
 f.financial||
 {};
 
-return `
+return`
 
 <div class="chip">
 
@@ -4482,11 +3822,9 @@ fmt(r.mom)+
 
 function newsHTML(n){
 
-if(
-!n?.available
-){
+if(!n?.available){
 
-return `
+return`
 
 <div
 class="chip"
@@ -4507,7 +3845,7 @@ id="newsSection"
 
 }
 
-return `
+return`
 
 <div
 class="chip"
@@ -4553,7 +3891,7 @@ ${esc(x.sentiment||'中性')}
 
 }
 
-/* HUMAN CONCLUSION */
+/* CONCLUSION */
 
 function conclusionOf(a){
 
@@ -4568,7 +3906,7 @@ a.technical>=12
 :
 '趨勢偏弱';
 
-const volume=
+const vol=
 a.volumeScore>=16
 ?
 '量價健康'
@@ -4590,44 +3928,42 @@ a.chipScore>=8
 :
 '法人偏弱';
 
-let text='';
+let text;
 
 if(
 a.planType!=='LIMIT'
 ){
 
 text=
-`${trend}、${volume}，但現價附近尚未找到足夠可靠的進場支撐，先等待，不為了進場而追價。`;
+`${trend}、${vol}，但現價附近尚未找到足夠可靠的進場支撐，先等待，不為了進場而追價。`;
 
 }else if(
 a.entryReady
 ){
 
 text=
-`${trend}、${volume}，目前已接近系統計算的最佳 Entry 區，可再配合盤中價格行為確認，並以結構失效位置作為停損。`;
+`${trend}、${vol}，目前已接近系統計算的最佳 Entry 區，可再配合盤中價格行為確認，並以結構失效位置作為停損。`;
 
 }else if(
-a.entryDistance!==null&&
+a.entryDistance!=null&&
 a.entryDistance>3
 ){
 
 text=
-`${trend}、${volume}，但現價距最佳 Entry 仍有一段距離，不建議追價，等待回踩 ${fmt(a.entryLow)}～${fmt(a.entryHigh)} 再觀察。`;
+`${trend}、${vol}，但現價距最佳 Entry 仍有一段距離，不建議追價，等待回踩 ${fmt(a.entryLow)}～${fmt(a.entryHigh)} 再觀察。`;
 
 }else{
 
 text=
-`${trend}、${volume}，目前可持續追蹤；等待價格靠近 ${fmt(a.entryLow)}～${fmt(a.entryHigh)} 的最佳進場區。`;
+`${trend}、${vol}，目前可持續追蹤；等待價格靠近 ${fmt(a.entryLow)}～${fmt(a.entryHigh)} 的最佳進場區。`;
 
 }
 
-return {
-
+return{
 text,
-
 tags:[
 trend,
-volume,
+vol,
 chip,
 a.entryReady
 ?
@@ -4635,21 +3971,17 @@ a.entryReady
 :
 '等待位置'
 ]
-
 };
 
 }
 
-/* FAVORITE */
+/* FAVORITES */
 
 function updateFavButtons(){
 
 const has=
 current&&
-watch()
-.includes(
-current
-);
+watch().includes(current);
 
 $('topFav').textContent=
 has
@@ -4658,9 +3990,7 @@ has
 :
 '☆ 自選';
 
-$('topFav')
-.classList
-.toggle(
+$('topFav').classList.toggle(
 'active',
 !!has
 );
@@ -4672,9 +4002,7 @@ has
 :
 '☆ 加入自選';
 
-$('dockFav')
-.classList
-.toggle(
+$('dockFav').classList.toggle(
 'active',
 !!has
 );
@@ -4683,30 +4011,20 @@ $('dockFav')
 
 async function toggleCurrentFav(){
 
-if(
-!currentDetail
-){
-return;
-}
+if(!currentDetail)return;
 
 let x=
 watch();
 
-if(
-x.includes(
-current
-)
-){
-
 x=
+x.includes(current)
+?
 x.filter(
 s=>
 s!==current
-);
-
-}else{
-
-x=[
+)
+:
+[
 current,
 ...x.filter(
 s=>
@@ -4714,11 +4032,7 @@ s!==current
 )
 ];
 
-}
-
-saveWatchLocal(
-x
-);
+saveWatchLocal(x);
 
 cache[current]=
 currentDetail;
@@ -4729,9 +4043,7 @@ syncPushSymbols();
 
 try{
 
-await saveCloudWatch(
-x
-);
+await saveCloudWatch(x);
 
 }catch(e){
 
@@ -4754,7 +4066,7 @@ function renderDetail(a){
 currentDetail=
 a;
 
-const [
+const[
 label,
 cls
 ]=
@@ -4767,7 +4079,7 @@ const cp=
 +a.changePercent||
 0;
 
-const conclusion=
+const con=
 conclusionOf(a);
 
 let planLabel=
@@ -4780,9 +4092,7 @@ if(
 a.planType==='LIMIT'
 ){
 
-if(
-a.entryReady
-){
+if(a.entryReady){
 
 planLabel=
 '接近最佳進場區';
@@ -4805,24 +4115,14 @@ planText=
 let breakoutText=
 '目前上方沒有足夠明確的歷史壓力。';
 
-if(
-a.breakout
-){
-
-if(
-a.breakoutState===
-'BROKEN'
-){
+if(a.breakout){
 
 breakoutText=
-'價格目前位於剛突破的關鍵壓力上方；此位置保留作為突破確認基準。';
-
-}else{
-
-breakoutText=
+a.breakoutState==='BROKEN'
+?
+'價格目前位於剛突破的關鍵壓力上方；此位置保留作為突破確認基準。'
+:
 '這是目前上方最近的有效關鍵壓力。突破後才往下一層歷史壓力尋找 TP1。';
-
-}
 
 }
 
@@ -4934,19 +4234,15 @@ ${a.score}
 </div>
 
 <div class="conclusion-text">
-${esc(conclusion.text)}
+${esc(con.text)}
 </div>
 
 <div class="conclusion-tags">
 
-${
-conclusion.tags
-.map(
+${con.tags.map(
 x=>
 `<span>${esc(x)}</span>`
-)
-.join('')
-}
+).join('')}
 
 </div>
 
@@ -4985,7 +4281,7 @@ ${a.realtime?'目前即時成交價':'目前最新報價'}
 
 <strong>
 ${
-a.entryLow!==null
+a.entryLow!=null
 ?
 `${fmt(a.entryLow)}～${fmt(a.entryHigh)}`
 :
@@ -5007,7 +4303,7 @@ ${planLabel}
 
 <strong>
 ${
-a.sl!==null
+a.sl!=null
 ?
 fmt(a.sl)
 :
@@ -5067,7 +4363,7 @@ fmt(a.tp1)
 
 <small>
 ${
-a.rr1!==null
+a.rr1!=null
 ?
 `${fmt(a.rr1)}R｜突破後第一有效歷史壓力`
 :
@@ -5174,7 +4470,7 @@ ${a.support2?fmt(a.support2):'暫無明確第二支撐'}
 
 <strong>
 ${
-a.entryLow!==null
+a.entryLow!=null
 ?
 `${fmt(a.entryLow)} ～ ${fmt(a.entryHigh)}`
 :
@@ -5200,7 +4496,7 @@ ${a.tp2?fmt(a.tp2):'暫無第二目標'}
 
 <small>
 ${
-a.rr2!==null
+a.rr2!=null
 ?
 fmt(a.rr2)+'R'
 :
@@ -5224,7 +4520,7 @@ ${a.tp3?fmt(a.tp3):'暫無第三目標'}
 ${
 a.tp3
 ?
-`${esc(a.tp3Source)}${a.rr3!==null?'｜'+fmt(a.rr3)+'R':''}`
+`${esc(a.tp3Source)}${a.rr3!=null?'｜'+fmt(a.rr3)+'R':''}`
 :
 '優先尋找第三層歷史壓力；不足時才使用延伸。'
 }
@@ -5246,9 +4542,7 @@ ${newsHTML(news)}
 
 <div class="conditions">
 
-${
-a.conditions
-.map(x=>`
+${a.conditions.map(x=>`
 
 <div class="cond ${x[1]?'ok':'no'}">
 
@@ -5261,9 +4555,7 @@ ${esc(x[2])}
 
 </div>
 
-`)
-.join('')
-}
+`).join('')}
 
 </div>
 
@@ -5279,23 +4571,18 @@ document
 .querySelectorAll(
 '[data-jump]'
 )
-.forEach(button=>{
+.forEach(b=>{
 
-button.onclick=()=>{
+b.onclick=()=>{
 
-const target=
-document.getElementById(
-button.dataset.jump
-);
-
-if(target){
-
-target.scrollIntoView({
+document
+.getElementById(
+b.dataset.jump
+)
+?.scrollIntoView({
 behavior:'smooth',
 block:'start'
 });
-
-}
 
 };
 
@@ -5313,72 +4600,54 @@ withNews=false,
 force=false
 ){
 
-const cached=
-detailCache[
-symbol
-];
+const c=
+detailCache[symbol];
 
 if(
 !force&&
 withNews&&
-cached&&
-Date.now()-
-cached.time<
+c&&
+Date.now()-c.time<
 DETAIL_CACHE_MS
 ){
 
-return cached.data;
+return c.data;
 
 }
 
-const [
-stockResult,
-newsResult
+const[
+s,
+n
 ]=
 await Promise.all([
-
-getStock(
-symbol
-),
-
+getStock(symbol),
 withNews
 ?
-getNews(
-symbol
-)
+getNews(symbol)
 :
-Promise.resolve(
-null
-)
-
+Promise.resolve(null)
 ]);
 
-const analyzed=
+const a=
 analyzeData(
-stockResult,
-newsResult
+s,
+n
 );
 
-if(
-withNews
-){
+if(withNews){
 
-detailCache[
-symbol
-]={
-time:
-Date.now(),
-
-data:
-analyzed
+detailCache[symbol]={
+time:Date.now(),
+data:a
 };
 
 }
 
-return analyzed;
+return a;
+
 }
 
-/* OPEN */
+/* OPEN STOCK */
 
 async function openStock(
 symbol,
@@ -5390,30 +4659,20 @@ hideSuggestions();
 if(
 !$('home')
 .classList
-.contains(
-'hidden'
-)
+.contains('hidden')
 ){
 
-tabScroll[
-tab
-]=
+tabScroll[tab]=
 window.scrollY||
-document.documentElement.scrollTop||
-document.body.scrollTop||
 0;
 
 homeScrollY=
-tabScroll[
-tab
-];
+tabScroll[tab];
 
 }
 
 current=
-String(
-symbol
-)
+String(symbol)
 .trim();
 
 currentDetail=
@@ -5421,59 +4680,45 @@ null;
 
 $('home')
 .classList
-.add(
-'hidden'
-);
+.add('hidden');
 
 $('detail')
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
 $('bottomNav')
 .classList
-.add(
-'hidden'
-);
+.add('hidden');
 
 $('detailDock')
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
-window.scrollTo({
-top:0,
-left:0,
-behavior:'auto'
-});
+window.scrollTo(
+0,
+0
+);
 
 updateFavButtons();
 
-const cached=
-detailCache[
-current
-];
+const c=
+detailCache[current];
 
 if(
-cached&&
-Date.now()-
-cached.time<
+c&&
+Date.now()-c.time<
 DETAIL_CACHE_MS
 ){
 
-cache[
-current
-]=
-cached.data;
+cache[current]=
+c.data;
 
 saveHistory(
-cached.data
+c.data
 );
 
 renderDetail(
-cached.data
+c.data
 );
 
 }else{
@@ -5482,43 +4727,31 @@ $('detailBody').innerHTML=
 renderQuickDetail(
 current,
 preview||
-getRadarPreview(
-current
-)
+getRadarPreview(current)
 );
 
 try{
 
-const requestedSymbol=
+const requested=
 current;
 
 const a=
 await analyzeStock(
-requestedSymbol,
+requested,
 true
 );
 
 if(
 current!==
-requestedSymbol
-){
+requested
+)return;
 
-return;
-
-}
-
-cache[
-current
-]=
+cache[current]=
 a;
 
-saveHistory(
-a
-);
+saveHistory(a);
 
-renderDetail(
-a
-);
+renderDetail(a);
 
 }catch(e){
 
@@ -5550,52 +4783,33 @@ refreshDetail,
 
 }
 
-/* REFRESH */
+/* REFRESH DETAIL */
 
 async function refreshDetail(){
 
-if(
-!current
-){
-return;
-}
+if(!current)return;
 
-const symbol=
+const s=
 current;
 
 try{
 
 const a=
 await analyzeStock(
-symbol,
+s,
 true,
 true
 );
 
-if(
-current!==
-symbol
-){
+if(current!==s)return;
 
-return;
+cache[s]=a;
 
-}
-
-cache[
-symbol
-]=
-a;
-
-renderDetail(
-a
-);
+renderDetail(a);
 
 }catch(e){
 
-console.warn(
-'個股更新失敗',
-e
-);
+console.warn(e);
 
 }
 
@@ -5608,14 +4822,8 @@ function backToHome(){
 if(
 $('detail')
 .classList
-.contains(
-'hidden'
-)
-){
-
-return;
-
-}
+.contains('hidden')
+)return;
 
 current='';
 currentDetail=null;
@@ -5626,27 +4834,19 @@ detailTimer
 
 $('detail')
 .classList
-.add(
-'hidden'
-);
+.add('hidden');
 
 $('home')
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
 $('detailDock')
 .classList
-.add(
-'hidden'
-);
+.add('hidden');
 
 $('bottomNav')
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
 renderHome();
 
@@ -5654,44 +4854,30 @@ document
 .querySelectorAll(
 '.tab'
 )
-.forEach(x=>{
-
+.forEach(x=>
 x.classList.toggle(
 'on',
-x.dataset.tab===
-tab
+x.dataset.tab===tab
+)
 );
 
-});
-
-const restoreY=
-tabScroll[
-tab
-]
+const y=
+tabScroll[tab]
 ??
 homeScrollY
 ??
 0;
 
 requestAnimationFrame(
-()=>{
-
+()=>
 requestAnimationFrame(
-()=>{
-
+()=>
 window.scrollTo({
-top:
-restoreY,
-
+top:y,
 left:0,
-
 behavior:'auto'
-});
-
-}
-);
-
-}
+})
+)
 );
 
 }
@@ -5708,7 +4894,7 @@ toggleCurrentFav;
 $('dockFav').onclick=
 toggleCurrentFav;
 
-/* SWIPE BACK */
+/* IPHONE EDGE SWIPE */
 
 document.addEventListener(
 'touchstart',
@@ -5717,35 +4903,22 @@ e=>{
 if(
 $('detail')
 .classList
-.contains(
-'hidden'
-)
-){
-
-return;
-
-}
-
-if(
+.contains('hidden')||
 e.touches.length!==1
-){
+)return;
 
-return;
-
-}
-
-const touch=
+const t=
 e.touches[0];
 
 if(
-touch.clientX<=32
+t.clientX<=32
 ){
 
 touchStartX=
-touch.clientX;
+t.clientX;
 
 touchStartY=
-touch.clientY;
+t.clientY;
 
 touchTracking=
 true;
@@ -5762,27 +4935,21 @@ document.addEventListener(
 'touchend',
 e=>{
 
-if(
-!touchTracking
-){
-
-return;
-
-}
+if(!touchTracking)return;
 
 touchTracking=
 false;
 
-const touch=
+const t=
 e.changedTouches[0];
 
 const dx=
-touch.clientX-
+t.clientX-
 touchStartX;
 
 const dy=
 Math.abs(
-touch.clientY-
+t.clientY-
 touchStartY
 );
 
@@ -5801,78 +4968,51 @@ passive:true
 }
 );
 
-/* WATCH STOCKS */
+/* WATCH STOCK LOAD */
 
 async function loadWatchStocks(){
 
 const symbols=
 watch();
 
-if(
-!symbols.length
-){
-
-return;
-
-}
-
-const BATCH_SIZE=5;
-
 for(
 let i=0;
 i<symbols.length;
-i+=BATCH_SIZE
+i+=5
 ){
 
-const batch=
-symbols.slice(
-i,
-i+BATCH_SIZE
-);
-
-const results=
+const rs=
 await Promise.allSettled(
-
-batch.map(
-async symbol=>{
-
-const a=
+symbols
+.slice(i,i+5)
+.map(
+async symbol=>({
+symbol,
+a:
 await analyzeStock(
 symbol,
 false
-);
-
-return {
-symbol,
-a
-};
-
-}
 )
-
+})
+)
 );
 
-for(
-const result of results
-){
+for(const r of rs){
 
 if(
-result.status===
-'fulfilled'
+r.status==='fulfilled'
 ){
 
 cache[
-result.value.symbol
+r.value.symbol
 ]=
-result.value.a;
+r.value.a;
 
 }
 
 }
 
-if(
-tab==='watch'
-){
+if(tab==='watch'){
 
 renderHome();
 
@@ -5900,10 +5040,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -5915,49 +5052,34 @@ d.error||
 unified={
 
 strategyReady:
-Array.isArray(
-d.strategyReady
-)
+Array.isArray(d.strategyReady)
 ?
 d.strategyReady
 :
 [],
 
 radar:
-Array.isArray(
-d.radar
-)
+Array.isArray(d.radar)
 ?
 d.radar
 :
 [],
 
 longWatch:
-Array.isArray(
-d.longWatch
-)
+Array.isArray(d.longWatch)
 ?
 d.longWatch
 :
 [],
 
 generatedAt:
-Number(
-d.generatedAt||
-0
-),
+Number(d.generatedAt||0),
 
 updatedAt:
-String(
-d.updatedAt||
-''
-),
+String(d.updatedAt||''),
 
 cache:
-String(
-d.cache||
-''
-)
+String(d.cache||'')
 
 };
 
@@ -5967,10 +5089,7 @@ return d;
 
 }catch(e){
 
-console.warn(
-'全市場共用雷達失敗',
-e
-);
+console.warn(e);
 
 if(
 unified.strategyReady.length||
@@ -5986,12 +5105,13 @@ return null;
 $('homeList').innerHTML=`
 
 <div class="empty">
-全市場 Radar 暫時載入失敗：${esc(e.message||'請稍後重新整理')}
+
+全市場 Radar 暫時載入失敗：
+${esc(e.message||'請稍後重新整理')}
+
 </div>
 
 `;
-
-return null;
 
 }
 
@@ -6003,9 +5123,7 @@ function hideSuggestions(){
 
 $('suggestions')
 .classList
-.add(
-'hidden'
-);
+.add('hidden');
 
 }
 
@@ -6025,10 +5143,7 @@ cache:'no-store'
 const d=
 await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -6047,9 +5162,7 @@ async function showSuggestions(q){
 const box=
 $('suggestions');
 
-if(
-!q.trim()
-){
+if(!q.trim()){
 
 showSearchHistory();
 
@@ -6060,13 +5173,9 @@ return;
 try{
 
 const items=
-await searchStocks(
-q
-);
+await searchStocks(q);
 
-if(
-!items.length
-){
+if(!items.length){
 
 box.innerHTML=`
 
@@ -6078,9 +5187,7 @@ box.innerHTML=`
 
 box
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
 return;
 
@@ -6093,7 +5200,6 @@ items
 <button
 class="suggestion"
 data-symbol="${esc(x.symbol)}"
-type="button"
 >
 
 <div>
@@ -6119,9 +5225,7 @@ ${esc(x.market||'')}
 
 box
 .classList
-.remove(
-'hidden'
-);
+.remove('hidden');
 
 box
 .querySelectorAll(
@@ -6149,7 +5253,7 @@ x.dataset.symbol
 
 });
 
-}catch(e){
+}catch{
 
 hideSuggestions();
 
@@ -6166,52 +5270,33 @@ $('q')
 .value
 .trim();
 
-if(
-!q
-){
-return;
-}
+if(!q)return;
 
-if(
-selectedSearchSymbol
-){
+if(selectedSearchSymbol){
 
-const symbol=
+const s=
 selectedSearchSymbol;
 
 selectedSearchSymbol='';
 
-openStock(
-symbol
-);
-
-return;
+return openStock(s);
 
 }
 
 if(
-/^\d{4,6}$/
-.test(q)
+/^\d{4,6}$/.test(q)
 ){
 
-openStock(
-q
-);
-
-return;
+return openStock(q);
 
 }
 
 try{
 
 const x=
-await searchStocks(
-q
-);
+await searchStocks(q);
 
-if(
-x[0]
-){
+if(x[0]){
 
 openStock(
 x[0].symbol
@@ -6235,16 +5320,11 @@ e.message
 
 }
 
-/* SEARCH EVENTS */
-
-$('q')
-.addEventListener(
+$('q').addEventListener(
 'focus',
 e=>{
 
-if(
-!e.target.value.trim()
-){
+if(!e.target.value.trim()){
 
 showSearchHistory();
 
@@ -6253,24 +5333,7 @@ showSearchHistory();
 }
 );
 
-$('q')
-.addEventListener(
-'click',
-e=>{
-
-if(
-!e.target.value.trim()
-){
-
-showSearchHistory();
-
-}
-
-}
-);
-
-$('q')
-.addEventListener(
+$('q').addEventListener(
 'input',
 e=>{
 
@@ -6280,43 +5343,30 @@ clearTimeout(
 searchTimer
 );
 
-const value=
+const v=
 e.target.value;
 
-if(
-!value.trim()
-){
+if(!v.trim()){
 
-showSearchHistory();
-
-return;
+return showSearchHistory();
 
 }
 
 searchTimer=
 setTimeout(
-()=>{
-
-showSuggestions(
-value
-);
-
-},
+()=>
+showSuggestions(v),
 180
 );
 
 }
 );
 
-$('q')
-.addEventListener(
+$('q').addEventListener(
 'keydown',
 e=>{
 
-if(
-e.key===
-'Enter'
-){
+if(e.key==='Enter'){
 
 submitSearch();
 
@@ -6332,14 +5382,12 @@ document.addEventListener(
 'click',
 e=>{
 
-const searchBox=
-document.querySelector(
-'.search-box'
-);
-
 if(
-searchBox&&
-!searchBox.contains(
+!document
+.querySelector(
+'.search-box'
+)
+?.contains(
 e.target
 )
 ){
@@ -6361,14 +5409,10 @@ scrollTop=false
 if(
 !$('home')
 .classList
-.contains(
-'hidden'
-)
+.contains('hidden')
 ){
 
-tabScroll[
-tab
-]=
+tabScroll[tab]=
 window.scrollY||
 0;
 
@@ -6381,15 +5425,12 @@ document
 .querySelectorAll(
 '.tab'
 )
-.forEach(x=>{
-
+.forEach(x=>
 x.classList.toggle(
 'on',
-x.dataset.tab===
-tab
+x.dataset.tab===tab
+)
 );
-
-});
 
 document
 .querySelectorAll(
@@ -6397,17 +5438,25 @@ document
 )
 .forEach(x=>{
 
-x.classList.toggle(
-'on',
+const active=
 (
-tab==='watch'&&
-x.dataset.nav==='watch'
+tab==='signal'&&
+x.dataset.nav==='home'
 )
 ||
 (
-tab!=='watch'&&
-x.dataset.nav==='home'
+tab==='near'&&
+x.dataset.nav==='radar'
 )
+||
+(
+tab==='watch'&&
+x.dataset.nav==='watch'
+);
+
+x.classList.toggle(
+'on',
+active
 );
 
 });
@@ -6420,27 +5469,19 @@ scrollTop
 0
 :
 (
-tabScroll[
-tab
-]||
+tabScroll[tab]||
 0
 );
 
 requestAnimationFrame(
-()=>{
-
-window.scrollTo({
-top:y,
-left:0,
-behavior:'auto'
-});
-
-}
+()=>
+window.scrollTo(
+0,
+y
+)
 );
 
-if(
-tab==='watch'
-){
+if(tab==='watch'){
 
 loadWatchStocks();
 
@@ -6454,14 +5495,12 @@ document
 )
 .forEach(x=>{
 
-x.onclick=()=>{
-
+x.onclick=
+()=>
 setTab(
 x.dataset.tab,
 false
 );
-
-};
 
 });
 
@@ -6479,19 +5518,6 @@ const nav=
 button.dataset.nav;
 
 if(
-nav==='watch'
-){
-
-setTab(
-'watch',
-true
-);
-
-return;
-
-}
-
-if(
 nav==='home'
 ){
 
@@ -6505,23 +5531,28 @@ return;
 }
 
 if(
-nav==='search'
+nav==='radar'
 ){
 
-window.scrollTo({
-top:0,
-left:0,
-behavior:'smooth'
-});
-
-setTimeout(
-()=>{
-
-$('q').focus();
-
-},
-180
+setTab(
+'near',
+true
 );
+
+return;
+
+}
+
+if(
+nav==='watch'
+){
+
+setTab(
+'watch',
+true
+);
+
+return;
 
 }
 
@@ -6533,7 +5564,7 @@ $('q').focus();
 
 function pushSymbols(){
 
-return [
+return[
 ...new Set([
 ...DEFAULT,
 ...watch()
@@ -6542,22 +5573,19 @@ return [
 
 }
 
-function urlBase64ToUint8Array(
-base64String
-){
+function urlBase64ToUint8Array(s){
 
-const padding=
+const p=
 '='.repeat(
 (
 4-
-base64String.length%4
+s.length%4
 )%4
 );
 
-const base64=
+const b=
 (
-base64String+
-padding
+s+p
 )
 .replace(
 /-/g,
@@ -6568,28 +5596,26 @@ padding
 '/'
 );
 
-const rawData=
-window.atob(
-base64
-);
+const r=
+atob(b);
 
-const outputArray=
+const o=
 new Uint8Array(
-rawData.length
+r.length
 );
 
 for(
 let i=0;
-i<rawData.length;
-++i
+i<r.length;
+i++
 ){
 
-outputArray[i]=
-rawData.charCodeAt(i);
+o[i]=
+r.charCodeAt(i);
 
 }
 
-return outputArray;
+return o;
 
 }
 
@@ -6602,24 +5628,15 @@ await fetch(
 '/api/push-subscribe',
 {
 method:'POST',
-
 headers:{
-'Content-Type':
-'application/json'
+'Content-Type':'application/json'
 },
-
-body:
-JSON.stringify({
-
-deviceId:
-getDeviceId(),
-
+body:JSON.stringify({
+deviceId:getDeviceId(),
 subscription:
 subscription.toJSON(),
-
 symbols:
 pushSymbols()
-
 })
 }
 );
@@ -6627,10 +5644,7 @@ pushSymbols()
 const d=
 await r.json();
 
-if(
-!r.ok||
-!d.ok
-){
+if(!r.ok||!d.ok){
 
 throw Error(
 d.error||
@@ -6647,48 +5661,31 @@ try{
 
 if(
 !('serviceWorker' in navigator)
-){
+)return;
 
-return;
-
-}
-
-const registration=
+const reg=
 await navigator
 .serviceWorker
 .getRegistration('/');
 
-if(
-!registration
-){
+if(!reg)return;
 
-return;
-
-}
-
-const subscription=
-await registration
+const sub=
+await reg
 .pushManager
 .getSubscription();
 
-if(
-!subscription
-){
+if(sub){
 
-return;
+await savePushSubscription(
+sub
+);
 
 }
 
-await savePushSubscription(
-subscription
-);
-
 }catch(e){
 
-console.warn(
-'Push 股票同步失敗',
-e
-);
+console.warn(e);
 
 }
 
@@ -6697,7 +5694,8 @@ e
 async function enablePush(){
 
 if(
-!('Notification' in window)
+!('Notification' in window)||
+!('PushManager' in window)
 ){
 
 throw Error(
@@ -6707,21 +5705,10 @@ throw Error(
 }
 
 if(
-!('PushManager' in window)
-){
-
-throw Error(
-'此瀏覽器不支援背景 Push'
-);
-
-}
-
-const permission=
 await Notification
-.requestPermission();
-
-if(
-permission!=='granted'
+.requestPermission()
+!==
+'granted'
 ){
 
 throw Error(
@@ -6730,7 +5717,7 @@ throw Error(
 
 }
 
-const registration=
+const reg=
 await navigator
 .serviceWorker
 .register(
@@ -6743,22 +5730,15 @@ updateViaCache:'none'
 
 try{
 
-await registration.update();
+await reg.update();
 
-}catch(e){
-
-console.warn(
-'Service Worker 更新檢查失敗',
-e
-);
-
-}
+}catch{}
 
 await navigator
 .serviceWorker
 .ready;
 
-const configResponse=
+const cr=
 await fetch(
 '/api/push-config?t='+
 Date.now(),
@@ -6767,64 +5747,50 @@ cache:'no-store'
 }
 );
 
-const config=
-await configResponse
-.json();
+const c=
+await cr.json();
 
 if(
-!configResponse.ok||
-!config.ok||
-!config.publicKey
+!cr.ok||
+!c.ok||
+!c.publicKey
 ){
 
 throw Error(
-config.error||
+c.error||
 'Push 公鑰取得失敗'
 );
 
 }
 
-const oldSubscription=
-await registration
+const old=
+await reg
 .pushManager
 .getSubscription();
 
-if(
-oldSubscription
-){
+if(old){
 
 try{
 
-await oldSubscription
-.unsubscribe();
+await old.unsubscribe();
 
-}catch(e){
-
-console.warn(
-'取消舊 Push 失敗',
-e
-);
+}catch{}
 
 }
 
-}
-
-const subscription=
-await registration
+const sub=
+await reg
 .pushManager
 .subscribe({
-
 userVisibleOnly:true,
-
 applicationServerKey:
 urlBase64ToUint8Array(
-config.publicKey
+c.publicKey
 )
-
 });
 
 await savePushSubscription(
-subscription
+sub
 );
 
 $('notify')
@@ -6838,9 +5804,6 @@ $('notify')
 $('notify').onclick=
 async()=>{
 
-$('notify').disabled=
-true;
-
 try{
 
 await enablePush();
@@ -6851,33 +5814,6 @@ alert(
 
 }catch(e){
 
-const isiOS=
-/iPad|iPhone|iPod/
-.test(
-navigator.userAgent
-);
-
-const standalone=
-window
-.matchMedia(
-'(display-mode: standalone)'
-)
-.matches
-||
-window.navigator.standalone===
-true;
-
-if(
-isiOS&&
-!standalone
-){
-
-alert(
-'請先把「波段分析」加入 iPhone／iPad 主畫面，再從主畫面開啟後按 🔔。'
-);
-
-}else{
-
 alert(
 e.message||
 '通知開啟失敗'
@@ -6885,52 +5821,33 @@ e.message||
 
 }
 
-}finally{
-
-$('notify').disabled=
-false;
-
-}
-
 };
 
-/* URL OPEN */
+/* URL STOCK */
 
 async function openStockFromURL(){
 
-try{
-
-const params=
+const p=
 new URLSearchParams(
 location.search
 );
 
-const symbol=
-params.get('stock')||
-params.get('symbol');
+const s=
+p.get('stock')||
+p.get('symbol');
 
 if(
-symbol&&
-/^\d{4,6}$/
-.test(symbol)
+s&&
+/^\d{4,6}$/.test(s)
 ){
 
-await openStock(
-symbol
-);
+await openStock(s);
 
-window.history
-.replaceState(
+history.replaceState(
 {},
 '',
 location.pathname
 );
-
-}
-
-}catch(e){
-
-console.warn(e);
 
 }
 
@@ -6940,24 +5857,13 @@ console.warn(e);
 
 async function startApp(){
 
-hideSuggestions();
-
 getDeviceId();
 
 try{
 
 await loadWatchlist();
 
-}catch(e){
-
-console.warn(
-'自選初始化失敗',
-e
-);
-
-}
-
-/* SERVICE WORKER */
+}catch{}
 
 if(
 'serviceWorker' in navigator
@@ -6965,7 +5871,7 @@ if(
 
 try{
 
-const registration=
+const r=
 await navigator
 .serviceWorker
 .register(
@@ -6976,25 +5882,11 @@ updateViaCache:'none'
 }
 );
 
-try{
-
-await registration.update();
+await r.update();
 
 }catch(e){
 
-console.warn(
-'Service Worker 更新檢查失敗',
-e
-);
-
-}
-
-}catch(e){
-
-console.warn(
-'Service Worker 註冊失敗',
-e
-);
+console.warn(e);
 
 }
 
@@ -7002,45 +5894,19 @@ e
 
 syncPushSymbols();
 
-$('homeList').innerHTML=`
+const rp=
+radar();
 
-<div class="card loader">
-正在載入全市場共用雷達
-</div>
+const wp=
+loadWatchStocks();
 
-`;
-
-const radarPromise=
-radar()
-.catch(e=>{
-
-console.warn(
-'第一次全市場雷達失敗',
-e
-);
-
-});
-
-const watchPromise=
-loadWatchStocks()
-.catch(e=>{
-
-console.warn(
-'自選股票載入失敗',
-e
-);
-
-});
-
-await radarPromise;
+await rp;
 
 renderHome();
 
-watchPromise.then(()=>{
+wp.then(()=>{
 
-if(
-tab==='watch'
-){
+if(tab==='watch'){
 
 renderHome();
 
@@ -7054,30 +5920,13 @@ radarTimer
 
 radarTimer=
 setInterval(
-async()=>{
-
-try{
-
-await radar();
-
-}catch(e){
-
-console.warn(
-'全市場雷達更新失敗',
-e
-);
-
-}
-
-},
+radar,
 300000
 );
 
 await openStockFromURL();
 
 }
-
-/* BOOT */
 
 if(
 document.readyState===
@@ -7097,6 +5946,7 @@ once:true
 startApp();
 
 }
+
 </script>
 
 </body>
